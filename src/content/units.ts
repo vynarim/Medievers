@@ -40,6 +40,12 @@ export interface UnitRules {
    */
   readonly slopeTakeoff?: boolean;
   /**
+   * px of free room a unit needs above its head to jump: under a lower ceiling (the wall-walk of
+   * a curtain wall), the jump is refused and costs nothing (2026-10-25). Absent from older logs:
+   * the jump goes, and bumps its head.
+   */
+  readonly jumpHeadroom?: number;
+  /**
    * ticks: walking towards the other side first turns the unit round on the spot for this long,
    * without moving, so turning round costs no walk and keeps the jump (2026-10-24). Absent from
    * older logs: the unit turns and walks at once.
@@ -91,6 +97,7 @@ export const UNIT_RULES: UnitRules = {
   fallMinDamage: 5,
   moveBudget: 280,
   slopeTakeoff: true,
+  jumpHeadroom: 40,
   turnTicks: 12,
   climbSpeed: 256,
   climbCostPct: 50,

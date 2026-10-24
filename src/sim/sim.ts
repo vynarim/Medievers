@@ -23,6 +23,7 @@ import {
 import { drownFlames, flamesTurnEnd, flamesTurnStart, spawnFlames, stepFlames } from './flames.ts';
 import {
   atRest,
+  bodyFree,
   createUnit,
   jump,
   release,
@@ -344,6 +345,16 @@ function autoPlace(s: SimState, events: SimEvent[]): void {
   else startTurn(s, events);
 }
 
+/** The unit has rules.unit.jumpHeadroom px of free room above its head to jump. */
+function headroom(s: SimState, u: Unit): boolean {
+  const room = s.rules.unit.jumpHeadroom;
+  if (room === undefined) return true;
+  const px = subToPx(u.x);
+  const py = subToPx(u.y);
+  for (let k = 1; k <= room; k++) if (!bodyFree(s.terrain, px, py - k)) return false;
+  return true;
+}
+
 function applyCommand(s: SimState, c: GameCommand, events: SimEvent[]): void {
   const t = s.turn;
   if (c.t === 'place') {
@@ -413,6 +424,11 @@ function applyCommand(s: SimState, c: GameCommand, events: SimEvent[]): void {
       // With a move budget, a turn has either a walk or a single jump (GDD §3.1).
       const budget = s.rules.unit.moveBudget;
       if (budget !== undefined && t.moveLeft !== budget * SUBPX) return;
+      // No room above the head: no jump, and nothing spent (rules.unit.jumpHeadroom).
+      if (u.grounded && !headroom(s, u)) {
+        events.push({ e: 'jumpRefused', unitId: u.id });
+        return;
+      }
       const facing = u.facing;
       if (c.dir !== undefined) u.facing = c.dir;
       if (!jump(u, c.kind, unitRulesOf(s, u))) {

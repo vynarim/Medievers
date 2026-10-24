@@ -110,6 +110,7 @@
   "ui.close": "Fermer",
   "ui.rope": "Grimper",
   "tip.rope": "Lancer une corde et grimper au mur devant soi : c'est l'action du tour, qui finit le tour (G)",
+  "quip.jumpRefused": "{name} n'a pas la place de sauter : sa tête cognerait le plafond. Il faut d'abord sortir de dessous en marchant.",
   "ui.ropeDown": "Descendre",
   "tip.ropeDown": "Lancer une corde et descendre l'à-pic devant soi : c'est l'action du tour, qui finit le tour (G)",
   "ui.walkLeft": "◀",

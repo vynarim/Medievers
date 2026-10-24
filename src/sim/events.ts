@@ -69,6 +69,8 @@ export type SimEvent =
   | { readonly e: 'unicornGone' }
   /** the unit throws a rope up (or down) a wall */
   | { readonly e: 'ropeThrown'; readonly unitId: number }
+  /** no room above its head to jump (rules.unit.jumpHeadroom): nothing spent */
+  | { readonly e: 'jumpRefused'; readonly unitId: number }
   /** shot by unitId, the angel lifts it in a beam of light */
   | { readonly e: 'angelLift'; readonly unitId: number }
   /** the angel lets go of it */

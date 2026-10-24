@@ -133,6 +133,9 @@ export class Commentary {
         case 'mineSprung':
           this.hud.say(pick('quip.mineSprung'), now);
           break;
+        case 'jumpRefused':
+          this.hud.say(t('quip.jumpRefused', { name: unitName(e.unitId) }), now);
+          break;
         case 'toolRefused':
           this.hud.say(t(e.weapon === 'mace' ? 'quip.strikeRefused' : 'quip.toolRefused'), now);
           break;

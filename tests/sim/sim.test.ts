@@ -364,6 +364,28 @@ describe('turn loop', () => {
     expect(d.sim.view().turn.aim).toBe((2048 - aim) & 4095);
   });
 
+  it('refuses a jump under a low ceiling, and spends nothing', () => {
+    // A slab 20 px over the head of a unit (80 px tall, feet at 500).
+    const mask = flatMask();
+    for (let y = 390; y < 400; y++) mask.data.fill(Material.Rock, y * 1200 + 330, y * 1200 + 390);
+    const sim = new Sim(DUEL, 1, mask);
+    for (let i = 0; i < 2000 && sim.view().turn.phase !== 'action'; i++) sim.step();
+    // Under the slab.
+    const snap = sim.snapshot();
+    const u1 = snap.units.find((u) => u.id === 1);
+    if (u1) u1.x = 360 * 256;
+    sim.restore(snap);
+    const budget = sim.view().turn.moveLeft;
+    expect(sim.step([{ t: 'jump', kind: 'forward' }])).toContainEqual({
+      e: 'jumpRefused',
+      unitId: 1,
+    });
+    const v = sim.view();
+    expect(v.units.find((u) => u.id === 1)?.grounded).toBe(true);
+    expect(v.turn.moveLeft).toBe(budget);
+    expect(v.turn.phase).toBe('action');
+  });
+
   it('rotates through the units of each team', () => {
     const config: MatchConfig = {
       rules: CLASSIC_RULES,
