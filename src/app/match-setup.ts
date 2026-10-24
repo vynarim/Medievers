@@ -13,7 +13,7 @@ import {
 import { applyOverrides, type TuningOverrides } from '../ui/tuning-model.ts';
 import { MAP_THEMES, type MapTheme } from '../content/maps.ts';
 
-const KEY = 'medievers.setup.v1';
+const KEY = 'medieverse.setup.v1';
 
 export interface MatchSetup {
   /** the map's theme; the land itself is drawn anew for each match */

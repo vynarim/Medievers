@@ -4,10 +4,9 @@ import type { GameCommand, TimedCommand } from '../sim/commands.ts';
 import { LOG_VERSION, type GameLog } from '../sim/log.ts';
 import type { MatchConfig } from '../sim/state.ts';
 
-// Storage keys keep the game's first name (Medievers), so players keep their saves and settings.
-const KEY = 'medievers.save.v1';
+const KEY = 'medieverse.save.v1';
 /** the last match played to its end, for « Revoir la dernière partie » */
-const LAST_KEY = 'medievers.lastReplay.v1';
+const LAST_KEY = 'medieverse.lastReplay.v1';
 /** ms between two writes when only time has passed */
 const FLUSH_MS = 1000;
 
