@@ -99,15 +99,20 @@ export class Hud {
   /** Centre banner: a title in textura, a subtitle and a quip. Persistent ones stay until replaced. */
   announce(
     big: string,
-    sub: string,
-    quip: string,
+    sub: string | readonly (string | Node)[],
+    quip: string | readonly (string | Node)[],
     color: number,
     now: number,
     action: { label: string; run: () => void } | null = null,
   ): void {
     const title = el('div', 'big', big);
     title.style.color = css(color);
-    this.banner.replaceChildren(title, el('div', 'sub', sub), el('div', 'quip', quip));
+    const line = (cls: string, text: string | readonly (string | Node)[]): HTMLElement => {
+      const d = el('div', cls);
+      d.append(...(typeof text === 'string' ? [text] : text));
+      return d;
+    };
+    this.banner.replaceChildren(title, line('sub', sub), line('quip', quip));
     if (action) {
       const b = button(action.label);
       b.addEventListener('click', action.run);

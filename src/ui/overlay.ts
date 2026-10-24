@@ -73,10 +73,12 @@ const STYLE = `
 #ui .shield::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 32%;
   background: var(--s); border-bottom: 2px solid var(--encre); }
 #ui .shield.small { width: 22px; height: 27px; border-width: 2px; }
-#ui .hud-teams { position: absolute; top: 12px; left: 12px; display: flex; flex-direction: column; gap: 6px; }
+/* The bands grow to the longest house name, all to the same width. */
+#ui .hud-teams { position: absolute; top: 12px; left: 12px; display: flex; flex-direction: column; gap: 6px;
+  width: max-content; max-width: 46vw; }
 #ui .team { display: flex; align-items: center; gap: 8px; padding: 4px 12px 4px 6px;
-  font-family: var(--caps); font-size: 16px; width: calc(var(--col) + 40px); }
-#ui .team .name { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  font-family: var(--caps); font-size: 16px; min-width: calc(var(--col) + 40px); }
+#ui .team .name { flex: 1 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 #ui .team .hp { flex: none; width: 64px; height: 10px; border: 2px solid var(--encre); background: var(--velin); }
 #ui .team .hp i { display: block; height: 100%; background: var(--p); }
 #ui .team.out { opacity: 0.45; text-decoration: line-through; }

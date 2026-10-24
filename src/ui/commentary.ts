@@ -9,7 +9,7 @@ import type { Hud } from './hud.ts';
 import { houseName } from './house-names.ts';
 import { pick, t } from './i18n.ts';
 import { showEndScreen } from './end-screen.ts';
-import { COLORS } from './tokens.ts';
+import { COLORS, css } from './tokens.ts';
 import { uiRoot } from './overlay.ts';
 
 /** A word or number popping up in the world, in px. */
@@ -63,11 +63,21 @@ export class Commentary {
     const f = FACTIONS[team];
     const house = houseName(team);
     const name = unitName(unitId);
+    const ink = f?.ink ?? COLORS.encre;
+    // The playing unit's name, wherever it appears, in its house's colour.
+    const inked = (text: string): (string | Node)[] =>
+      text.split(name).flatMap((part, i) => {
+        if (i === 0) return [part];
+        const span = document.createElement('span');
+        span.textContent = name;
+        span.style.color = css(ink);
+        return [span, part];
+      });
     this.hud.announce(
       t('hud.turn', { n: turn }),
-      `${house} · ${name}`,
-      pick('quip.turn', { name, house }),
-      f?.ink ?? COLORS.encre,
+      inked(`${house} · ${name}`),
+      inked(pick('quip.turn', { name, house })),
+      ink,
       now,
     );
   }
