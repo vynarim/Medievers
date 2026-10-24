@@ -49,7 +49,7 @@
 ### 3.1 Règles communes
 - PV : 100 (option 50 / 150 / 200).
 - Déplacement : marche (vitesse 1,5 px/tick), franchit une marche ≤ 12 px, pente max ~60°.
-- Saut avant (Entrée/bouton) : impulsion courte vers l'avant. Saut arrière (double appui) : plus haut, vers l'arrière.
+- Saut avant (Entrée/bouton) : impulsion courte vers l'avant. Saut arrière (double appui) : plus haut, vers l'arrière. Valeurs de départ, à régler en playtest : avant (+2,5 ; −5) px/tick, arrière (−1 ; −7,5) px/tick (`src/content/units.ts`).
 - Dégâts de chute : au-delà de 160 px de hauteur de chute, 1 PV par 8 px supplémentaires, plafonné à 30.
 - Hors carte (bords latéraux) ou eau : mort.
 - Une unité touchée pendant son tour termine son tour immédiatement.

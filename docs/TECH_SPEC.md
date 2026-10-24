@@ -128,7 +128,8 @@ export interface Sim {
 ### 5.1 Unités
 - Hitbox : capsule verticale de 28 × 80 px, avec des points d'échantillonnage sur le masque (pieds ×3, flancs ×4, tête ×2).
 - Marche : à chaque pas de 1 px, la marche cherche le sol jusqu'à 12 px au-dessus ou en dessous. Au-delà, l'unité bloque ou tombe.
-- Chute : gravité de 0,35 px/tick² (en sub-pixels), vitesse terminale de 14 px/tick.
+- Chute : gravité de 0,35 px/tick², arrondie à 90 sub-px/tick² (0,3516), vitesse terminale de 14 px/tick.
+- Échantillonnage : les pieds et les flancs partagent la colonne extérieure (±13 px), pour qu'une unité qui perd pied n'ait jamais un flanc encore au-dessus du rebord quitté. La pente maximale se mesure sur la colonne centrale : la montée sur 7 px ne doit pas dépasser la marche de 12 px (≈ 60°).
 - Projection (explosion) : vélocité initiale, puis rebonds amortis (restitution 0,3) et friction au sol. L'unité « glisse » jusqu'à repos complet (vitesse < seuil pendant 10 ticks).
 - La résolution de tour attend que **toutes** les entités soient au repos.
 

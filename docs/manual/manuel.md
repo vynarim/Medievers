@@ -48,12 +48,12 @@ Le ton est **burlesque**. Les personnages gardent la gravité figée des enlumin
 
 ## 3. Vos combattants
 
-### 3.1 Ce que tous savent faire {{st:prevu}}
+### 3.1 Ce que tous savent faire {{st:moteur}}
 
-- **Points de vie** : 100 par défaut (50, 150 ou 200 en option).
-- **Marcher** : un combattant franchit une marche de 12 pixels au plus et grimpe des pentes jusqu'à environ 60°.
+- **Points de vie** : {{unit:startHp}} par défaut (50, 150 ou 200 en option).
+- **Marcher** : un combattant avance de {{unit:walkSpeedPx}} pixel par instant de jeu, franchit une marche de {{unit:maxStep}} pixels au plus et grimpe des pentes jusqu'à environ 60°. Au bord d'un précipice, il tombe.
 - **Sauter** : un saut court vers l'avant, ou un saut plus haut vers l'arrière.
-- **Tomber** : une chute de plus de 160 pixels blesse. On perd 1 PV tous les 8 pixels de chute en plus, jusqu'à 30 PV au maximum.
+- **Tomber** : une chute de plus de {{unit:fallSafeHeight}} pixels blesse. On perd 1 PV tous les {{unit:fallPxPerHp}} pixels de chute en plus, jusqu'à {{unit:fallMaxDamage}} PV au maximum. Une chute de 200 pixels coûte donc {{unit:fall200}} PV.
 - **Mourir** : à 0 PV, en sortant de la carte par les bords, ou en tombant dans l'eau. Le combattant laisse une petite stèle qui roule et glisse comme un objet.
 
 ### 3.2 Les six classes {{st:prevu}}

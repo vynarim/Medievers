@@ -6,7 +6,9 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { marked } from 'marked';
 import { chromium } from 'playwright';
 import { MASK_PALETTE, MATERIALS } from '../src/content/materials.ts';
+import { UNIT_RULES } from '../src/content/units.ts';
 import { Material, type MaterialId } from '../src/sim/terrain/material.ts';
+import { fallDamage } from '../src/sim/units/unit.ts';
 
 const dir = new URL('../docs/manual/', import.meta.url);
 const OUTPUT = 'Medievers-Manuel-du-joueur.pdf';
@@ -48,6 +50,19 @@ function materialsTable(): string {
   ].join('\n');
 }
 
+const frNumber = (n: number): string => n.toLocaleString('fr-FR', { maximumFractionDigits: 2 });
+
+/** {{unit:<key>}} values, read from src/content/units.ts. */
+const UNIT_VALUES: Record<string, string> = {
+  startHp: frNumber(UNIT_RULES.startHp),
+  walkSpeedPx: frNumber(UNIT_RULES.walkSpeed / 256),
+  maxStep: frNumber(UNIT_RULES.maxStep),
+  fallSafeHeight: frNumber(UNIT_RULES.fallSafeHeight),
+  fallPxPerHp: frNumber(UNIT_RULES.fallPxPerHp),
+  fallMaxDamage: frNumber(UNIT_RULES.fallMaxDamage),
+  fall200: frNumber(fallDamage(200, UNIT_RULES)),
+};
+
 function edition(): string {
   const date = new Date().toLocaleDateString('fr-FR', {
     day: 'numeric',
@@ -66,6 +81,11 @@ function edition(): string {
 const source = readFileSync(new URL('manuel.md', dir), 'utf8')
   .replaceAll('{{edition}}', edition())
   .replaceAll('{{materials}}', materialsTable())
+  .replace(/\{\{unit:(\w+)\}\}/g, (_, key: string) => {
+    const value = UNIT_VALUES[key];
+    if (value === undefined) throw new Error(`unknown unit value {{unit:${key}}}`);
+    return value;
+  })
   .replace(/\{\{st:(\w+)\}\}/g, (_, key: string) => {
     const badge = STATUS[key];
     if (!badge) throw new Error(`unknown status tag {{st:${key}}}`);
