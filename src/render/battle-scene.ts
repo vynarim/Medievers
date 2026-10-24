@@ -97,6 +97,10 @@ export function onlineBattle(m: OnlineMatch): BattleData {
   };
 }
 
+/** the dragon's drawing: its scale, ms per quarter wing beat, px it bobs while crossing */
+const DRAGON_SCALE = 1.15;
+const DRAGON_FLAP = 210;
+const DRAGON_BOB = 12;
 /** Playback speeds of the replay viewer. */
 const REPLAY_SPEEDS = [1, 2, 4] as const;
 
@@ -162,6 +166,8 @@ export class BattleScene extends Phaser.Scene {
   private scenery!: Scenery;
   private saver!: AutoSaver;
   private world!: Phaser.GameObjects.Graphics;
+  /** the dragon of the sim (GDD §4.11), painted by SkyLife */
+  private dragonImg!: Phaser.GameObjects.Image;
   /** turns-left figures over the pots resting on the map, by pot id */
   private readonly potLabels = new Map<number, Phaser.GameObjects.Text>();
   /** the map object whose bubble is open */
@@ -285,6 +291,13 @@ export class BattleScene extends Phaser.Scene {
     this.scenery = new Scenery(this, this.sim.view().terrain, map.theme);
     this.terrain = new TerrainLayer(this, () => this.sim.view().terrain, map.theme);
     this.world = this.add.graphics().setDepth(6);
+    // In front of the units it swoops on, behind their labels.
+    this.dragonImg = this.add
+      .image(0, 0, 'dragon_0')
+      .setOrigin(0.55, 0.5)
+      .setScale(DRAGON_SCALE)
+      .setDepth(6.6)
+      .setVisible(false);
     this.burnGfx = this.add.graphics().setDepth(5.5);
     this.waterGfx = this.add.graphics().setDepth(6.5);
     this.weatherGfx = this.add.graphics().setDepth(11);
@@ -308,6 +321,7 @@ export class BattleScene extends Phaser.Scene {
       ...this.scenery.objects,
       ...this.terrain.images,
       this.world,
+      this.dragonImg,
       this.burnGfx,
       this.waterGfx,
       this.weatherGfx,
@@ -1040,6 +1054,7 @@ export class BattleScene extends Phaser.Scene {
     for (const u of v.units) put(`u${u.id}`, u.x, u.y);
     for (const s of v.shots) put(`s${s.projectile.id}`, s.projectile.x, s.projectile.y);
     for (const c of v.crates) put(`c${c.id}`, c.x, c.y);
+    if (v.dragon) put(`d${v.dragon.id}`, v.dragon.x, v.dragon.y);
     for (const key of this.interp.keys()) if (!seen.has(key)) this.interp.delete(key);
   }
 
@@ -1103,6 +1118,7 @@ export class BattleScene extends Phaser.Scene {
     this.drawBarrels(g);
     this.drawCrates(g, alpha, time);
     this.drawBeast(g, delta, time);
+    this.drawDragon(alpha, time);
     this.drawPots(g, time);
     this.drawMines(g, time);
     this.drawFlames(g, time);
@@ -1399,6 +1415,34 @@ export class BattleScene extends Phaser.Scene {
       g.lineStyle(3, COLORS.ceruse, k);
       g.strokePoints(pts);
     }
+  }
+
+  /**
+   * The dragon (GDD §4.11): it flaps across, bobbing a little; it swoops head first on its prey,
+   * and climbs away once fed.
+   */
+  private drawDragon(alpha: number, time: number): void {
+    const d = this.sim.view().dragon;
+    const img = this.dragonImg;
+    if (!d) {
+      img.setVisible(false);
+      return;
+    }
+    const [x, y] = this.pos(`d${d.id}`, alpha, d.x, d.y);
+    const e = this.interp.get(`d${d.id}`);
+    const vx = e ? e.cx - e.px : d.dir;
+    const vy = e ? e.cy - e.py : 0;
+    const flying = d.prey === 0 && !d.fed;
+    // Wings up, level, down, level.
+    const beat = Math.floor(time / (d.prey !== 0 ? DRAGON_FLAP / 2 : DRAGON_FLAP)) % 4;
+    img
+      .setVisible(true)
+      .setTexture(`dragon_${beat === 0 ? 0 : beat === 2 ? 2 : 1}`)
+      .setFlipX(d.dir < 0)
+      .setPosition(x, y + (flying ? Math.sin(time / 900) * DRAGON_BOB : 0))
+      .setRotation(
+        flying ? 0 : Math.max(-1.2, Math.min(1.2, Math.atan2(vy, Math.abs(vx) || 1) * d.dir)),
+      );
   }
 
   /**

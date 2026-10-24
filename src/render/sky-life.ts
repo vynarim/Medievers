@@ -1,6 +1,7 @@
-// Life in the sky, now and then: flocks of birds crossing or flying up from a tree, a dragon
-// flapping across, a rainbow fading in behind the hills. Cosmetic randomness only (Math.random),
-// never the sim PRNG; every object is created up front so the HUD camera can ignore it.
+// Life in the sky, now and then: flocks of birds crossing or flying up from a tree, a rainbow
+// fading in behind the hills. Cosmetic randomness only (Math.random), never the sim PRNG; every
+// object is created up front so the HUD camera can ignore it. The dragon belongs to the sim now
+// (GDD §4.11): only its textures are painted here, `dragon_0` to `dragon_2`.
 import Phaser from 'phaser';
 import { COLORS, css } from '../ui/tokens.ts';
 
@@ -9,18 +10,14 @@ type Ctx = CanvasRenderingContext2D;
 const FLOCK_MAX = 7;
 /** ms between two flocks */
 const FLOCK_EVERY: readonly [number, number] = [12_000, 35_000];
-/** ms between two dragons */
-const DRAGON_EVERY: readonly [number, number] = [90_000, 200_000];
 /** ms between two rainbows, and how long one stays */
 const RAINBOW_EVERY: readonly [number, number] = [120_000, 260_000];
 const RAINBOW_STAY = 25_000;
 const RAINBOW_FADE = 4_000;
 /** px per second */
 const BIRD_SPEED = 150;
-const DRAGON_SPEED = 120;
 /** ms per wing beat */
 const BIRD_FLAP = 140;
-const DRAGON_FLAP = 420;
 /** px of the rainbow texture: its outer radius, and the width of its five bands */
 const RAINBOW_OUTER = 494;
 const RAINBOW_BANDS = 5 * 22;
@@ -373,13 +370,11 @@ export class SkyLife {
   readonly objects: Phaser.GameObjects.GameObject[] = [];
   private readonly scene: Phaser.Scene;
   private readonly birds: Flyer[] = [];
-  private readonly dragon: Flyer;
   private readonly rainbow: Phaser.GameObjects.Image;
   private readonly skyBottom: number;
   private readonly trees: () => readonly { x: number; y: number }[];
   private readonly far: FarGround;
   private nextFlock = between([4_000, 10_000]);
-  private nextDragon = between(DRAGON_EVERY);
   private nextRainbow = between(RAINBOW_EVERY);
   /** ms since the rainbow appeared; -1 when there is none */
   private rainbowAge = -1;
@@ -415,8 +410,6 @@ export class SkyLife {
       return { image, vx: 0, vy: 0, phase: 0, live: false };
     };
     for (let i = 0; i < FLOCK_MAX; i++) this.birds.push(flyer('bird_up', 3.5));
-    this.dragon = flyer('dragon_0', 2.5);
-    this.dragon.image.setScale(1.15);
     this.rainbow = scene.add
       .image(0, 0, rainbowKey)
       .setOrigin(0.5, 1)
@@ -434,10 +427,6 @@ export class SkyLife {
     if ((this.nextFlock -= delta) <= 0) {
       this.nextFlock = between(FLOCK_EVERY);
       this.launchFlock();
-    }
-    if ((this.nextDragon -= delta) <= 0) {
-      this.nextDragon = between(DRAGON_EVERY);
-      if (!this.dragon.live) this.launchDragon();
     }
     if ((this.nextRainbow -= delta) <= 0) {
       this.nextRainbow = between(RAINBOW_EVERY);
@@ -465,15 +454,6 @@ export class SkyLife {
       // Birds taking off level out once they are up in the sky.
       if (b.live && b.vy < -20 && b.image.y < this.skyBottom * 0.6) b.vy *= 0.97;
       fly(b, BIRD_FLAP, 'bird_up', 'bird_down');
-    }
-    if (this.dragon.live) {
-      this.dragon.vy = Math.sin(this.clock / 900) * 25;
-    }
-    fly(this.dragon, DRAGON_FLAP, 'dragon_0', 'dragon_2');
-    // The dragon's wings pass level between up and down: up, level, down, level.
-    if (this.dragon.live) {
-      const beat = Math.floor((this.clock * 2) / DRAGON_FLAP) % 4;
-      this.dragon.image.setTexture(`dragon_${beat === 0 ? 0 : beat === 2 ? 2 : 1}`);
     }
 
     if (this.rainbowAge >= 0) {
@@ -528,20 +508,6 @@ export class SkyLife {
         b.vy = (Math.random() - 0.5) * 10;
       }
     }
-  }
-
-  private launchDragon(): void {
-    const view = this.scene.cameras.main.worldView;
-    const dir = Math.random() < 0.5 ? -1 : 1;
-    const top = Math.max(80, view.top + 90);
-    const d = this.dragon;
-    d.live = true;
-    d.image
-      .setVisible(true)
-      .setFlipX(dir < 0)
-      .setPosition(dir > 0 ? view.left - 150 : view.right + 150, top + Math.random() * 80);
-    d.vx = dir * DRAGON_SPEED;
-    d.vy = 0;
   }
 
   private showRainbow(): void {

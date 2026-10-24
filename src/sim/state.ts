@@ -199,6 +199,20 @@ export interface Beast {
   y: number;
 }
 
+/** The dragon of the margins (GDD §4.11). */
+export interface Dragon {
+  readonly id: number;
+  /** sub-px: centre */
+  x: number;
+  y: number;
+  /** -1 flying left, 1 right */
+  readonly dir: -1 | 1;
+  /** id of the unit it swoops on; 0 while it just flies */
+  prey: number;
+  /** it has eaten (or had nobody to eat): it flies up and away */
+  fed: boolean;
+}
+
 /** A lasting trick played by a beast on a unit. trick: content/beasts.ts Trick. */
 export interface Affliction {
   readonly unitId: number;
@@ -250,6 +264,8 @@ export interface SimState {
   /** sorted by id */
   readonly crates: Crate[];
   beast: Beast | null;
+  /** null when it is not in the sky; always null without rules.dragon */
+  dragon: Dragon | null;
   /** sorted by id */
   readonly pots: PlacedPot[];
   /** the pick or the sap at work; null otherwise */

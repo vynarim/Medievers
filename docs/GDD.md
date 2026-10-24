@@ -213,6 +213,14 @@ Les lièvres et les escargots des marges du manuscrit entrent dans la bataille. 
 - Une bête peut être tuée par un tir (10 PV) ; elle ne rapporte rien, sauf la paix.
 - Précisions de programmation (2026-10-24) : tout se passe **à la fin de chaque tour** : les effets durables agissent, la bête avance (le lièvre est arrêté par une montée de plus de 40 px, l'escargot passe partout), puis, s'il n'y a pas de bête, 8 % de chances qu'une sorte d'un bord (hors parties brûlées). La proie est le combattant vivant le plus proche en x ; la bête l'atteint à 26 px. N'importe quel tir, coup de masse ou explosion qui la touche la tue. Le feu du parchemin la chasse. « Prochain tour » et « tours » de la bave et de la coquille comptent les tours où la victime joue ; la morsure et la ruade comptent tous les tours. Le chapardage prend une munition de l'arme à munitions limitées la plus rare de la maison. Valeurs dans `src/content/beasts.ts` (`MatchRules.beasts`, absent des vieux logs), réglables dans ⚙ Réglages ; effets durables affichés au-dessus du nom et dans la fiche.
 
+### 4.11 Le dragon des marges (décidé le 2026-10-24)
+Le dragon de la « vie du ciel » n'est plus un décor : il est dans la simulation.
+
+- **Passage** : 12 % de chances au début de l'action de chaque tour (PRNG du sim), un seul à la fois. Il traverse la carte d'un bord à l'autre, à 120 px/s, à altitude fixe : **le plus bas possible**, son ventre à 60 px au-dessus du point le plus haut de la carte (relief ou maçonnerie), donc à portée d'une flèche tirée à pleine puissance.
+- **Colère** : un tir qui le touche (quels que soient ses dégâts ; la flèche s'y arrête) ou une explosion qui l'atteint le met en colère : il pique sur **un combattant vivant d'une maison adverse du tireur, tiré au hasard**, et l'avale (mort immédiate, cause « dragon »), puis remonte et quitte le ciel. Pour une explosion, le tireur est la maison qui joue. Une fois en colère ou repu, il ignore les tirs.
+- La résolution du tour attend la fin de son piqué.
+- Précisions de programmation : valeurs dans `src/content/dragon.ts` (`MatchRules.dragon`, absent des vieux logs), corps de 240 × 90 px autour de son centre, piqué à 12 px/tick. Test `tests/sim/dragon.test.ts`, replay de référence `dragon`.
+
 ## 5. Vent
 - Valeur entière de −10 à +10, tirée par PRNG à chaque tour. Une option permet de le figer à 0.
 - Il affecte les projectiles marqués « Vent » (accélération horizontale proportionnelle : 2 sub-px/tick² par point de vent, multipliée par le facteur de vent de l'arme, `src/content/world.ts`), la bannière, les anges des reliquaires et la fumée (visuel).
@@ -315,7 +323,7 @@ Chaque carte a un thème, une palette, un niveau d'eau initial et des éléments
 - **La Terre sainte** : dunes, rochers et une forteresse sarrasine (deux tours et une courtine) dans le tiers central ; strates en rides de sable, pierre de grès ; au fond, Jérusalem (murailles, dôme d'or, minaret), une forteresse, des palmiers, des tentes et des chameaux ; sur le terrain, des palmiers et des buissons secs.
 - La vallée grise fixe des premières versions n'est plus proposée ; ses vieux logs se rejouent encore.
 
-**Vie du ciel** (décidé le 2026-10-24, purement décoratif) : de temps en temps, une volée d'oiseaux traverse le ciel ou s'envole d'un arbre ; plus rarement, un dragon des marges passe en battant des ailes, ou un arc-en-ciel apparaît derrière les collines puis s'efface.
+**Vie du ciel** (décidé le 2026-10-24, purement décoratif) : de temps en temps, une volée d'oiseaux traverse le ciel ou s'envole d'un arbre ; ou un arc-en-ciel apparaît derrière les collines, les pieds dans le décor du fond, puis s'efface. Le dragon des marges, d'abord décoratif, est devenu un élément de jeu (§4.11).
 
 **Grandes batailles de l'histoire** (décidé le 2026-10-24) : en plus des épisodes du manuscrit, les cartes évoquent de grandes batailles médiévales, avec une touche historique (lieu, date, armées en présence, une phrase de contexte dans l'écran de choix) et des décors fun. La liste ci-dessous sera revue en conséquence au lot de contenu (M7).
 

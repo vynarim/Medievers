@@ -14,6 +14,7 @@ import { isqrt } from '../math/isqrt.ts';
 import { queueExplosion } from '../explosions/explosion.ts';
 import { barrelOnSegment, igniteBarrel } from '../barrels.ts';
 import { beastOnSegment, killBeast } from '../beasts.ts';
+import { dragonOnSegment, enrageDragon } from '../dragon.ts';
 import { crateOnSegment, burstCrate } from '../crates.ts';
 import { segmentTouchesKitchen, useKitchen } from '../kitchen.ts';
 import { fuseTurnsOf, maybeRest } from '../pots.ts';
@@ -285,6 +286,12 @@ export function stepShots(state: SimState, events: SimEvent[]): void {
     // A shot that touches a beast of the margins puts it down (GDD §4.10).
     if (beastOnSegment(state, fromX, fromY, p.x, p.y)) {
       killBeast(state, events);
+      if (stops) impact = { kind: 'outOfMap', x: p.x, y: p.y };
+    }
+    // A shot that touches the dragon enrages it, whatever the damage (GDD §4.11).
+    if (dragonOnSegment(state, fromX, fromY, p.x, p.y)) {
+      const shooter = state.units.find((x) => x.id === p.ownerId);
+      enrageDragon(state, shooter?.team ?? state.turn.activeTeam, events);
       if (stops) impact = { kind: 'outOfMap', x: p.x, y: p.y };
     }
     // A shot that touches a reliquary bursts it (GDD §4.5).

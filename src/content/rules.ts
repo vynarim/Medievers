@@ -5,6 +5,7 @@ import { BEAST_RULES, type BeastRules } from './beasts.ts';
 import { BURN_RULES, type BurnRules } from './burn.ts';
 import { CLASS_RULES, type ClassRules } from './classes.ts';
 import { DELUGE_RULES, type DelugeRules } from './deluge.ts';
+import { DRAGON_RULES, type DragonRules } from './dragon.ts';
 import { WEATHER_RULES, type WeatherRules } from './weather.ts';
 import { FLAME_RULES, type FlameRules } from './flames.ts';
 import { STRUCTURE_RULES, type StructureRules } from './structures.ts';
@@ -95,6 +96,8 @@ export interface MatchRules {
   readonly crates?: CrateRules;
   /** hares and snails out of the margins (GDD §4.10); absent from older logs: none */
   readonly beasts?: BeastRules;
+  /** the dragon crossing the sky, angered by shots (GDD §4.11); absent from older logs: none */
+  readonly dragon?: DragonRules;
   /**
    * class passives (GDD §3.2); the line-up of each house is in its TeamConfig. Absent from logs
    * recorded before 2026-10-25: no classes.
@@ -140,6 +143,7 @@ export const CLASSIC_RULES: MatchRules = {
   barrels: BARREL_RULES,
   crates: CRATE_RULES,
   beasts: BEAST_RULES,
+  dragon: DRAGON_RULES,
   classes: CLASS_RULES,
   deluge: DELUGE_RULES,
   weather: WEATHER_RULES,

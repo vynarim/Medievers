@@ -2,7 +2,7 @@
 import type { WeaponId } from '../content/weapons.ts';
 
 /** kingFell: Régicide, the house's king is dead (GDD §2.3) */
-export type DeathCause = 'hp' | 'outOfMap' | 'drowned' | 'kingFell';
+export type DeathCause = 'hp' | 'outOfMap' | 'drowned' | 'kingFell' | 'dragon';
 
 export type SimEvent =
   | {
@@ -58,6 +58,11 @@ export type SimEvent =
       readonly trick: number;
     }
   | { readonly e: 'beastKilled' }
+  | { readonly e: 'dragonAppeared'; readonly dir: -1 | 1 }
+  /** shot at, it swoops on this unit */
+  | { readonly e: 'dragonEnraged'; readonly unitId: number }
+  | { readonly e: 'dragonAte'; readonly unitId: number }
+  | { readonly e: 'dragonGone' }
   | { readonly e: 'beastGone' }
   | { readonly e: 'panicked'; readonly unitId: number }
   | { readonly e: 'potPlaced'; readonly id: number; readonly turns: number }

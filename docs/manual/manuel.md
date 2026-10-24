@@ -210,6 +210,10 @@ Les lièvres et les escargots qui peuplent les marges du manuscrit se mêlent pa
 
 Un tir, un coup de masse ou une explosion qui touche la bête la renvoie dans sa marge. Les effets en cours s'affichent au-dessus du nom du combattant et dans sa fiche.
 
+### Le dragon {{st:jeu}}
+
+De temps en temps (12 % de chances au début d'un tour), un dragon des marges traverse le ciel, aussi bas qu'il le peut sans rien frôler : une flèche tirée à pleine puissance l'atteint sans peine. **Ne lui tirez pas dessus** : touché, même sans dégâts, il pique sur un combattant d'une maison adverse tiré au hasard, l'avale tout rond, puis repart. Le tour attend qu'il ait fini. Une explosion qui l'atteint le fâche de la même façon, comme si la maison qui joue avait tiré.
+
 ### Le parchemin brûle {{st:jeu}}
 
 Après deux tours de table, un moine maladroit renverse sa chandelle : **la carte prend feu à ses deux bouts**. À la fin de chaque tour de table, le feu mange 60 pixels de plus de chaque côté. Un combattant qui se trouve dans la partie brûlée à la fin d'un tour perd **20 PV**, à chaque tour. Les armées n'ont donc pas intérêt à rester sur les bords : il faut se rapprocher de l'ennemi. Une cuisine de campagne rattrapée par le feu s'éteint. **Quand les deux feux se rejoignent au milieu, la partie s'arrête** : la maison à qui il reste le plus de points de vie, tous ses combattants vivants comptés, l'emporte. Réglages : onglet **Parchemin en feu**.

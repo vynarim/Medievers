@@ -29,6 +29,7 @@ import {
 import { blastReachesBarrels, burnBarrels, placeBarrels, stepBarrels } from './barrels.ts';
 import { blastReachesCrates, burnCrates, maybeDropCrate, stepCrates } from './crates.ts';
 import { beastsTurnEnd, blastReachesBeast, hasAffliction, panicAtAction } from './beasts.ts';
+import { blastReachesDragon, dragonAtAction, dragonBusy, stepDragon } from './dragon.ts';
 import { Trick } from '../content/beasts.ts';
 import { blastMovesPots, potsTurn, stepPots } from './pots.ts';
 import { kitchenTurn, inKitchen, stepKitchen, useKitchen } from './kitchen.ts';
@@ -173,6 +174,7 @@ function createState(config: MatchConfig, seed: number, mask: Mask): SimState {
     barrels: [],
     crates: [],
     beast: null,
+    dragon: null,
     pots: [],
     dig: null,
     mines: [],
@@ -513,6 +515,7 @@ function advanceTick(s: SimState, phaseJustSet: boolean, events: SimEvent[]): vo
   drownUnits(s, events);
   stepShots(s, events);
   stepMines(s, events);
+  stepDragon(s, events);
 
   for (const e of takeDueExplosions(s.explosions, s.tick)) {
     const res = explode(e, s.terrain, s.units, s.rules.explosion, (u) => blastTakenPct(s, u));
@@ -524,6 +527,7 @@ function advanceTick(s: SimState, phaseJustSet: boolean, events: SimEvent[]): vo
     blastReachesBarrels(s, e);
     blastReachesCrates(s, e, events);
     blastReachesBeast(s, e, events);
+    blastReachesDragon(s, e, events);
     blastMovesPots(s, e);
     blastReachesMines(s, e, events);
     spawnFlames(s, e);
@@ -560,6 +564,7 @@ function advancePhase(
       if (--t.phaseTicks <= 0) {
         setPhase(s, 'action', s.rules.turn.actionTicks, events);
         panicAtAction(s, events);
+        dragonAtAction(s, events);
       }
       break;
     case 'action':
@@ -614,7 +619,8 @@ function onStructure(s: SimState, x: number, y: number): boolean {
   if (!o || y < 0 || y >= t.height) return false;
   for (const dx of FEET_COLUMNS) {
     const px = x + dx;
-    if (px >= 0 && px < t.width && (o[y * t.width + px] ?? 0) !== 0 && isSolid(t, px, y)) return true;
+    if (px >= 0 && px < t.width && (o[y * t.width + px] ?? 0) !== 0 && isSolid(t, px, y))
+      return true;
   }
   return false;
 }
@@ -706,6 +712,7 @@ function settled(s: SimState): boolean {
     s.explosions.items.length === 0 &&
     s.blocks.length === 0 &&
     s.dig === null &&
+    !dragonBusy(s) &&
     s.units.every(atRest)
   );
 }
@@ -911,6 +918,10 @@ function hashState(s: SimState): number {
     for (const v of b ? [b.id, b.kind, b.x, b.y] : [-1]) int(v);
     int(s.afflictions.length);
     for (const a of s.afflictions) for (const v of [a.unitId, a.trick, a.turns]) int(v);
+  }
+  if (s.rules.dragon) {
+    const d = s.dragon;
+    for (const v of d ? [d.id, d.x, d.y, d.dir, d.prey, d.fed ? 1 : 0] : [-1]) int(v);
   }
   if (s.rules.crates) {
     int(s.crates.length);

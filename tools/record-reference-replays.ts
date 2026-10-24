@@ -6,6 +6,7 @@ import { existsSync, writeFileSync } from 'node:fs';
 import { BEAST_RULES } from '../src/content/beasts.ts';
 import { CRATE_RULES } from '../src/content/crates.ts';
 import { DELUGE_RULES } from '../src/content/deluge.ts';
+import { DRAGON_RULES } from '../src/content/dragon.ts';
 import { STRUCTURE_RULES } from '../src/content/structures.ts';
 import { TOWER_STRUCTURES } from '../tests/fixtures/maps/test-maps.ts';
 import { KITCHEN_RULES } from '../src/content/kitchen.ts';
@@ -579,6 +580,39 @@ const SCRIPTS: readonly Script[] = [
       r.step([{ t: 'move', dir: -1 }]);
       r.steps(240);
       r.step([{ t: 'move', dir: 0 }]);
+      r.until('transition');
+    },
+  },
+  {
+    name: 'dragon',
+    description:
+      'Dragon (GDD §4.11), across the sky at every turn: an archer waits for it overhead and ' +
+      'shoots it; it swoops on an enemy, swallows it and flies away.',
+    mapId: 'flat',
+    seed: 2026,
+    config: {
+      rules: {
+        ...NO_PLACEMENT,
+        wind: { ...NO_PLACEMENT.wind, max: 0 },
+        dragon: { ...DRAGON_RULES, spawnPermille: 1000 },
+      },
+      teams: [{ spawns: [600] }, { spawns: [300, 1000] }],
+    },
+    play: (r) => {
+      r.until('action');
+      const archer = r.sim.view().units[0];
+      for (let i = 0; i < 3000; i++) {
+        const d = r.sim.view().dragon;
+        if (!d || !archer || Math.abs(d.x - archer.x) < 20 * 256) break;
+        r.step([]);
+      }
+      r.step([
+        { t: 'aim', angle: 3072 },
+        { t: 'fire', power: 1024 },
+      ]);
+      r.until('transition');
+      r.until('action');
+      r.step([{ t: 'skip' }]);
       r.until('transition');
     },
   },
