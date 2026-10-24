@@ -29,6 +29,8 @@ const SIN_22 = 6270;
 const MINE_FALL_PX = 4;
 /** px a mine is left ahead of the unit's side */
 const MINE_AHEAD = 10;
+/** px a slope ahead may rise above the unit's feet and still take the mine */
+const MINE_CLIMB = 24;
 /** px above its base where a mine is touched and where it goes off */
 const MINE_TOP = 3;
 
@@ -123,16 +125,39 @@ export function stepDig(s: SimState, events: SimEvent[]): void {
 // Chausse-trape
 // ---------------------------------------------------------------------------------------------
 
-/** The unit leaves a chausse-trape just ahead of it (at its feet against a wall). */
+/** px: row where a mine can be left in column x, up a slope as high as MINE_CLIMB; null if walled. */
+function mineRow(t: Terrain, x: number, feet: number): number | null {
+  if (x < 0 || x >= t.width) return null;
+  for (let y = feet - 4; y >= feet - 4 - MINE_CLIMB; y--) {
+    if (!isSolid(t, x - 3, y) && !isSolid(t, x, y) && !isSolid(t, x + 3, y)) return y;
+  }
+  return null;
+}
+
+/**
+ * The unit leaves a chausse-trape just ahead of it, up or down the slope; behind it when a wall
+ * stands ahead; at its feet only when walled in on both sides.
+ */
 export function placeMine(s: SimState, u: Unit, def: WeaponDef, id: number, events: SimEvent[]) {
   if (!def.mine) return;
-  let x = subToPx(u.x) + u.facing * (UNIT_HALF_WIDTH + MINE_AHEAD);
-  if (isSolid(s.terrain, x, subToPx(u.y) - 4)) x = subToPx(u.x);
+  const ux = subToPx(u.x);
+  const feet = subToPx(u.y);
+  const off = UNIT_HALF_WIDTH + MINE_AHEAD;
+  let x = ux + u.facing * off;
+  let y = mineRow(s.terrain, x, feet);
+  if (y === null) {
+    x = ux - u.facing * off;
+    y = mineRow(s.terrain, x, feet);
+  }
+  if (y === null) {
+    x = ux;
+    y = feet - 8;
+  }
   s.mines.push({
     id,
     team: u.team,
     x: x * SUBPX + SUBPX / 2,
-    y: u.y - 8 * SUBPX,
+    y: y * SUBPX,
     arm: def.mine.armTicks,
     weapon: def.id,
   });

@@ -191,6 +191,48 @@ describe('chausse-trape (GDD §4.4)', () => {
     expect(sim.view().mines).toHaveLength(0);
   });
 
+  it('goes behind its unit against a wall, not under it', () => {
+    const sim = duel(300, 1000);
+    const snap = sim.snapshot();
+    const t = snap.terrain;
+    for (let y = 300; y < 500; y++) for (let x = 315; x < 360; x++) t.data[y * t.width + x] = 1;
+    sim.restore(snap);
+    run(
+      sim,
+      [
+        { t: 'selectWeapon', id: 'caltrop' },
+        { t: 'aim', angle: 0 },
+        { t: 'fire', power: 0 },
+      ],
+      5,
+    );
+    const mine = sim.view().mines[0];
+    expect(px(mine?.x)).toBeLessThan(280);
+    expect(px(mine?.y)).toBe(500);
+    // Armed, it stays put while its unit stands still.
+    expect(run(sim, [], 200).some((e) => e.e === 'mineSprung')).toBe(false);
+  });
+
+  it('is left up a gentle rise ahead', () => {
+    const sim = duel(300, 1000);
+    const snap = sim.snapshot();
+    const t = snap.terrain;
+    for (let y = 490; y < 500; y++) for (let x = 315; x < 400; x++) t.data[y * t.width + x] = 1;
+    sim.restore(snap);
+    run(
+      sim,
+      [
+        { t: 'selectWeapon', id: 'caltrop' },
+        { t: 'aim', angle: 0 },
+        { t: 'fire', power: 0 },
+      ],
+      5,
+    );
+    const mine = sim.view().mines[0];
+    expect(px(mine?.x)).toBeGreaterThan(320);
+    expect(px(mine?.y)).toBe(490);
+  });
+
   it('is set off by a blast that reaches it', () => {
     const sim = duel(300, 1000);
     run(
