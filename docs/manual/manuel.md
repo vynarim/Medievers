@@ -61,6 +61,7 @@ Un chroniqueur à l'humour douteux commente la partie {{st:jeu}} : chaque tour s
 - **Marcher** : un combattant avance de {{unit:walkSpeedPx}} pixel par instant de jeu, franchit une marche de {{unit:maxStep}} pixels au plus et grimpe des pentes jusqu'à environ 60°. Au bord d'un précipice, il tombe.
 - **Sauter** : **↶** et **↷** font un saut long vers la gauche ou vers la droite (le combattant se retourne au besoin) ; **↑** fait un saut haut, très haut en reculant un peu, pour sortir d'un trou ou grimper sur un rebord. Au clavier, Entrée saute loin devant, Entrée deux fois saute haut.
 - **Marcher ou sauter** : à chaque tour, c'est l'un ou l'autre. Soit on marche, {{unit:moveBudget}} pixels au plus (environ 10 largeurs de combattant) ; soit on fait un seul saut, qui porte bien plus loin (environ 15 largeurs) mais toujours à la même distance. La barre verte sous le nom de la maison montre la marche qui reste.
+- **Se retourner** est gratuit : un appui bref vers l'autre côté retourne le combattant sur place, sans marcher. Un combattant qui commence son tour près d'un bout de la carte est déjà tourné vers l'intérieur.
 - **Tomber** : une chute de plus de {{unit:fallSafeHeight}} pixels blesse. On perd 1 PV tous les {{unit:fallPxPerHp}} pixels de chute en plus, jusqu'à {{unit:fallMaxDamage}} PV au maximum. Une chute de 200 pixels coûte donc {{unit:fall200}} PV.
 - **Mourir** : à 0 PV, en sortant de la carte par les bords, ou en tombant dans l'eau. Le combattant laisse une petite stèle qui roule et glisse comme un objet.
 

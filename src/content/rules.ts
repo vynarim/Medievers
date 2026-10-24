@@ -55,6 +55,11 @@ export interface TurnRules {
    * 2026-10-24). Absent from older logs: units start on their spawn columns.
    */
   readonly placementTicks?: number;
+  /**
+   * percent of the map width at each end: a unit there starts its turn facing the inside of the
+   * map, since turning round is free anyway (2026-10-25). Absent from older logs: as it was.
+   */
+  readonly faceInwardPct?: number;
 }
 
 export interface MatchRules {
@@ -105,6 +110,7 @@ export const CLASSIC_RULES: MatchRules = {
     freeSelect: true,
     noRepeat: true,
     placementTicks: 20 * TICKS_PER_SECOND,
+    faceInwardPct: 25,
   },
   unitsPerTeam: 4,
   startHp: 100,

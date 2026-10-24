@@ -230,6 +230,7 @@ function startTurn(s: SimState, events: SimEvent[]): void {
   t.activeTeam = team.id;
   t.activeUnitId = unit.id;
   t.wind = nextRange(s.prng, -s.rules.wind.max, s.rules.wind.max);
+  faceInward(s, unit);
   t.aim = unit.facing > 0 ? AIM_UP_RIGHT : AIM_UP_LEFT;
   t.weapon = 'bow';
   t.fuse = 0;
@@ -525,7 +526,19 @@ function selectUnit(s: SimState, unitId: number): void {
   if (unitId === t.restingUnitId) return;
   t.activeUnitId = unitId;
   team.lastPlayed = idx;
+  faceInward(s, unit);
   t.aim = unit.facing > 0 ? AIM_UP_RIGHT : AIM_UP_LEFT;
+}
+
+/** A unit near an end of the map turns to face its inside (rules.turn.faceInwardPct). */
+function faceInward(s: SimState, u: Unit): void {
+  const pct = s.rules.turn.faceInwardPct;
+  if (pct === undefined) return;
+  const w = s.terrain.width;
+  const x = subToPx(u.x);
+  const zone = idiv(w * pct, 100);
+  if (x < zone) u.facing = 1;
+  else if (x >= w - zone) u.facing = -1;
 }
 
 /** After the shot, no move left and the shot is over: the turn ends without waiting. */
