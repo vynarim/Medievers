@@ -20,7 +20,7 @@ export const TICKS_PER_SECOND = 60;
 export interface TurnRules {
   /** ticks: camera moves to the active unit, wind shown (GDD §2.2: 2 s) */
   readonly transitionTicks: number;
-  /** ticks: free action time (GDD §2.2: 45 s) */
+  /** ticks: the time to play the turn, before and after the shot (GDD §2.2: 30 s) */
   readonly actionTicks: number;
   /** ticks: move-only time after firing (GDD §2.2: 3 s) */
   readonly retreatTicks: number;
@@ -119,13 +119,13 @@ export interface MatchRules {
 export const CLASSIC_RULES: MatchRules = {
   turn: {
     transitionTicks: 2 * TICKS_PER_SECOND,
-    actionTicks: 45 * TICKS_PER_SECOND,
+    actionTicks: 30 * TICKS_PER_SECOND,
     retreatTicks: 3 * TICKS_PER_SECOND,
     maxResolutionTicks: 30 * TICKS_PER_SECOND,
     settleTicks: 2 * TICKS_PER_SECOND,
     moveAfterShot: true,
-    // As long as the action itself: the walk not used before the shot stays usable after it.
-    retreatMaxTicks: 45 * TICKS_PER_SECOND,
+    // As long as the turn itself: the shot does not cut the clock, which runs on (30 s in all).
+    retreatMaxTicks: 30 * TICKS_PER_SECOND,
     freeSelect: true,
     noRepeat: true,
     rememberWeapon: true,
