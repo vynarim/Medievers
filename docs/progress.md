@@ -14,7 +14,7 @@
 
 ## À reprendre en premier
 1. **Clore M2** : quand l'utilisateur aura fait les deux vérifications humaines du rapport, consigner le résultat et passer la gate à PASS.
-2. **Lot 3 (M3)** : toutes les tâches sont programmées. Prochaine étape : `milestone-gate M3` (les vérifications humaines à l'écran en font partie), puis le lot 4.
+2. **Lot 3 (M3)** : gate du 2026-10-24 = **CONCERNS** ([rapport](reports/gates/2026-10-24-M3.md)) : tous les CA sont PASS, il reste un WARN de formatage sur deux fichiers. À l'utilisateur d'accepter ou de faire corriger, puis lot 4 (LAN, M9).
 3. **À chaque mécanique livrée** : manuel + `pnpm run manual`, champs de réglage, GDD, et commit + push automatique (préférence de l'utilisateur).
 
 ## Dettes connues / à ne pas refaire
