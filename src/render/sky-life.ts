@@ -1,7 +1,7 @@
 // Life in the sky, now and then: flocks of birds crossing or flying up from a tree, a rainbow
 // fading in behind the hills. Cosmetic randomness only (Math.random), never the sim PRNG; every
 // object is created up front so the HUD camera can ignore it. The dragon belongs to the sim now
-// (GDD §4.11): only its textures are painted here, `dragon_0` to `dragon_2`.
+// (GDD §4.11): only its textures are painted here, `dragon_<colours>_<frame>`.
 import Phaser from 'phaser';
 import { COLORS, css } from '../ui/tokens.ts';
 
@@ -42,14 +42,51 @@ interface Pt {
   readonly y: number;
 }
 
+/** A primary colour of the page: its full tone, and the paler one of a far wing. */
+const PRIMARIES = [
+  { tone: COLORS.vermillon, far: COLORS.roseGarance },
+  { tone: COLORS.lapis, far: COLORS.azur },
+  { tone: COLORS.or, far: COLORS.ocre },
+] as const;
+
 /**
- * A wyvern of the marginalia (2026-10-24, drawn anew): a green serpent body with a gilt ringed
- * belly and vermilion spines, bat wings on four fingers, horns, open jaws and a forked tongue, a
- * long S tail ending in a spade. Frame 0: wings up, 1: level, 2: down.
+ * Every dragon's colours (2026-10-25): body, wings and spines each wear a different primary,
+ * so the wings never match the body. Indices into PRIMARIES.
  */
-function drawDragon(ctx: Ctx, frame: 0 | 1 | 2): void {
+export const DRAGON_COLOURS: readonly (readonly [number, number, number])[] = [
+  [0, 1, 2],
+  [0, 2, 1],
+  [1, 0, 2],
+  [1, 2, 0],
+  [2, 0, 1],
+  [2, 1, 0],
+];
+
+/**
+ * The colours of the dragon `id` of the sim: drawn from its id, so each passage has its own and
+ * both players of an online match see the same.
+ */
+export function dragonColours(id: number): number {
+  const h = Math.imul(id ^ 0x5bd1e995, 0x9e3779b1) >>> 0;
+  return (h >>> 16) % DRAGON_COLOURS.length;
+}
+
+/** Texture of frame `frame` of the dragon wearing colours `colours` (an index of DRAGON_COLOURS). */
+export const dragonTexture = (colours: number, frame: 0 | 1 | 2): string =>
+  `dragon_${colours}_${frame}`;
+
+/**
+ * A wyvern of the marginalia (2026-10-24, drawn anew): a serpent body with a ringed belly and
+ * spines, bat wings on four fingers, horns, open jaws and a forked tongue, a long S tail ending
+ * in a spade. Frame 0: wings up, 1: level, 2: down.
+ */
+function drawDragon(ctx: Ctx, frame: 0 | 1 | 2, colours: readonly [number, number, number]): void {
   const ink = css(COLORS.encre);
-  const green = css(COLORS.vertDeGris);
+  const [bodyAt, wingsAt, spinesAt] = colours.map((i) => PRIMARIES[i] ?? PRIMARIES[0]);
+  const green = css(bodyAt?.tone ?? COLORS.vertDeGris);
+  const spines = css(spinesAt?.tone ?? COLORS.vermillon);
+  // A gilt belly, but on a gilt body a white one.
+  const bellyColour = css(bodyAt?.tone === COLORS.or ? COLORS.ceruse : COLORS.or);
   ctx.lineJoin = 'round';
   ctx.lineCap = 'round';
   const P = (x: number, y: number): Pt => ({ x, y });
@@ -158,8 +195,8 @@ function drawDragon(ctx: Ctx, frame: 0 | 1 | 2): void {
   };
 
   // Far wing and far leg, behind.
-  wing(-16, -4, css(COLORS.roseGarance));
-  leg(P(128, 98), P(118, 112), P(126, 124), css(COLORS.vertDeGris));
+  wing(-16, -4, css(wingsAt?.far ?? COLORS.roseGarance));
+  leg(P(128, 98), P(118, 112), P(126, 124), green);
   // The tail: a long S that curls up at its end, tipped with a spade.
   const tail = taper(
     [
@@ -171,7 +208,7 @@ function drawDragon(ctx: Ctx, frame: 0 | 1 | 2): void {
     green,
   );
   const end = tail[tail.length - 1] ?? P(34, 76);
-  ctx.fillStyle = css(COLORS.vermillon);
+  ctx.fillStyle = spines;
   ctx.strokeStyle = ink;
   ctx.lineWidth = 2;
   ctx.beginPath();
@@ -192,8 +229,8 @@ function drawDragon(ctx: Ctx, frame: 0 | 1 | 2): void {
   body.bezierCurveTo(230, 62, 222, 82, 208, 94);
   body.bezierCurveTo(182, 112, 132, 114, 102, 96);
   body.closePath();
-  // Dorsal spines, vermilion, along the back.
-  ctx.fillStyle = css(COLORS.vermillon);
+  // Dorsal spines along the back.
+  ctx.fillStyle = spines;
   ctx.strokeStyle = ink;
   ctx.lineWidth = 2;
   for (let i = 1; i <= 7; i++) {
@@ -212,7 +249,7 @@ function drawDragon(ctx: Ctx, frame: 0 | 1 | 2): void {
   // The gilt belly, ringed like a worm's, inside the body.
   ctx.save();
   ctx.clip(body);
-  ctx.strokeStyle = css(COLORS.or);
+  ctx.strokeStyle = bellyColour;
   ctx.lineWidth = 16;
   ctx.beginPath();
   ctx.moveTo(104, 104);
@@ -246,7 +283,7 @@ function drawDragon(ctx: Ctx, frame: 0 | 1 | 2): void {
   ctx.stroke(body);
 
   // Head: brow, long snout, open jaws with teeth and a forked tongue.
-  ctx.fillStyle = css(COLORS.vermillon);
+  ctx.fillStyle = spines;
   ctx.beginPath();
   ctx.moveTo(254, 54);
   ctx.lineTo(284, 56);
@@ -324,8 +361,8 @@ function drawDragon(ctx: Ctx, frame: 0 | 1 | 2): void {
   ctx.fill();
 
   // Near leg, near wing in front.
-  leg(P(186, 100), P(194, 114), P(186, 122), css(COLORS.vertDeGris));
-  wing(0, 0, css(COLORS.vermillon));
+  leg(P(186, 100), P(194, 114), P(186, 122), green);
+  wing(0, 0, css(wingsAt?.tone ?? COLORS.vermillon));
 }
 
 /** Bands of manuscript colours, outlined in ink, as the illuminators drew the bow of the Flood. */
@@ -401,7 +438,11 @@ export class SkyLife {
     };
     tex('bird_up', 28, 16, (ctx) => drawBird(ctx, true));
     tex('bird_down', 28, 16, (ctx) => drawBird(ctx, false));
-    for (const f of [0, 1, 2] as const) tex(`dragon_${f}`, 300, 170, (ctx) => drawDragon(ctx, f));
+    DRAGON_COLOURS.forEach((colours, i) => {
+      for (const f of [0, 1, 2] as const) {
+        tex(dragonTexture(i, f), 300, 170, (ctx) => drawDragon(ctx, f, colours));
+      }
+    });
     const rainbowKey = tex('rainbow', 1000, 500, (ctx) => drawRainbow(ctx, 1000, 500));
 
     const flyer = (key: string, depth: number): Flyer => {

@@ -41,6 +41,7 @@ import {
   type ObjectRef,
 } from '../ui/object-info.ts';
 import { Scenery } from './scenery.ts';
+import { dragonColours, dragonTexture } from './sky-life.ts';
 import { FixedStep } from './fixed-step.ts';
 import { TerrainLayer } from './terrain-layer.ts';
 import { drawClassMark } from './class-marks.ts';
@@ -324,7 +325,7 @@ export class BattleScene extends Phaser.Scene {
     this.world = this.add.graphics().setDepth(6);
     // In front of the units it swoops on, behind their labels.
     this.dragonImg = this.add
-      .image(0, 0, 'dragon_0')
+      .image(0, 0, dragonTexture(0, 0))
       .setOrigin(0.55, 0.5)
       .setScale(DRAGON_SCALE)
       .setDepth(6.6)
@@ -1489,7 +1490,7 @@ export class BattleScene extends Phaser.Scene {
     const beat = Math.floor(time / (d.prey !== 0 ? DRAGON_FLAP / 2 : DRAGON_FLAP)) % 4;
     img
       .setVisible(true)
-      .setTexture(`dragon_${beat === 0 ? 0 : beat === 2 ? 2 : 1}`)
+      .setTexture(dragonTexture(dragonColours(d.id), beat === 0 ? 0 : beat === 2 ? 2 : 1))
       .setFlipX(d.dir < 0)
       .setPosition(x, y)
       .setRotation(
