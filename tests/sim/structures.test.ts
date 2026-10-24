@@ -172,4 +172,31 @@ describe('towers built by the match (2026-10-25)', () => {
     expect((u?.x ?? 0) >> 8).toBeGreaterThan(640);
     expect((u?.y ?? 0) >> 8).toBe(500);
   });
+
+  it('keep a unit up on a curtain wall from walking off it before the tower', () => {
+    const sim = flat();
+    for (let i = 0; i < 2000 && sim.view().turn.phase !== 'action'; i++) sim.step();
+    const snap = sim.snapshot();
+    // A curtain wall 100 px high against the tower's east face, lower than the tower.
+    const t = snap.terrain;
+    for (let y = 400; y < 500; y++) {
+      for (let x = 700; x < 820; x++) {
+        t.data[y * t.width + x] = Material.BuiltStone;
+        if (snap.owners) snap.owners[y * t.width + x] = 1;
+      }
+    }
+    const u0 = snap.units[0];
+    if (u0) {
+      u0.x = 770 * 256 + 128;
+      u0.y = 400 * 256;
+      u0.grounded = true;
+    }
+    sim.restore(snap);
+    sim.step([{ t: 'move', dir: -1 }]);
+    for (let i = 0; i < 200; i++) sim.step();
+    const u = sim.view().units[0];
+    // Stopped at the tower's face, still on the wall, not dropped in front of the tower's body.
+    expect((u?.x ?? 0) >> 8).toBeGreaterThanOrEqual(700);
+    expect((u?.y ?? 0) >> 8).toBe(400);
+  });
 });

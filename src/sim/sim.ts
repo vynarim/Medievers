@@ -442,13 +442,18 @@ function advanceTick(s: SimState, phaseJustSet: boolean, events: SimEvent[]): vo
     const wasClimbing = active.climbing === true;
     const r = walk(active, s.terrain, t.walkDir, s.rules.unit);
     // At the edge beside a ladder (the top of a tower), the unit stops instead of stepping off,
-    // so it can take the ladder down (rules.unit.ladderReach, 2026-10-25).
+    // so it can take the ladder down (rules.unit.ladderReach, 2026-10-25). Nor does it walk off
+    // a tower or a curtain wall, into the air before a tower's body: up there, it jumps or takes
+    // a ladder; only on the ground does it pass in front of a castle.
+    const high = !wasClimbing && onStructure(s, subToPx(x0), subToPx(y0));
     if (
-      r === 'fell' &&
-      !wasClimbing &&
-      s.rules.unit.ladderReach !== undefined &&
-      ladderAt(s.terrain, subToPx(x0), subToPx(y0), s.rules.unit) &&
-      deepDrop(s, subToPx(active.x), subToPx(y0))
+      (r === 'fell' &&
+        !wasClimbing &&
+        s.rules.unit.ladderReach !== undefined &&
+        ladderAt(s.terrain, subToPx(x0), subToPx(y0), s.rules.unit) &&
+        deepDrop(s, subToPx(active.x), subToPx(y0))) ||
+      // Up there, its middle stays over the masonry: it does not lean out over the void.
+      (high && r !== 'blocked' && deepDrop(s, subToPx(active.x), subToPx(active.y), [0]))
     ) {
       active.x = x0;
       active.y = y0;
@@ -590,14 +595,28 @@ function advancePhase(
 /** px: a drop deeper than this beside a ladder is a ledge the walk stops at */
 const LEDGE_DROP = 40;
 
-/** No ground under column x within LEDGE_DROP px below row y (any of the unit's feet). */
-function deepDrop(s: SimState, x: number, y: number): boolean {
+const FEET_COLUMNS = [-UNIT_HALF_WIDTH + 1, 0, UNIT_HALF_WIDTH - 1];
+
+/** No ground within LEDGE_DROP px below row y, under columns x + dx (all the unit's feet). */
+function deepDrop(s: SimState, x: number, y: number, columns = FEET_COLUMNS): boolean {
   for (let dy = 0; dy <= LEDGE_DROP; dy++) {
-    for (const dx of [-UNIT_HALF_WIDTH + 1, 0, UNIT_HALF_WIDTH - 1]) {
+    for (const dx of columns) {
       if (isSolid(s.terrain, x + dx, y + dy)) return false;
     }
   }
   return true;
+}
+
+/** The unit with its feet at (x, y) px stands on a structure's masonry (a tower, a curtain wall). */
+function onStructure(s: SimState, x: number, y: number): boolean {
+  const o = s.owners;
+  const t = s.terrain;
+  if (!o || y < 0 || y >= t.height) return false;
+  for (const dx of FEET_COLUMNS) {
+    const px = x + dx;
+    if (px >= 0 && px < t.width && (o[y * t.width + px] ?? 0) !== 0 && isSolid(t, px, y)) return true;
+  }
+  return false;
 }
 
 /**
