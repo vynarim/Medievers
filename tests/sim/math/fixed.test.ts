@@ -8,7 +8,7 @@ import {
   mulQ14,
   pxToSub,
   subToPx,
-} from '../../../src/sim/math';
+} from '../../../src/sim/math/index.ts';
 
 describe('fixed-point helpers', () => {
   it('truncates division toward zero', () => {

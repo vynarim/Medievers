@@ -59,7 +59,9 @@ docs/
 
 - `pnpm run dev` — serveur Vite
 - `pnpm run build` — build statique
-- `pnpm test` — Vitest
+- `pnpm test` — Vitest (Node)
+- `pnpm run test:browser` — mêmes sondes de déterminisme dans Node, Chromium et Firefox (Playwright)
+- `pnpm run check` — lint + typecheck + tests + test:browser
 - `pnpm run test:determinism` — rejeu des replays de référence de `tests/replays/`
 - `pnpm run sim:headless <replay.json>` — exécution CLI sans rendu
 
@@ -69,6 +71,7 @@ docs/
 - Commits conventionnels (`feat(sim): …`, `fix(render): …`).
 - Unités internes : positions en **sub-pixels** (1 px = 256 unités, `int32`), angles en **binary angle** (0..4095 = 360°), temps en **ticks**.
 - Chaque arme = une entrée `WeaponDef` + un `WeaponBehavior` dans `src/sim/weapons/`.
+- Imports relatifs avec extension (`'./mask.ts'`) et syntaxe TypeScript effaçable uniquement (`erasableSyntaxOnly`) : Node exécute `src/` et `tools/` directement, sans build.
 
 ## Skills et rules
 

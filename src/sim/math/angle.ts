@@ -1,5 +1,5 @@
 // Binary angles (BAM): 4096 units = 360°, 0 points along +x, angles grow toward +y (screen down).
-import { ATAN_BAM, SIN_Q14 } from './trig-lut';
+import { ATAN_BAM, SIN_Q14 } from './trig-lut.ts';
 
 export const ANGLE_BITS = 12;
 export const ANGLE_FULL = 1 << ANGLE_BITS;

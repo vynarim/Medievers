@@ -5,8 +5,8 @@ import {
   buildAtanTable,
   buildSinTable,
   renderLutModule,
-} from '../../../tools/gen-trig-lut';
-import { ATAN_BAM, SIN_Q14 } from '../../../src/sim/math/trig-lut';
+} from '../../../tools/gen-trig-lut.ts';
+import { ATAN_BAM, SIN_Q14 } from '../../../src/sim/math/trig-lut.ts';
 
 describe('trig LUT', () => {
   it('is bit-identical across two generations', () => {

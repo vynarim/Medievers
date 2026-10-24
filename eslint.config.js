@@ -52,6 +52,13 @@ const FORBIDDEN_GLOBALS = [
   'queueMicrotask',
 ];
 
+// Node runs src/ and tools/ natively (type stripping), so relative imports need their extension.
+const RELATIVE_IMPORT_EXTENSION = {
+  selector:
+    ':matches(ImportDeclaration, ExportAllDeclaration, ExportNamedDeclaration)[source.value=/^[.]/]:not([source.value=/[.](ts|png|json)([?][a-z]+)?$/])',
+  message: "Relative imports must name the file with its extension, e.g. './mask.ts'.",
+};
+
 const simGuard = {
   files: ['src/sim/**/*.ts'],
   rules: {
@@ -72,6 +79,7 @@ const simGuard = {
     ],
     'no-restricted-syntax': [
       'error',
+      RELATIVE_IMPORT_EXTENSION,
       {
         selector: "BinaryExpression[operator='**'], AssignmentExpression[operator='**=']",
         message: 'Exponentiation is Math.pow: forbidden in src/sim.',
@@ -105,6 +113,7 @@ export default tseslint.config(
   ...tseslint.configs.strict,
   {
     languageOptions: { globals: { ...globals.browser } },
+    rules: { 'no-restricted-syntax': ['error', RELATIVE_IMPORT_EXTENSION] },
   },
   {
     files: ['*.config.{js,ts}', 'tests/**/*.ts', 'tools/**/*.ts'],

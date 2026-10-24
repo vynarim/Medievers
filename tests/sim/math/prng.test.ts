@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { clonePrng, createPrng, nextInt, nextRange, nextU32 } from '../../../src/sim/math';
+import { clonePrng, createPrng, nextInt, nextRange, nextU32 } from '../../../src/sim/math/index.ts';
 
 /** Reference sfc32 (Chris Doty-Humphrey, PractRand) in its common JS form. */
 function referenceSfc32(a: number, b: number, c: number, d: number): () => number {

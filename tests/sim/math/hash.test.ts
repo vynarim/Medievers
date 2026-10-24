@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { FNV_OFFSET, hashBytes, hashInt, hashInts, hashString } from '../../../src/sim/math';
+import {
+  FNV_OFFSET,
+  hashBytes,
+  hashInt,
+  hashInts,
+  hashString,
+} from '../../../src/sim/math/index.ts';
 
 const ascii = (s: string): number[] => Array.from(s, (ch) => ch.charCodeAt(0));
 

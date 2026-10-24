@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { angleDelta, atan2Bam, cosQ14, normAngle, sinQ14 } from '../../../src/sim/math';
+import { angleDelta, atan2Bam, cosQ14, normAngle, sinQ14 } from '../../../src/sim/math/index.ts';
 
 const toBam = (rad: number): number => ((((rad * 4096) / (2 * Math.PI)) % 4096) + 4096) % 4096;
 const bamDistance = (a: number, b: number): number =>
