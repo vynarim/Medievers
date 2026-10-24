@@ -17,7 +17,7 @@
 ## 2. Boucle de jeu
 
 ### 2.1 Partie (escarmouche)
-1. Configuration : 2 à 4 équipes (V1 : 2 équipes garanties, 3–4 en P1), 1 à 6 unités par équipe (**4 par défaut**, réglable : « Combattants par maison », décidé le 2026-10-24 ; placement réparti sur la part de carte de chaque maison, sur un sol large), carte, schéma de règles.
+1. Configuration : 2 à 4 équipes (V1 : 2 équipes garanties, 3–4 en P1), 1 à 6 unités par équipe (**6 par défaut, une de chaque classe**, décidé le 2026-10-24, réglable : « Combattants par maison », décidé le 2026-10-24 ; placement réparti sur la part de carte de chaque maison, sur un sol large), carte, schéma de règles.
 2. Placement (décidé le 2026-10-24) : **chaque maison pose un combattant à tour de rôle**, en cliquant sur la carte (un trait à ses couleurs montre où il tombera), jusqu'à ce que toutes les armées soient en place ; puis le tour 1 commence. Pas à moins de 36 px d'un autre combattant ni du bord, et il faut un sol où tenir. 20 s par combattant ; le temps écoulé, il est posé sur sa colonne par défaut (`turn.placementTicks`, absent des vieux logs : placement automatique).
 3. Tours alternés jusqu'à ce qu'il reste une seule équipe vivante, ou fin du Déluge.
 

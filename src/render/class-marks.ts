@@ -1,6 +1,6 @@
-// Greybox class marks (GDD §3.2), drawn over the placeholder knight figure until the rigs of M6:
-// the king's crown, the archer's quiver, the slinger's sling, the sapper's pick, the cleric's
-// crosier. The knight is the base figure itself.
+// Class marks (GDD §3.2), drawn over each class's placeholder figure (figures.ts) until the rigs
+// of M6: the king's crown, the archer's quiver, the slinger's sling, the sapper's pick, the
+// cleric's crosier. The knight has his helm and shield.
 import type Phaser from 'phaser';
 import type { ClassId } from '../content/classes.ts';
 import { COLORS } from '../ui/tokens.ts';

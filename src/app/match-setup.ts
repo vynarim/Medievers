@@ -29,7 +29,8 @@ export function defaultSetup(custom: boolean): MatchSetup {
     map: 'valley',
     scheme: custom ? 'custom' : 'classic',
     regicide: false,
-    lineups: [defaultLineup(4, false), defaultLineup(4, false)],
+    // One unit of each class per house (2026-10-24).
+    lineups: [defaultLineup(6, false), defaultLineup(6, false)],
   };
 }
 
@@ -54,7 +55,7 @@ export function fixLineup(lineup: readonly ClassId[], regicide: boolean): ClassI
 export function fixSetup(s: MatchSetup): MatchSetup {
   const scheme = SCHEME_IDS.includes(s.scheme) ? s.scheme : 'classic';
   const lineups = s.lineups.slice(0, MAX_HOUSES).map((l) => fixLineup(l, s.regicide));
-  while (lineups.length < MIN_HOUSES) lineups.push(defaultLineup(4, s.regicide));
+  while (lineups.length < MIN_HOUSES) lineups.push(defaultLineup(6, s.regicide));
   const map = MAP_THEMES.includes(s.map) ? s.map : 'valley';
   return { map, scheme, regicide: s.regicide, lineups };
 }

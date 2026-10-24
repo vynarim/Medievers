@@ -36,6 +36,7 @@ import { Scenery } from './scenery.ts';
 import { FixedStep } from './fixed-step.ts';
 import { TerrainLayer } from './terrain-layer.ts';
 import { drawClassMark } from './class-marks.ts';
+import { drawFigure } from './figures.ts';
 import { aimPreviewTicks, classOf, maxHpOf, visibleMines } from '../sim/classes.ts';
 import { shotSpeed } from '../sim/weapons/weapons.ts';
 import { targetFor, wallAngle, wallLength, wallRefusal, wallSize } from '../sim/tools.ts';
@@ -1123,8 +1124,9 @@ export class BattleScene extends Phaser.Scene {
         g.lineStyle(4, COLORS.lapis, 1);
         g.strokeEllipse(x, y + 2, UNIT_HALF_WIDTH * 5, 18);
       }
-      this.drawFigure(g, x, y, u.facing, primary, secondary, isActive, time);
-      drawClassMark(g, classOf(v, u), x, y, u.facing);
+      const cls = classOf(v, u);
+      drawFigure(g, x, y, u.facing, primary, secondary, cls, isActive, time);
+      drawClassMark(g, cls, x, y, u.facing);
 
       if (label) {
         // A small phylactery with the name and a thin life bar under it; the figures are in the
@@ -1201,131 +1203,6 @@ export class BattleScene extends Phaser.Scene {
     }
 
     this.drawBursts(g, time);
-  }
-
-  /** Placeholder figure in the house's tinctures: chausses, cotte, helm, almond shield. */
-  private drawFigure(
-    g: Phaser.GameObjects.Graphics,
-    x: number,
-    y: number,
-    facing: number,
-    primary: number,
-    secondary: number,
-    active: boolean,
-    time: number,
-  ): void {
-    const hx = x + facing * 2;
-    const hy = y - 66;
-    if (active) {
-      // Gilt nimbus, as on the saints of the manuscript.
-      const pulse = 1 + Math.sin(time / 250) * 0.06;
-      g.fillStyle(COLORS.or, 1);
-      g.fillCircle(hx, hy, 21 * pulse);
-      g.lineStyle(3, COLORS.encre, 1);
-      g.strokeCircle(hx, hy, 21 * pulse);
-      g.lineStyle(2, COLORS.ocre, 1);
-      g.strokeCircle(hx, hy, 16 * pulse);
-    }
-    const ink = COLORS.encre;
-    const mail = COLORS.roche;
-    // Mail chausses: grey legs with rows of little arcs, pointed black shoes.
-    for (const lx of [x - 9, x + 2]) {
-      g.fillStyle(mail, 1);
-      g.lineStyle(2, ink, 1);
-      g.fillRect(lx, y - 22, 7, 20);
-      g.strokeRect(lx, y - 22, 7, 20);
-      g.lineStyle(1, ink, 0.55);
-      for (let ry = y - 19; ry < y - 3; ry += 4) {
-        g.beginPath();
-        g.arc(lx + 3.5, ry, 2.5, 0, Math.PI);
-        g.strokePath();
-      }
-      g.fillStyle(ink, 1);
-      g.fillTriangle(lx - 1, y - 3, lx + 8 + facing * 4, y, lx - 1, y);
-    }
-    // Heater shield on the back side, blazoned: the house's field with a chevron.
-    const sx = x - facing * 14;
-    const shieldPts = poly([
-      { x: sx - 10, y: y - 56 },
-      { x: sx + 10, y: y - 56 },
-      { x: sx + 9, y: y - 40 },
-      { x: sx, y: y - 26 },
-      { x: sx - 9, y: y - 40 },
-    ]);
-    g.fillStyle(secondary, 1);
-    g.fillPoints(shieldPts, true);
-    g.fillStyle(primary, 1);
-    g.fillPoints(
-      poly([
-        { x: sx - 9, y: y - 36 },
-        { x: sx, y: y - 47 },
-        { x: sx + 9, y: y - 36 },
-        { x: sx + 7, y: y - 31 },
-        { x: sx, y: y - 40 },
-        { x: sx - 7, y: y - 31 },
-      ]),
-      true,
-    );
-    g.lineStyle(3, ink, 1);
-    g.strokePoints(shieldPts, true);
-    // Hauberk sleeves under the surcoat: grey mail arm reaching forward.
-    g.fillStyle(mail, 1);
-    g.lineStyle(2, ink, 1);
-    const ax = x + facing * 8;
-    g.fillPoints(
-      poly([
-        { x: ax - 4, y: y - 56 },
-        { x: ax + 4, y: y - 56 },
-        { x: ax + facing * 12 + 3, y: y - 40 },
-        { x: ax + facing * 12 - 3, y: y - 36 },
-      ]),
-      true,
-    );
-    g.strokePoints(
-      poly([
-        { x: ax - 4, y: y - 56 },
-        { x: ax + 4, y: y - 56 },
-        { x: ax + facing * 12 + 3, y: y - 40 },
-        { x: ax + facing * 12 - 3, y: y - 36 },
-      ]),
-      true,
-    );
-    g.fillStyle(COLORS.carnation, 1);
-    g.fillCircle(ax + facing * 12, y - 37, 3);
-    // Surcoat (cotte d'armes) in the house's colour, to the knee, split in front, with
-    // tubular folds as the manuscript draws them.
-    const tunic = poly([
-      { x: x - 10, y: y - 58 },
-      { x: x + 10, y: y - 58 },
-      { x: x + 16, y: y - 20 },
-      { x: x - 16, y: y - 20 },
-    ]);
-    g.fillStyle(primary, 1);
-    g.fillPoints(tunic, true);
-    g.lineStyle(3, ink, 1);
-    g.strokePoints(tunic, true);
-    g.lineStyle(1.5, ink, 0.45);
-    for (const fx of [-7, 0, 7]) g.lineBetween(x + fx * 0.6, y - 44, x + fx, y - 21);
-    g.lineStyle(2, ink, 1);
-    g.lineBetween(x + facing * 2, y - 30, x + facing * 2, y - 20);
-    // Girdle in the house's second tincture.
-    g.fillStyle(secondary, 1);
-    g.fillRect(x - 12, y - 42, 24, 4);
-    g.lineStyle(1.5, ink, 1);
-    g.strokeRect(x - 12, y - 42, 24, 4);
-    // Mail coif and flat-topped great helm, with a gilt cross over the eye slit.
-    const top = hy - 13;
-    g.fillStyle(mail, 1);
-    g.fillRoundedRect(hx - 10, top, 20, 25, { tl: 3, tr: 3, bl: 6, br: 6 });
-    g.lineStyle(3, ink, 1);
-    g.strokeRoundedRect(hx - 10, top, 20, 25, { tl: 3, tr: 3, bl: 6, br: 6 });
-    g.fillStyle(ink, 1);
-    g.fillRect(hx - 8 + facing * 3, hy - 3, 14, 3);
-    g.fillStyle(COLORS.or, 1);
-    g.fillRect(hx + facing * 3 - 1, hy - 9, 3, 18);
-    g.fillRect(hx + facing * 3 - 6, hy - 3, 13, 2);
-    g.lineStyle(1, ink, 0.6);
-    for (let k = -1; k <= 1; k++) g.strokeCircle(hx - facing * 5 + k * 0, hy + 5 + k * 3, 1);
   }
 
   /** A little tombstone where a unit fell. */
@@ -1657,7 +1534,12 @@ export class BattleScene extends Phaser.Scene {
     const color = faction?.primary ?? COLORS.encre;
     g.lineStyle(3, color, 0.5 + 0.3 * Math.sin(time / 200));
     for (let yy = Math.max(0, y - 400); yy < y - 10; yy += 24) g.lineBetween(x, yy, x, yy + 12);
-    this.drawFigure(g, x, y, 1, color, faction?.secondary ?? COLORS.or, false, time);
+    // The unit about to be placed, in its class.
+    const next = v.placing[0];
+    const unit = next ? v.units.find((u) => u.id === next.unitId) : undefined;
+    const cls = unit ? classOf(v, unit) : null;
+    drawFigure(g, x, y, 1, color, faction?.secondary ?? COLORS.or, cls, false, time);
+    drawClassMark(g, cls, x, y, 1);
   }
 
   /** Pots resting on the map, smoking, with the turns left written above in roman figures. */

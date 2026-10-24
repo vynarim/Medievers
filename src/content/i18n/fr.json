@@ -330,7 +330,7 @@
   "tuto.done": "À la bataille !",
   "tuto.count": "{n} / {count}",
   "tuto.1.title": "Le but du jeu",
-  "tuto.1.body": "De 2 à 4 maisons s'affrontent, chacune avec 1 à 6 combattants (4 par défaut). On joue chacun son tour : en ligne contre un adversaire, ou bientôt contre l'IA.\nLa dernière maison qui a encore un combattant debout gagne (en Régicide, celle dont le Roi tient encore). Le terrain se creuse sous les tirs, les combattants volent, tombent et parfois se blessent tout seuls.",
+  "tuto.1.body": "De 2 à 4 maisons s'affrontent, chacune avec 1 à 6 combattants (par défaut, un de chaque classe). On joue chacun son tour : en ligne contre un adversaire, ou bientôt contre l'IA.\nLa dernière maison qui a encore un combattant debout gagne (en Régicide, celle dont le Roi tient encore). Le terrain se creuse sous les tirs, les combattants volent, tombent et parfois se blessent tout seuls.",
   "tuto.2.title": "Un tour de jeu",
   "tuto.2.body": "La partie s'ouvre par le placement : chaque maison pose ses combattants à tour de rôle.\nPuis, à chaque tour, le combattant qui joue porte une auréole dorée. Avant de bouger ou de tirer, ⇄ Combattant (ou un clic) en choisit un autre de votre maison, sauf celui qui a joué la fois d'avant.\nVous avez 45 secondes (le sablier) pour bouger, choisir une arme, viser et tirer. Après le tir, il reste quelques secondes pour se mettre à l'abri ; Fin du tour (ou Passer) termine le tour.",
   "tuto.3.title": "Se déplacer",
