@@ -1,6 +1,6 @@
 // Turns raw player input (keys held, presses, drags) into GameCommands, one tick at a time
 // (GDD §8). Pure logic, so it is tested in Node; the Phaser adapter only fills RawInput.
-import { WEAPONS, type WeaponId } from '../content/weapons.ts';
+import type { WeaponDef, WeaponId } from '../content/weapons.ts';
 import { MAX_POWER, type GameCommand } from '../sim/commands.ts';
 import { atan2Bam } from '../sim/math/angle.ts';
 import type { SimView } from '../sim/sim.ts';
@@ -102,7 +102,9 @@ export class LocalControls {
       return out;
     }
 
-    if (input.nextWeaponPressed) out.push({ t: 'selectWeapon', id: nextWeapon(turn.weapon) });
+    if (input.nextWeaponPressed) {
+      out.push({ t: 'selectWeapon', id: nextWeapon(view.rules.weapons, turn.weapon) });
+    }
     if (input.fusePressed !== null && input.fusePressed >= 1 && input.fusePressed <= 5) {
       out.push({ t: 'setFuse', seconds: input.fusePressed as 1 | 2 | 3 | 4 | 5 });
     }
@@ -152,7 +154,7 @@ export class LocalControls {
   }
 }
 
-function nextWeapon(current: WeaponId): WeaponId {
-  const i = WEAPONS.findIndex((w) => w.id === current);
-  return WEAPONS[(i + 1) % WEAPONS.length]?.id ?? current;
+function nextWeapon(weapons: readonly WeaponDef[], current: WeaponId): WeaponId {
+  const i = weapons.findIndex((w) => w.id === current);
+  return weapons[(i + 1) % weapons.length]?.id ?? current;
 }

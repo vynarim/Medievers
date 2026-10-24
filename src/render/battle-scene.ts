@@ -4,8 +4,6 @@ import Phaser from 'phaser';
 import { FACTIONS, UNIT_NAMES } from '../content/factions.ts';
 import type { MapDef } from '../content/maps.ts';
 import { CLASSIC_RULES, TICKS_PER_SECOND } from '../content/rules.ts';
-import { WEAPONS } from '../content/weapons.ts';
-import { WIND_RULES } from '../content/world.ts';
 import { PhaserLocalInput } from '../input/phaser-local-input.ts';
 import { MAX_POWER } from '../sim/commands.ts';
 import type { SimEvent } from '../sim/events.ts';
@@ -404,7 +402,7 @@ export class BattleScene extends Phaser.Scene {
       `${t('hud.wind')} ${turn.wind > 0 ? '→' : turn.wind < 0 ? '←' : '·'} ${Math.abs(turn.wind)}`,
     );
     const wx = VIEW_W / 2;
-    const len = (Math.abs(turn.wind) / WIND_RULES.max) * 220;
+    const len = (Math.abs(turn.wind) / v.rules.wind.max) * 220;
     g.fillStyle(COLORS.ceruse, 0.85);
     g.fillRect(wx - 240, 66, 480, 18);
     g.fillStyle(COLORS.azur, 1);
@@ -412,7 +410,7 @@ export class BattleScene extends Phaser.Scene {
     g.lineStyle(2, COLORS.encre, 1);
     g.strokeRect(wx - 240, 66, 480, 18);
 
-    const def = WEAPONS.find((w) => w.id === turn.weapon);
+    const def = v.rules.weapons.find((w) => w.id === turn.weapon);
     const fuse =
       def?.behavior === 'fusedBouncer'
         ? `   ${t('hud.fuse', { s: Math.round((turn.fuse || def.defaultFuse) / TICKS_PER_SECOND) })}`
@@ -477,7 +475,7 @@ export class BattleScene extends Phaser.Scene {
     }
     // Predicted trajectory of the selected weapon at the charged power (or full power).
     const u = this.activeUnit();
-    const def = WEAPONS.find((w) => w.id === v.turn.weapon);
+    const def = v.rules.weapons.find((w) => w.id === v.turn.weapon);
     if (u && def && v.turn.phase === 'action') {
       const power = this.input_.controls.power || MAX_POWER;
       const speed = Math.trunc((def.maxSpeed * power) / MAX_POWER);
@@ -498,7 +496,7 @@ export class BattleScene extends Phaser.Scene {
           v.terrain as Terrain,
           [],
           v.turn.wind,
-          WIND_RULES.accelPerUnit,
+          v.rules.wind.accelPerUnit,
         );
         if (i % 3 === 0) g.fillCircle(p.x / SUBPX, p.y / SUBPX, 2);
         if (hit) break;

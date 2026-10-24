@@ -68,9 +68,3 @@ export const WEAPONS: readonly WeaponDef[] = [
     ammo: -1,
   },
 ];
-
-export function weaponIndex(id: WeaponId): number {
-  const i = WEAPONS.findIndex((w) => w.id === id);
-  if (i < 0) throw new Error(`unknown weapon ${id}`);
-  return i;
-}

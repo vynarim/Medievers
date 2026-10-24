@@ -1,9 +1,7 @@
 // The simulation: init, one tick per step(), hash, snapshot and restore (TECH_SPEC §2.1).
 // Turn loop (GDD §2.2): transition → action → (retreat) → resolution → next turn.
 import { MATERIAL_RULES } from '../content/materials.ts';
-import { UNIT_RULES } from '../content/units.ts';
-import { WEAPONS, weaponIndex } from '../content/weapons.ts';
-import { EXPLOSION_RULES, WIND_RULES } from '../content/world.ts';
+import { weaponDefIn, weaponIndexIn } from '../content/rules.ts';
 import type { GameCommand } from './commands.ts';
 import type { SimEvent } from './events.ts';
 import { createExplosionQueue, explode, takeDueExplosions } from './explosions/explosion.ts';
@@ -93,7 +91,12 @@ function createState(config: MatchConfig, seed: number, mask: Mask): SimState {
       units.push(u);
       unitIds.push(u.id);
     }
-    teams.push({ id: teamId, unitIds, lastPlayed: -1, ammo: WEAPONS.map((w) => w.ammo) });
+    teams.push({
+      id: teamId,
+      unitIds,
+      lastPlayed: -1,
+      ammo: config.rules.weapons.map((w) => w.ammo),
+    });
   });
   return {
     tick: 0,
@@ -166,7 +169,7 @@ function startTurn(s: SimState, events: SimEvent[]): void {
   t.number++;
   t.activeTeam = team.id;
   t.activeUnitId = unit.id;
-  t.wind = nextRange(s.prng, -WIND_RULES.max, WIND_RULES.max);
+  t.wind = nextRange(s.prng, -s.rules.wind.max, s.rules.wind.max);
   t.aim = unit.facing > 0 ? AIM_UP_RIGHT : AIM_UP_LEFT;
   t.weapon = 'bow';
   t.fuse = 0;
@@ -186,7 +189,7 @@ function applyCommand(s: SimState, c: GameCommand, events: SimEvent[]): void {
       t.walkDir = c.dir;
       break;
     case 'jump':
-      jump(u, c.kind, UNIT_RULES);
+      jump(u, c.kind, s.rules.unit);
       break;
     case 'aim':
       if (!canAct) return;
@@ -196,7 +199,7 @@ function applyCommand(s: SimState, c: GameCommand, events: SimEvent[]): void {
     case 'selectWeapon':
       if (canAct) {
         t.weapon = c.id;
-        t.fuse = WEAPONS[weaponIndex(c.id)]?.defaultFuse ?? 0;
+        t.fuse = weaponDefIn(s.rules, c.id).defaultFuse;
       }
       break;
     case 'setFuse':
@@ -205,11 +208,11 @@ function applyCommand(s: SimState, c: GameCommand, events: SimEvent[]): void {
     case 'fire': {
       if (!canAct) return;
       const team = s.teams[t.activeTeam];
-      const wi = weaponIndex(t.weapon);
+      const wi = weaponIndexIn(s.rules, t.weapon);
       const ammo = team?.ammo[wi] ?? 0;
       if (!team || ammo === 0) return;
       if (ammo > 0) team.ammo[wi] = ammo - 1;
-      if (t.fuse === 0) t.fuse = WEAPONS[wi]?.defaultFuse ?? 0;
+      if (t.fuse === 0) t.fuse = s.rules.weapons[wi]?.defaultFuse ?? 0;
       fire(s, u, c.power, events);
       t.fired = true;
       setPhase(s, 'retreat', s.rules.turn.retreatTicks, events);
@@ -227,12 +230,12 @@ function advanceTick(s: SimState, phaseJustSet: boolean, events: SimEvent[]): vo
   const hpBefore = active?.hp ?? 0;
 
   if (active?.alive && t.walkDir !== 0 && (t.phase === 'action' || t.phase === 'retreat')) {
-    walk(active, s.terrain, t.walkDir, UNIT_RULES);
+    walk(active, s.terrain, t.walkDir, s.rules.unit);
   }
 
   for (const u of s.units) {
     if (!u.alive) continue;
-    const r = stepUnitPhysics(u, s.terrain, UNIT_RULES);
+    const r = stepUnitPhysics(u, s.terrain, s.rules.unit);
     if (r.fallDamage > 0) {
       u.hp = Math.max(0, u.hp - r.fallDamage);
       events.push({ e: 'unitDamaged', unitId: u.id, damage: r.fallDamage });
@@ -247,7 +250,7 @@ function advanceTick(s: SimState, phaseJustSet: boolean, events: SimEvent[]): vo
   stepShots(s, events);
 
   for (const e of takeDueExplosions(s.explosions, s.tick)) {
-    const res = explode(e, s.terrain, s.units, EXPLOSION_RULES);
+    const res = explode(e, s.terrain, s.units, s.rules.explosion);
     events.push({ e: 'explosion', x: e.x, y: e.y, radius: e.radius });
     if (res.carved > 0) {
       events.push({ e: 'terrainCarved', x: subToPx(e.x), y: subToPx(e.y), radius: e.carveRadius });
@@ -328,7 +331,7 @@ function hashState(s: SimState): number {
   for (const shot of s.shots) {
     const p = shot.projectile;
     for (const v of [p.id, p.ownerId, p.x, p.y, p.vx, p.vy, p.age, p.clearOfOwner ? 1 : 0]) int(v);
-    int(weaponIndex(shot.weapon));
+    int(weaponIndexIn(s.rules, shot.weapon));
     int(shot.fuse);
   }
   int(s.explosions.items.length);
@@ -352,7 +355,7 @@ function hashState(s: SimState): number {
     t.activeUnitId,
     t.wind,
     t.aim,
-    weaponIndex(t.weapon),
+    weaponIndexIn(s.rules, t.weapon),
     t.fuse,
     t.walkDir,
     t.fired ? 1 : 0,
