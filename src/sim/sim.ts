@@ -715,6 +715,22 @@ function endTurn(s: SimState, events: SimEvent[]): void {
   maybeDropCrate(s, events);
   callDeaths(s, events);
   const alive = s.teams.filter((team) => teamAlive(s, team));
+  // The two fires have met: the house with the most HP left wins (rules.burn.endWhenMet).
+  if (alive.length > 1 && s.rules.burn?.endWhenMet && s.burnPx >= s.terrain.width >> 1) {
+    const hp = alive.map((team) =>
+      team.unitIds.reduce((sum, id) => {
+        const u = unitById(s, id);
+        return sum + (u?.alive ? u.hp : 0);
+      }, 0),
+    );
+    const best = Math.max(...hp);
+    const leaders = alive.filter((_, i) => hp[i] === best);
+    s.winner = leaders.length === 1 ? (leaders[0]?.id ?? -1) : -1;
+    events.push({ e: 'burnMet' });
+    setPhase(s, 'gameOver', 0, events);
+    events.push({ e: 'gameOver', winner: s.winner });
+    return;
+  }
   if (alive.length <= 1) {
     s.winner = alive[0]?.id ?? -1;
     setPhase(s, 'gameOver', 0, events);

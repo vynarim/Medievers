@@ -55,6 +55,25 @@ describe('burning parchment (GDD §2.5)', () => {
     expect(events.some((e) => e.e === 'unitDamaged' && e.unitId !== 1)).toBe(false);
   });
 
+  it('ends the match when the fires meet, the house with the most HP winning', () => {
+    // The fire eats 300 px a round, no damage: both units stay alive, house 1 has more HP.
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { deluge, ...noDeluge } = RULES;
+    const rules: MatchRules = {
+      ...noDeluge,
+      burn: { ...BURN_RULES, startRound: 0, advancePx: 300, damage: 0 },
+    };
+    const sim = new Sim({ rules, teams: [{ spawns: [550] }, { spawns: [650] }] }, 1, flatMask());
+    const snap = sim.snapshot();
+    const u = snap.units[0];
+    if (u) u.hp = 40;
+    sim.restore(snap);
+    const events = passTurns(sim, 20);
+    expect(events).toContainEqual({ e: 'burnMet' });
+    expect(sim.view().turn.phase).toBe('gameOver');
+    expect(sim.view().winner).toBe(1);
+  });
+
   it('never burns in logs recorded without it', () => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { burn, ...old } = RULES;

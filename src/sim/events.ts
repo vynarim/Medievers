@@ -65,6 +65,8 @@ export type SimEvent =
   /** px */
   | { readonly e: 'unitPlaced'; readonly unitId: number; readonly x: number }
   | { readonly e: 'placeRefused'; readonly x: number }
+  /** the two fires met in the middle: the match ends on the HP left (rules.burn.endWhenMet) */
+  | { readonly e: 'burnMet' }
   /** px burnt away at each end of the map, after the fire spread */
   | { readonly e: 'burnSpread'; readonly px: number }
   /** px: a rectangle of the terrain changed (a structure fell, rubble landed) */

@@ -234,6 +234,9 @@ export class Commentary {
         case 'crateBurst':
           if (e.trap) this.hud.say(pick('quip.crateTrap'), now);
           break;
+        case 'burnMet':
+          this.hud.say(pick('quip.burnMet'), now);
+          break;
         case 'burnSpread':
           this.hud.say(pick(this.burning ? 'quip.burn' : 'quip.burnStart'), now);
           this.burning = true;

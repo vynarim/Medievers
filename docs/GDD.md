@@ -49,6 +49,7 @@
 ### 2.5 Le parchemin brûle (décidé le 2026-10-24)
 - Après **2 tours de table**, la carte prend feu **à ses deux extrémités**, comme une page de parchemin approchée d'une chandelle. À la fin de chaque tour de table, le feu avance de **60 px** de chaque côté (décidé le 2026-10-24, réduit de 120) (jusqu'au milieu de la carte au plus).
 - Un combattant qui se trouve dans la partie brûlée à la fin d'un tour (n'importe quel tour) perd **20 PV**. Le feu pousse donc les armées à se rapprocher, et sert de fin forcée à côté du Déluge.
+- **Quand les deux feux se rejoignent** au milieu (décidé et programmé le 2026-10-25), la partie s'arrête : la maison à qui il reste le plus de PV (total de ses combattants vivants) gagne ; à égalité, personne (`burn.endWhenMet`, absent des vieux logs : la partie continue).
 - Une cuisine de campagne rattrapée par le feu s'éteint.
 - Rendu : page noircie, bord brun qui ondule comme un papier qui se recroqueville, ligne de flammes. Valeurs dans `src/content/burn.ts` (`MatchRules.burn`, absent des vieux logs : pas de feu), réglables dans ⚙ Réglages (onglet Parchemin en feu).
 

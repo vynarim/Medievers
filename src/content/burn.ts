@@ -8,10 +8,16 @@ export interface BurnRules {
   readonly advancePx: number;
   /** HP lost at the end of every turn by each unit standing in the burnt part */
   readonly damage: number;
+  /**
+   * When the two fires meet in the middle, the match is over: the house with the most HP left
+   * wins (2026-10-25). Absent from older logs: the match goes on.
+   */
+  readonly endWhenMet?: boolean;
 }
 
 export const BURN_RULES: BurnRules = {
   startRound: 2,
   advancePx: 60,
   damage: 20,
+  endWhenMet: true,
 };

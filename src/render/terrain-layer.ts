@@ -68,7 +68,7 @@ const MASK_RGB: Record<number, Rgb> = Object.fromEntries(
 /** px: ink outline (cerne) along every edge with the air, ASSETS §1.1 */
 const CERNE = 3;
 /** px: depth of the grass on top of earth */
-const GRASS_DEPTH = 12;
+const GRASS_DEPTH = 22;
 
 /** True when air lies within CERNE px (4 directions, plus the diagonal neighbours). */
 function nearAir(airAt: (x: number, y: number) => boolean, x: number, y: number): boolean {
