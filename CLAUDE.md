@@ -19,6 +19,7 @@ Documents de référence (à lire avant toute tâche structurante) :
 | Physique | Collision pixel vs masque bitmap, maison. Pas de Matter.js / Box2D |
 | Rendu / input / audio | Phaser (version à figer au setup, cf. TECH_SPEC §1) |
 | Langage / build | TypeScript strict, Vite, Vitest |
+| Paquets | pnpm (projet sous OneDrive : store global et `enableGlobalVirtualStore` pour que `node_modules` ne contienne que des liens) |
 | Visée | Drag-to-aim ET jauge angle+puissance, choix en options |
 | Cartes | Image peinte + masque PNG + JSON. Pas d'éditeur in-game en V1 |
 | LAN | WebRTC DataChannel, appairage manuel par QR/code, sans serveur ; fallback mini-serveur Node local |
@@ -32,7 +33,7 @@ Documents de référence (à lire avant toute tâche structurante) :
 3. Toute modification d'état passe par une `GameCommand` appliquée au tick. Le rendu lit l'état, ne l'écrit jamais.
 4. Pas fixe à 60 Hz. Le rendu interpole entre deux ticks.
 5. Toute entrée (humain, IA, réseau) implémente `InputSource`. Aucun code de gameplay ne sait d'où vient une commande.
-6. Un test de déterminisme (`npm run test:determinism`) doit passer sur chaque PR : même seed + même log de commandes ⇒ même hash d'état final.
+6. Un test de déterminisme (`pnpm run test:determinism`) doit passer sur chaque PR : même seed + même log de commandes ⇒ même hash d'état final.
 7. Les paramètres de gameplay (dégâts, rayons, munitions) vivent dans `src/content/*.ts` typés, jamais en dur dans la logique.
 
 ## Structure
@@ -56,11 +57,11 @@ docs/
 
 ## Commandes
 
-- `npm run dev` — serveur Vite
-- `npm run build` — build statique
-- `npm test` — Vitest
-- `npm run test:determinism` — rejeu des replays de référence de `tests/replays/`
-- `npm run sim:headless -- <replay.json>` — exécution CLI sans rendu
+- `pnpm run dev` — serveur Vite
+- `pnpm run build` — build statique
+- `pnpm test` — Vitest
+- `pnpm run test:determinism` — rejeu des replays de référence de `tests/replays/`
+- `pnpm run sim:headless <replay.json>` — exécution CLI sans rendu
 
 ## Conventions
 

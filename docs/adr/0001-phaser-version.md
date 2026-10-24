@@ -87,7 +87,7 @@ Recommandation d'implémentation pour le terrain (à confirmer en M2) :
 |---|---|
 | Bug WebGL bloquant propre à la v4 | Rendu isolé dans `src/render/`. La sim ne dépend pas de Phaser. Version épinglée. Ticket suivi sur GitHub |
 | Upload `CanvasTexture` trop coûteux sur tablette | Mesure par `perf-check` en M2. Repli `DynamicTexture`. Upload partiel (`putData` avec rectangle « dirty ») |
-| Le support WebGL1/WebGL2 n'est pas documenté dans le guide de migration | Vérifier `renderer.gl` sur la tablette cible en M2 (smoke test) |
+| Le support WebGL1/WebGL2 n'est pas documenté dans le guide de migration | Constat au scaffold (0.2, Chromium desktop) : Phaser 4.2.1 démarre en « WebGL » et crée un contexte `webgl` (WebGL1). À revérifier sur la tablette cible en M2 |
 
 ## Sources consultées (2026-10-24)
 

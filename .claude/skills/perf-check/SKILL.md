@@ -2,7 +2,7 @@
 name: perf-check
 description: "Mesure les performances par rapport aux budgets de TECH_SPEC §9 (fps PC et tablette, sim.step, chargement des cartes, mémoire, ré-upload des tuiles de terrain) et identifie les points chauds. N'utilise que des mesures réelles : bench headless, export de l'overlay debug ou trace navigateur."
 argument-hint: "[sim | render | load | all]"
-allowed-tools: Read, Glob, Grep, Write, Bash(npm run bench*), Bash(npm run sim:headless*), Bash(npm run build*)
+allowed-tools: Read, Glob, Grep, Write, Bash(pnpm run bench*), Bash(pnpm run sim:headless*), Bash(pnpm run build*)
 ---
 
 # Perf check
@@ -15,7 +15,7 @@ allowed-tools: Read, Glob, Grep, Write, Bash(npm run bench*), Bash(npm run sim:h
 
 | Mesure | Budget | Comment mesurer |
 |---|---|---|
-| `sim.step()` moyen hors explosion | < 1 ms | `npm run bench -- sim` (Node, sur replays de référence) |
+| `sim.step()` moyen hors explosion | < 1 ms | `pnpm run bench sim` (Node, sur replays de référence) |
 | `sim.step()` pire cas | < 4 ms | idem, p99 et max |
 | FPS PC 1920×1080 | 60 constant | export de l'overlay debug F1 (`perf.json`) |
 | FPS tablette | 60 visé, ≥ 45 en pic | export de l'overlay sur appareil réel → **needs human** |
@@ -24,7 +24,7 @@ allowed-tools: Read, Glob, Grep, Write, Bash(npm run bench*), Bash(npm run sim:h
 | Ré-upload tuiles | ≤ 4 par frame | compteur de l'overlay |
 | Thread principal pendant l'IA | < 4 ms/frame | overlay (BACKLOG 5.1) |
 
-Si `npm run bench` n'existe pas, propose de l'ajouter (tâche à ajouter au BACKLOG). Ne fabrique pas de benchmark ad hoc sans accord.
+Si `pnpm run bench` n'existe pas, propose de l'ajouter (tâche à ajouter au BACKLOG). Ne fabrique pas de benchmark ad hoc sans accord.
 
 ## Phase 1 — Mesurer
 

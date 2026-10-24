@@ -2,7 +2,7 @@
 name: milestone-gate
 description: "Décide si un jalon du BACKLOG (M0–M9) est terminé : vérifie chaque critère d'acceptation avec une preuve exécutée, puis rend PASS, CONCERNS, NOT ASSESSED ou FAIL. Usage : « /milestone-gate M2 » ou « peut-on passer à M3 ? »."
 argument-hint: "<M0..M9>"
-allowed-tools: Read, Glob, Grep, Write, Bash(npm run *), Bash(npx vitest *), Bash(git log *), Bash(git status*), Bash(python3 tools/*)
+allowed-tools: Read, Glob, Grep, Write, Bash(pnpm run *), Bash(pnpm exec vitest *), Bash(git log *), Bash(git status*), Bash(python3 tools/*)
 ---
 
 # Milestone gate
@@ -27,12 +27,12 @@ Pour chaque ligne :
 2. Exécute la vérification la plus directe possible. Raccourcis utiles :
    - déterminisme → skill `determinism-check` ;
    - assets → `python3 tools/asset_audit.py` ;
-   - cartes → `npm run maps:build` et skill `map-soak` ;
+   - cartes → `pnpm run maps:build` et skill `map-soak` ;
    - performances → skill `perf-check`.
 3. Attribue un statut : PASS, FAIL, NOT ASSESSED (avec la raison) ou PARTIAL. PARTIAL compte comme FAIL dans le verdict.
 
 Vérifie toujours, en plus des CA :
-- `npm run check` (lint, typecheck et tests) ;
+- `pnpm run check` (lint, typecheck et tests) ;
 - le test de déterminisme, à partir de M1.
 
 ## Phase 3 — Rapport
@@ -42,14 +42,14 @@ Vérifie toujours, en plus des CA :
 ```
 # Gate M<n> — <titre> — <date> — verdict: …
 | # | Tâche | CA | Preuve (commande / fichier) | Statut |
-## Hors CA        | npm run check | determinism |
+## Hors CA        | pnpm run check | determinism |
 ## Bloquants      | liste ordonnée, chaque item → tâche BACKLOG ou skill à lancer
 ## À faire par un humain | procédure pas à pas pour chaque NOT ASSESSED — needs human
 ## Risques (BACKLOG § Risques) touchés par ce jalon
 ```
 
 Le verdict retient la première condition remplie, dans cet ordre :
-1. **FAIL** : un CA est en FAIL ou PARTIAL, ou `npm run check` est rouge.
+1. **FAIL** : un CA est en FAIL ou PARTIAL, ou `pnpm run check` est rouge.
 2. **NOT ASSESSED** : un CA n'a pas pu être vérifié.
 3. **CONCERNS** : tout est PASS, mais il reste des WARN (lint warnings, WARN de determinism-check, couverture inférieure à 80 %).
 4. **PASS** : sinon.

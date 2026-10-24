@@ -10,10 +10,10 @@ Ordre recommandé : simulation d'abord, en headless et testée, puis rendu en gr
 | # | Tâche | CA |
 |---|---|---|
 | 0.1 | Évaluer Phaser 3.x vs 4.x (état de release, API RenderTexture/CanvasTexture, tactile) et consigner la décision dans `docs/adr/0001-phaser-version.md` | ADR rédigée avec la version exacte figée dans `package.json` |
-| 0.2 | Scaffold Vite + TS strict + ESLint + Prettier + Vitest | `npm run dev`, `build`, `test` fonctionnels |
+| 0.2 | Scaffold Vite + TS strict + ESLint + Prettier + Vitest | `pnpm run dev`, `build`, `test` fonctionnels |
 | 0.3 | Règle ESLint interdisant `Math.random`, `Math.sin`…, `Date`, `performance`, DOM et Phaser dans `src/sim/**` | Un fichier de test violant la règle échoue au lint |
 | 0.4 | Arborescence `src/` conforme à `CLAUDE.md` | — |
-| 0.5 | CI locale (script `npm run check` = lint + typecheck + test) | Vert sur un repo vide |
+| 0.5 | CI locale (script `pnpm run check` = lint + typecheck + test) | Vert sur un repo vide |
 
 ## M1 — Noyau de simulation (headless)
 | # | Tâche | CA |
@@ -26,7 +26,7 @@ Ordre recommandé : simulation d'abord, en headless et testée, puis rendu en gr
 | 1.6 | Explosion : carve, dégâts linéaires, impulsion, chaîne différée | Tests de dégâts à d, R/2 et R |
 | 1.7 | Boucle de tour : phases, timer en ticks, repli, résolution « tout au repos », fin de partie | Partie scriptée de 3 tours jouée jusqu'à la fin |
 | 1.8 | `GameCommand`, `Sim.step`, `snapshot`/`restore`, log de partie | Snapshot, N steps, restore puis N steps donnent le même hash |
-| 1.9 | `npm run sim:headless` + `npm run test:determinism` avec 2 replays de référence | Rejeu vert en CI |
+| 1.9 | `pnpm run sim:headless` + `pnpm run test:determinism` avec 2 replays de référence | Rejeu vert en CI |
 
 ## M2 — Greybox jouable
 | # | Tâche | CA |
@@ -72,7 +72,7 @@ Ordre recommandé : simulation d'abord, en headless et testée, puis rendu en gr
 | 5.4 | Scoring des coups (GDD §7.2) et fallback défensif | L'IA n'inflige pas plus de 10 % de ses dégâts à ses propres alliés sur 50 parties |
 | 5.5 | Niveaux Écuyer, Chevalier, Connétable | Taux de victoire Connétable vs Écuyer ≥ 85 % |
 | 5.6 | `AIInputSource` (débit de commandes « humain » : visée progressive) | L'action de l'IA reste lisible à l'écran |
-| 5.7 | `npm run maps:soak` | Rapport généré |
+| 5.7 | `pnpm run maps:soak` | Rapport généré |
 
 ## M6 — Pipeline artistique et vertical slice
 **Prérequis** : planche de référence de style validée (ASSETS §9.1).
@@ -81,7 +81,7 @@ Ordre recommandé : simulation d'abord, en headless et testée, puis rendu en gr
 |---|---|---|
 | 6.1 | Format `rig.json` + `anim/*.json`, runtime d'animation cutout | Le Chevalier P0 joue toutes ses animations P0 |
 | 6.2 | Tint de faction + composition dynamique du blason sur l'écu et la bannière | 8 blasons pré-composés affichés |
-| 6.3 | `npm run maps:build` (découpe, validations) | La carte Jéricho passe les validations |
+| 6.3 | `pnpm run maps:build` (découpe, validations) | La carte Jéricho passe les validations |
 | 6.4 | Carte Jéricho complète (peinture, masque, parallaxe, cadre) | — |
 | 6.5 | Bord « vélin déchiré » sur les carves | Validé visuellement |
 | 6.6 | VFX P0 (explosion M, débris, poussière, étoiles, trajectoire) | — |

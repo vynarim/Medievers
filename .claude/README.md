@@ -22,7 +22,7 @@ Tous les skills qui rendent un verdict distinguent **NOT ASSESSED** de PASS : un
 ## Prérequis
 
 - Python 3 avec Pillow pour `tools/asset_audit.py` : `pip install pillow`.
-- Les scripts npm cités par les skills (`test:determinism`, `sim:headless`, `maps:build`, `maps:soak`, `bench`) sont créés au fil du BACKLOG. Tant qu'un script n'existe pas, les skills rendent `NOT ASSESSED` en le signalant.
+- Les scripts `package.json` cités par les skills (`test:determinism`, `sim:headless`, `maps:build`, `maps:soak`, `bench`) sont créés au fil du BACKLOG. Tant qu'un script n'existe pas, les skills rendent `NOT ASSESSED` en le signalant.
 
 ## Origine
 

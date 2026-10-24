@@ -2,7 +2,7 @@
 name: determinism-check
 description: "Vérifie le déterminisme de src/sim : imports et API interdits, flottants dans l'état, ordre d'itération, rejeu des replays de référence. À lancer avant chaque commit touchant src/sim, src/content ou tests/replays, et avant de clore une tâche M1–M5."
 argument-hint: "[--quick | --full | <chemin replay.json>]"
-allowed-tools: Read, Glob, Grep, Bash(npm run test:determinism*), Bash(npm run sim:headless*), Bash(npm run lint*), Bash(npx eslint *), Bash(git diff *), Bash(git status*)
+allowed-tools: Read, Glob, Grep, Bash(pnpm run test:determinism*), Bash(pnpm run sim:headless*), Bash(pnpm run lint*), Bash(pnpm exec eslint *), Bash(git diff *), Bash(git status*)
 ---
 
 # Determinism check
@@ -41,13 +41,13 @@ Chaque occurrence est rapportée avec son fichier et sa ligne. Ne corrige rien d
 
 ## Phase 3 — Lint
 
-Lance `npm run lint -- src/sim` ou l'équivalent du projet. Si la règle ESLint dédiée n'existe pas, le résultat de la section est `NOT ASSESSED — ESLint sim restrictions absent (BACKLOG 0.3)`.
+Lance `pnpm run lint src/sim` ou l'équivalent du projet. Si la règle ESLint dédiée n'existe pas, le résultat de la section est `NOT ASSESSED — ESLint sim restrictions absent (BACKLOG 0.3)`.
 
 ## Phase 4 — Rejeu
 
-- `--quick` (défaut) : `npm run test:determinism`.
+- `--quick` (défaut) : `pnpm run test:determinism`.
 - `--full` : rejeu complet, plus un second rejeu à partir d'un `snapshot()`/`restore()` au milieu de chaque replay, si le script le permet.
-- `<replay.json>` : `npm run sim:headless -- <replay>` deux fois, puis comparaison des hashes.
+- `<replay.json>` : `pnpm run sim:headless <replay>` deux fois, puis comparaison des hashes.
 
 Rapporte les hashes obtenus et attendus. Une sortie de commande non lue vaut NOT ASSESSED.
 

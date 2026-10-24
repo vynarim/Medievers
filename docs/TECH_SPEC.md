@@ -173,8 +173,8 @@ public/assets/maps/<mapId>/
 }
 ```
 
-- Script `npm run maps:build` : découpe `paint.png` en tuiles WebP, vérifie que le masque et la peinture ont la même taille, que les zones de spawn reposent sur un sol et sont accessibles, et qu'aucun pixel n'a une couleur de masque inconnue.
-- Script `npm run maps:soak` : lance N parties IA contre IA en headless (Node) et sort un rapport (durée moyenne, unités coincées, tours).
+- Script `pnpm run maps:build` : découpe `paint.png` en tuiles WebP, vérifie que le masque et la peinture ont la même taille, que les zones de spawn reposent sur un sol et sont accessibles, et qu'aucun pixel n'a une couleur de masque inconnue.
+- Script `pnpm run maps:soak` : lance N parties IA contre IA en headless (Node) et sort un rapport (durée moyenne, unités coincées, tours).
 
 ## 7. Rendu des personnages : cutout rig
 - Chaque classe est un **rig 2D de pièces séparées** : tête, buste, bras haut et bas ×2, mains, jambes haut et bas ×2, pieds, accessoire de tête, accessoire porté (écu, carquois…).

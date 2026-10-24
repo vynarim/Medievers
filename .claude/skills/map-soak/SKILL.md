@@ -2,7 +2,7 @@
 name: map-soak
 description: "Valide une carte (maps:build) puis la fait jouer en parties IA contre IA headless (maps:soak) : unités coincées, parties interminables, spawns inéquitables, désyncs de replay. À lancer pour chaque nouvelle carte ou modification de masque."
 argument-hint: "<mapId|all> [--games N]"
-allowed-tools: Read, Glob, Grep, Write, Bash(npm run maps:build*), Bash(npm run maps:soak*), Bash(npm run sim:headless*)
+allowed-tools: Read, Glob, Grep, Write, Bash(pnpm run maps:build*), Bash(pnpm run maps:soak*), Bash(pnpm run sim:headless*)
 ---
 
 # Map soak
@@ -11,7 +11,7 @@ Références : TECH_SPEC §6 (format et scripts) et GDD §10 (règles de level d
 
 ## Phase 1 — Build et validations statiques
 
-`npm run maps:build -- <mapId>`. Reprends les erreurs du script telles quelles :
+`pnpm run maps:build <mapId>`. Reprends les erreurs du script telles quelles :
 - tailles du masque et de la peinture ;
 - couleurs de masque inconnues ;
 - spawns en l'air ou inaccessibles.
@@ -26,7 +26,7 @@ Si le script n'existe pas encore, le statut est `NOT ASSESSED — maps:build abs
 
 ## Phase 2 — Soak
 
-`npm run maps:soak -- <mapId> --games <N>` (N vaut 30 par défaut, et au moins 3 selon le GDD §10). Le script doit écrire un rapport JSON dans `docs/reports/soak/`. Si ce n'est pas le cas, signale-le comme NOT ASSESSED.
+`pnpm run maps:soak <mapId> --games <N>` (N vaut 30 par défaut, et au moins 3 selon le GDD §10). Le script doit écrire un rapport JSON dans `docs/reports/soak/`. Si ce n'est pas le cas, signale-le comme NOT ASSESSED.
 
 Critères :
 
@@ -53,4 +53,4 @@ Le verdict retient la première condition remplie, dans cet ordre :
 2. **NOT ASSESSED** : un script ou une donnée manque.
 3. **PASS** : sinon.
 
-Pour chaque problème, donne la commande `npm run sim:headless -- <log>` qui le reproduit. Ne modifie pas le masque de la carte : c'est un asset, qui se corrige dans la source artistique.
+Pour chaque problème, donne la commande `pnpm run sim:headless <log>` qui le reproduit. Ne modifie pas le masque de la carte : c'est un asset, qui se corrige dans la source artistique.

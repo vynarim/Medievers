@@ -2,7 +2,7 @@
 name: balance-check
 description: "Analyse l'équilibrage de l'arsenal et des classes : écarts entre src/content et le GDD, armes dominantes, combos dégénérés, et statistiques des soaks IA contre IA (part des kills par arme, durée des parties). Usage : « /balance-check weapons », « /balance-check classes », « /balance-check soak <rapport> »."
 argument-hint: "weapons | classes | soak [chemin rapport] | all"
-allowed-tools: Read, Glob, Grep, Write, Bash(npm run maps:soak*), Bash(npm run sim:headless*)
+allowed-tools: Read, Glob, Grep, Write, Bash(pnpm run maps:soak*), Bash(pnpm run sim:headless*)
 ---
 
 # Balance check
