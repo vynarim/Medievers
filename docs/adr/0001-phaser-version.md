@@ -1,6 +1,6 @@
 # ADR 0001 — Version de Phaser
 
-- **Statut** : proposée (en attente de validation)
+- **Statut** : acceptée le 2026-10-24
 - **Date** : 2026-10-24
 - **Tâche** : BACKLOG M0 / 0.1
 - **Décision** : **Phaser `4.2.1`**, figée sans plage (`"phaser": "4.2.1"`) dans `package.json`.
