@@ -47,6 +47,10 @@ const PARAPET = 14;
 const MERLON_H = 18;
 const MERLON_W = 16;
 const MERLON_STEP = 32;
+/** px: the stakes of a wooden tower's palisade, every STAKE_STEP px, pointed by STAKE_TAPER */
+const STAKE_W = 7;
+const STAKE_STEP = 10;
+const STAKE_TAPER = 3;
 /** px: battlement kept free of merlons on the ladder side, to step on from the ladder */
 const LANDING = 40;
 /** px: how deep a built tower goes under the lowest ground of its foot */
@@ -88,8 +92,16 @@ function buildTower(
   };
   for (let x = x0; x < x1; x++) {
     const free = ladder < 0 ? x < x0 + LANDING : x >= x1 - LANDING;
-    const merlon = !free && (x - x0) % MERLON_STEP < MERLON_W;
-    for (let y = merlon ? top - MERLON_H : top; y < bottom; y++) {
+    // Stone: square merlons. Wood: a palisade of pointed stakes.
+    const k = (x - x0) % STAKE_STEP;
+    const rise = wood
+      ? !free && k < STAKE_W
+        ? MERLON_H - STAKE_TAPER * Math.abs(k - (STAKE_W >> 1))
+        : 0
+      : !free && (x - x0) % MERLON_STEP < MERLON_W
+        ? MERLON_H
+        : 0;
+    for (let y = top - rise; y < bottom; y++) {
       put(x, y, y < top + PARAPET ? floor : body);
     }
   }

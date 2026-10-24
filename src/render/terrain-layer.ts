@@ -54,8 +54,12 @@ const MORTAR = pale(COLORS.terreOmbre, 0.2);
 const BAND = 56;
 const STEP = 92;
 /** px: planks of a wooden tower's body, and the beams across them */
-const PLANK = 12;
-const BEAM = 64;
+const PLANK = 8;
+const BEAM = 40;
+/** px: width of the logs of solid wood (a palisade, a wooden walk) */
+const STAKE = 10;
+/** dark oak of the posts, beams and braces */
+const INK_WOOD = pale(COLORS.terreOmbre, 0);
 /** px: masonry courses and stones of built stone */
 const COURSE = 16;
 const STONE = 34;
@@ -314,14 +318,22 @@ export class TerrainLayer {
           if (sx < 2 || sy < 2) c = MORTAR;
           else if (sy < 4) c = HIGHLIGHT;
           else c = tint ?? HIGHLIGHT;
-        } else if (mat === Material.Timber) {
-          // Upright planks with dark seams, crossed by a beam now and then.
+        } else if (mat === Material.Wood) {
+          // Upright logs, a dark split between each.
           const tints = this.style.tints[mat] ?? FALLBACK;
-          const plank = Math.floor(wx / PLANK);
-          const tint = tints[plank % tints.length] ?? HIGHLIGHT;
-          if (wy % BEAM < 6) c = wy % BEAM < 2 ? MORTAR : (tints[0] ?? HIGHLIGHT);
-          else if (wx % PLANK < 2) c = MORTAR;
-          else c = tint;
+          const log = Math.floor(wx / STAKE);
+          c = wx % STAKE < 2 ? INK_WOOD : (tints[log % tints.length] ?? HIGHLIGHT);
+        } else if (mat === Material.Timber) {
+          // Timber framing, as the wooden keeps and hoardings were built: square panels of
+          // planks between dark posts and beams, each braced by a Saint Andrew's cross.
+          const tints = this.style.tints[mat] ?? FALLBACK;
+          const u = ((wx % BEAM) + BEAM) % BEAM;
+          const v = ((wy % BEAM) + BEAM) % BEAM;
+          const frame = u < 5 || v < 5;
+          const brace = Math.abs(u - v) < 4 || Math.abs(u + v - BEAM) < 4;
+          if (frame || brace) c = INK_WOOD;
+          else if (u % PLANK < 1) c = MORTAR;
+          else c = tints[Math.floor(wy / BEAM + wx / PLANK) % tints.length] ?? HIGHLIGHT;
         } else {
           // Strata in rounded steps: each band's lower edge bulges in arcs, ink line on the edge,
           // a white highlight just under it, as on the hills of the manuscript.
