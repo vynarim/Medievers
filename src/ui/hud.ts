@@ -1,6 +1,6 @@
 // DOM heads-up display (GDD §9): turn and house, houses' health, wind banner, hourglass, weapon
 // and power, the phylactery of running commentary, and the centre banner. Reads the sim view.
-import { FACTIONS } from '../content/factions.ts';
+import { FACTIONS, unitName } from '../content/factions.ts';
 import { TICKS_PER_SECOND } from '../content/rules.ts';
 import { MAX_POWER } from '../sim/commands.ts';
 import type { SimView } from '../sim/sim.ts';
@@ -87,11 +87,12 @@ export class Hud {
 
   /**
    * Shows a line of commentary in a phylactery, under the ones still up: two things said in a
-   * row (two coffers picked up on one walk) are both read.
+   * row (two coffers picked up on one walk) are both read. `tone` borders it in red (bad news)
+   * or green (good news).
    */
-  /** A line of commentary; `tone` borders it in red (bad news) or green (good news). */
   say(text: string, now: number, tone: 'good' | 'bad' | null = null): void {
-    const line = el('div', tone ? `chronicle ${tone}` : 'chronicle', text);
+    const line = el('div', tone ? `chronicle ${tone}` : 'chronicle');
+    line.append(...this.inked(text));
     this.chronicle.append(line);
     this.lines.push({ el: line, until: now + CHRONICLE_MS });
     while (this.lines.length > CHRONICLE_LINES) this.lines.shift()?.el.remove();
@@ -110,7 +111,7 @@ export class Hud {
     title.style.color = css(color);
     const line = (cls: string, text: string | readonly (string | Node)[]): HTMLElement => {
       const d = el('div', cls);
-      d.append(...(typeof text === 'string' ? [text] : text));
+      d.append(...(typeof text === 'string' ? this.inked(text) : text));
       return d;
     };
     this.banner.replaceChildren(title, line('sub', sub), line('quip', quip));
@@ -123,7 +124,37 @@ export class Hud {
     this.bannerUntil = action ? Infinity : now + BANNER_MS;
   }
 
+  /** The names of the match's units, longest first, each in its house's ink. */
+  private inks: { readonly name: string; readonly ink: string }[] = [];
+
+  /** `text` with every unit's name in its house's ink. */
+  private inked(text: string): (string | Node)[] {
+    let parts: (string | Node)[] = [text];
+    for (const { name, ink } of this.inks) {
+      parts = parts.flatMap((p): (string | Node)[] =>
+        typeof p !== 'string'
+          ? [p]
+          : p.split(name).flatMap((piece, i): (string | Node)[] => {
+              if (i === 0) return [piece];
+              const span = document.createElement('span');
+              span.textContent = name;
+              span.style.color = ink;
+              return [span, piece];
+            }),
+      );
+    }
+    return parts.filter((p) => p !== '');
+  }
+
   update(v: SimView, power: number, now: number): void {
+    if (this.inks.length !== v.units.length) {
+      this.inks = v.units
+        .map((u) => ({
+          name: unitName(u.id),
+          ink: css(FACTIONS[u.team]?.ink ?? COLORS.encre),
+        }))
+        .sort((a, b) => b.name.length - a.name.length);
+    }
     this.lines = this.lines.filter((l) => {
       if (now > l.until + CHRONICLE_FADE) {
         l.el.remove();
