@@ -54,7 +54,7 @@ function edition(): string {
     month: 'long',
     year: 'numeric',
   });
-  let rev = '';
+  let rev: string;
   try {
     rev = execSync('git rev-parse --short HEAD', { encoding: 'utf8' }).trim();
   } catch {
