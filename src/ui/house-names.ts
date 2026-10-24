@@ -1,7 +1,8 @@
 // Names of the houses for a match (2026-10-25): drawn from the match seed, so both players of an
 // online match (and a replay) read the same ones, out of heraldry gone wrong: a beast, its
 // attitude or its tincture, « Maison du Hareng Rampant », « Maison des Trois Limaces d'Azur ».
-// Cosmetic: never read by the sim.
+// Each has a short form for the HUD and the unit card, without « Maison de » (2026-10-25):
+// « Hareng Rampant », « Trois Limaces d'Azur », « Huître et Lama ». Cosmetic: never read by the sim.
 import { FACTIONS } from '../content/factions.ts';
 import { t, variantCount } from './i18n.ts';
 
@@ -40,26 +41,36 @@ function dice(seed: number): () => number {
   };
 }
 
+/** A house's name in full (« Maison du Hareng Rampant ») and short (« Hareng Rampant »). */
+interface Name {
+  readonly full: string;
+  readonly short: string;
+}
+
 /** One name, drawn with `roll`. */
-function draw(roll: () => number): string {
+function draw(roll: () => number): Name {
   const n = (prefix: string): number => 1 + Math.floor(roll() * variantCount(prefix));
   const b = beast(n('house.beast'));
   const kind = Math.floor(roll() * 4);
-  if (kind === 0)
-    return t('house.three', {
-      beasts: b.many,
-      tincture: t(`house.tincture.${n('house.tincture')}`),
-    });
-  if (kind === 1)
-    return t('house.name', { of: of(b), more: t(`house.tincture.${n('house.tincture')}`) });
-  if (kind === 2) {
-    const other = beast(n('house.beast'));
-    return t('house.name', { of: of(b), more: t('house.and', { of: of(other) }) });
+  if (kind === 0) {
+    const params = { beasts: b.many, tincture: t(`house.tincture.${n('house.tincture')}`) };
+    return { full: t('house.three', params), short: t('house.short.three', params) };
   }
-  return t('house.name', { of: of(b), more: pose(n('house.pose'), b) });
+  let more: string;
+  let shortMore: string;
+  if (kind === 1) more = shortMore = t(`house.tincture.${n('house.tincture')}`);
+  else if (kind === 2) {
+    const other = beast(n('house.beast'));
+    more = t('house.and', { of: of(other) });
+    shortMore = t('house.short.and', { beast: other.one });
+  } else more = shortMore = pose(n('house.pose'), b);
+  return {
+    full: t('house.name', { of: of(b), more }),
+    short: t('house.short.name', { beast: b.one, more: shortMore }),
+  };
 }
 
-let names: string[] = [];
+let names: Name[] = [];
 
 /** Draws the houses' names of the match played with `seed`; null: their heraldic names. */
 export function nameHouses(seed: number | null): void {
@@ -68,13 +79,19 @@ export function nameHouses(seed: number | null): void {
   const roll = dice(seed ^ 0x9e3779b9);
   for (let team = 0; team < FACTIONS.length; team++) {
     let name = draw(roll);
-    for (let k = 0; k < 8 && names.includes(name); k++) name = draw(roll);
+    for (let k = 0; k < 8 && names.some((m) => m.full === name.full); k++) name = draw(roll);
     names.push(name);
   }
 }
 
-/** The name of house `team` in this match. */
+/** The name of house `team` in this match, in full: for sentences (« la Maison du Hareng »). */
 export function houseName(team: number): string {
   const f = FACTIONS[team];
-  return names[team] ?? (f ? t(f.nameKey) : '');
+  return names[team]?.full ?? (f ? t(f.nameKey) : '');
+}
+
+/** Its short name, without « Maison de »: for the HUD and the unit card. */
+export function houseShortName(team: number): string {
+  const f = FACTIONS[team];
+  return names[team]?.short ?? (f ? t(`factions.short.${f.id}`) : '');
 }

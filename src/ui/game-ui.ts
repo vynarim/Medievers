@@ -10,7 +10,7 @@ import { canClimb } from '../sim/units/climb.ts';
 import { ropeDir } from '../input/local-controls.ts';
 import { Hud } from './hud.ts';
 import { renderTutorial } from './tutorial.ts';
-import { houseName } from './house-names.ts';
+import { houseShortName } from './house-names.ts';
 import { t } from './i18n.ts';
 import { button, el, holdButton, shield, uiRoot } from './overlay.ts';
 import { COLORS, css } from './tokens.ts';
@@ -624,7 +624,7 @@ export class GameUi {
     const house = el('div', 'house');
     house.append(
       shield(faction?.primary ?? COLORS.encre, faction?.secondary ?? COLORS.or, true),
-      el('span', '', houseName(u.team)),
+      el('span', '', houseShortName(u.team)),
     );
     house.style.color = css(faction?.ink ?? COLORS.encre);
     const hpBar = el('div', 'hpbar');

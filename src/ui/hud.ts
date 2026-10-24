@@ -4,7 +4,7 @@ import { FACTIONS } from '../content/factions.ts';
 import { TICKS_PER_SECOND } from '../content/rules.ts';
 import { MAX_POWER } from '../sim/commands.ts';
 import type { SimView } from '../sim/sim.ts';
-import { houseName } from './house-names.ts';
+import { houseShortName } from './house-names.ts';
 import { t } from './i18n.ts';
 import { button, el, shield } from './overlay.ts';
 import { COLORS, css } from './tokens.ts';
@@ -183,7 +183,7 @@ export class Hud {
         bar.append(fill);
         row.append(
           shield(f?.primary ?? COLORS.encre, f?.secondary ?? COLORS.or, true),
-          el('span', 'name', houseName(team.id)),
+          el('span', 'name', houseShortName(team.id)),
           el('span', '', String(hp[i] ?? 0)),
           bar,
         );
