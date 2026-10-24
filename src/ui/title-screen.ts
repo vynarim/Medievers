@@ -4,11 +4,15 @@ import { t } from './i18n.ts';
 import { button, el, uiRoot } from './overlay.ts';
 import { renderTutorial } from './tutorial.ts';
 
+/** share of the window's width the title page takes, and how far it may grow */
+const TITLE_SHARE = 0.55;
+const TITLE_MAX_SCALE = 1.6;
+
 const STYLE = `
 #ui .title-screen { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
   pointer-events: auto; background:
     radial-gradient(ellipse at 50% 45%, rgba(233, 220, 192, 0.10) 0%, rgba(26, 20, 16, 0) 60%), #1a1410; }
-#ui .title-screen .folio { position: relative; width: min(760px, calc(100vw - 32px)); padding: 44px 48px 52px;
+#ui .title-screen .folio { position: relative; width: min(760px, calc(100vw - 32px)); padding: 44px 48px 64px;
   text-align: center; background: radial-gradient(ellipse at 50% 40%, var(--ceruse) 50%, var(--velin) 100%);
   border: 3px solid var(--encre); box-shadow: inset 0 0 0 6px var(--ceruse), inset 0 0 0 9px var(--or),
   inset 0 0 0 12px var(--ceruse), inset 0 0 0 14px var(--vermillon), 0 10px 40px rgba(0, 0, 0, 0.6); }
@@ -25,11 +29,11 @@ const STYLE = `
 #ui .title-screen .quip { font-size: 17px; font-style: italic; margin: 10px 0 24px; color: var(--brun); }
 #ui .title-screen .actions { justify-content: center; }
 #ui .title-screen .actions button { min-width: 220px; font-size: 20px; }
-#ui .title-screen .colophon { margin-top: 22px; font-size: 13px; color: var(--brun); }
-#ui .title-screen .author, #ui .title-screen .version { position: absolute; bottom: 14px;
-  font-family: var(--caps); font-size: 12px; color: var(--brun); }
-#ui .title-screen .author { right: 22px; }
-#ui .title-screen .version { left: 22px; user-select: text; pointer-events: auto; }
+#ui .title-screen .colophon { margin-top: 22px; font-size: 15px; color: var(--brun); }
+#ui .title-screen .author, #ui .title-screen .version { position: absolute; bottom: 26px;
+  font-family: var(--caps); font-size: 14px; color: var(--brun); }
+#ui .title-screen .author { right: 34px; }
+#ui .title-screen .version { left: 34px; user-select: text; pointer-events: auto; }
 #ui .title-screen .colophon a, #ui .title-screen .author a { color: var(--lapis); pointer-events: auto; user-select: text; }
 `;
 
@@ -64,7 +68,20 @@ export function showTitleScreen(choices: TitleChoices): void {
   const title = el('div', 'name');
   title.append(el('span', 'initial', name.slice(0, 1)), el('span', '', name.slice(1, -1)));
   title.append(el('span', 'last', name.slice(-1)));
+  // About half the screen: the folio grows with the window, up to half again its size.
+  const fit = (): void => {
+    folio.style.transform = '';
+    const w = folio.offsetWidth;
+    const h = folio.offsetHeight;
+    if (w === 0 || h === 0) return;
+    const k = Math.min(
+      TITLE_MAX_SCALE,
+      Math.max(1, Math.min((TITLE_SHARE * window.innerWidth) / w, (0.85 * window.innerHeight) / h)),
+    );
+    folio.style.transform = k > 1 ? `scale(${k.toFixed(3)})` : '';
+  };
   const close = (then: () => void): void => {
+    window.removeEventListener('resize', fit);
     window.removeEventListener('keydown', onKey, true);
     screen.remove();
     then();
@@ -142,4 +159,6 @@ export function showTitleScreen(choices: TitleChoices): void {
   );
   screen.append(folio);
   root.append(screen);
+  fit();
+  window.addEventListener('resize', fit);
 }
