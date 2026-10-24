@@ -8,7 +8,7 @@ const STYLE = `
 #ui .title-screen { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
   pointer-events: auto; background:
     radial-gradient(ellipse at 50% 45%, rgba(233, 220, 192, 0.10) 0%, rgba(26, 20, 16, 0) 60%), #1a1410; }
-#ui .title-screen .folio { position: relative; width: min(760px, calc(100vw - 32px)); padding: 44px 48px 36px;
+#ui .title-screen .folio { position: relative; width: min(760px, calc(100vw - 32px)); padding: 44px 48px 52px;
   text-align: center; background: radial-gradient(ellipse at 50% 40%, var(--ceruse) 50%, var(--velin) 100%);
   border: 3px solid var(--encre); box-shadow: inset 0 0 0 6px var(--ceruse), inset 0 0 0 9px var(--or),
   inset 0 0 0 12px var(--ceruse), inset 0 0 0 14px var(--vermillon), 0 10px 40px rgba(0, 0, 0, 0.6); }
@@ -26,8 +26,10 @@ const STYLE = `
 #ui .title-screen .actions { justify-content: center; }
 #ui .title-screen .actions button { min-width: 220px; font-size: 20px; }
 #ui .title-screen .colophon { margin-top: 22px; font-size: 13px; color: var(--brun); }
-#ui .title-screen .author { margin-top: 8px; text-align: right; font-family: var(--caps);
-  font-size: 12px; color: var(--brun); }
+#ui .title-screen .author, #ui .title-screen .version { position: absolute; bottom: 14px;
+  font-family: var(--caps); font-size: 12px; color: var(--brun); }
+#ui .title-screen .author { right: 22px; }
+#ui .title-screen .version { left: 22px; user-select: text; pointer-events: auto; }
 #ui .title-screen .colophon a, #ui .title-screen .author a { color: var(--lapis); pointer-events: auto; user-select: text; }
 `;
 
@@ -90,6 +92,17 @@ export function showTitleScreen(choices: TitleChoices): void {
   link.target = '_blank';
   link.rel = 'noopener';
   author.append(t('title.by'), ' ', link, `, ${YEAR}`);
+  // The version built: its commit and day, « dev » on the local server.
+  const env = import.meta.env as Record<string, string | boolean | undefined> | undefined;
+  const commit = String(env?.VITE_COMMIT ?? '');
+  const day = String(env?.VITE_COMMIT_DATE ?? '');
+  const version = el(
+    'div',
+    'version',
+    commit === ''
+      ? t('title.versionUnknown')
+      : t(env?.VITE_DEV === true ? 'title.versionDev' : 'title.version', { v: commit, day }),
+  );
   const actions = el('div', 'actions');
   const resume = choices.resume;
   if (resume) {
@@ -125,6 +138,7 @@ export function showTitleScreen(choices: TitleChoices): void {
     actions,
     colophon,
     author,
+    version,
   );
   screen.append(folio);
   root.append(screen);
