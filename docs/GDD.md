@@ -226,7 +226,8 @@ Règles de level design :
 - Chaque carte est testée avec 3 parties IA contre IA automatiques. Critère : aucune unité coincée et aucune partie interminable (plus de 40 tours).
 
 ## 11. Audio
-- **Musique** : instrumentation d'époque (vièle, flûte, chalemie, tambour, psaltérion). Les compositions médiévales sont dans le domaine public, mais **les enregistrements existants ne le sont pas** : il faut un enregistrement propre, une génération ou une banque sous licence vérifiée.
+- **Musique** : instrumentation d'époque (vièle, flûte, chalemie, tambour, psaltérion).
+- **Style musical** (décidé le 2026-10-24) : l'esprit rythmique de [*Patapon*](https://fr.wikipedia.org/wiki/Patapon), **remixé en médiéval**. Percussions au premier plan (tambours, tabor, nacaires) sur des boucles courtes et entraînantes ; motifs mélodiques simples et répétés à la chalemie, à la flûte et à la vièle ; chœurs scandés en onomatopées ou en latin de cuisine, comme une troupe en marche. Ton joyeux et burlesque, accordé à celui du jeu. On s'inspire de l'énergie et de la structure, sans reprendre aucune mélodie ni aucun motif existant. Les compositions médiévales sont dans le domaine public, mais **les enregistrements existants ne le sont pas** : il faut un enregistrement propre, une génération ou une banque sous licence vérifiée.
 - **Ambiance** par carte : vent, oiseaux, camp, eau.
 - **SFX** : la liste est dans `ASSETS.md` §6.
 - **Voix** : courtes interjections en ancien français ou en latin de cuisine (« Hélas ! », « Par ma foi ! », « Mea culpa ! »), avec 3 timbres. P1.

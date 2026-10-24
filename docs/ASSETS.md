@@ -169,7 +169,7 @@ Arc, arbalète, fronde, pot de feu grégeois, pot de poix, cochon enflammé, ruc
 ## 6. Audio
 | Catégorie | Contenu | Qté | P |
 |---|---|---|---|
-| Musique | Menu, sélection d'équipes, 3 thèmes de bataille (calme, tendu, Déluge), victoire, défaite | 7 pistes | P1 (1 piste en P0) |
+| Musique | Menu, sélection d'équipes, 3 thèmes de bataille (calme, tendu, Déluge), victoire, défaite. Style : rythmes et sonorités à la *Patapon* remixés en médiéval (GDD §11) | 7 pistes | P1 (1 piste en P0) |
 | Ambiances | Vent de plaine, camp, eau, tour (vent fort), verger (oiseaux) | 5 boucles | P1 |
 | SFX armes | Corde d'arc, impact de flèche ×2, arbalète, fronde (rotation + lâcher), pot (lancer, rebond ×2, mèche), explosions S/M/L ×2, poix, grognement de cochon ×3, essaim, cri de faucon, trébuchet lointain + sifflement, épée ×2, masse ×2 | ~30 | P0 (8) / P1 |
 | SFX utilitaires | Grappin (tir, accroche), pierre posée, échelle, bannière qui claque, pioche ×3, chausse-trape (armement, déclenchement), miracle (chœur bref) | ~12 | P1 |
