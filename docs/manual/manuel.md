@@ -279,6 +279,10 @@ On peut aussi viser « à la fronde » : appuyer sur son combattant, tirer franc
 
 Un clic sur n'importe quel combattant ouvre sa fiche : nom, maison, points de vie, état (joue ce tour, attend, en l'air, tombé), classe et talent (à venir), un rappel des règles de marche, de chute et de mort, et, pour le combattant qui joue, l'arme en main avec ses caractéristiques.
 
+### Les bulles d'objets {{st:jeu}}
+
+Un clic (ou un appui) sur un baril de poudre, un reliquaire, la cuisine de campagne, une bête des marges ou un pot posé ouvre une **bulle** au-dessus de lui, qui dit ce que c'est et ce que ça fait. Un clic sur la bulle la ferme. Un reliquaire piégé ne se trahit pas.
+
 ### Réglages de test {{st:jeu}}
 
 Le bouton **⚙ Réglages** ouvre toutes les valeurs du jeu en cours de réglage : durées du tour, points de vie, vitesse de marche, sauts, chutes, vent, projections, et pour chaque arme ses dégâts, sa vitesse, son rayon, son usure du terrain, sa mèche, ses munitions. Les valeurs sont rangées par onglets (Tour, Combattants, Vent et explosions, puis une page par arme). Elles s'appliquent à la partie suivante (**Appliquer et relancer**), le navigateur s'en souvient, et **Valeurs par défaut** remet tout comme avant. Les valeurs d'une partie sont enregistrées avec son replay.

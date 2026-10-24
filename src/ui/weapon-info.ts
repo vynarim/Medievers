@@ -10,6 +10,7 @@ export function weaponLines(w: WeaponDef): string[] {
         ? t('weapon.wind.weak')
         : t('weapon.wind.full');
   const lines = [
+    t(`weapons.${w.id}.desc`),
     `${t('weapon.damage')} : ${w.damage}`,
     `${t('weapon.radius')} : ${w.explosionRadius > 0 ? `${w.explosionRadius} px` : '—'}`,
     `${t('weapon.wind')} : ${wind}`,

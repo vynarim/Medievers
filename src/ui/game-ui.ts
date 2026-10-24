@@ -58,6 +58,9 @@ export class GameUi {
   private readonly veil: HTMLElement;
   private readonly arsenal: HTMLElement;
   private readonly card: HTMLElement;
+  /** speech bubble describing the map object last clicked */
+  private readonly bubble: HTMLElement;
+  private bubbleText = '';
   private readonly help: HTMLElement;
   private readonly settings: HTMLElement;
   private readonly pause: HTMLElement;
@@ -170,6 +173,8 @@ export class GameUi {
     this.veil.addEventListener('pointerdown', () => this.show(null));
     this.arsenal = this.modal();
     this.card = el('div', 'card panel hidden');
+    this.bubble = el('div', 'bubble panel hidden');
+    this.bubble.addEventListener('pointerdown', () => this.showBubble(null, 0, 0));
     this.help = this.modal('help');
     this.settings = this.modal();
     this.pause = this.modal('pause');
@@ -188,6 +193,7 @@ export class GameUi {
       bar,
       sys,
       this.card,
+      this.bubble,
       this.veil,
       this.arsenal,
       this.help,
@@ -258,6 +264,25 @@ export class GameUi {
     this.selectedUnit = unitId;
     this.cardSignature = '';
     this.card.classList.toggle('hidden', unitId === null);
+  }
+
+  /**
+   * The bubble over a map object (screen px of the point it hangs from), or none. The text is
+   * rebuilt only when it changes.
+   */
+  showBubble(info: { title: string; text: string } | null, sx: number, sy: number): void {
+    this.bubble.classList.toggle('hidden', info === null);
+    if (!info) {
+      this.bubbleText = '';
+      return;
+    }
+    const text = `${info.title}|${info.text}`;
+    if (text !== this.bubbleText) {
+      this.bubbleText = text;
+      this.bubble.replaceChildren(el('b', '', info.title), el('div', '', info.text));
+    }
+    this.bubble.style.left = `${Math.round(sx)}px`;
+    this.bubble.style.top = `${Math.round(sy)}px`;
   }
 
   /** Puts the character card on the side of the screen away from its unit. */

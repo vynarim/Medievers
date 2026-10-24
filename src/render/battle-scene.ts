@@ -30,6 +30,7 @@ import { AutoSaver, clearSave } from '../app/autosave.ts';
 import { spawnColumns } from '../app/spawns.ts';
 import { replay, type GameLog } from '../sim/log.ts';
 import { frame, type Point } from './framing.ts';
+import { objectAt, objectInfo, type ObjectRef } from '../ui/object-info.ts';
 import { Scenery } from './scenery.ts';
 import { FixedStep } from './fixed-step.ts';
 import { TerrainLayer } from './terrain-layer.ts';
@@ -102,6 +103,8 @@ export class BattleScene extends Phaser.Scene {
   private world!: Phaser.GameObjects.Graphics;
   /** turns-left figures over the pots resting on the map, by pot id */
   private readonly potLabels = new Map<number, Phaser.GameObjects.Text>();
+  /** the map object whose bubble is open */
+  private infoRef: ObjectRef | null = null;
   /** drawn position of the beast, easing after the sim's */
   private beastShown: { x: number; y: number } | null = null;
   /** the burnt ends of the parchment, over the terrain, under the units */
@@ -137,6 +140,7 @@ export class BattleScene extends Phaser.Scene {
     this.bursts = [];
     this.manualCamera = false;
     this.selectedUnit = null;
+    this.infoRef = null;
   }
 
   create(): void {
@@ -409,7 +413,6 @@ export class BattleScene extends Phaser.Scene {
     return key;
   }
 
-
   override update(time: number, delta: number): void {
     this.fps += (1000 / Math.max(1, delta) - this.fps) * 0.05;
     const k = (name: string): boolean => this.pressed.has(name);
@@ -455,6 +458,7 @@ export class BattleScene extends Phaser.Scene {
     if (click) this.selectAt(click.x, click.y);
     this.ui.update(this.sim.view(), this.input_.controls.power, time);
     this.ui.showResetView(this.manualCamera);
+    this.updateBubble();
     if (this.selectedUnit !== null) {
       // The card goes to the half of the screen the unit is not in.
       const u = this.sim.view().units.find((x) => x.id === this.selectedUnit);
@@ -476,6 +480,20 @@ export class BattleScene extends Phaser.Scene {
     }
   }
 
+  /** Keeps the object bubble over its object, and closes it once the object is gone. */
+  private updateBubble(): void {
+    const info = this.infoRef ? objectInfo(this.sim.view(), this.infoRef) : null;
+    if (!info) {
+      this.infoRef = null;
+      this.ui.showBubble(null, 0, 0);
+      return;
+    }
+    const cam = this.cameras.main;
+    const sx = (info.x - cam.worldView.x) * cam.zoom;
+    const sy = (info.y - cam.worldView.y) * cam.zoom;
+    this.ui.showBubble(info, sx, sy);
+  }
+
   /** Shows the card of the unit under a click (figure or name label), or hides it. */
   private selectAt(x: number, y: number): void {
     // During the placement, a click puts the house's next unit down on that column.
@@ -494,6 +512,9 @@ export class BattleScene extends Phaser.Scene {
       );
     this.selectedUnit = hit?.id ?? null;
     this.ui.selectUnit(this.selectedUnit);
+    // No unit there: a barrel, a reliquary, the kitchen, a beast or a pot gets its bubble.
+    const slop = 10 / this.cameras.main.zoom;
+    this.infoRef = hit ? null : objectAt(this.sim.view(), x, y, slop);
     // A click on one of the playing team's units hands it the turn (the sim decides if allowed).
     const v = this.sim.view();
     if (hit && hit.team === v.turn.activeTeam && hit.id !== v.turn.activeUnitId) {

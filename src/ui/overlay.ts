@@ -32,6 +32,14 @@ const STYLE = `
 #ui button:hover { background: var(--or); }
 #ui button:active, #ui button.on { background: var(--or); transform: translateY(1px); }
 #ui button:disabled { opacity: 0.4; cursor: default; background: var(--velin); transform: none; }
+/* Speech bubble over a map object: anchored by its tail, which points at the object. */
+#ui .bubble { position: absolute; transform: translate(-50%, calc(-100% - 18px)); width: max-content;
+  max-width: min(320px, calc(100vw - 24px)); padding: 8px 14px 10px; font-size: 16px; line-height: 1.35;
+  border-radius: 14px; text-align: center; cursor: pointer; }
+#ui .bubble b { display: block; font-family: var(--caps); font-weight: normal; font-size: 19px;
+  color: var(--vermillon); margin-bottom: 2px; }
+#ui .bubble::after { content: ''; position: absolute; left: 50%; bottom: -16px; margin-left: -10px;
+  border: 10px solid transparent; border-top: 16px solid var(--encre); border-bottom: 0; }
 #ui .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 12px; }
 #ui .tabs button { min-height: 40px; font-size: 16px; }
 #ui button.icon { font-family: var(--text); font-size: 26px; min-width: 52px; padding: 2px 8px; }
