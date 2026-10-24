@@ -44,6 +44,8 @@ const MATERIAL_RGB: Record<number, readonly Rgb[]> = {
   [Material.Ladder]: [rgb(COLORS.or), rgb(COLORS.ocre)],
   // Masonry behind the play: the same ashlar, a shade darker, so it reads as background.
   [Material.Backdrop]: [pale(COLORS.roche, 0.55), pale(COLORS.velin, 0.05)],
+  // Timber behind the play: planks of oak, a shade lighter than the wood one stands on.
+  [Material.Timber]: [pale(COLORS.terreOmbre, 0.3), pale(COLORS.ocre, 0.35)],
 };
 const FALLBACK: readonly Rgb[] = [rgb(COLORS.roseGarance)];
 const HIGHLIGHT = rgb(COLORS.ceruse);
@@ -51,6 +53,9 @@ const MORTAR = pale(COLORS.terreOmbre, 0.2);
 /** px: height of a band of strata, and width of the rounded steps along its edge */
 const BAND = 56;
 const STEP = 92;
+/** px: planks of a wooden tower's body, and the beams across them */
+const PLANK = 12;
+const BEAM = 64;
 /** px: masonry courses and stones of built stone */
 const COURSE = 16;
 const STONE = 34;
@@ -309,6 +314,14 @@ export class TerrainLayer {
           if (sx < 2 || sy < 2) c = MORTAR;
           else if (sy < 4) c = HIGHLIGHT;
           else c = tint ?? HIGHLIGHT;
+        } else if (mat === Material.Timber) {
+          // Upright planks with dark seams, crossed by a beam now and then.
+          const tints = this.style.tints[mat] ?? FALLBACK;
+          const plank = Math.floor(wx / PLANK);
+          const tint = tints[plank % tints.length] ?? HIGHLIGHT;
+          if (wy % BEAM < 6) c = wy % BEAM < 2 ? MORTAR : (tints[0] ?? HIGHLIGHT);
+          else if (wx % PLANK < 2) c = MORTAR;
+          else c = tint;
         } else {
           // Strata in rounded steps: each band's lower edge bulges in arcs, ink line on the edge,
           // a white highlight just under it, as on the hills of the manuscript.

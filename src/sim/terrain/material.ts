@@ -9,11 +9,13 @@ export const Material = {
   Ladder: 5,
   /** masonry seen behind the play (a tower's body): drawn, not an obstacle (2026-10-25) */
   Backdrop: 6,
+  /** timber seen behind the play (a wooden tower's body): drawn, not an obstacle (2026-10-25) */
+  Timber: 7,
 } as const;
 
 export type MaterialId = (typeof Material)[keyof typeof Material];
 
-export const MATERIAL_COUNT = 7;
+export const MATERIAL_COUNT = 8;
 
 /** Colour of a material in the source mask PNG. */
 export interface MaskColor {

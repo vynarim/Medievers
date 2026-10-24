@@ -22,6 +22,17 @@ describe('generated maps (GDD §10)', () => {
     expect(got).toMatchSnapshot();
   });
 
+  it('build some wooden towers on mottes in the valley and on the coast, none in the Holy Land', () => {
+    const kinds = (theme: (typeof MAP_THEMES)[number]) =>
+      [1, 2, 3, 4, 5, 6, 7, 8].flatMap((seed) =>
+        generateMap(theme, seed).structures.map((s) => s.type),
+      );
+    expect(kinds('valley')).toContain('woodTower');
+    expect(kinds('valley')).toContain('tower');
+    expect(kinds('coast')).toContain('woodTower');
+    expect(kinds('holyLand')).not.toContain('woodTower');
+  });
+
   it('have bedrock at the bottom, open sky at the top, and structures inside the map', () => {
     for (const theme of MAP_THEMES) {
       for (const seed of [1, 2, 3, 4, 5]) {

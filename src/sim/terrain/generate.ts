@@ -70,6 +70,19 @@ function flatten(ground: Int32Array, x0: number, x1: number, ease: number): numb
   return level;
 }
 
+/** px: height of the earthen motte under a wooden tower, and the run of its slopes */
+const MOTTE_HEIGHT = 70;
+const MOTTE_SLOPE = 90;
+
+/** Raises a motte castrale between x0 and x1: a flat top, eased slopes on both sides. */
+function motte(ground: Int32Array, x0: number, x1: number): void {
+  for (let x = Math.max(0, x0 - MOTTE_SLOPE); x < Math.min(ground.length, x1 + MOTTE_SLOPE); x++) {
+    const d = x < x0 ? x0 - x : x >= x1 ? x - x1 + 1 : 0;
+    const k = d === 0 ? ONE : smooth(ONE - Math.trunc((d * ONE) / MOTTE_SLOPE));
+    ground[x] = (ground[x] ?? 0) - Math.trunc((MOTTE_HEIGHT * k) / ONE);
+  }
+}
+
 /** A column for a structure of width w, clear of the ends and of the others; null if none. */
 function freeColumn(
   prng: PrngState,
@@ -173,7 +186,14 @@ export function generateMap(theme: MapTheme, seed: number): GeneratedMap {
     if (x === null) continue;
     flatten(ground, x - 10, x + tw + 10, 60);
     const ladder = nextRange(prng, 0, 1) === 0 ? -1 : 1;
-    structures.push({ id: id++, type: 'tower', build: { x, width: tw, ladder } });
+    // Wood or stone from the column already drawn, so the rest of the map draws as before.
+    const wood = g.woodTowers === true && ((x >> 4) & 1) === 1;
+    if (wood) motte(ground, x - 10, x + tw + 10);
+    structures.push({
+      id: id++,
+      type: wood ? 'woodTower' : 'tower',
+      build: { x, width: tw, ladder },
+    });
   }
   const wallCount = nextRange(prng, g.walls[0], g.walls[1]);
   for (let i = 0; i < wallCount; i++) {

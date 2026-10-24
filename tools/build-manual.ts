@@ -31,6 +31,10 @@ const MATERIAL_NAMES: Record<MaterialId, [string, string]> = {
     'Maçonnerie de fond',
     'Le corps des tours : on passe devant, les tirs aussi ; seul le chemin de ronde arrête.',
   ],
+  [Material.Timber]: [
+    'Charpente de fond',
+    'Le corps des tours de bois : on passe devant, comme pour la maçonnerie de fond.',
+  ],
 };
 
 function materialsTable(): string {

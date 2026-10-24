@@ -48,6 +48,11 @@ export interface MapGen {
   readonly maxGround: number;
   /** towers built by the match, and free-standing stone walls */
   readonly towers: readonly [number, number];
+  /**
+   * about one tower in two is a timber keep on an earthen motte, as the mottes castrales were
+   * (2026-10-25); absent: stone towers only
+   */
+  readonly woodTowers?: boolean;
   readonly walls: readonly [number, number];
   /** rock outcrops near the surface, and pockets of rock deeper down */
   readonly outcrops: readonly [number, number];
@@ -77,6 +82,7 @@ export const MAP_GEN: Readonly<Record<MapTheme, MapGen>> = {
     minGround: 640,
     maxGround: 1380,
     towers: [2, 2],
+    woodTowers: true,
     walls: [1, 1],
     outcrops: [0, 2],
     pockets: [2, 4],
@@ -95,6 +101,7 @@ export const MAP_GEN: Readonly<Record<MapTheme, MapGen>> = {
     minGround: 760,
     maxGround: 1530,
     towers: [1, 2],
+    woodTowers: true,
     walls: [0, 1],
     outcrops: [1, 3],
     pockets: [1, 2],

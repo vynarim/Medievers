@@ -72,7 +72,10 @@ function buildTower(
   width: number,
   height: number,
   ladder: -1 | 1,
+  wood: boolean,
 ): [number, number, number, number] {
+  const floor = wood ? Material.Wood : Material.BuiltStone;
+  const body = wood ? Material.Timber : Material.Backdrop;
   const x1 = x0 + width;
   let foot = 0;
   for (let x = x0; x < x1; x++) foot = Math.max(foot, groundAt(t, x));
@@ -87,7 +90,7 @@ function buildTower(
     const free = ladder < 0 ? x < x0 + LANDING : x >= x1 - LANDING;
     const merlon = !free && (x - x0) % MERLON_STEP < MERLON_W;
     for (let y = merlon ? top - MERLON_H : top; y < bottom; y++) {
-      put(x, y, y < top + PARAPET ? Material.BuiltStone : Material.Backdrop);
+      put(x, y, y < top + PARAPET ? floor : body);
     }
   }
   const lx = ladder < 0 ? x0 - LADDER_GAP - LADDER_W : x1 + LADDER_GAP;
@@ -112,7 +115,16 @@ export function initStructures(
   for (const p of [...placements].sort((a, b) => a.id - b.id)) {
     const rect =
       'build' in p
-        ? buildTower(terrain, p.build.x, p.build.width, rules.towerHeight, p.build.ladder)
+        ? buildTower(
+            terrain,
+            p.build.x,
+            p.build.width,
+            p.type === 'woodTower'
+              ? (rules.woodTowerHeight ?? rules.towerHeight)
+              : rules.towerHeight,
+            p.build.ladder,
+            p.type === 'woodTower',
+          )
         : p.rect;
     const [x0, y0, w, h] = rect;
     for (let y = Math.max(0, y0); y < Math.min(terrain.height, y0 + h); y++) {
@@ -122,6 +134,7 @@ export function initStructures(
         if (
           m === Material.BuiltStone ||
           m === Material.Backdrop ||
+          m === Material.Timber ||
           m === Material.Wood ||
           m === Material.Ladder
         ) {
@@ -288,7 +301,8 @@ export function undermineStructures(s: SimState, events: SimEvent[]): void {
   const t = s.terrain;
   const width = t.width;
   for (const st of s.structures) {
-    if (st.state === StructureState.Fallen || (st.type !== 'tower' && st.type !== 'wall')) continue;
+    if (st.state === StructureState.Fallen) continue;
+    if (st.type !== 'tower' && st.type !== 'woodTower' && st.type !== 'wall') continue;
     const [rx, ry, rw, rh] = st.rect;
     let columns = 0;
     let standing = 0;

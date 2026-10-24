@@ -3,7 +3,7 @@
 // them live here. Percentages apply to the weapon's damage (100 = as on a unit).
 import type { WeaponId } from './weapons.ts';
 
-export type StructureType = 'tower' | 'wall' | 'bridge' | 'scaffold';
+export type StructureType = 'tower' | 'woodTower' | 'wall' | 'bridge' | 'scaffold';
 
 export interface StructureDef {
   readonly hp: number;
@@ -49,11 +49,17 @@ export interface StructureRules {
    * older logs: nothing collapses for want of ground.
    */
   readonly supportPct?: number;
+  /**
+   * px: height of the wooden towers the match builds (a timber keep on its motte, 2026-10-25),
+   * above the top of their motte. Absent: towerHeight.
+   */
+  readonly woodTowerHeight?: number;
 }
 
 export const STRUCTURE_RULES: StructureRules = {
   defs: {
     tower: { hp: 240, ...STONE },
+    woodTower: { hp: 140, ...WOOD },
     wall: { hp: 160, ...STONE },
     bridge: { hp: 90, ...WOOD },
     scaffold: { hp: 60, ...WOOD },
@@ -67,6 +73,7 @@ export const STRUCTURE_RULES: StructureRules = {
   crushMax: 40,
   towerHeight: 320,
   supportPct: 50,
+  woodTowerHeight: 220,
 };
 
 /**
@@ -81,7 +88,8 @@ export type StructurePlacement =
     }
   | {
       readonly id: number;
-      readonly type: 'tower';
+      /** a stone tower, or a wooden one (a timber keep, as on a motte castrale) */
+      readonly type: 'tower' | 'woodTower';
       /** px: left edge and width of the tower; the side of its ladder (-1 west, 1 east) */
       readonly build: { readonly x: number; readonly width: number; readonly ladder: -1 | 1 };
     };
