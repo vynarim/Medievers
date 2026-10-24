@@ -306,6 +306,40 @@ export function targetFor(
   };
 }
 
+/**
+ * px: the row the middle of a wall set at (x, y) comes to rest at: stone is heavy, so it drops
+ * straight down until it stands on the ground (2026-10-25: walls no longer hang in the air).
+ * A wall set into the ground stays where it is (and is refused).
+ */
+export function wallLanding(v: TargetView, def: WeaponDef, x: number, y: number): number {
+  const w = def.wall;
+  if (!w) return y;
+  const { shape, ox, oy } = wallShape(
+    w,
+    wallLength(w, wallSize(v.turn.fuse)),
+    wallAngle(v.turn.aim),
+  );
+  const t = v.terrain;
+  let drop = t.height;
+  for (let i = 0; i < shape.width; i++) {
+    // The lowest stone of this column, and the free fall under it.
+    let bottom = -1;
+    for (let j = shape.height - 1; j >= 0; j--) {
+      if (shape.data[j * shape.width + i] !== 0) {
+        bottom = j;
+        break;
+      }
+    }
+    if (bottom < 0) continue;
+    const px = x + ox + i;
+    if (px < 0 || px >= t.width) continue;
+    let gap = 0;
+    for (let py = y + oy + bottom + 1; py < t.height && !isSolid(t, px, py); py++) gap++;
+    drop = Math.min(drop, gap);
+  }
+  return drop >= t.height ? y : y + drop;
+}
+
 /** Why a wall cannot go at (x, y), or null when it can: too far, on a unit, or in the ground. */
 export function wallRefusal(
   v: TargetView & { readonly units: readonly Readonly<Unit>[] },
@@ -319,6 +353,8 @@ export function wallRefusal(
   const dx = x - subToPx(u.x);
   const dy = y - (subToPx(u.y) - (UNIT_HEIGHT >> 1));
   if (isqrt(dx * dx + dy * dy) > w.reach) return 'far';
+  // Where it comes to rest: neither on a unit nor in the ground there.
+  if (w.fall) y = wallLanding(v, def, x, y);
   const { shape, ox, oy } = wallShape(
     w,
     wallLength(w, wallSize(v.turn.fuse)),
@@ -355,6 +391,7 @@ export function buildWall(
 ): boolean {
   const w = def.wall;
   if (!w || wallRefusal(s, u, def, x, y) !== null) return false;
+  if (w.fall) y = wallLanding(s, def, x, y);
   const { shape, ox, oy } = wallShape(
     w,
     wallLength(w, wallSize(s.turn.fuse)),

@@ -132,7 +132,7 @@ La **masse d'armes** est jouable {{st:jeu}} : le bouton devient « Frapper ». E
 | Outil | Effet | Munitions |
 |---|---|---|
 | **Grappin** | Une corde pour se balancer, la lâcher et la relancer en l'air | 5 |
-| **Mur de pierres** {{st:jeu}} | Cliquez sur la carte pour poser un bloc de pierre taillée, jusqu'à 320 px de vous. La visée le tourne (par pas de 22,5°), les boutons 1 à 3 choisissent sa longueur (48, 80 ou 120 px). Son contour s'affiche sous la souris, en rouge là où il ne peut pas aller (trop loin, sur un combattant, en pleine terre) : le mur n'est alors pas posé et vous le gardez | 2 |
+| **Mur de pierres** {{st:jeu}} | Cliquez sur la carte pour poser un bloc de pierre taillée, jusqu'à 320 px de vous ; la pierre est lourde : il tombe tout droit jusqu'au sol, où son contour s'affiche. La visée le tourne (par pas de 22,5°), les boutons 1 à 3 choisissent sa longueur (48, 80 ou 120 px). Son contour s'affiche sous la souris, en rouge là où il ne peut pas aller (trop loin, sur un combattant, en pleine terre) : le mur n'est alors pas posé et vous le gardez | 2 |
 | **Bannière** | Parachute : on descend lentement, porté par le vent | 3 |
 | **Pioche** {{st:jeu}} | « Creuser » : creuse droit vers le bas pendant 3 s, environ 90 px dans la terre (180 pour un Sapeur), plus lentement dans la pierre, pas du tout dans la roche. Le temps du tour s'arrête pendant qu'on creuse | 2 |
 | **Sape** {{st:jeu}} | « Creuser » : un tunnel à plat, ou en biais à 45° vers le haut ou le bas selon la visée, pendant 4 s (environ 180 px, 360 pour un Sapeur) ; le combattant le suit | 2 |

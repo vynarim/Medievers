@@ -47,7 +47,14 @@ import { drawClassMark } from './class-marks.ts';
 import { drawFigure } from './figures.ts';
 import { aimPreviewTicks, classOf, maxHpOf, visibleMines } from '../sim/classes.ts';
 import { shotSpeed } from '../sim/weapons/weapons.ts';
-import { targetFor, wallAngle, wallLength, wallRefusal, wallSize } from '../sim/tools.ts';
+import {
+  targetFor,
+  wallAngle,
+  wallLanding,
+  wallLength,
+  wallRefusal,
+  wallSize,
+} from '../sim/tools.ts';
 import { isProjectile, isTargeted, type WeaponDef } from '../content/weapons.ts';
 import { rulesFor, saveSetup, type MatchSetup } from '../app/match-setup.ts';
 import { showSetupScreen } from '../ui/setup-screen.ts';
@@ -1956,6 +1963,8 @@ export class BattleScene extends Phaser.Scene {
     const wall = def.wall;
     if (wall) {
       const ok = wallRefusal(v, u, def, at.x, at.y) === null;
+      // Shown where it will come to rest, on the ground below.
+      const spot = wall.fall ? { x: at.x, y: wallLanding(v, def, at.x, at.y) } : at;
       const length = wallLength(wall, wallSize(v.turn.fuse || def.defaultFuse));
       const a = (wallAngle(v.turn.aim) * Math.PI * 2) / 4096;
       const hl = length / 2;
@@ -1967,7 +1976,7 @@ export class BattleScene extends Phaser.Scene {
         [hl, -ht],
         [hl, ht],
         [-hl, ht],
-      ].map(([dx = 0, dy = 0]) => ({ x: at.x + dx * c - dy * s, y: at.y + dx * s + dy * c }));
+      ].map(([dx = 0, dy = 0]) => ({ x: spot.x + dx * c - dy * s, y: spot.y + dx * s + dy * c }));
       g.fillStyle(ok ? COLORS.ceruse : COLORS.vermillon, 0.55);
       g.fillPoints(poly(corners), true);
       g.lineStyle(3, ok ? COLORS.encre : COLORS.vermillon, 0.9);

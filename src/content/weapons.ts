@@ -57,6 +57,11 @@ export interface WallDef {
   readonly thickness: number;
   /** px: farthest from the unit's body centre the wall's centre may be */
   readonly reach: number;
+  /**
+   * the wall drops straight down onto the ground below where it is set (2026-10-25). Absent
+   * from older logs: it stays where it is set, in the air if need be.
+   */
+  readonly fall?: boolean;
 }
 
 /** Volée de trébuchet (GDD §4.2): stones falling from off the map on a chosen point. */
@@ -282,7 +287,7 @@ export const WEAPONS: readonly WeaponDef[] = [
     ...TOOL,
     ammo: 2,
     defaultFuse: 2 * 60,
-    wall: { short: 48, medium: 80, long: 120, thickness: 14, reach: 320 },
+    wall: { short: 48, medium: 80, long: 120, thickness: 14, reach: 320, fall: true },
   },
   {
     id: 'trebuchet',

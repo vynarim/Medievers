@@ -266,7 +266,7 @@ describe('chausse-trape (GDD §4.4)', () => {
 });
 
 describe('mur de pierres (GDD §4.4)', () => {
-  it('sets dressed stone where clicked, along the aim', () => {
+  it('sets dressed stone below where clicked, along the aim, dropped onto the ground', () => {
     const sim = duel(300, 1000);
     const events = run(
       sim,
@@ -277,11 +277,14 @@ describe('mur de pierres (GDD §4.4)', () => {
       ],
       1,
     );
-    expect(events).toContainEqual({ e: 'wallBuilt', x: 450, y: 420 });
+    // Clicked 80 px above the ground (500): the stone falls until it stands on it.
+    const built = events.find((e) => e.e === 'wallBuilt');
+    expect(built).toEqual({ e: 'wallBuilt', x: 450, y: 500 - 8 });
     const t = sim.view().terrain;
-    expect(t.data[420 * t.width + 450]).toBe(Material.BuiltStone);
-    expect(t.data[420 * t.width + 450 + 38]).toBe(Material.BuiltStone);
-    expect(t.data[(420 - 20) * t.width + 450]).toBe(Material.Air);
+    expect(t.data[420 * t.width + 450]).toBe(Material.Air);
+    expect(t.data[495 * t.width + 450]).toBe(Material.BuiltStone);
+    expect(t.data[495 * t.width + 450 + 38]).toBe(Material.BuiltStone);
+    expect(t.data[(495 - 20) * t.width + 450]).toBe(Material.Air);
     expect(sim.view().turn.phase).toBe('retreat');
   });
 
@@ -320,13 +323,36 @@ describe('mur de pierres (GDD §4.4)', () => {
       sim,
       [
         { t: 'selectWeapon', id: 'stoneWall' },
-        { t: 'aim', angle: 3072 },
+        { t: 'aim', angle: 0 },
         { t: 'fire', power: 512 },
       ],
       1,
     );
     const reach = def('stoneWall')?.wall?.reach ?? 0;
-    expect(events).toContainEqual({ e: 'wallBuilt', x: 300, y: 460 - (reach >> 1) });
+    expect(events).toContainEqual({ e: 'wallBuilt', x: 300 + (reach >> 1), y: 500 - 8 });
+  });
+
+  it('stays where it is set in logs recorded before walls fell', () => {
+    const rules: MatchRules = {
+      ...CALM,
+      weapons: CALM.weapons.map((w) => {
+        if (!w.wall) return w;
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { fall, ...old } = w.wall;
+        return { ...w, wall: old };
+      }),
+    };
+    const sim = duel(300, 1000, rules);
+    const events = run(
+      sim,
+      [
+        { t: 'selectWeapon', id: 'stoneWall' },
+        { t: 'aim', angle: 0 },
+        { t: 'fireAt', x: 450, y: 420 },
+      ],
+      1,
+    );
+    expect(events).toContainEqual({ e: 'wallBuilt', x: 450, y: 420 });
   });
 });
 
