@@ -141,7 +141,7 @@ export class Commentary {
           break;
         }
         case 'mineSprung':
-          this.hud.say(pick('quip.mineSprung'), now);
+          this.hud.say(pick('quip.mineSprung'), now, 'bad');
           break;
         case 'jumpRefused':
           this.hud.say(t('quip.jumpRefused', { name: unitName(e.unitId) }), now);
@@ -178,7 +178,7 @@ export class Commentary {
                 : u.team === v.turn.activeTeam
                   ? 'quip.friendly'
                   : 'quip.hit';
-            this.hud.say(pick(kind, params), now);
+            this.hud.say(pick(kind, params), now, 'bad');
           }
           break;
         }
@@ -191,6 +191,7 @@ export class Commentary {
           this.hud.say(
             pick(e.heal > 0 ? 'quip.soup' : 'quip.soupFull', { name, heal: e.heal }),
             now,
+            e.heal > 0 ? 'good' : null,
           );
           if (u && e.heal > 0) {
             pops.push({
@@ -217,10 +218,10 @@ export class Commentary {
           this.hud.say(pick(e.kind === 0 ? 'quip.hare' : 'quip.snail'), now);
           break;
         case 'beastStruck':
-          this.hud.say(pick(`quip.trick${e.trick}`, { name: unitName(e.unitId) }), now);
+          this.hud.say(pick(`quip.trick${e.trick}`, { name: unitName(e.unitId) }), now, 'bad');
           break;
         case 'beastKilled':
-          this.hud.say(pick('quip.beastKilled'), now);
+          this.hud.say(pick('quip.beastKilled'), now, 'good');
           break;
         case 'dragonAppeared':
           this.hud.say(pick('quip.dragon'), now);
@@ -229,16 +230,16 @@ export class Commentary {
           this.hud.say(pick('quip.angelLift', { name: unitName(e.unitId) }), now);
           break;
         case 'angelDropped':
-          this.hud.say(pick('quip.angelDropped', { name: unitName(e.unitId) }), now);
+          this.hud.say(pick('quip.angelDropped', { name: unitName(e.unitId) }), now, 'bad');
           break;
         case 'towerAlight':
-          this.hud.say(pick('quip.towerAlight'), now);
+          this.hud.say(pick('quip.towerAlight'), now, 'bad');
           break;
         case 'towerBurnt':
-          this.hud.say(pick('quip.towerBurnt'), now);
+          this.hud.say(pick('quip.towerBurnt'), now, 'bad');
           break;
         case 'washedUp':
-          this.hud.say(pick('quip.washedUp', { name: unitName(e.unitId) }), now);
+          this.hud.say(pick('quip.washedUp', { name: unitName(e.unitId) }), now, 'bad');
           break;
         case 'unicornAppeared':
           this.hud.say(pick('quip.unicorn'), now);
@@ -247,13 +248,14 @@ export class Commentary {
           this.hud.say(
             pick('quip.unicornTouched', { name: unitName(e.unitId), heal: e.heal }),
             now,
+            'good',
           );
           break;
         case 'dragonEnraged':
-          this.hud.say(pick('quip.dragonEnraged', { name: unitName(e.unitId) }), now);
+          this.hud.say(pick('quip.dragonEnraged', { name: unitName(e.unitId) }), now, 'bad');
           break;
         case 'panicked':
-          this.hud.say(pick('quip.panicked', { name: unitName(e.unitId) }), now);
+          this.hud.say(pick('quip.panicked', { name: unitName(e.unitId) }), now, 'bad');
           break;
         case 'crateDropped':
           this.hud.say(pick('quip.crate'), now);
@@ -262,7 +264,7 @@ export class Commentary {
           const name = unitName(e.unitId);
           const w = v.rules.weapons[e.weapon];
           if (e.kind === 1) {
-            this.hud.say(pick('quip.crateBalm', { name, heal: e.heal }), now);
+            this.hud.say(pick('quip.crateBalm', { name, heal: e.heal }), now, 'good');
             const u = v.units.find((x) => x.id === e.unitId);
             if (u && e.heal > 0) {
               pops.push({
@@ -273,12 +275,16 @@ export class Commentary {
               });
             }
           } else if (w) {
-            this.hud.say(pick('quip.crateWeapon', { name, weapon: t(`weapons.${w.id}`) }), now);
+            this.hud.say(
+              pick('quip.crateWeapon', { name, weapon: t(`weapons.${w.id}`) }),
+              now,
+              'good',
+            );
           }
           break;
         }
         case 'crateBurst':
-          if (e.trap) this.hud.say(pick('quip.crateTrap'), now);
+          if (e.trap) this.hud.say(pick('quip.crateTrap'), now, 'bad');
           break;
         case 'rainStarted':
           this.hud.say(pick('quip.rain'), now);
@@ -288,13 +294,13 @@ export class Commentary {
           break;
         case 'lightning':
           pops.push({ x: e.x, y: e.y - 60, text: pick('thunder'), kind: 'boom' });
-          this.hud.say(pick('quip.lightning'), now);
+          this.hud.say(pick('quip.lightning'), now, 'bad');
           break;
         case 'burnMet':
           this.hud.say(pick('quip.burnMet'), now);
           break;
         case 'burnSpread':
-          this.hud.say(pick(this.burning ? 'quip.burn' : 'quip.burnStart'), now);
+          this.hud.say(pick(this.burning ? 'quip.burn' : 'quip.burnStart'), now, 'bad');
           this.burning = true;
           break;
         case 'structureHit':
@@ -313,7 +319,7 @@ export class Commentary {
           this.undermined = false;
           break;
         case 'crushed':
-          this.hud.say(pick('quip.crushed', { name: unitName(e.unitId) }), now);
+          this.hud.say(pick('quip.crushed', { name: unitName(e.unitId) }), now, 'bad');
           break;
         case 'delugeStarted':
           this.hud.announce(
@@ -328,7 +334,7 @@ export class Commentary {
           if (!events.some((x) => x.e === 'delugeStarted')) this.hud.say(pick('quip.water'), now);
           break;
         case 'kitchenGone':
-          this.hud.say(pick('quip.kitchenGone'), now);
+          this.hud.say(pick('quip.kitchenGone'), now, 'bad');
           break;
         case 'unitHealed': {
           const u = v.units.find((x) => x.id === e.unitId);
@@ -339,7 +345,8 @@ export class Commentary {
             text: `+${e.heal}`,
             kind: 'heal',
           });
-          if (!this.blessed) this.hud.say(pick('quip.bless', { name: unitName(e.unitId) }), now);
+          if (!this.blessed)
+            this.hud.say(pick('quip.bless', { name: unitName(e.unitId) }), now, 'good');
           this.blessed = true;
           break;
         }
@@ -361,6 +368,7 @@ export class Commentary {
               house: house(v.units.find((x) => x.id === e.unitId)?.team ?? 0),
             }),
             now,
+            'bad',
           );
           break;
         }

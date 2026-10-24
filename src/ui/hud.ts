@@ -89,8 +89,9 @@ export class Hud {
    * Shows a line of commentary in a phylactery, under the ones still up: two things said in a
    * row (two coffers picked up on one walk) are both read.
    */
-  say(text: string, now: number): void {
-    const line = el('div', 'chronicle', text);
+  /** A line of commentary; `tone` borders it in red (bad news) or green (good news). */
+  say(text: string, now: number, tone: 'good' | 'bad' | null = null): void {
+    const line = el('div', tone ? `chronicle ${tone}` : 'chronicle', text);
     this.chronicle.append(line);
     this.lines.push({ el: line, until: now + CHRONICLE_MS });
     while (this.lines.length > CHRONICLE_LINES) this.lines.shift()?.el.remove();

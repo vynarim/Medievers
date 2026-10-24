@@ -130,6 +130,9 @@ const STYLE = `
   border: 2px solid var(--encre); border-radius: 18px / 50%;
   box-shadow: inset 0 0 0 3px var(--ceruse), inset 0 0 0 4px var(--or), var(--lift);
   transition: opacity 0.6s; }
+/* Bad news in a red border, good news in a green one. */
+#ui .chronicle.bad { border-color: var(--vermillon); box-shadow: inset 0 0 0 3px var(--ceruse), inset 0 0 0 5px var(--vermillon), var(--lift); }
+#ui .chronicle.good { border-color: var(--vert); box-shadow: inset 0 0 0 3px var(--ceruse), inset 0 0 0 5px var(--vert), var(--lift); }
 #ui .faded { opacity: 0; }
 #ui .banner { position: absolute; left: 50%; top: 32%; transform: translate(-50%, -50%);
   padding: 18px 36px 20px; text-align: center; width: max-content; max-width: min(760px, calc(100vw - 48px));
