@@ -3,6 +3,7 @@
 // Existing files are kept unless --force is given: a reference hash only changes after an
 // intended rule change, with `regen-hash: <reason>` in the commit message (.claude/rules/tests.md).
 import { existsSync, writeFileSync } from 'node:fs';
+import { KITCHEN_RULES } from '../src/content/kitchen.ts';
 import { CLASSIC_RULES } from '../src/content/rules.ts';
 import { formatHash, type MatchConfig, type ReplayFile } from '../src/sim/index.ts';
 import { loadMask } from './lib/maps-node.ts';
@@ -99,6 +100,45 @@ const SCRIPTS: readonly Script[] = [
         r.until('transition');
         r.until('action');
         r.step([{ t: 'skip' }]);
+        r.until('transition');
+      }
+    },
+  },
+  {
+    name: 'field-kitchen',
+    description:
+      'Field kitchen (GDD §4.9), lit at every chance: a pot thrown aside, then team 0 shoots ' +
+      'the kitchen whenever there is one, and it comes back on the fair turns.',
+    mapId: 'flat',
+    seed: 11,
+    config: {
+      rules: {
+        ...CLASSIC_RULES,
+        wind: { ...CLASSIC_RULES.wind, max: 0 },
+        kitchen: { ...KITCHEN_RULES, chanceStartPermille: 1000, chanceDecayPct: 100 },
+      },
+      teams: [{ spawns: [300] }, { spawns: [900] }],
+    },
+    play: (r) => {
+      // Team 0 throws a pot aside, team 1 passes, then team 0 shoots every kitchen it sees.
+      r.until('action');
+      r.step([
+        { t: 'selectWeapon', id: 'greekFire' },
+        { t: 'setFuse', seconds: 1 },
+        { t: 'aim', angle: 2300 },
+        { t: 'fire', power: 160 },
+      ]);
+      r.until('transition');
+      for (let turn = 0; turn < 7; turn++) {
+        r.until('action');
+        if (r.sim.view().turn.activeTeam === 0 && r.sim.view().kitchen) {
+          r.step([
+            { t: 'aim', angle: 0 },
+            { t: 'fire', power: 1024 },
+          ]);
+        } else {
+          r.step([{ t: 'skip' }]);
+        }
         r.until('transition');
       }
     },

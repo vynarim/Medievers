@@ -270,7 +270,12 @@ export class BattleScene extends Phaser.Scene {
     }
     const shot = v.shots[0];
     if (shot) {
-      const [x, y] = this.pos(`s${shot.projectile.id}`, alpha, shot.projectile.x, shot.projectile.y);
+      const [x, y] = this.pos(
+        `s${shot.projectile.id}`,
+        alpha,
+        shot.projectile.x,
+        shot.projectile.y,
+      );
       // A point counts with a unit's label above it: lower it so the shot itself is framed.
       points.push({ x, y: y + 150 });
     }
@@ -492,6 +497,13 @@ export class BattleScene extends Phaser.Scene {
         stroke: css(COLORS.ceruse),
         strokeThickness: 8,
       },
+      heal: {
+        fontFamily: FONT_CAPS,
+        fontSize: '40px',
+        color: css(COLORS.vertDeGris),
+        stroke: css(COLORS.ceruse),
+        strokeThickness: 6,
+      },
       damage: {
         fontFamily: FONT_CAPS,
         fontSize: '40px',
@@ -505,15 +517,15 @@ export class BattleScene extends Phaser.Scene {
       .setOrigin(0.5, 1)
       .setDepth(12)
       .setScale(0.3)
-      .setAngle(pop.kind === 'damage' ? 0 : Phaser.Math.Between(-12, 12));
+      .setAngle(pop.kind === 'damage' || pop.kind === 'heal' ? 0 : Phaser.Math.Between(-12, 12));
     text.setShadow(3, 3, css(COLORS.encre), 0, true, true);
     this.hudCam.ignore(text);
     this.tweens.add({ targets: text, scale: 1, duration: 220, ease: 'Back.easeOut' });
     this.tweens.add({
       targets: text,
-      y: pop.y - (pop.kind === 'damage' ? 70 : 50),
+      y: pop.y - (pop.kind === 'damage' || pop.kind === 'heal' ? 70 : 50),
       alpha: 0,
-      delay: pop.kind === 'damage' ? 700 : 900,
+      delay: pop.kind === 'damage' || pop.kind === 'heal' ? 700 : 900,
       duration: 700,
       onComplete: () => text.destroy(),
     });
@@ -594,6 +606,7 @@ export class BattleScene extends Phaser.Scene {
     const v = this.sim.view();
     const turn = v.turn;
 
+    this.drawKitchen(g, time);
     for (const u of v.units) {
       const label = this.labels.get(u.id);
       const [x, y] = this.pos(`u${u.id}`, alpha, u.x, u.y);
@@ -746,6 +759,47 @@ export class BattleScene extends Phaser.Scene {
   }
 
   /** A little tombstone where a unit fell. */
+  /** La cuisine de campagne: stone hearth, flames, a cauldron on a tripod, rising steam. */
+  private drawKitchen(g: Phaser.GameObjects.Graphics, time: number): void {
+    const k = this.sim.view().kitchen;
+    if (!k) return;
+    const x = k.x / SUBPX;
+    const y = k.y / SUBPX;
+    // Tripod
+    g.lineStyle(3, COLORS.terreOmbre, 1);
+    g.lineBetween(x - 20, y, x, y - 44);
+    g.lineBetween(x + 20, y, x, y - 44);
+    // Flames, flickering
+    const f = Math.sin(time / 90) * 3;
+    g.fillStyle(COLORS.vermillon, 1);
+    g.fillTriangle(x - 12, y - 4, x + 12, y - 4, x + f, y - 22);
+    g.fillStyle(COLORS.or, 1);
+    g.fillTriangle(x - 6, y - 4, x + 6, y - 4, x - f, y - 15);
+    // Hearth stones
+    g.fillStyle(COLORS.roche, 1);
+    g.lineStyle(2, COLORS.encre, 1);
+    for (const dx of [-18, -6, 6, 18]) {
+      g.fillCircle(x + dx, y - 3, 6);
+      g.strokeCircle(x + dx, y - 3, 6);
+    }
+    // Cauldron on its chain
+    g.lineStyle(2, COLORS.encre, 1);
+    g.lineBetween(x, y - 44, x, y - 34);
+    g.fillStyle(COLORS.encre, 1);
+    g.fillEllipse(x, y - 26, 30, 20);
+    g.fillStyle(COLORS.vertTendre, 1);
+    g.fillEllipse(x, y - 33, 24, 6);
+    // Steam scrolls
+    g.lineStyle(2, COLORS.azur, 0.8);
+    for (let i = 0; i < 3; i++) {
+      const p = ((time / 1400 + i / 3) % 1) * 30;
+      const sx = x - 8 + i * 8 + Math.sin(time / 300 + i) * 3;
+      g.beginPath();
+      g.arc(sx, y - 40 - p, 4, Math.PI * 0.5, Math.PI * 1.5);
+      g.strokePath();
+    }
+  }
+
   private drawGrave(g: Phaser.GameObjects.Graphics, x: number, y: number): void {
     g.fillStyle(COLORS.roche, 1);
     g.lineStyle(3, COLORS.encre, 1);

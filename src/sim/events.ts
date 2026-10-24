@@ -28,4 +28,8 @@ export type SimEvent =
     }
   | { readonly e: 'unitDamaged'; readonly unitId: number; readonly damage: number }
   | { readonly e: 'unitDied'; readonly unitId: number; readonly cause: DeathCause }
+  /** px: base of the hearth */
+  | { readonly e: 'kitchenAppeared'; readonly x: number; readonly y: number }
+  | { readonly e: 'kitchenUsed'; readonly unitId: number; readonly heal: number }
+  | { readonly e: 'kitchenGone' }
   | { readonly e: 'gameOver'; readonly winner: number };

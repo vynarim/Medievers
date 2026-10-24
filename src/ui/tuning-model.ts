@@ -103,6 +103,37 @@ export function tuningGroups(rules: MatchRules): TuningGroup[] {
         field('explosion.liftPct', 'tuning.liftPct', 'units.percent', 1, 5, 0, 200),
       ],
     },
+    ...(rules.kitchen
+      ? [
+          {
+            titleKey: 'tuning.group.kitchen',
+            fields: [
+              field('kitchen.healHp', 'tuning.kitchenHeal', 'units.hp', 1, 5, 0, 200),
+              // Stored per mille, shown in percent.
+              field(
+                'kitchen.chanceStartPermille',
+                'tuning.kitchenChance',
+                'units.percent',
+                10,
+                1,
+                0,
+                100,
+              ),
+              field('kitchen.chanceDecayPct', 'tuning.kitchenDecay', 'units.percent', 1, 5, 0, 100),
+              field(
+                'kitchen.chanceFloorPermille',
+                'tuning.kitchenFloor',
+                'units.percent',
+                10,
+                0.5,
+                0,
+                100,
+              ),
+              field('kitchen.lifeRounds', 'tuning.kitchenLife', 'units.rounds', 1, 1, 1, 10),
+            ],
+          },
+        ]
+      : []),
     ...rules.weapons.map((w) => ({ titleKey: `weapons.${w.id}`, fields: weaponFields(w) })),
   ];
 }

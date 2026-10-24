@@ -8,6 +8,7 @@ import { cosQ14, sinQ14 } from '../math/angle.ts';
 import { SUBPX, idiv, mulQ14, subToPx } from '../math/fixed.ts';
 import { isqrt } from '../math/isqrt.ts';
 import { queueExplosion } from '../explosions/explosion.ts';
+import { segmentTouchesKitchen, useKitchen } from '../kitchen.ts';
 import { carveCircle } from '../terrain/terrain.ts';
 import { bounce, createProjectile, stepProjectile } from '../projectiles/projectile.ts';
 import type { SimEvent } from '../events.ts';
@@ -70,7 +71,9 @@ export function stepShots(state: SimState, events: SimEvent[]): void {
   for (const shot of state.shots) {
     const p = shot.projectile;
     const def = weaponDefIn(state.rules, shot.weapon);
-    const impact = stepProjectile(
+    const fromX = p.x;
+    const fromY = p.y;
+    let impact = stepProjectile(
       p,
       state.terrain,
       state.units,
@@ -78,6 +81,11 @@ export function stepShots(state: SimState, events: SimEvent[]): void {
       state.rules.wind.accelPerUnit,
     );
     let ended = false;
+    // Any shot touching the field kitchen heals the shooter (GDD §4.9); an arrow stops there.
+    if (segmentTouchesKitchen(state, fromX, fromY, p.x, p.y)) {
+      useKitchen(state, events);
+      if (def.behavior === 'directHit') impact = { kind: 'outOfMap', x: p.x, y: p.y };
+    }
 
     if (def.behavior === 'directHit') {
       if (impact?.kind === 'unit') {

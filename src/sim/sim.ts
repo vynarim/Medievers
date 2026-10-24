@@ -21,6 +21,7 @@ import {
   walk,
   type Unit,
 } from './units/unit.ts';
+import { kitchenTurn, inKitchen, stepKitchen, useKitchen } from './kitchen.ts';
 import { fire, stepShots } from './weapons/weapons.ts';
 
 /** BAM: default aim, 45° above the horizon on the facing side */
@@ -122,6 +123,8 @@ function createState(config: MatchConfig, seed: number, mask: Mask): SimState {
       fired: false,
     },
     nextEntityId: nextId,
+    kitchen: null,
+    kitchenCounts: teams.map(() => 0),
     winner: null,
     rules: config.rules,
   };
@@ -176,6 +179,7 @@ function startTurn(s: SimState, events: SimEvent[]): void {
   t.fuse = 0;
   t.fired = false;
   t.moveLeft = (s.rules.unit.moveBudget ?? 0) * SUBPX;
+  kitchenTurn(s, events);
   setPhase(s, 'transition', s.rules.turn.transitionTicks, events);
   events.push({ e: 'turnStarted', turn: t.number, team: team.id, unitId: unit.id, wind: t.wind });
 }
@@ -286,7 +290,10 @@ function advanceTick(s: SimState, phaseJustSet: boolean, events: SimEvent[]): vo
       events.push({ e: 'terrainCarved', x: subToPx(e.x), y: subToPx(e.y), radius: e.carveRadius });
     }
     for (const h of res.hits) events.push({ e: 'unitDamaged', unitId: h.unitId, damage: h.damage });
+    // A blast that reaches the kitchen counts as a touch (GDD §4.9).
+    if (inKitchen(s, e.x, e.y, e.radius * SUBPX)) useKitchen(s, events);
   }
+  stepKitchen(s, events);
 
   const hurt = active !== undefined && (active.hp < hpBefore || !active.alive);
   advancePhase(s, hurt, phaseJustSet, events);
@@ -463,6 +470,11 @@ function hashState(s: SimState): number {
     int(v);
   // Hashed only when the rule exists, so logs recorded before it keep their reference hashes.
   if (s.rules.unit.moveBudget !== undefined) int(t.moveLeft);
+  if (s.rules.kitchen) {
+    const k = s.kitchen;
+    for (const v of k ? [k.x, k.y, k.expiresTurn] : [-1]) int(v);
+    for (const c of s.kitchenCounts) int(c);
+  }
   int(s.nextEntityId);
   int(s.winner ?? -2);
   return h;

@@ -1,5 +1,6 @@
 // Match rules (GDD §2, §6): every tunable value of a match. They travel in the match config,
 // so a game log replays with the values it was played with. Times in ticks (60 per second).
+import { KITCHEN_RULES, type KitchenRules } from './kitchen.ts';
 import { UNIT_RULES, type UnitRules } from './units.ts';
 import { WEAPONS, type WeaponDef, type WeaponId } from './weapons.ts';
 import { EXPLOSION_RULES, WIND_RULES, type ExplosionRules, type WindRules } from './world.ts';
@@ -42,6 +43,8 @@ export interface MatchRules {
   readonly explosion: ExplosionRules;
   /** the arsenal of this match, in selection order */
   readonly weapons: readonly WeaponDef[];
+  /** la cuisine de campagne (GDD §4.9); absent from logs recorded before 2026-10-24: none */
+  readonly kitchen?: KitchenRules;
 }
 
 /** « Classique » rules scheme (GDD §6). */
@@ -60,6 +63,7 @@ export const CLASSIC_RULES: MatchRules = {
   wind: WIND_RULES,
   explosion: EXPLOSION_RULES,
   weapons: WEAPONS,
+  kitchen: KITCHEN_RULES,
 };
 
 /** Index of a weapon in the match arsenal; throws for a weapon the match does not have. */

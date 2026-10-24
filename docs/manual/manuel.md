@@ -155,6 +155,15 @@ Le vent change à chaque tour, de −10 (fort vers la gauche) à +10 (fort vers 
 - **Barils de poix** : touchés, ils explosent (30 dégâts dans un rayon de 60 px), puis enflamment le sol. Une explosion peut en déclencher d'autres en chaîne.
 - **Flammes** : 3 PV par instant de contact, 10 PV au plus par tour. L'eau les éteint.
 
+### La cuisine de campagne {{st:jeu}}
+
+De temps en temps, au début d'un tour, **un foyer avec un chaudron** s'installe entre les deux camps, à mi-chemin entre la maison qui joue et l'ennemi le plus proche, sur un sol plat. Le combattant dont le tir la touche (flèche, pierre, ou l'explosion d'un pot qui l'atteint) **regagne 30 PV**, sans dépasser ses PV de départ ; la cuisine disparaît alors, et une flèche s'arrête dans la marmite. Tirer sur la soupe plutôt que sur l'ennemi est donc un choix.
+
+- La chance d'apparition baisse au fil de la partie : 25 % au premier tour de table, puis un peu moins à chaque tour de table, jamais moins de 2 %.
+- C'est équitable : aucune maison ne voit apparaître une deuxième cuisine à son tour tant que les autres n'en ont pas eu autant.
+- Une seule cuisine à la fois ; si personne n'y touche, elle s'éteint au bout de deux tours de table.
+- Toutes ces valeurs se règlent dans l'onglet **Cuisine de campagne** des réglages. Une partie commencée avant l'arrivée de la cuisine n'en aura pas : recommencez la partie pour la voir.
+
 ### 5.4 Le Déluge {{st:prevu}}
 
 Pour que les parties ne s'éternisent pas, **le Déluge** arrive après 20 tours (ou 15 minutes). Une pleine page enluminée l'annonce : « *Et les eaux montèrent…* ». Ensuite, l'eau monte de 48 pixels à chaque fin de tour, et en option tous les combattants perdent 5 PV. L'eau noie instantanément.

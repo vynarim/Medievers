@@ -14,7 +14,7 @@ export interface Pop {
   readonly x: number;
   readonly y: number;
   readonly text: string;
-  readonly kind: 'boom' | 'whack' | 'damage' | 'miss';
+  readonly kind: 'boom' | 'whack' | 'damage' | 'miss' | 'heal';
 }
 
 /** ticks to wait after a shot ends before calling it a miss */
@@ -123,6 +123,29 @@ export class Commentary {
           }
           break;
         }
+        case 'kitchenAppeared':
+          this.hud.say(pick('quip.kitchen'), now);
+          break;
+        case 'kitchenUsed': {
+          const u = v.units.find((x) => x.id === e.unitId);
+          const name = unitName(e.unitId);
+          this.hud.say(
+            pick(e.heal > 0 ? 'quip.soup' : 'quip.soupFull', { name, heal: e.heal }),
+            now,
+          );
+          if (u && e.heal > 0) {
+            pops.push({
+              x: u.x / SUBPX,
+              y: u.y / SUBPX - UNIT_HEIGHT - 20,
+              text: `+${e.heal}`,
+              kind: 'heal',
+            });
+          }
+          break;
+        }
+        case 'kitchenGone':
+          this.hud.say(pick('quip.kitchenGone'), now);
+          break;
         case 'unitDied':
           this.hud.say(
             pick(e.cause === 'outOfMap' ? 'quip.out' : 'quip.kill', { name: unitName(e.unitId) }),

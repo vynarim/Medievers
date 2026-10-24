@@ -161,6 +161,7 @@ Les cartes portent des machines de siège fixes, que n'importe quel combattant p
 - **Apparition** : tirée au début de chaque tour avec le PRNG du sim. La chance baisse au fil de la partie pour que les parties ne s'éternisent pas : 25 % au premier tour de table, × 0,8 à chaque tour de table, plancher 2 %.
 - **Équité** : une équipe ne peut pas voir apparaître une deuxième cuisine « à son tour » tant que les autres équipes encore en vie n'en ont pas eu autant. Une cuisine apparue au tour d'une équipe est placée à distance égale (± 10 %) de ses combattants et des combattants adverses les plus proches, sur un sol stable.
 - Une seule cuisine à la fois ; si personne ne la touche, elle s'éteint au bout de 2 tours de table.
+- Précisions de programmation (2026-10-24) : la cuisine se place au milieu de la paire (combattant de l'équipe qui joue, ennemi) la plus proche en x, sur le sol plat le plus proche du milieu (dans les ± 10 %), à plus de 40 px de tout combattant ; sinon elle n'apparaît pas ce tour-là. Une flèche ou une pierre qui la touche s'y arrête ; un pot continue sa course ; une explosion dont le rayon l'atteint compte aussi. Si le sol se dérobe, elle tombe. Valeurs dans `src/content/kitchen.ts` (`MatchRules.kitchen`, absent des vieux logs : pas de cuisine), réglables dans ⚙ Réglages. Replay de référence `field-kitchen`.
 
 ### 4.10 Les bêtes des marges (décidé le 2026-10-24)
 Les lièvres et les escargots des marges du manuscrit entrent dans la bataille. Ils menacent tout le monde, sans camp.

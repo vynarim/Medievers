@@ -61,6 +61,16 @@ export interface TurnState {
   fired: boolean;
 }
 
+/** La cuisine de campagne on the map (GDD §4.9). */
+export interface KitchenState {
+  /** sub-px: centre of the hearth's base */
+  readonly x: number;
+  /** sub-px: ground level under it */
+  y: number;
+  /** turn number at whose start it goes out */
+  readonly expiresTurn: number;
+}
+
 export interface SimState {
   tick: number;
   readonly prng: PrngState;
@@ -73,6 +83,10 @@ export interface SimState {
   readonly teams: TeamState[];
   readonly turn: TurnState;
   nextEntityId: number;
+  /** null when there is none; always null without rules.kitchen */
+  kitchen: KitchenState | null;
+  /** kitchens that appeared on each team's turn, for fairness (GDD §4.9) */
+  readonly kitchenCounts: number[];
   /** team id of the winner, -1 for a draw, null while playing */
   winner: number | null;
   readonly rules: MatchRules;

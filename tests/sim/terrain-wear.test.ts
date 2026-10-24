@@ -25,7 +25,10 @@ function wallMask(): Mask {
   return { width, height, data };
 }
 
-const CALM: MatchRules = { ...CLASSIC_RULES, wind: { ...CLASSIC_RULES.wind, max: 0 } };
+// No wind, no field kitchen: every arrow follows the same path.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const { kitchen, ...NO_KITCHEN } = CLASSIC_RULES;
+const CALM: MatchRules = { ...NO_KITCHEN, wind: { ...CLASSIC_RULES.wind, max: 0 } };
 
 /**
  * Team 0 shoots level arrows at the wall each of its turns, team 1 passes. Returns the number
