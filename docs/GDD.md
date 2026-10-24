@@ -62,7 +62,8 @@
 - **Demi-tour gratuit** (décidé le 2026-10-24, étude E2) : marcher vers l'autre côté retourne d'abord le combattant sur place pendant 0,2 s, sans avancer. Un appui bref pour regarder derrière soi ne coûte donc ni marche ni saut (`unit.turnTicks`).
 - **Face à la carte** (décidé le 2026-10-25) : un combattant qui commence son tour (ou qui reçoit la main) dans le quart gauche ou droit de la carte est tourné vers l'intérieur ; ailleurs il garde son sens (`turn.faceInwardPct`, 25 %).
 - **Saut long** (Entrée : devant soi ; boutons ↶ et ↷ : vers la gauche ou vers la droite, le combattant se retourne au besoin) : bond loin. **Saut haut** (double appui, bouton ↑, placé entre ◀ et ▶) : bond très haut en reculant un peu, pour sortir d'un trou ou monter sur un rebord. Un saut décolle aussi depuis une pente montante. Valeurs de départ, à régler en playtest : avant (+8,2 ; −9) px/tick, soit environ 420 px sur sol plat et 115 px de hauteur, arrière (−1 ; −10,5) px/tick, plus haut (environ 150 px) et court (`src/content/units.ts`).
-- Dégâts de chute : au-delà de 160 px de hauteur de chute, 1 PV par 8 px supplémentaires, plafonné à 30.
+- Dégâts de chute : au-delà de 160 px de hauteur de chute, 1 PV par 8 px supplémentaires, plafonné à 30. **Toute chute d'au moins 40 px** (d'un mur, d'une falaise, d'une pente trop raide) coûte **au moins 5 PV** (décidé le 2026-10-25, `unit.fallMinHeight`, `unit.fallMinDamage`).
+- **Pentes raides** (décidé le 2026-10-25, `unit.steepFall`) : on ne descend en marchant qu'une pente qu'on pourrait monter (pas plus de 12 px de dénivelé sur 7 px, environ 60°) ; plus raide, le combattant tombe. Une simple marche de 12 px se descend toujours.
 - Hors carte (bords latéraux) ou eau : mort.
 - Une unité touchée pendant son tour termine son tour immédiatement.
 - Mort : l'unité laisse une stèle (petite croix ou dalle gravée) soumise à la physique.

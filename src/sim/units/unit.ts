@@ -129,6 +129,16 @@ function tooSteep(t: Terrain, nx: number, dir: -1 | 1, ny: number, rules: UnitRu
   return here !== null && behind !== null && behind - here > rules.maxStep;
 }
 
+/**
+ * The ground falls by more than maxStep over the slopeWindow px ahead of column nx, measured on
+ * the centre column (the feet may stand higher, on a trailing foot).
+ */
+function tooSteepDown(t: Terrain, nx: number, dir: -1 | 1, ny: number, rules: UnitRules): boolean {
+  const here = surfaceAt(t, nx, ny, UNIT_HEIGHT);
+  const ahead = surfaceAt(t, nx + dir * rules.slopeWindow, ny, UNIT_HEIGHT);
+  return here !== null && (ahead === null || ahead - here > rules.maxStep);
+}
+
 export type WalkResult = 'moved' | 'blocked' | 'fell';
 
 /**
@@ -160,6 +170,12 @@ export function walk(u: Unit, t: Terrain, dir: -1 | 1, rules: UnitRules): WalkRe
     }
     if (ny < py && tooSteep(t, nx, dir, ny, rules)) {
       result = 'blocked';
+      break;
+    }
+    // Down a slope steeper than one could walk up: the unit falls off it.
+    if (rules.steepFall && ny > py && tooSteepDown(t, nx, dir, ny, rules) && bodyFree(t, nx, py)) {
+      px = nx;
+      result = 'fell';
       break;
     }
     px = nx;
@@ -208,8 +224,16 @@ export function jump(u: Unit, kind: 'forward' | 'back', rules: UnitRules): boole
 
 /** Fall damage for a fall of `height` px (GDD §3.1). */
 export function fallDamage(height: number, rules: UnitRules): number {
-  if (height <= rules.fallSafeHeight) return 0;
-  return Math.min(idiv(height - rules.fallSafeHeight, rules.fallPxPerHp), rules.fallMaxDamage);
+  // Off a wall or a cliff, a fall always hurts a little (rules.unit.fallMinDamage).
+  const least =
+    rules.fallMinHeight !== undefined && height >= rules.fallMinHeight
+      ? (rules.fallMinDamage ?? 0)
+      : 0;
+  if (height <= rules.fallSafeHeight) return least;
+  return Math.max(
+    least,
+    Math.min(idiv(height - rules.fallSafeHeight, rules.fallPxPerHp), rules.fallMaxDamage),
+  );
 }
 
 export interface PhysicsResult {

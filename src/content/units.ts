@@ -18,6 +18,18 @@ export interface UnitRules {
   /** HP: maximum fall damage */
   readonly fallMaxDamage: number;
   /**
+   * A walking unit does not walk down a slope steeper than it could walk up (a drop of more than
+   * maxStep over slopeWindow px ahead): it falls off it (2026-10-25). A single step down is still
+   * walked. Absent from older logs: any slope is walked down.
+   */
+  readonly steepFall?: boolean;
+  /**
+   * A fall of at least fallMinHeight px (off a wall, a cliff, a steep slope) always costs at least
+   * fallMinDamage HP (2026-10-25). Absent from older logs: only falls over fallSafeHeight hurt.
+   */
+  readonly fallMinHeight?: number;
+  readonly fallMinDamage?: number;
+  /**
    * px a unit may walk in one turn, if it does not jump; a jump takes the whole turn's move
    * (GDD §3.1). Absent from logs recorded before 2026-10-24: unlimited walking and jumps.
    */
@@ -68,6 +80,9 @@ export const UNIT_RULES: UnitRules = {
   fallSafeHeight: 160,
   fallPxPerHp: 8,
   fallMaxDamage: 30,
+  steepFall: true,
+  fallMinHeight: 40,
+  fallMinDamage: 5,
   moveBudget: 280,
   slopeTakeoff: true,
   turnTicks: 12,

@@ -112,6 +112,17 @@ describe('slopes', () => {
     expect(px(u.x)).toBeGreaterThan(200);
   });
 
+  it('walks down a gentle slope, but falls off one too steep to walk up', () => {
+    const gentle = terrainFrom(400, 300, (x) => (x < 100 ? 150 : x < 200 ? 150 + (x - 100) : 250));
+    const u = standingUnit(gentle, 80);
+    expect(walkTicks(u, gentle, 1, 120)).not.toContain('fell');
+    const steep = terrainFrom(400, 300, (x) =>
+      x < 100 ? 130 : x < 140 ? 130 + (x - 100) * 3 : 250,
+    );
+    const v = standingUnit(steep, 80);
+    expect(walkTicks(v, steep, 1, 60)).toContain('fell');
+  });
+
   it('is blocked by a 70° slope', () => {
     const t = terrainFrom(400, 300, (x) => (x < 100 ? 250 : x < 140 ? 250 - (x - 100) * 3 : 130));
     const u = standingUnit(t, 80);
@@ -130,24 +141,32 @@ describe('falling', () => {
     const r = u.grounded ? { landed: true, fallDamage: 0, outOfMap: false } : fallUntilLanded(u, t);
     expect(r.landed).toBe(true);
     expect(px(u.y)).toBe(300);
-    expect(r.fallDamage).toBe(0);
+    // 100 px off a ledge: no more than the least a fall off a wall costs.
+    expect(r.fallDamage).toBe(UNIT_RULES.fallMinDamage);
   });
 
-  it('applies fall damage beyond 160 px: 1 HP per 8 px, at most 30', () => {
+  it('applies fall damage beyond 160 px: 1 HP per 8 px, at most 30, and 5 from 40 px', () => {
     expect([
+      fallDamage(30, UNIT_RULES),
+      fallDamage(40, UNIT_RULES),
       fallDamage(100, UNIT_RULES),
       fallDamage(160, UNIT_RULES),
       fallDamage(168, UNIT_RULES),
       fallDamage(200, UNIT_RULES),
+      fallDamage(240, UNIT_RULES),
       fallDamage(5000, UNIT_RULES),
-    ]).toEqual([0, 0, 1, 5, 30]);
+    ]).toEqual([0, 5, 5, 5, 5, 5, 10, 30]);
+    // Older logs: only beyond 160 px.
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { fallMinHeight, fallMinDamage, ...old } = UNIT_RULES;
+    expect([100, 168, 200].map((h) => fallDamage(h, old))).toEqual([0, 1, 5]);
   });
 
   it('measures the fall from the drop point to the ground', () => {
     const t = terrainFrom(100, 1200, () => 1100);
     for (const [drop, damage] of [
       [0, 0],
-      [100, 0],
+      [100, 5],
       [200, 5],
       [1000, 30],
     ] as const) {
