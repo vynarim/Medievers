@@ -181,11 +181,11 @@ export class LocalControls {
       if (aim !== turn.aim) out.push({ t: 'aim', angle: aim });
     }
 
-    // Gauge: hold to charge, release to fire; a full gauge fires by itself.
+    // Gauge: hold to charge, release to fire. A full gauge starts again from empty, so the
+    // shot only leaves when the button is let go at the right moment.
     if (input.charge) {
       this.charging = true;
-      this.power = Math.min(MAX_POWER, this.power + CHARGE_SPEED);
-      if (this.power === MAX_POWER) this.fire(out);
+      this.power = this.power >= MAX_POWER ? 0 : Math.min(MAX_POWER, this.power + CHARGE_SPEED);
     } else if (this.charging) {
       this.fire(out);
     }

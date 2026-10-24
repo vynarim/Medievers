@@ -142,12 +142,19 @@ describe('LocalControls', () => {
     expect(sim.view().turn.phase).toBe('retreat');
   });
 
-  it('fires by itself at full charge', () => {
-    const { tick } = setup();
+  it('never fires by itself: a full gauge starts again from empty', () => {
+    const { tick, controls } = setup();
     let fired: GameCommand | undefined;
-    for (let i = 0; i < 200 && !fired; i++)
+    let full = false;
+    for (let i = 0; i < 200 && !fired; i++) {
       fired = tick({ charge: true }).find((c) => c.t === 'fire');
-    expect(fired).toEqual({ t: 'fire', power: 1024 });
+      if (controls.power === 1024) full = true;
+    }
+    expect(fired).toBeUndefined();
+    expect(full).toBe(true);
+    const power = controls.power;
+    expect(power).toBeLessThan(1024);
+    expect(tick({}).find((c) => c.t === 'fire')).toEqual({ t: 'fire', power });
   });
 
   it('aims opposite to a drag and fires on release', () => {

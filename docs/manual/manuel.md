@@ -272,7 +272,7 @@ En bas à droite, les armes :
 - **Mèche 1 à 5** : visible avec le pot de feu grégeois ;
 - **⇄ Combattant** : donner la main au combattant suivant de votre maison, avant d'avoir bougé ou tiré ;
 - **Passer** : finir son tour sans tirer ;
-- **Tirer** : maintenir pour charger la puissance, relâcher pour tirer.
+- **Tirer** : maintenir pour charger la puissance, relâcher pour tirer. Une jauge pleine repart de zéro : rien ne part tout seul, il faut lâcher au bon moment.
 
 Au-dessus, le cartouche de l'arme en main montre la jauge de puissance. En haut à droite : **⤢** (plein écran, comme F11 ; un second appui en sort), **◎** (revenir au zoom par défaut et recentrer ; il n'apparaît que lorsque vous avez zoomé ou déplacé la vue), **Aide** (un petit tutoriel illustré en sept pages : le but, le tour, se déplacer, viser, tirer, le vent, la caméra), **Réglages** et **Pause**. La souris posée contre un bord de l'écran fait défiler la carte. Le menu de pause (aussi sur Échap) propose de reprendre, de recommencer la partie, de lire l'aide ou d'ouvrir les réglages ; le temps est arrêté tant qu'il est ouvert, comme pendant l'aide et les réglages.
 
