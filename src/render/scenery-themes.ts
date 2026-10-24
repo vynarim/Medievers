@@ -19,6 +19,7 @@ import {
   shape,
   sheep,
   type Ctx,
+  type FarHerd,
 } from './scenery.ts';
 
 /**
@@ -42,6 +43,39 @@ const crest =
 export const COAST_GROUND = crest(390, 22, 5, 0.7);
 /** Far-landscape crest of the Holy Land's back hills (the rainbow stands on it too). */
 export const HOLY_LAND_GROUND = crest(300, 36, 3);
+/** Far-landscape crest of the Holy Land's near dunes, where its camels stand. */
+const HOLY_LAND_DUNES = crest(385, 30, 7, 1.3);
+
+/** The salt-meadow sheep of the coast, on its land. */
+export function coastHerd(): FarHerd {
+  return {
+    ground: COAST_GROUND,
+    alpha: 0.82,
+    beasts: [300, 330, 362, 1700, 1735, 2980, 3012].map((x) => ({
+      draw: sheep,
+      x,
+      f: pick([-1, 1] as const),
+      s: rnd(1.25, 1.4),
+    })),
+  };
+}
+
+/** The camels of the Holy Land, on its near dunes. */
+export function holyLandHerd(): FarHerd {
+  return {
+    ground: HOLY_LAND_DUNES,
+    alpha: 0.8,
+    beasts: (
+      [
+        [900, 1],
+        [960, 1],
+        [1020, 1],
+        [2650, -1],
+        [2900, -1],
+      ] as const
+    ).map(([x, f]) => ({ draw: camel, x, f, s: rnd(1.1, 1.25) })),
+  };
+}
 
 /** A filled band under a crest, inked along the crest only (the sides would show as seams). */
 function band(l: Ctx, top: (x: number) => number, color: number, alpha: number): void {
@@ -266,9 +300,7 @@ export function drawFarCoast(ctx: Ctx): void {
     farm(l, 2500, groundOf(front, 2460, 2720) + 8);
     beached(l, 1100, front(1100) + 10);
     beached(l, 1900, front(1900) + 10);
-    for (const x of [300, 330, 362, 1700, 1735, 2980, 3012]) {
-      sheep(l, x, front(x) + 6, pick([-1, 1]), rnd(1.25, 1.4));
-    }
+    // Its sheep are sprites of their own (coastHerd).
   });
 }
 
@@ -485,7 +517,7 @@ function tent(ctx: Ctx, x: number, base: number, w: number, color: number): void
 export function drawFarHolyLand(ctx: Ctx): void {
   ctx.clearRect(0, 0, FAR_W, FAR_H);
   const back = HOLY_LAND_GROUND;
-  const front = crest(385, 30, 7, 1.3);
+  const front = HOLY_LAND_DUNES;
   layer(ctx, 0.62, (l) => {
     band(l, back, COLORS.or, 0.5 / 0.62);
     city(l, 1150, groundOf(back, 900, 1400) + 8);
@@ -505,15 +537,7 @@ export function drawFarHolyLand(ctx: Ctx): void {
     tent(l, 600, front(600) + 8, 70, COLORS.vermillon);
     tent(l, 680, front(680) + 8, 54, COLORS.lapis);
     tent(l, 2200, front(2200) + 8, 64, COLORS.vertDeGris);
-    for (const [x, f] of [
-      [900, 1],
-      [960, 1],
-      [1020, 1],
-      [2650, -1],
-      [2900, -1],
-    ] as const) {
-      camel(l, x, front(x) + 6, f, rnd(1.1, 1.25));
-    }
+    // Its camels are sprites of their own (holyLandHerd).
     for (const x of [450, 1400, 1460, 2420, 3100])
       palm(l, x, front(x) + 12, rnd(70, 95), pick([-1, 1]));
   });

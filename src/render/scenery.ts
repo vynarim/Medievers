@@ -11,9 +11,11 @@ import type { MapTheme } from '../content/maps.ts';
 import {
   COAST_GROUND,
   HOLY_LAND_GROUND,
+  coastHerd,
   coastProps,
   drawFarCoast,
   drawFarHolyLand,
+  holyLandHerd,
   holyLandProps,
   type ThemeProps,
 } from './scenery-themes.ts';
@@ -858,7 +860,27 @@ function horse(ctx: Ctx, x: number, feet: number, f: number, s: number): void {
   ctx.stroke();
 }
 
-type Beast = (ctx: Ctx, x: number, feet: number, f: number, s: number) => void;
+export type Beast = (ctx: Ctx, x: number, feet: number, f: number, s: number) => void;
+
+/**
+ * A beast grazing on the far fields: drawn apart from the landscape, at the y of its crest, so
+ * that now and then one of them can wander a little (2026-10-25).
+ */
+export interface FarBeast {
+  readonly draw: Beast;
+  /** px along one repeat of the far tile */
+  readonly x: number;
+  readonly f: -1 | 1;
+  /** drawing scale */
+  readonly s: number;
+}
+
+/** A herd on its crest, and the opacity of the layer it grazes in. */
+export interface FarHerd {
+  readonly ground: (x: number) => number;
+  readonly alpha: number;
+  readonly beasts: readonly FarBeast[];
+}
 
 /**
  * Paints `draw` on a scratch canvas, then lays it down at `alpha`: the whole group fades as one
@@ -887,6 +909,34 @@ const farCrest =
   };
 /** Far-landscape crest of the valley's back hill (the rainbow stands on it too). */
 const VALLEY_GROUND = farCrest(300, 40, 4);
+/** Far-landscape crest of the valley's near fields, where its beasts graze. */
+const VALLEY_FIELDS = farCrest(380, 26, 6);
+const VALLEY_FIELDS_ALPHA = 0.8;
+
+/** The valley's grazing beasts on its near fields. */
+function valleyHerd(): FarHerd {
+  const herd: readonly (readonly [Beast, number, -1 | 1])[] = [
+    [sheep, 290, 1],
+    [sheep, 324, -1],
+    [sheep, 350, 1],
+    [sheep, 378, 1],
+    [cow, 860, -1],
+    [horse, 1240, 1],
+    [sheep, 1580, -1],
+    [sheep, 1612, 1],
+    [cow, 2040, 1],
+    [cow, 2110, -1],
+    [horse, 2480, -1],
+    [sheep, 2810, 1],
+    [sheep, 2842, 1],
+    [sheep, 2868, -1],
+  ];
+  return {
+    ground: VALLEY_FIELDS,
+    alpha: VALLEY_FIELDS_ALPHA,
+    beasts: herd.map(([draw, x, f]) => ({ draw, x, f, s: rnd(1.3, 1.45) })),
+  };
+}
 
 /**
  * The far landscape: soft hills, a castle, farms, an inn, mills, trees and grazing beasts;
@@ -930,7 +980,7 @@ function drawFar(ctx: Ctx): void {
     return y;
   };
   const back = VALLEY_GROUND;
-  const front = farCrest(380, 26, 6);
+  const front = VALLEY_FIELDS;
   // The back hill and everything on it fade together.
   const backAlpha = 0.62;
   layer(ctx, backAlpha, (l) => {
@@ -958,27 +1008,10 @@ function drawFar(ctx: Ctx): void {
       lollipop(l, x, back(x) + 30, r, pick([COLORS.vertDeGris, COLORS.vertTendre]), 0.8);
     }
   });
-  const frontAlpha = 0.8;
+  const frontAlpha = VALLEY_FIELDS_ALPHA;
   layer(ctx, frontAlpha, (l) => {
     hill(l, front, COLORS.ocre, 0.35 / frontAlpha);
-    // Grazing beasts on the near fields.
-    const herd: readonly (readonly [Beast, number, number])[] = [
-      [sheep, 290, 1],
-      [sheep, 324, -1],
-      [sheep, 350, 1],
-      [sheep, 378, 1],
-      [cow, 860, -1],
-      [horse, 1240, 1],
-      [sheep, 1580, -1],
-      [sheep, 1612, 1],
-      [cow, 2040, 1],
-      [cow, 2110, -1],
-      [horse, 2480, -1],
-      [sheep, 2810, 1],
-      [sheep, 2842, 1],
-      [sheep, 2868, -1],
-    ];
-    for (const [kind, x, f] of herd) kind(l, x, front(x) + 6, f, rnd(1.3, 1.45));
+    // Its grazing beasts are sprites of their own (valleyHerd).
   });
 }
 
@@ -1054,6 +1087,25 @@ function drawCloud(ctx: Ctx, w: number, h: number): void {
   ctx.stroke();
 }
 
+/** A far beast on the map: one image per repeat of the far tile, all at the same x in it. */
+interface Grazer {
+  readonly images: Phaser.GameObjects.Image[];
+  readonly home: number;
+  /** px along the tile */
+  x: number;
+  /** px it is walking to; null while it grazes */
+  to: number | null;
+}
+
+/** ms between two beasts of the far fields setting off; px/s they walk; px they roam from home */
+const WANDER_EVERY: readonly [number, number] = [6_000, 16_000];
+const WANDER_SPEED = 22;
+const WANDER_RANGE = 90;
+/** far beast textures: their size, and where the feet stand in them */
+const BEAST_TEX_W = 140;
+const BEAST_TEX_H = 110;
+const BEAST_FEET = 100;
+
 interface Prop {
   readonly image: Phaser.GameObjects.Image;
   readonly x: number;
@@ -1069,6 +1121,12 @@ export class Scenery {
   private readonly width: number;
   private readonly sky: SkyLife;
   private storm = false;
+  private readonly herd: FarHerd;
+  private readonly grazers: Grazer[] = [];
+  /** world px of the far tile's top-left */
+  private readonly farX: number;
+  private readonly farY: number;
+  private nextWander = rnd(...WANDER_EVERY);
 
   constructor(scene: Phaser.Scene, mask: MaskView, theme: MapTheme = 'valley') {
     this.width = mask.width;
@@ -1101,6 +1159,35 @@ export class Scenery {
       .setDepth(1);
     const farCrestOf =
       theme === 'coast' ? COAST_GROUND : theme === 'holyLand' ? HOLY_LAND_GROUND : VALLEY_GROUND;
+
+    // The beasts of the far fields, one image per repeat of the tile, with the same parallax.
+    this.farX = farX;
+    this.farY = farY;
+    this.herd =
+      theme === 'coast' ? coastHerd() : theme === 'holyLand' ? holyLandHerd() : valleyHerd();
+    const repeats = Math.ceil((mask.width * 3) / FAR_W);
+    this.herd.beasts.forEach((b, i) => {
+      const key = tex(`far_beast_${theme}_${i}`, BEAST_TEX_W, BEAST_TEX_H, (ctx) => {
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
+        b.draw(ctx, BEAST_TEX_W / 2, BEAST_FEET, 1, b.s);
+      });
+      const images: Phaser.GameObjects.Image[] = [];
+      for (let k = 0; k < repeats; k++) {
+        const image = scene.add
+          .image(0, 0, key)
+          .setOrigin(0.5, BEAST_FEET / BEAST_TEX_H)
+          .setFlipX(b.f < 0)
+          .setAlpha(this.herd.alpha)
+          .setScrollFactor(FAR_SCROLL, 0.8)
+          .setDepth(1.1);
+        images.push(image);
+        this.objects.push(image);
+      }
+      const g: Grazer = { images, home: b.x, x: b.x, to: null };
+      this.placeGrazer(g);
+      this.grazers.push(g);
+    });
     this.objects.push(far);
 
     const cloudKeys: string[] = [];
@@ -1189,9 +1276,36 @@ export class Scenery {
     }
   }
 
+  /** Puts every image of a far beast at its x along the tile, its feet on the crest. */
+  private placeGrazer(g: Grazer): void {
+    const y = this.farY + this.herd.ground(g.x) + 6;
+    g.images.forEach((image, k) => image.setPosition(this.farX + k * FAR_W + g.x, y));
+  }
+
+  /** Now and then one beast of the far fields walks a few steps, then grazes again. */
+  private wander(delta: number): void {
+    const walking = this.grazers.find((g) => g.to !== null);
+    if (walking && walking.to !== null) {
+      const step = (WANDER_SPEED * delta) / 1000;
+      const d = walking.to - walking.x;
+      walking.x = Math.abs(d) <= step ? walking.to : walking.x + Math.sign(d) * step;
+      if (walking.x === walking.to) walking.to = null;
+      this.placeGrazer(walking);
+      return;
+    }
+    if ((this.nextWander -= delta) > 0 || this.grazers.length === 0) return;
+    this.nextWander = rnd(...WANDER_EVERY);
+    const g = pick(this.grazers);
+    const to = g.home + rnd(-WANDER_RANGE, WANDER_RANGE);
+    if (Math.abs(to - g.x) < 20) return;
+    g.to = to;
+    for (const image of g.images) image.setFlipX(to < g.x);
+  }
+
   /** Drifts the clouds and the sky life; drops props whose ground was blown away. */
   update(delta: number, wind: number, mask: MaskView): void {
     this.sky.update(delta, wind);
+    this.wander(delta);
     for (const c of this.clouds) {
       // With the wind: its way, at its strength; still when it is calm.
       c.x += (wind * CLOUD_DRIFT * delta) / 1000;
