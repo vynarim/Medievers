@@ -6,7 +6,7 @@ import Phaser from 'phaser';
 import { COLORS, css } from '../ui/tokens.ts';
 import type { MaskView } from './terrain-layer.ts';
 
-const FAR_W = 1600;
+const FAR_W = 3200;
 /** tall enough for the lower hill to reach below the terrain everywhere */
 const FAR_H = 1000;
 /** parallax factor of the far landscape */
@@ -69,19 +69,146 @@ function tower(ctx: Ctx, x: number, base: number, w: number, h: number, roof: nu
   ctx.fill();
 }
 
-/** The far landscape: soft hills, a castle, trees; muted so the play stays readable. */
+const ink = (ctx: Ctx, w = 2): void => {
+  ctx.strokeStyle = css(COLORS.encre);
+  ctx.lineWidth = w;
+};
+
+/** Half-timbered farmhouse with a thatched roof and a haystack. */
+function farm(ctx: Ctx, x: number, base: number): void {
+  ink(ctx, 3);
+  ctx.fillStyle = css(COLORS.ceruse);
+  ctx.fillRect(x, base - 44, 70, 44);
+  ctx.strokeRect(x, base - 44, 70, 44);
+  ctx.beginPath();
+  for (const bx of [x + 20, x + 50]) {
+    ctx.moveTo(bx, base - 44);
+    ctx.lineTo(bx, base);
+  }
+  ctx.moveTo(x, base - 22);
+  ctx.lineTo(x + 70, base - 22);
+  ctx.stroke();
+  ctx.fillStyle = css(COLORS.ocre);
+  ctx.beginPath();
+  ctx.moveTo(x - 8, base - 44);
+  ctx.lineTo(x + 35, base - 78);
+  ctx.lineTo(x + 78, base - 44);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  ctx.fillStyle = css(COLORS.terreOmbre);
+  ctx.fillRect(x + 28, base - 18, 14, 18);
+  ctx.strokeRect(x + 28, base - 18, 14, 18);
+  // Haystack
+  ctx.fillStyle = css(COLORS.or);
+  ctx.beginPath();
+  ctx.ellipse(x + 100, base - 14, 18, 16, 0, Math.PI, 0);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+}
+
+function windmill(ctx: Ctx, x: number, base: number): void {
+  ink(ctx, 3);
+  ctx.fillStyle = css(COLORS.ceruse);
+  ctx.beginPath();
+  ctx.moveTo(x - 16, base);
+  ctx.lineTo(x - 10, base - 60);
+  ctx.lineTo(x + 10, base - 60);
+  ctx.lineTo(x + 16, base);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  ctx.fillStyle = css(COLORS.vermillon);
+  ctx.beginPath();
+  ctx.moveTo(x - 14, base - 60);
+  ctx.lineTo(x, base - 76);
+  ctx.lineTo(x + 14, base - 60);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  ctx.fillStyle = css(COLORS.velin);
+  for (let i = 0; i < 4; i++) {
+    const a = Math.PI / 4 + (i * Math.PI) / 2;
+    ctx.save();
+    ctx.translate(x, base - 62);
+    ctx.rotate(a);
+    ctx.fillRect(4, -5, 40, 10);
+    ctx.strokeRect(4, -5, 40, 10);
+    ctx.restore();
+  }
+}
+
+/** Four-legged beast: body, head, legs, in the manuscript's flat tints. */
+function beast(
+  ctx: Ctx,
+  x: number,
+  feet: number,
+  facing: number,
+  size: number,
+  body: number,
+  head: number,
+  patches: number | null,
+): void {
+  ink(ctx, 2);
+  const w = 26 * size;
+  const h = 13 * size;
+  const top = feet - 10 * size - h;
+  ctx.fillStyle = css(head);
+  for (const lx of [x - w / 2 + 4, x - w / 2 + 9, x + w / 2 - 9, x + w / 2 - 4]) {
+    ctx.fillRect(lx - 1.5, top + h - 2, 3, 10 * size + 2);
+  }
+  ctx.fillStyle = css(body);
+  ctx.beginPath();
+  ctx.ellipse(x, top + h / 2, w / 2, h / 2, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  if (patches !== null) {
+    ctx.fillStyle = css(patches);
+    ctx.beginPath();
+    ctx.ellipse(x - w * 0.15, top + h * 0.4, w * 0.14, h * 0.25, 0.4, 0, Math.PI * 2);
+    ctx.ellipse(x + w * 0.2, top + h * 0.6, w * 0.1, h * 0.2, -0.3, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.fillStyle = css(head);
+  ctx.beginPath();
+  ctx.ellipse(
+    x + facing * (w / 2 + 3 * size),
+    top + 2,
+    5 * size,
+    4 * size,
+    facing * 0.5,
+    0,
+    Math.PI * 2,
+  );
+  ctx.fill();
+  ctx.stroke();
+}
+
+const sheep = (ctx: Ctx, x: number, feet: number, f: number): void =>
+  beast(ctx, x, feet, f, 0.9, COLORS.ceruse, COLORS.encre, null);
+const cow = (ctx: Ctx, x: number, feet: number, f: number): void =>
+  beast(ctx, x, feet, f, 1.3, COLORS.ceruse, COLORS.terreOmbre, COLORS.terreOmbre);
+const horse = (ctx: Ctx, x: number, feet: number, f: number): void =>
+  beast(ctx, x, feet, f, 1.4, COLORS.terreOmbre, COLORS.terreOmbre, null);
+
+/**
+ * The far landscape: soft hills, a castle, farms, a mill, trees and grazing beasts; muted so
+ * the play stays readable. FAR_W is one repeat of the tile.
+ */
 function drawFar(ctx: Ctx): void {
   ctx.clearRect(0, 0, FAR_W, FAR_H);
-  const hill = (y0: number, amp: number, period: number, color: number, alpha: number): void => {
-    ctx.globalAlpha = alpha;
-    ctx.fillStyle = css(color);
-    ctx.strokeStyle = css(COLORS.encre);
-    ctx.lineWidth = 3;
-    // Periodic in FAR_W so the tile repeats without a seam.
-    const top = (x: number): number => {
+  // Periodic in FAR_W so the tile repeats without a seam.
+  const crest =
+    (y0: number, amp: number, period: number) =>
+    (x: number): number => {
       const k = (x / FAR_W) * Math.PI * 2;
       return y0 - amp * Math.sin(k * period) - amp * 0.4 * Math.sin(k * period * 3 + 1);
     };
+  const hill = (top: (x: number) => number, color: number, alpha: number): void => {
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = css(color);
+    ink(ctx, 3);
     ctx.beginPath();
     ctx.moveTo(0, FAR_H);
     for (let x = 0; x <= FAR_W; x += 8) ctx.lineTo(x, top(x));
@@ -95,23 +222,52 @@ function drawFar(ctx: Ctx): void {
     ctx.stroke();
     ctx.globalAlpha = 1;
   };
-  hill(300, 40, 2, COLORS.vertTendre, 0.45);
+  const back = crest(300, 40, 4);
+  const front = crest(380, 26, 6);
+  hill(back, COLORS.vertTendre, 0.45);
   ctx.globalAlpha = 0.55;
-  tower(ctx, 980, 290, 40, 120, COLORS.vermillon);
-  tower(ctx, 1030, 270, 60, 90, COLORS.lapis);
-  tower(ctx, 1100, 285, 40, 130, COLORS.vermillon);
+  tower(ctx, 980, back(1000) + 10, 40, 120, COLORS.vermillon);
+  tower(ctx, 1030, back(1060) + 10, 60, 90, COLORS.lapis);
+  tower(ctx, 1100, back(1120) + 10, 40, 130, COLORS.vermillon);
+  farm(ctx, 380, back(420) + 6);
+  farm(ctx, 2300, back(2340) + 6);
+  windmill(ctx, 1720, back(1720) + 6);
+  windmill(ctx, 2900, back(2900) + 6);
   ctx.globalAlpha = 1;
   for (const [x, r] of [
     [140, 22],
     [210, 16],
-    [520, 20],
+    [620, 20],
     [760, 26],
     [1320, 18],
     [1450, 24],
+    [1980, 20],
+    [2560, 24],
+    [2700, 16],
+    [3080, 22],
   ] as const) {
-    lollipop(ctx, x, 330, r, COLORS.vertDeGris, 0.5);
+    lollipop(ctx, x, back(x) + 30, r, COLORS.vertDeGris, 0.5);
   }
-  hill(380, 26, 3, COLORS.ocre, 0.35);
+  hill(front, COLORS.ocre, 0.35);
+  // Grazing beasts on the near fields.
+  ctx.globalAlpha = 0.75;
+  for (const [kind, x, f] of [
+    [sheep, 300, 1],
+    [sheep, 330, -1],
+    [sheep, 352, 1],
+    [cow, 860, -1],
+    [horse, 1240, 1],
+    [sheep, 1580, -1],
+    [sheep, 1606, 1],
+    [cow, 2050, 1],
+    [cow, 2100, -1],
+    [horse, 2480, -1],
+    [sheep, 2820, 1],
+    [sheep, 2846, 1],
+  ] as const) {
+    kind(ctx, x, front(x) + 4, f);
+  }
+  ctx.globalAlpha = 1;
 }
 
 /** A scalloped manuscript cloud. */
