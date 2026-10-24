@@ -15,9 +15,18 @@ export const COLORS = {
   roseGarance: 0xc96a6e,
   vertTendre: 0x8fae6a,
   ciel: 0xcfd8d0,
+  /** gold leaf of the page background, and its shadowed burnish */
+  feuilleOr: 0xe8cf8a,
+  feuilleOrOmbre: 0xdcc07a,
+  /** tooling punched into the gold */
+  poincon: 0x8c6222,
   /** greybox rock, until the painted maps exist */
   roche: 0x77737a,
 } as const;
 
 /** CSS form of a token. */
 export const css = (c: number): string => `#${c.toString(16).padStart(6, '0')}`;
+
+/** CSS form of a token with an opacity. */
+export const cssAlpha = (c: number, alpha: number): string =>
+  `rgba(${(c >> 16) & 255}, ${(c >> 8) & 255}, ${c & 255}, ${alpha})`;

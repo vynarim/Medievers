@@ -29,10 +29,14 @@
 | Ocre | Ocre jaune | #c99a3e |
 | Brun | Terre d'ombre | #6b4a2e |
 | Or | Or | #d4a93c (+ texture) |
+| Feuille d'or (fond) | Feuille d'or, ombre, poinçon | #e8cf8a, #dcc07a, #8c6222 (placeholder procédural du 2026-10-24 : fond d'or poinçonné en losanges) |
 | Blanc | Céruse | #f3ecd9 |
 | Vélin | Vélin | #e9dcc0 |
 | Cerne | Encre | #2a1d14 |
 | Chair | Carnation | #f0cfb0 |
+
+### 1.2 bis Placeholders procéduraux (2026-10-24)
+En attendant la production artistique, le rendu dessine en code une première approximation du style : fond d'or poinçonné en losanges avec fleurons et craquelure ; sol en bandes stratifiées aux bords en marches arrondies (cerne d'encre et rehaut blanc sous chaque bord), teintes pâles vert tendre, rose garance, ocre ; pierre bâtie en assises appareillées ; combattants en heaume à sommet plat orné d'une croix d'or, camail et chausses de mailles (petits arcs), cotte d'armes aux plis tubulaires et ceinture à la seconde couleur, écu triangulaire blasonné d'un chevron ; noms sur des phylactères aux bouts enroulés.
 
 ### 1.3 Références et droits
 - Source : Morgan Library & Museum, MS M.638, consultable en ligne (Corsair).

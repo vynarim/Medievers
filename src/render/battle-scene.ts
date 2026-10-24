@@ -24,7 +24,7 @@ import { FONT_CAPS, FONT_TEXT, FONT_TITLE } from '../ui/fonts.ts';
 import { GameUi, loadOverrides } from '../ui/game-ui.ts';
 import { t } from '../ui/i18n.ts';
 import { applyOverrides, type TuningOverrides } from '../ui/tuning-model.ts';
-import { COLORS, css } from '../ui/tokens.ts';
+import { COLORS, css, cssAlpha } from '../ui/tokens.ts';
 import { uiScale } from '../ui/ui-scale.ts';
 import { AutoSaver, clearSave } from '../app/autosave.ts';
 import { spawnColumns } from '../app/spawns.ts';
@@ -324,17 +324,39 @@ export class BattleScene extends Phaser.Scene {
 
   /** Fond diapré (ASSETS §1.1): lozenges on vellum, faint enough to keep the play readable. */
   private diaperTexture(): string {
-    const key = 'page_diaper';
+    // Fond d'or (ASSETS §1.1): burnished gold leaf, tooled in lozenges with punched dots and a
+    // small fleuron in each, lightly crazed. Kept pale so the figures read against it.
+    const key = 'page_gold';
     if (this.textures.exists(key)) return key;
     const tex = this.textures.createCanvas(key, DIAPER, DIAPER);
     if (!tex) throw new Error('cannot create the page texture');
     const ctx = tex.getContext();
     const h = DIAPER / 2;
-    ctx.fillStyle = css(COLORS.velin);
+    const grad = ctx.createLinearGradient(0, 0, DIAPER, DIAPER);
+    grad.addColorStop(0, css(COLORS.feuilleOr));
+    grad.addColorStop(0.5, css(COLORS.feuilleOrOmbre));
+    grad.addColorStop(1, css(COLORS.feuilleOr));
+    ctx.fillStyle = grad;
     ctx.fillRect(0, 0, DIAPER, DIAPER);
-    ctx.globalAlpha = 0.28;
-    ctx.strokeStyle = css(COLORS.ocre);
-    ctx.lineWidth = 3;
+    // Craquelure of the leaf: a few fine broken lines.
+    ctx.strokeStyle = cssAlpha(COLORS.poincon, 0.12);
+    ctx.lineWidth = 1;
+    for (const [x0, y0, x1, y1] of [
+      [12, 30, 44, 38],
+      [44, 38, 58, 22],
+      [96, 110, 130, 104],
+      [130, 104, 150, 126],
+      [70, 140, 86, 158],
+      [20, 96, 30, 120],
+    ] as const) {
+      ctx.beginPath();
+      ctx.moveTo(x0, y0);
+      ctx.lineTo(x1, y1);
+      ctx.stroke();
+    }
+    // Tooled lozenges: an incised line doubled by punched dots.
+    ctx.strokeStyle = cssAlpha(COLORS.poincon, 0.45);
+    ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(0, h);
     ctx.lineTo(h, 0);
@@ -342,33 +364,51 @@ export class BattleScene extends Phaser.Scene {
     ctx.lineTo(h, DIAPER);
     ctx.closePath();
     ctx.stroke();
-    // A small quatrefoil in each lozenge, alternating lapis and vermillon.
-    const flower = (x: number, y: number, color: number): void => {
-      ctx.fillStyle = css(color);
-      for (const [dx, dy] of [
-        [0, -6],
-        [6, 0],
-        [0, 6],
-        [-6, 0],
+    ctx.fillStyle = cssAlpha(COLORS.poincon, 0.4);
+    for (let k = 0; k <= 16; k++) {
+      const t = k / 16;
+      for (const [x, y] of [
+        [t * h, h - t * h + 7],
+        [h + t * h, t * h + 7],
+        [t * h, h + t * h - 7],
+        [h + t * h, DIAPER - t * h - 7],
       ] as const) {
         ctx.beginPath();
-        ctx.arc(x + dx, y + dy, 5, 0, Math.PI * 2);
+        ctx.arc(x, y, 1.3, 0, Math.PI * 2);
         ctx.fill();
       }
+    }
+    // A punched fleuron in each lozenge: four petals and a centre.
+    const fleuron = (x: number, y: number): void => {
+      ctx.fillStyle = cssAlpha(COLORS.poincon, 0.35);
+      for (const [dx, dy] of [
+        [0, -7],
+        [7, 0],
+        [0, 7],
+        [-7, 0],
+      ] as const) {
+        ctx.beginPath();
+        ctx.ellipse(x + dx, y + dy, dx === 0 ? 3 : 5, dx === 0 ? 5 : 3, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.fillStyle = cssAlpha(COLORS.ceruse, 0.6);
+      ctx.beginPath();
+      ctx.arc(x, y, 2.5, 0, Math.PI * 2);
+      ctx.fill();
     };
-    flower(h, h, COLORS.lapis);
+    fleuron(h, h);
     for (const [x, y] of [
       [0, 0],
       [DIAPER, 0],
       [0, DIAPER],
       [DIAPER, DIAPER],
     ] as const) {
-      flower(x, y, COLORS.vermillon);
+      fleuron(x, y);
     }
-    ctx.globalAlpha = 1;
     tex.refresh();
     return key;
   }
+
 
   override update(time: number, delta: number): void {
     this.fps += (1000 / Math.max(1, delta) - this.fps) * 0.05;
@@ -653,7 +693,7 @@ export class BattleScene extends Phaser.Scene {
         label.setPosition(x, y - UNIT_HEIGHT - 12);
         label.setText(`${unitName(u.id)}\n${u.hp}`);
         label.setColor(css(primary));
-        label.setBackgroundColor(css(isActive ? COLORS.or : COLORS.ceruse));
+        this.drawScroll(g, x, y - UNIT_HEIGHT - 12, label.width, label.height, isActive);
         this.drawAfflictions(g, u.id, x, y - UNIT_HEIGHT - 12 - label.height - 10);
       }
       if (isActive) {
@@ -743,51 +783,106 @@ export class BattleScene extends Phaser.Scene {
       g.lineStyle(2, COLORS.ocre, 1);
       g.strokeCircle(hx, hy, 16 * pulse);
     }
-    g.lineStyle(3, COLORS.encre, 1);
-    // Legs
-    g.fillStyle(COLORS.terreOmbre, 1);
+    const ink = COLORS.encre;
+    const mail = COLORS.roche;
+    // Mail chausses: grey legs with rows of little arcs, pointed black shoes.
     for (const lx of [x - 9, x + 2]) {
-      g.fillRect(lx, y - 18, 7, 18);
-      g.strokeRect(lx, y - 18, 7, 18);
+      g.fillStyle(mail, 1);
+      g.lineStyle(2, ink, 1);
+      g.fillRect(lx, y - 22, 7, 20);
+      g.strokeRect(lx, y - 22, 7, 20);
+      g.lineStyle(1, ink, 0.55);
+      for (let ry = y - 19; ry < y - 3; ry += 4) {
+        g.beginPath();
+        g.arc(lx + 3.5, ry, 2.5, 0, Math.PI);
+        g.strokePath();
+      }
+      g.fillStyle(ink, 1);
+      g.fillTriangle(lx - 1, y - 3, lx + 8 + facing * 4, y, lx - 1, y);
     }
-    // Shield on the back side
-    const sx = x - facing * 13;
+    // Heater shield on the back side, blazoned: the house's field with a chevron.
+    const sx = x - facing * 14;
     const shieldPts = poly([
-      { x: sx - 9, y: y - 52 },
-      { x: sx + 9, y: y - 52 },
-      { x: sx + 8, y: y - 36 },
-      { x: sx, y: y - 22 },
-      { x: sx - 8, y: y - 36 },
+      { x: sx - 10, y: y - 56 },
+      { x: sx + 10, y: y - 56 },
+      { x: sx + 9, y: y - 40 },
+      { x: sx, y: y - 26 },
+      { x: sx - 9, y: y - 40 },
     ]);
     g.fillStyle(secondary, 1);
     g.fillPoints(shieldPts, true);
     g.fillStyle(primary, 1);
-    g.fillRect(sx - 3, y - 51, 6, 22);
+    g.fillPoints(
+      poly([
+        { x: sx - 9, y: y - 36 },
+        { x: sx, y: y - 47 },
+        { x: sx + 9, y: y - 36 },
+        { x: sx + 7, y: y - 31 },
+        { x: sx, y: y - 40 },
+        { x: sx - 7, y: y - 31 },
+      ]),
+      true,
+    );
+    g.lineStyle(3, ink, 1);
     g.strokePoints(shieldPts, true);
-    // Cotte
+    // Hauberk sleeves under the surcoat: grey mail arm reaching forward.
+    g.fillStyle(mail, 1);
+    g.lineStyle(2, ink, 1);
+    const ax = x + facing * 8;
+    g.fillPoints(
+      poly([
+        { x: ax - 4, y: y - 56 },
+        { x: ax + 4, y: y - 56 },
+        { x: ax + facing * 12 + 3, y: y - 40 },
+        { x: ax + facing * 12 - 3, y: y - 36 },
+      ]),
+      true,
+    );
+    g.strokePoints(
+      poly([
+        { x: ax - 4, y: y - 56 },
+        { x: ax + 4, y: y - 56 },
+        { x: ax + facing * 12 + 3, y: y - 40 },
+        { x: ax + facing * 12 - 3, y: y - 36 },
+      ]),
+      true,
+    );
+    g.fillStyle(COLORS.carnation, 1);
+    g.fillCircle(ax + facing * 12, y - 37, 3);
+    // Surcoat (cotte d'armes) in the house's colour, to the knee, split in front, with
+    // tubular folds as the manuscript draws them.
     const tunic = poly([
-      { x: x - 11, y: y - 56 },
-      { x: x + 11, y: y - 56 },
-      { x: x + 15, y: y - 16 },
-      { x: x - 15, y: y - 16 },
+      { x: x - 10, y: y - 58 },
+      { x: x + 10, y: y - 58 },
+      { x: x + 16, y: y - 20 },
+      { x: x - 16, y: y - 20 },
     ]);
     g.fillStyle(primary, 1);
     g.fillPoints(tunic, true);
+    g.lineStyle(3, ink, 1);
     g.strokePoints(tunic, true);
+    g.lineStyle(1.5, ink, 0.45);
+    for (const fx of [-7, 0, 7]) g.lineBetween(x + fx * 0.6, y - 44, x + fx, y - 21);
+    g.lineStyle(2, ink, 1);
+    g.lineBetween(x + facing * 2, y - 30, x + facing * 2, y - 20);
+    // Girdle in the house's second tincture.
     g.fillStyle(secondary, 1);
-    g.fillRect(x - 13, y - 36, 26, 5);
-    g.lineStyle(2, COLORS.encre, 1);
-    g.strokeRect(x - 13, y - 36, 26, 5);
-    // Head and helm
-    g.fillStyle(COLORS.carnation, 1);
-    g.fillCircle(hx, hy, 11);
-    g.fillStyle(COLORS.roche, 1);
-    g.slice(hx, hy, 11.5, Math.PI, Math.PI * 2, false);
-    g.fillPath();
-    g.lineStyle(3, COLORS.encre, 1);
-    g.strokeCircle(hx, hy, 11);
-    g.fillStyle(COLORS.encre, 1);
-    g.fillCircle(hx + facing * 6, hy + 2, 2.2);
+    g.fillRect(x - 12, y - 42, 24, 4);
+    g.lineStyle(1.5, ink, 1);
+    g.strokeRect(x - 12, y - 42, 24, 4);
+    // Mail coif and flat-topped great helm, with a gilt cross over the eye slit.
+    const top = hy - 13;
+    g.fillStyle(mail, 1);
+    g.fillRoundedRect(hx - 10, top, 20, 25, { tl: 3, tr: 3, bl: 6, br: 6 });
+    g.lineStyle(3, ink, 1);
+    g.strokeRoundedRect(hx - 10, top, 20, 25, { tl: 3, tr: 3, bl: 6, br: 6 });
+    g.fillStyle(ink, 1);
+    g.fillRect(hx - 8 + facing * 3, hy - 3, 14, 3);
+    g.fillStyle(COLORS.or, 1);
+    g.fillRect(hx + facing * 3 - 1, hy - 9, 3, 18);
+    g.fillRect(hx + facing * 3 - 6, hy - 3, 13, 2);
+    g.lineStyle(1, ink, 0.6);
+    for (let k = -1; k <= 1; k++) g.strokeCircle(hx - facing * 5 + k * 0, hy + 5 + k * 3, 1);
   }
 
   /** A little tombstone where a unit fell. */
@@ -890,6 +985,38 @@ export class BattleScene extends Phaser.Scene {
     }
   }
 
+  /**
+   * Phylactery behind a unit's name: a strip of parchment whose ends roll up, gilt for the unit
+   * that plays. (x, bottom) is the label's anchor, w × h its size.
+   */
+  private drawScroll(
+    g: Phaser.GameObjects.Graphics,
+    x: number,
+    bottom: number,
+    w: number,
+    h: number,
+    gilt: boolean,
+  ): void {
+    const left = x - w / 2;
+    const top = bottom - h;
+    g.fillStyle(gilt ? COLORS.or : COLORS.ceruse, 1);
+    g.lineStyle(2, COLORS.encre, 1);
+    g.fillRect(left + 6, top, w - 12, h);
+    g.lineBetween(left + 6, top, left + w - 6, top);
+    g.lineBetween(left + 6, bottom, left + w - 6, bottom);
+    // Rolled ends: a curl at each side, the inside of the roll a shade darker.
+    for (const [cx, dir] of [
+      [left + 6, -1],
+      [left + w - 6, 1],
+    ] as const) {
+      g.fillStyle(COLORS.velin, 1);
+      g.fillEllipse(cx, top + h / 2, 12, h);
+      g.strokeEllipse(cx, top + h / 2, 12, h);
+      g.fillStyle(COLORS.ocre, 1);
+      g.fillEllipse(cx + dir * 2, top + h / 2, 5, h * 0.55);
+    }
+  }
+
   /** The name label of a unit, made the first time it shows (units placed during the match). */
   private labelFor(unitId: number): Phaser.GameObjects.Text {
     let label = this.labels.get(unitId);
@@ -900,8 +1027,7 @@ export class BattleScene extends Phaser.Scene {
           fontSize: '30px',
           color: css(COLORS.encre),
           align: 'center',
-          backgroundColor: css(COLORS.ceruse),
-          padding: { x: 8, y: 2 },
+          padding: { x: 14, y: 2 },
         })
         .setOrigin(0.5, 1)
         .setDepth(7);

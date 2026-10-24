@@ -19,15 +19,43 @@ export interface MaskView {
 type Rgb = readonly [number, number, number];
 const rgb = (c: number): Rgb => [(c >> 16) & 255, (c >> 8) & 255, c & 255];
 
-/** Greybox tints per material: two flat tints for the wavy strata (« bandes ondulées »). */
-const MATERIAL_RGB: Record<number, readonly [Rgb, Rgb]> = {
-  [Material.Earth]: [rgb(COLORS.ocre), rgb(COLORS.terreOmbre)],
-  [Material.Rock]: [rgb(COLORS.roche), rgb(COLORS.azur)],
-  [Material.BuiltStone]: [rgb(COLORS.ceruse), rgb(COLORS.velin)],
-  [Material.Wood]: [rgb(COLORS.terreOmbre), rgb(COLORS.ocre)],
+/** Mixes a colour with the vellum, as the illuminators thinned their pigments with white. */
+const pale = (c: number, k: number): Rgb => {
+  const [r, g, b] = rgb(c);
+  const [vr, vg, vb] = rgb(COLORS.ceruse);
+  return [r + (vr - r) * k, g + (vg - g) * k, b + (vb - b) * k];
+};
+
+/**
+ * Tints per material for the stratified ground (ASSETS §1.1: « sol en bandes ondulées
+ * stratifiées, rochers en marches arrondies »): the bands cycle through these pigments.
+ */
+const MATERIAL_RGB: Record<number, readonly Rgb[]> = {
+  [Material.Earth]: [
+    pale(COLORS.vertTendre, 0.25),
+    pale(COLORS.roseGarance, 0.45),
+    pale(COLORS.ocre, 0.35),
+    pale(COLORS.vertDeGris, 0.35),
+  ],
+  [Material.Rock]: [pale(COLORS.roche, 0.1), pale(COLORS.azur, 0.35), pale(COLORS.roche, 0.3)],
+  [Material.BuiltStone]: [rgb(COLORS.ceruse), pale(COLORS.velin, 0.2)],
+  [Material.Wood]: [rgb(COLORS.terreOmbre), pale(COLORS.ocre, 0.1)],
   [Material.Ladder]: [rgb(COLORS.or), rgb(COLORS.ocre)],
 };
-const FALLBACK: readonly [Rgb, Rgb] = [rgb(COLORS.roseGarance), rgb(COLORS.roseGarance)];
+const FALLBACK: readonly Rgb[] = [rgb(COLORS.roseGarance)];
+const HIGHLIGHT = rgb(COLORS.ceruse);
+const MORTAR = pale(COLORS.terreOmbre, 0.2);
+/** px: height of a band of strata, and width of the rounded steps along its edge */
+const BAND = 56;
+const STEP = 92;
+/** px: masonry courses and stones of built stone */
+const COURSE = 16;
+const STONE = 34;
+/** Rounded steps: how far below its nominal line a band edge sits at u in [0, STEP). */
+const STEP_DROP = Array.from({ length: STEP }, (_, u) => {
+  const t = (u - STEP / 2) / (STEP / 2);
+  return Math.round(18 * Math.sqrt(Math.max(0, 1 - t * t)));
+});
 const GRASS = rgb(COLORS.vertDeGris);
 const GRASS_LIGHT = rgb(COLORS.vertTendre);
 const INK = rgb(COLORS.encre);
@@ -187,14 +215,31 @@ export class TerrainLayer {
         else if (mat === Material.Earth && !solidAt(wx, wy - GRASS_DEPTH)) {
           // Grass in tufts: lighter blades every few px.
           c = (wx + (wy >> 2)) % 7 < 2 ? GRASS_LIGHT : GRASS;
+        } else if (mat === Material.BuiltStone) {
+          // Ashlar: courses of dressed stones, mortar joints, a lighter top edge to each stone.
+          const course = Math.floor(wy / COURSE);
+          const sx = (wx + (course & 1) * (STONE >> 1)) % STONE;
+          const sy = wy % COURSE;
+          const tints = MATERIAL_RGB[mat] ?? FALLBACK;
+          const tint = tints[(course + Math.floor((wx + (course & 1) * 17) / STONE)) % tints.length];
+          if (sx < 2 || sy < 2) c = MORTAR;
+          else if (sy < 4) c = HIGHLIGHT;
+          else c = tint ?? HIGHLIGHT;
         } else {
-          // Strata: wavy bands, a thin ink-shaded line between two bands.
-          const [a1, a2] = MATERIAL_RGB[mat] ?? FALLBACK;
-          const phase = wy + 7 * Math.sin(wx / 37) + 3 * Math.sin(wx / 11);
-          const band = ((phase % 44) + 44) % 44;
-          const base = band < 26 ? a1 : a2;
-          const shade = band < 2 || (band >= 26 && band < 28) ? 0.72 : 1;
-          c = [base[0] * shade, base[1] * shade, base[2] * shade];
+          // Strata in rounded steps: each band's lower edge bulges in arcs, ink line on the edge,
+          // a white highlight just under it, as on the hills of the manuscript.
+          const tints = MATERIAL_RGB[mat] ?? FALLBACK;
+          const row = Math.floor(wy / BAND);
+          const shift = ((row * 23) % STEP + STEP) % STEP;
+          const drop = STEP_DROP[(wx + shift) % STEP] ?? 0;
+          const v = wy - row * BAND; // 0..BAND-1 inside the nominal band
+          const edge = BAND - 20 + drop - 18; // where this band ends, in the next band's space
+          const band = v >= edge ? row + 1 : row;
+          const d = v - edge;
+          const base = tints[((band % tints.length) + tints.length) % tints.length] ?? HIGHLIGHT;
+          if (d >= 0 && d < 3) c = INK;
+          else if (d >= 3 && d < 6) c = HIGHLIGHT;
+          else c = base;
         }
         img.data[o] = c[0];
         img.data[o + 1] = c[1];
