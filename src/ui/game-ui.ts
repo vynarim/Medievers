@@ -6,6 +6,7 @@ import { FACTIONS, unitName } from '../content/factions.ts';
 import type { UiIntents } from '../input/ui-intents.ts';
 import type { SimView } from '../sim/sim.ts';
 import { Hud } from './hud.ts';
+import { renderTutorial } from './tutorial.ts';
 import { t } from './i18n.ts';
 import { button, el, holdButton, shield, uiRoot } from './overlay.ts';
 import { COLORS, css } from './tokens.ts';
@@ -51,6 +52,7 @@ export class GameUi {
   private readonly root: HTMLElement;
   readonly hud: Hud;
   private readonly fuses: HTMLElement;
+  private readonly skip: HTMLButtonElement;
   private readonly actionButtons: HTMLButtonElement[] = [];
   private readonly veil: HTMLElement;
   private readonly arsenal: HTMLElement;
@@ -73,9 +75,13 @@ export class GameUi {
     this.hud = new Hud(this.root);
 
     /** 'move': usable in action and retreat; 'action': only before the shot. */
+    /**
+     * 'walk' and 'jump' follow the moves left (a walk or one jump per turn), 'action' is before
+     * the shot only, 'end' is the whole turn.
+     */
     const act = (
       b: HTMLButtonElement,
-      when: 'move' | 'action' = 'action',
+      when: 'walk' | 'jump' | 'action' | 'end' = 'action',
       tip = '',
     ): HTMLButtonElement => {
       b.dataset.when = when;
@@ -83,33 +89,29 @@ export class GameUi {
       this.actionButtons.push(b);
       return b;
     };
-    // Virtual pad, bottom left (GDD §8.2): walk, jump, aim all round.
-    const pad = el('div', 'cluster pad panel');
+    // One action bar, centred at the bottom (GDD §8.2): moves, then aim and weapons.
+    const bar = el('div', 'bar panel');
+    const pad = el('div', 'group');
     pad.append(
       act(
         holdButton(t('ui.walkLeft'), (h) => (i.walk = h ? -1 : 0)),
-        'move',
+        'walk',
         'tip.walkLeft',
       ),
       act(
         holdButton(t('ui.walkRight'), (h) => (i.walk = h ? 1 : 0)),
-        'move',
+        'walk',
         'tip.walkRight',
       ),
       act(
         this.click(button(t('ui.jumpForward')), () => (i.jump = 'forward')),
-        'move',
+        'jump',
         'tip.jumpForward',
       ),
       act(
         this.click(button(t('ui.jumpBack')), () => (i.jump = 'back')),
-        'move',
+        'jump',
         'tip.jumpBack',
-      ),
-      act(
-        holdButton(t('ui.spin'), (h) => (i.spin = h)),
-        'action',
-        'tip.spin',
       ),
     );
     // Weapons and fire, bottom right.
@@ -121,13 +123,23 @@ export class GameUi {
       b.addEventListener('click', () => (i.fuse = s));
       this.fuses.append(b);
     }
-    const arms = el('div', 'cluster arms panel');
+    const arms = el('div', 'group');
+    this.skip = act(
+      this.click(button(t('ui.skip')), () => (i.skip = true)),
+      'end',
+    );
+    // Weapon, aim and fire together.
     arms.append(
       act(this.click(button(t('ui.arsenal')), () => this.toggle(this.arsenal))),
       this.fuses,
-      act(this.click(button(t('ui.skip')), () => (i.skip = true))),
+      act(
+        holdButton(t('ui.spin'), (h) => (i.spin = h)),
+        'action',
+        'tip.spin',
+      ),
       act(holdButton(t('ui.fire'), (h) => (i.charge = h), 'fire')),
     );
+    bar.append(pad, el('div', 'sep'), arms, el('div', 'sep'), this.skip);
     const sys = el('div', 'sys');
     const view = this.click(button(`◎ ${t('ui.resetView')}`), () => opts.resetView());
     view.title = t('tip.resetView');
@@ -143,8 +155,6 @@ export class GameUi {
     this.arsenal = this.modal();
     this.card = el('div', 'card panel hidden');
     this.help = this.modal('help');
-    this.help.append(this.closeButton(), el('h2', '', t('help.title')));
-    for (const line of t('help.body').split('\n')) this.help.append(el('p', '', line));
     this.settings = this.modal();
     this.pause = this.modal('pause');
     const pauseActions = el('div', 'actions');
@@ -159,8 +169,7 @@ export class GameUi {
     );
     this.pause.append(el('h2', '', t('pause.title')), el('p', '', t('pause.body')), pauseActions);
     this.root.append(
-      pad,
-      arms,
+      bar,
       sys,
       this.card,
       this.veil,
@@ -202,6 +211,7 @@ export class GameUi {
     this.veil.classList.toggle('hidden', panel === null);
     this.open = panel;
     if (panel === this.arsenal) this.renderArsenal(true);
+    if (panel === this.help) renderTutorial(this.help, () => this.show(null));
   }
 
   private toggle(panel: HTMLElement): void {
@@ -226,9 +236,23 @@ export class GameUi {
     this.hud.update(view, power, now);
     const phase = view.turn.phase;
     const canMove = phase === 'action' || phase === 'retreat';
+    const budget = (view.rules.unit.moveBudget ?? 0) * 256;
+    const moveLeft = budget === 0 || view.turn.moveLeft > 0;
+    const jumpLeft = budget === 0 || view.turn.moveLeft === budget;
     for (const b of this.actionButtons) {
-      b.disabled = b.dataset.when === 'move' ? !canMove : phase !== 'action';
+      const when = b.dataset.when;
+      b.disabled =
+        when === 'walk'
+          ? !canMove || !moveLeft
+          : when === 'jump'
+            ? !canMove || !jumpLeft
+            : when === 'end'
+              ? !canMove
+              : phase !== 'action';
     }
+    // Before the shot it passes the turn; after it, it ends the turn.
+    const skipLabel = phase === 'retreat' ? t('ui.endTurn') : t('ui.skip');
+    if (this.skip.textContent !== skipLabel) this.skip.textContent = skipLabel;
     const def = view.rules.weapons.find((w) => w.id === view.turn.weapon);
     this.fuses.classList.toggle('hidden', def?.behavior !== 'fusedBouncer');
     const fuseSeconds = Math.round((view.turn.fuse || (def?.defaultFuse ?? 0)) / 60);

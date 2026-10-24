@@ -13,7 +13,9 @@ export type GameCommand =
   | { readonly t: 'setFuse'; readonly seconds: 1 | 2 | 3 | 4 | 5 }
   /** power 0..1024 */
   | { readonly t: 'fire'; readonly power: number }
-  | { readonly t: 'skip' };
+  | { readonly t: 'skip' }
+  /** free choice of the unit that plays this turn (rules.turn.freeSelect), before it acts */
+  | { readonly t: 'selectUnit'; readonly unitId: number };
 
 /** A command scheduled at a tick, as stored in game logs. */
 export type TimedCommand = readonly [tick: number, command: GameCommand];

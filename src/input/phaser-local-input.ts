@@ -12,6 +12,8 @@ import { UiIntents } from './ui-intents.ts';
 const DRAG_GRAB_RADIUS = 70;
 /** game px from the canvas border where the mouse scrolls the camera (GDD §8.1) */
 const EDGE_PX = 24;
+/** ms the mouse must rest at a side before the camera scrolls, so crossing it does nothing */
+const EDGE_DWELL_MS = 350;
 /** screen px around the aim arrowhead where a press grabs it to re-aim */
 const TIP_GRAB_RADIUS = 36;
 /** px a press may move and still count as a click */
@@ -59,6 +61,9 @@ export class PhaserLocalInput implements InputSource {
   pan = { dx: 0, dy: 0 };
   /** camera scroll direction while the mouse rests at a border of the canvas (-1, 0, 1) */
   edge = { x: 0, y: 0 };
+  /** side the mouse rests at (-1, 0, 1) and since when, before it scrolls */
+  private edgeSide = 0;
+  private edgeSince = 0;
   /** zoom factor requested by a pinch since the last frame, consumed by the scene */
   zoom = 1;
   /** set by a double tap: the scene recentres the camera */
@@ -147,14 +152,21 @@ export class PhaserLocalInput implements InputSource {
   /** The mouse left the canvas (or went over a DOM panel): stop edge scrolling. */
   private onOut(): void {
     this.edge = { x: 0, y: 0 };
+    this.edgeSide = 0;
   }
 
   private onMove(p: Phaser.Input.Pointer): void {
     if (!p.wasTouch) {
-      const { width, height } = this.scene.scale;
+      const { width } = this.scene.scale;
       const side = (v: number, max: number): number =>
         v < EDGE_PX ? -1 : v > max - EDGE_PX ? 1 : 0;
-      this.edge = p.isDown ? { x: 0, y: 0 } : { x: side(p.x, width), y: side(p.y, height) };
+      // Left and right sides only: the top and bottom are crossed on the way to the browser's
+      // bars and to the action bar, and the map is not much taller than the screen.
+      const s = p.isDown ? 0 : side(p.x, width);
+      if (s !== this.edgeSide) {
+        this.edgeSide = s;
+        this.edgeSince = this.scene.game.loop.time;
+      }
     }
     if (this.aimAt && this.unitCentre) {
       const w = this.world(p);
@@ -209,6 +221,12 @@ export class PhaserLocalInput implements InputSource {
     this.panFrom = null;
   }
 
+  /** Updates the edge scroll for this frame: only after the mouse has rested at a side. */
+  updateEdge(now: number): void {
+    const resting = this.edgeSide !== 0 && now - this.edgeSince >= EDGE_DWELL_MS;
+    this.edge = { x: resting ? this.edgeSide : 0, y: 0 };
+  }
+
   /** Returns and clears the last click, in world px. */
   takeClick(): { x: number; y: number } | null {
     const c = this.clickAt;
@@ -228,6 +246,7 @@ export class PhaserLocalInput implements InputSource {
     input.charge = k.space.isDown || this.ui.charge;
     input.jumpKind = ui.jump;
     input.selectWeapon = ui.selectWeapon;
+    input.selectUnit = ui.selectUnit;
     input.skipPressed = ui.skip;
     input.jumpPressed = this.pressed.jump;
     input.nextWeaponPressed = this.pressed.weapon || this.weaponClick;

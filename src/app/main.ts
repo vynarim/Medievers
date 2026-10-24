@@ -3,6 +3,7 @@ import Phaser from 'phaser';
 import { GREYBOX_MAPS } from '../content/maps.ts';
 import { CLASSIC_RULES } from '../content/rules.ts';
 import { BattleScene } from '../render/battle-scene.ts';
+import { loadSave } from './autosave.ts';
 import { loadFonts } from '../ui/fonts.ts';
 import { loadOverrides } from '../ui/game-ui.ts';
 import { applyOverrides } from '../ui/tuning-model.ts';
@@ -30,7 +31,16 @@ async function boot(): Promise<void> {
     scene: [],
   });
   const rules = applyOverrides(CLASSIC_RULES, loadOverrides());
-  game.scene.add('battle', BattleScene, true, { map, mask, seed, rules });
+  // A match left in progress (refresh, crash, reboot) resumes where it was.
+  const save = loadSave();
+  const resume = save && save.mapId === map.id ? save : undefined;
+  game.scene.add('battle', BattleScene, true, {
+    map,
+    mask,
+    seed,
+    rules,
+    ...(resume ? { resume } : {}),
+  });
   // Dev builds expose the game for browser-driven checks (Playwright); stripped from production.
   if (import.meta.env.DEV) (window as unknown as { medievers: Phaser.Game }).medievers = game;
 }

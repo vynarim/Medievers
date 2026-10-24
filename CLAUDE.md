@@ -24,7 +24,7 @@ Documents de référence (à lire avant toute tâche structurante) :
 | Cartes | Image peinte + masque PNG + JSON. Pas d'éditeur in-game en V1 |
 | LAN | WebRTC DataChannel, appairage manuel par QR/code, sans serveur ; fallback mini-serveur Node local |
 | Factions | Maisons héraldiques fictives, blason personnalisable |
-| Ton | Gameplay burlesque, décors inspirés d'épisodes du manuscrit |
+| Ton | Gameplay burlesque, humour à la Monty Python (pastiches, pas de citations) ; décors inspirés d'épisodes du manuscrit et de grandes batailles médiévales |
 
 ## Règles d'architecture NON négociables
 

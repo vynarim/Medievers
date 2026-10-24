@@ -233,7 +233,14 @@ export function stepUnitPhysics(u: Unit, t: Terrain, rules: UnitRules): PhysicsR
     if (dx !== 0) {
       const nx = u.x + dx;
       if (bodyFree(t, subToPx(nx), subToPx(u.y))) u.x = nx;
-      else u.vx = u.knocked ? -idiv(u.vx * RESTITUTION_PCT, 100) : 0;
+      else if (
+        rules.slopeTakeoff === true &&
+        dy < 0 &&
+        bodyFree(t, subToPx(nx), subToPx(u.y + dy))
+      ) {
+        // Taking off from a slope: rising clears the ground that blocks the sideways step.
+        u.x = nx;
+      } else u.vx = u.knocked ? -idiv(u.vx * RESTITUTION_PCT, 100) : 0;
     }
     if (dy !== 0) {
       const ny = u.y + dy;

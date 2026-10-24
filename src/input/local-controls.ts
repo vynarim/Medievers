@@ -17,6 +17,8 @@ export interface RawInput {
   /** weapon chosen in the arsenal */
   selectWeapon: WeaponId | null;
   skipPressed: boolean;
+  /** unit of the active team chosen to play this turn */
+  selectUnit: number | null;
   /** charge key held (gauge aiming) */
   charge: boolean;
   nextWeaponPressed: boolean;
@@ -41,6 +43,7 @@ export const emptyInput = (): RawInput => ({
   jumpKind: null,
   selectWeapon: null,
   skipPressed: false,
+  selectUnit: null,
   charge: false,
   nextWeaponPressed: false,
   flipPressed: false,
@@ -85,6 +88,8 @@ export class LocalControls {
   update(tick: number, input: RawInput, view: SimView): GameCommand[] {
     const out: GameCommand[] = [];
     const turn = view.turn;
+    // Choosing the unit is allowed during the transition too, before anything else.
+    if (input.selectUnit !== null) out.push({ t: 'selectUnit', unitId: input.selectUnit });
     const unit = view.units.find((u) => u.id === turn.activeUnitId);
     const canMove = turn.phase === 'action' || turn.phase === 'retreat';
     if (!unit || !canMove) {
@@ -119,14 +124,14 @@ export class LocalControls {
       this.pendingJumpTick = -1;
     }
 
-    if (turn.phase !== 'action') {
-      this.charging = false;
-      this.power = 0;
+    if (input.skipPressed) {
+      out.push({ t: 'skip' });
       return out;
     }
 
-    if (input.skipPressed) {
-      out.push({ t: 'skip' });
+    if (turn.phase !== 'action') {
+      this.charging = false;
+      this.power = 0;
       return out;
     }
     if (input.selectWeapon) out.push({ t: 'selectWeapon', id: input.selectWeapon });

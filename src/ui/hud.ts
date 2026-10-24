@@ -18,6 +18,8 @@ export class Hud {
   private readonly turnTitle: HTMLElement;
   private readonly turnHouse: HTMLElement;
   private readonly turnPhase: HTMLElement;
+  private readonly breath: HTMLElement;
+  private readonly breathFill: HTMLElement;
   private readonly teams: HTMLElement;
   private readonly windLabel: HTMLElement;
   private readonly windFill: HTMLElement;
@@ -40,7 +42,11 @@ export class Hud {
     this.turnHouse = el('div', 'house');
     this.turnPhase = el('div', 'phase');
     const turnText = el('div');
-    turnText.append(this.turnTitle, this.turnHouse, this.turnPhase);
+    this.breath = el('div', 'breath');
+    this.breathFill = el('i');
+    this.breath.append(this.breathFill);
+    this.breath.title = t('hud.breath');
+    turnText.append(this.turnTitle, this.turnHouse, this.turnPhase, this.breath);
     turn.append(this.turnShield, turnText);
 
     this.teams = el('div', 'hud-teams');
@@ -131,7 +137,10 @@ export class Hud {
         return sum + (u?.alive ? u.hp : 0);
       }, 0),
     );
+    const budget = (v.rules.unit.moveBudget ?? 0) * 256;
+    const breath = budget > 0 ? Math.round((turn.moveLeft * 100) / budget) : -1;
     const signature = [
+      breath,
       turn.number,
       turn.phase,
       turn.activeTeam,
@@ -154,6 +163,8 @@ export class Hud {
     this.turnHouse.textContent = faction ? t(faction.nameKey) : '';
     this.turnHouse.style.color = css(faction?.primary ?? COLORS.encre);
     this.turnPhase.textContent = t(`hud.phase.${turn.phase}`);
+    this.breath.classList.toggle('hidden', breath < 0);
+    this.breathFill.style.width = `${Math.max(0, breath)}%`;
 
     const max = v.rules.startHp * Math.max(1, ...v.teams.map((x) => x.unitIds.length));
     this.teams.replaceChildren(

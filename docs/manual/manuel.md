@@ -40,14 +40,14 @@ Un chroniqueur à l'humour douteux commente la partie {{st:jeu}} : chaque tour s
 |---|---|---|
 | Transition | {{rules:transition}} | La caméra rejoint votre combattant. Le vent du tour s'affiche. |
 | Action | {{rules:action}} | Vous vous déplacez librement, choisissez une arme, visez et tirez. |
-| Repli | {{rules:retreat}} | Après le tir, vous pouvez encore bouger pour vous mettre à l'abri, mais plus attaquer. |
+| Après le tir | le temps restant | Le tir ne termine pas le tour : on peut bouger puis tirer, ou tirer puis bouger, avec le déplacement pas encore utilisé. **Fin du tour** termine le tour ; il se termine aussi tout seul quand il ne reste plus de déplacement et que le tir est retombé. |
 | Résolution | variable, puis {{rules:settle}} | Le jeu attend que tout soit retombé : projectiles, explosions, chutes. Les morts sont alors constatées, puis une courte pause laisse voir le résultat et le commentaire. Le sablier est en pause. |
 | Fin de tour | — | Les effets de fin de tour s'appliquent, et un reliquaire peut tomber du ciel. |
 
 - Le sablier **ne s'arrête pas** pendant que vous visez : la pression du temps fait partie du jeu.
 - Un combattant **touché pendant son propre tour** termine son tour aussitôt.
 - **Le tir ami existe** : une flèche ou une explosion blesse aussi vos propres combattants, et vous-même.
-- Vos combattants jouent à tour de rôle, dans l'ordre de l'équipe. Une option permettra de choisir librement lequel joue.
+- **Vous choisissez qui joue** : le jeu propose un combattant, mais un clic sur un autre de vos combattants, avant de bouger ou de tirer, lui donne la main. Vous pouvez jouer le même plusieurs tours de suite.
 - Les morts sont constatées à la fin de la résolution : un combattant à 0 PV ne tombe qu'une fois que tout s'est arrêté.
 
 ## 3. Vos combattants
@@ -56,7 +56,8 @@ Un chroniqueur à l'humour douteux commente la partie {{st:jeu}} : chaque tour s
 
 - **Points de vie** : {{unit:startHp}} par défaut (50, 150 ou 200 en option).
 - **Marcher** : un combattant avance de {{unit:walkSpeedPx}} pixel par instant de jeu, franchit une marche de {{unit:maxStep}} pixels au plus et grimpe des pentes jusqu'à environ 60°. Au bord d'un précipice, il tombe.
-- **Sauter** : un saut court vers l'avant, ou un saut plus haut vers l'arrière.
+- **Sauter** : **↗ Saut long** bondit loin devant ; **↑ Saut haut** bondit très haut en reculant un peu, pour sortir d'un trou ou grimper sur un rebord.
+- **Marcher ou sauter** : à chaque tour, c'est l'un ou l'autre. Soit on marche, {{unit:moveBudget}} pixels au plus (environ 10 largeurs de combattant) ; soit on fait un seul saut, qui porte bien plus loin (environ 15 largeurs) mais toujours à la même distance. La barre verte sous le nom de la maison montre la marche qui reste.
 - **Tomber** : une chute de plus de {{unit:fallSafeHeight}} pixels blesse. On perd 1 PV tous les {{unit:fallPxPerHp}} pixels de chute en plus, jusqu'à {{unit:fallMaxDamage}} PV au maximum. Une chute de 200 pixels coûte donc {{unit:fall200}} PV.
 - **Mourir** : à 0 PV, en sortant de la carte par les bords, ou en tombant dans l'eau. Le combattant laisse une petite stèle qui roule et glisse comme un objet.
 
@@ -216,7 +217,7 @@ Tout se fait aussi à la souris (ou au doigt), avec les deux groupes de boutons 
 En bas à gauche, le **pad** :
 
 - **◀** et **▶** : maintenir le bouton pour marcher ;
-- **Sauter** et **↶ Arrière** ;
+- **↗ Saut long** et **↑ Saut haut** ;
 - **⟳ Viser** : maintenir pour faire tourner la visée tout autour du combattant.
 
 En bas à droite, les armes :
@@ -226,7 +227,7 @@ En bas à droite, les armes :
 - **Passer** : finir son tour sans tirer ;
 - **Tirer** : maintenir pour charger la puissance, relâcher pour tirer.
 
-Au-dessus, le cartouche de l'arme en main montre la jauge de puissance. En haut à droite : **Vue** (revenir au zoom par défaut et recentrer), **Aide**, **Réglages** et **Pause**. La souris posée contre un bord de l'écran fait défiler la carte. Le menu de pause (aussi sur Échap) propose de reprendre, de recommencer la partie, de lire l'aide ou d'ouvrir les réglages ; le temps est arrêté tant qu'il est ouvert, comme pendant l'aide et les réglages.
+Au-dessus, le cartouche de l'arme en main montre la jauge de puissance. En haut à droite : **Vue** (revenir au zoom par défaut et recentrer), **Aide** (un petit tutoriel illustré en sept pages : le but, le tour, se déplacer, viser, tirer, le vent, la caméra), **Réglages** et **Pause**. La souris posée contre un bord de l'écran fait défiler la carte. Le menu de pause (aussi sur Échap) propose de reprendre, de recommencer la partie, de lire l'aide ou d'ouvrir les réglages ; le temps est arrêté tant qu'il est ouvert, comme pendant l'aide et les réglages.
 
 On peut aussi viser « à la fronde » : appuyer sur son combattant, tirer franchement en arrière (le trait devient rouge quand le tir est armé), relâcher. Un simple clic sur le combattant ne tire jamais, et revenir près de lui avant de relâcher annule le tir.
 
@@ -259,11 +260,15 @@ Le choix du mode de visée dans les options est prévu {{st:prevu}}. Le jeu n'a 
 | **La Tour** | la tour de Babel | Carte verticale, échafaudages |
 | **Le Verger** | les arbres du manuscrit | Arbres en boules, terre meuble |
 
-## 9. Options et confort {{st:prevu}}
+## 9. Partie sauvegardée {{st:jeu}}
+
+La partie en cours s'enregistre toute seule dans le navigateur. Si la page est rechargée, si le navigateur se ferme ou si l'ordinateur redémarre, le jeu reprend la bataille exactement où elle en était. Une partie terminée, ou recommencée depuis le menu de pause, efface la sauvegarde.
+
+## 10. Options et confort {{st:prevu}}
 
 Choix du mode de visée · résolution accélérée ×2 · secousses de caméra réduites · couleurs de maisons distinguables pour les daltoniens (un motif en plus de la couleur) · taille du texte · volume par canal · français, puis anglais.
 
-## 10. Musique {{st:prevu}}
+## 11. Musique {{st:prevu}}
 
 L'énergie rythmique de *Patapon*, remixée en médiéval : tambours en avant, petites boucles entraînantes à la chalemie, à la flûte et à la vièle, et chœurs scandés comme une troupe en marche.
 

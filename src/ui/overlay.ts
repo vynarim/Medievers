@@ -32,10 +32,12 @@ const STYLE = `
 #ui button:disabled { opacity: 0.4; cursor: default; background: var(--velin); transform: none; }
 #ui button.fire { background: var(--vermillon); color: var(--ceruse); min-width: 96px; font-size: 20px; }
 #ui button.fire:hover, #ui button.fire.on { background: var(--vermillon); filter: brightness(1.15); }
-#ui .cluster { position: absolute; bottom: 12px; display: flex; gap: 6px; flex-wrap: wrap;
-  align-items: center; padding: 8px; max-width: calc(58vw - 24px); }
-#ui .pad { left: 12px; }
-#ui .arms { right: 12px; justify-content: flex-end; }
+#ui .bar { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); display: flex;
+  gap: 10px; align-items: center; padding: 8px 10px; width: max-content; max-width: calc(100vw - 24px);
+  flex-wrap: wrap; justify-content: center; }
+#ui .bar .group { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; justify-content: center; }
+#ui .bar .sep { width: 2px; align-self: stretch; background: var(--or); box-shadow: 1px 0 0 var(--encre); }
+#ui button:disabled { filter: grayscale(1); }
 #ui .fuses { display: flex; gap: 4px; align-items: center; font-family: var(--caps); }
 #ui .sys { position: absolute; top: 12px; right: 12px; display: flex; gap: 6px; }
 
@@ -44,13 +46,16 @@ const STYLE = `
   align-items: center; padding: 10px 18px 10px 12px; width: var(--col); }
 #ui .hud-turn .title { font-family: var(--title); font-size: 30px; line-height: 1; }
 #ui .hud-turn .house { font-family: var(--caps); font-size: 18px; }
+#ui .breath { height: 8px; margin-top: 4px; width: 170px; border: 2px solid var(--encre);
+  background: var(--velin); }
+#ui .breath i { display: block; height: 100%; background: var(--vert); }
 #ui .hud-turn .phase { font-size: 16px; }
 #ui .shield { flex: none; width: 40px; height: 48px; border: 3px solid var(--encre);
   border-radius: 0 0 50% 50% / 0 0 62% 62%; position: relative; overflow: hidden; background: var(--p); }
 #ui .shield::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 32%;
   background: var(--s); border-bottom: 2px solid var(--encre); }
 #ui .shield.small { width: 22px; height: 27px; border-width: 2px; }
-#ui .hud-teams { position: absolute; top: 104px; left: 12px; display: flex; flex-direction: column; gap: 6px; }
+#ui .hud-teams { position: absolute; top: 148px; left: 12px; display: flex; flex-direction: column; gap: 6px; }
 #ui .team { display: flex; align-items: center; gap: 8px; padding: 4px 12px 4px 6px;
   font-family: var(--caps); font-size: 14px; width: var(--col); }
 #ui .team .name { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -77,7 +82,7 @@ const STYLE = `
 #ui .hud-timer .secs { font-family: var(--title); font-size: 38px; line-height: 1; }
 #ui .hud-timer.hurry .secs { color: var(--vermillon); }
 #ui .hud-timer.idle { opacity: 0.5; }
-#ui .hud-weapon { position: absolute; right: 12px; bottom: 100px; padding: 6px 16px 8px; width: var(--col);
+#ui .hud-weapon { position: absolute; right: 12px; bottom: 96px; padding: 6px 16px 8px; width: var(--col);
   text-align: center; }
 #ui .hud-weapon .name { font-family: var(--caps); font-size: 19px; }
 #ui .hud-weapon .power { height: 12px; margin: 4px 0 2px; border: 2px solid var(--encre); background: var(--velin); }
@@ -119,7 +124,7 @@ const STYLE = `
 #ui .weapon.on { box-shadow: inset 0 0 0 3px var(--vermillon); }
 #ui .card { position: absolute; right: 12px; top: 182px; width: var(--col);
   max-height: calc(100vh - 290px); overflow: auto; padding: 14px 18px; font-size: 16px; line-height: 1.4; }
-#ui .card.left { right: auto; left: 12px; top: 214px; max-height: calc(100vh - 322px); }
+#ui .card.left { right: auto; left: 12px; top: 250px; max-height: calc(100vh - 358px); }
 #ui .card h2 { font-size: 30px; margin-bottom: 4px; }
 #ui .card .house { font-family: var(--caps); font-size: 18px; margin-bottom: 8px; display: flex;
   gap: 8px; align-items: center; }
@@ -135,6 +140,11 @@ const STYLE = `
 #ui td.unit, #ui td.def { color: var(--brun); font-size: 13px; white-space: nowrap; }
 #ui .note { font-size: 16px; margin: 0 0 6px; }
 #ui .actions { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+#ui .help { width: min(640px, calc(100vw - 32px)); }
+#ui .tuto-pic svg { display: block; width: 100%; max-height: 32vh; margin: 0 auto 10px;
+  border: 2px solid var(--encre); box-shadow: inset 0 0 0 2px var(--or); }
+#ui .tuto-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; }
+#ui .tuto-count { font-family: var(--caps); font-size: 16px; }
 #ui .help p, #ui .pause p { font-size: 17px; line-height: 1.5; margin: 0 0 10px; }
 #ui .pause { min-width: 360px; text-align: center; }
 #ui .pause .actions { flex-direction: column; align-items: stretch; }

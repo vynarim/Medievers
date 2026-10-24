@@ -26,11 +26,11 @@
 |---|---|---|
 | Transition | 2 s | Caméra vers l'unité active, affichage du vent |
 | Action | 45 s | Déplacement libre, choix d'une arme, visée, tir |
-| Repli | 3 s | Après le tir, déplacement autorisé, pas de nouvelle attaque |
+| Après le tir | temps d'action restant (au moins 3 s) | Le tir ne termine pas le tour (décidé le 2026-10-24) : on peut se déplacer puis tirer, ou tirer puis se déplacer, avec les déplacements pas encore utilisés (marche ou saut, plus tard escalade). **Fin du tour** termine le tour ; il se termine aussi tout seul quand il ne reste aucun déplacement et que le tir est retombé |
 | Résolution | variable + 2 s | Attente fin des projectiles, explosions et chutes ; les morts sont alors constatées, puis une pause de 2 s (réglable) laisse voir l'impact et le commentaire avant le tour suivant |
 | Fin de tour | — | Passifs de fin de tour, apparition éventuelle d'un reliquaire |
 
-- Unité active : rotation par équipe (unité suivante vivante), ou choix libre (option « sélection libre », comme Worms).
+- **Choix du combattant** (décidé le 2026-10-24) : à chaque tour, la maison qui joue **choisit** lequel de ses combattants agit, avant qu'il ne bouge ou ne tire (clic sur le combattant). Elle peut rejouer le même tour après tour : c'est un choix stratégique. Par défaut, le jeu propose le suivant dans l'ordre de l'équipe. Les règles « rotation imposée » restent disponibles pour les vieux logs (`turn.freeSelect`).
 - Le timer se met en pause pendant la visée de précision ? **Non** (le temps est une pression voulue). Il se met en pause pendant la résolution.
 - Garde-fou : une résolution est coupée au bout de 30 s, pour qu'une entité bloquée ne fige jamais la partie (`src/content/rules.ts`).
 
@@ -50,7 +50,8 @@
 ### 3.1 Règles communes
 - PV : 100 (option 50 / 150 / 200).
 - Déplacement : marche (vitesse 1,5 px/tick), franchit une marche ≤ 12 px, pente max ~60°.
-- Saut avant (Entrée/bouton) : impulsion courte vers l'avant. Saut arrière (double appui) : plus haut, vers l'arrière. Valeurs de départ, à régler en playtest : avant (+2,5 ; −5) px/tick, arrière (−1 ; −7,5) px/tick (`src/content/units.ts`).
+- **Déplacement par tour** (décidé le 2026-10-24) : **soit on marche, soit on saute**, pas les deux. La marche est limitée à environ 10 largeurs de combattant (**280 px**, action et repli confondus) ; un seul saut avant porte à environ 15 largeurs (≈ 420 px sur sol plat, portée fixe). Dès qu'on a marché, on ne peut plus sauter ; après un saut, on ne peut plus marcher. Valeur réglable (`unit.moveBudget`). La barre de souffle s'affiche dans le cartouche du tour.
+- **Saut long** (Entrée, bouton ↗) : bond loin vers l'avant. **Saut haut** (double appui, bouton ↑) : bond très haut en reculant un peu, pour sortir d'un trou ou monter sur un rebord. Un saut décolle aussi depuis une pente montante. Valeurs de départ, à régler en playtest : avant (+8,2 ; −9) px/tick, soit environ 420 px sur sol plat et 115 px de hauteur, arrière (−1 ; −10,5) px/tick, plus haut (environ 150 px) et court (`src/content/units.ts`).
 - Dégâts de chute : au-delà de 160 px de hauteur de chute, 1 PV par 8 px supplémentaires, plafonné à 30.
 - Hors carte (bords latéraux) ou eau : mort.
 - Une unité touchée pendant son tour termine son tour immédiatement.
@@ -86,7 +87,7 @@ Toutes les valeurs sont des défauts dans `src/content/weapons.ts`, ajustables p
 | **Arc** | Projectile tendu | 35 | 0 (impact) | Oui | ∞ | Flèche fichée dans le terrain ; 1 seul tir |
 | **Arbalète** | Projectile très tendu | 45 | 0 | Faible (×0,4) | 3 | Puissance fixe, angle seul |
 | **Fronde** | Projectile balistique | 25 + recul fort | 0 | Oui | ∞ | Recul important : arme d'éjection |
-| **Pot de feu grégeois** | Lancé, rebondit | 45 | 60 px | Non | ∞ | Mèche 1–5 s réglable ; laisse des flammes 3 tours |
+| **Pot de feu grégeois** | Lancé, rebondit | 45 | 60 px | Non | ∞ | Mèche réglable ; laisse des flammes 3 tours. **Mèche en tours** (décidé le 2026-10-24, à programmer) : 1 = explose à ce tour (après 3 s), 2 = au tour suivant, 3 = dans deux tours ; le pot reste posé, visible avec son compte, et peut être déplacé par les explosions |
 | **Pot de poix** | Lancé, à fragmentation | 30 + 5×15 | 50 / 30 | Non | 2 | Éclate en 5 gouttes enflammées |
 | **Cochon enflammé** | Marcheur | 70 | 90 px | Non | 1 | Avance seul, saute les obstacles, explose sur commande ou au timer de 8 s |
 | **Ruche** | Lancé | 5/tick de contact | — | Oui | 1 | Libère un essaim qui poursuit l'unité la plus proche 4 s |
@@ -109,6 +110,7 @@ Toutes les valeurs sont des défauts dans `src/content/weapons.ts`, ajustables p
 | Outil | Effet | Munitions |
 |---|---|---|
 | **Grappin** | Corde, balancement, relâchement, re-tir en l'air | 5 |
+| **Escalade au grappin** (décidé le 2026-10-24) | Lance une corde vers un rebord visé, jusqu'à 320 px plus haut (sortir d'un trou, monter sur un rempart). Le combattant grimpe pendant 2 s, perd 10 PV (écorchures) et **son tour s'arrête** en haut : il ne peut plus tirer, et reste à la merci de l'ennemi jusqu'à son prochain tour. Sert à prendre d'assaut les châteaux des cartes de siège | ∞ |
 | **Mur de pierres** | Pose d'un bloc de pierre taillée (3 longueurs, rotation par pas de 22,5°) | 2 |
 | **Bannière** | Parachute : chute lente, sensible au vent | 3 |
 | **Pioche** | Creuse verticalement vers le bas, 3 s | 2 |
@@ -138,6 +140,41 @@ Toutes les valeurs sont des défauts dans `src/content/weapons.ts`, ajustables p
 - **États visibles** : intacte, fissurée (66 % des PV ou moins), en ruine (33 % ou moins). Le rendu ajoute des fissures et fait tomber des éclats.
 - **À 0 PV, la structure s'effondre** : ce qu'il en reste se détache en blocs qui tombent, écrasent les combattants dessous (dégâts selon la hauteur de chute, comme une chute de combattant) et se reposent en gravats. Un combattant perché dessus tombe avec.
 - La roche peinte et les piliers de cadre restent indestructibles.
+
+### 4.8 Machines de siège (décidé le 2026-10-24)
+Les cartes portent des machines de siège fixes, que n'importe quel combattant peut servir. Il se place à côté (≤ 40 px), choisit **Servir la machine** dans l'arsenal, et tire avec elle à la place de son arme pendant ce tour.
+
+| Machine | Tir | Effet | Recharge | PV |
+|---|---|---|---|---|
+| **Baliste** | Trait très tendu, puissance fixe | 55 dégâts, traverse le premier combattant touché | 2 tours | 120 |
+| **Scorpion** | Rafale de 3 carreaux, angle seul | 3 × 20 | 1 tour | 80 |
+| **Catapulte** | Pierre en cloche, sensible au vent | 50 / 70 px, gros cratère | 2 tours | 150 |
+| **Trébuchet** | Très longue portée, visée lente (angle verrouillé à 45° ± 15°) | 70 / 90 px | 3 tours | 200 |
+| **Bélier** | Mêlée contre une structure | 4× dégâts aux structures, rien aux combattants | 1 tour | 150 |
+
+- Une machine est une structure (§4.7) : on peut la viser, l'endommager, la détruire ; détruite, elle s'effondre en gravats.
+- La recharge est partagée par toutes les équipes : celui qui la sert la rend indisponible pour les autres.
+- Placement par carte (`map.json`, `siegeEngines`), à égale distance des spawns pour rester équitable.
+
+### 4.9 La cuisine de campagne (décidé le 2026-10-24)
+- Un **foyer avec un chaudron pendu** apparaît parfois sur la carte. Le toucher d'un tir (n'importe quelle arme) rend **+30 PV** au combattant qui a tiré (sans dépasser ses PV de départ) ; la cuisine disparaît alors. Tirer sur la cuisine plutôt que sur l'ennemi est un choix.
+- **Apparition** : tirée au début de chaque tour avec le PRNG du sim. La chance baisse au fil de la partie pour que les parties ne s'éternisent pas : 25 % au premier tour de table, × 0,8 à chaque tour de table, plancher 2 %.
+- **Équité** : une équipe ne peut pas voir apparaître une deuxième cuisine « à son tour » tant que les autres équipes encore en vie n'en ont pas eu autant. Une cuisine apparue au tour d'une équipe est placée à distance égale (± 10 %) de ses combattants et des combattants adverses les plus proches, sur un sol stable.
+- Une seule cuisine à la fois ; si personne ne la touche, elle s'éteint au bout de 2 tours de table.
+
+### 4.10 Les bêtes des marges (décidé le 2026-10-24)
+Les lièvres et les escargots des marges du manuscrit entrent dans la bataille. Ils menacent tout le monde, sans camp.
+
+- **Apparition** : 8 % de chances au début de chaque tour (PRNG du sim), une seule bête à la fois, sur un bord de la carte.
+- **Déplacement** : entre deux tours, la bête avance vers le combattant le plus proche (lièvre : 300 px par bonds ; escargot : 60 px en rampant, mais il passe partout, murs compris).
+- **Contact** : quand elle atteint un combattant, elle applique **un effet tiré au hasard** parmi ceux de son espèce, puis disparaît.
+
+| Bête | Effets possibles (un seul, tiré au hasard) |
+|---|---|
+| **Lièvre** | Ruade : 15 dégâts et projection forte · Chapardage : vole une munition de l'arme limitée la plus rare de la victime · Panique : la victime fait un bond en arrière incontrôlé au début de son prochain tour |
+| **Escargot** | Bave : marche réduite de moitié pendant 2 tours · Coquille : la victime ne peut ni marcher ni sauter à son prochain tour (elle peut tirer) · Morsure lente : 3 dégâts par tour pendant 3 tours |
+
+- Une bête peut être tuée par un tir (10 PV) ; elle ne rapporte rien, sauf la paix.
 
 ## 5. Vent
 - Valeur entière de −10 à +10, tirée par PRNG à chaque tour. Une option permet de le figer à 0.
@@ -189,7 +226,7 @@ L'IA joue via `InputSource` et produit les mêmes commandes qu'un humain. Elle �
 | Action | Clavier / souris |
 |---|---|
 | Marcher | ← → ou A/D |
-| Saut avant / arrière | Entrée / Entrée ×2 |
+| Saut long / saut haut | Entrée / Entrée ×2 (boutons **↗ Saut long** et **↑ Saut haut**) |
 | Viser (angle) | ↑ ↓, ou glisser la pointe de la flèche de visée (n'importe quel côté, l'unité se retourne) |
 | Se retourner sur place | T (garde l'élévation de la visée) |
 | Tirer (jauge de puissance) | Espace maintenu puis relâché |
@@ -215,12 +252,25 @@ L'IA joue via `InputSource` et produit les mêmes commandes qu'un humain. Elle �
 - **Haut** : bannière de vent au centre, sablier du timer à droite (un vrai sablier qui s'écoule), tour courant et compte à rebours du Déluge à gauche.
 - **Bas** : barres de vie par équipe sous forme de phylactères avec blason ; fiche de l'unité active (nom, classe, PV).
 - **Au-dessus des unités** : nom et PV dans un petit cartouche aux couleurs de la maison.
+- **Actions indisponibles grisées** (décidé le 2026-10-24) : marcher après un saut, sauter après avoir marché, tirer ou changer d'arme après le tir… le bouton est grisé. Les boutons d'action forment une seule barre centrée en bas de l'écran.
 - **Arsenal** : grille d'icônes dans un cadre architecturé (arcades), avec les munitions en chiffres romains ou arabes (option).
 - **Dégâts** : chiffres en écriture gothique qui s'élèvent et s'estompent.
+- **Aide** (décidé le 2026-10-24) : le bouton Aide ouvre un **tutoriel illustré** en quelques pages courtes (le but, un tour de jeu, viser et tirer, les armes, le vent, la caméra, les raccourcis), avec un schéma par page ; on y navigue par Précédent / Suivant.
 - **Écrans** : titre (page enluminée avec lettrine animée), nouvelle partie, équipes et blasons, options, crédits, fin de partie (scène de triomphe peinte et tableau des exploits).
 
 ## 10. Cartes (V1 : 6, P1 : +4)
 Chaque carte a un thème, une palette, un niveau d'eau initial et des éléments spécifiques.
+
+**Grandes batailles de l'histoire** (décidé le 2026-10-24) : en plus des épisodes du manuscrit, les cartes évoquent de grandes batailles médiévales, avec une touche historique (lieu, date, armées en présence, une phrase de contexte dans l'écran de choix) et des décors fun. La liste ci-dessous sera revue en conséquence au lot de contenu (M7).
+
+| Bataille | Date | Décor et particularités |
+|---|---|---|
+| **Hastings** | 1066 | Colline de Senlac, mur de boucliers saxon en haut, marécage en bas ; tapisserie en guise de fond |
+| **Bouvines** | 1214 | Plaine et pont sur la Marque, destructible |
+| **Azincourt** | 1415 | Champ boueux entre deux bois, pieux d'archers anglais, boue qui ralentit la marche |
+| **Orléans** | 1429 | Siège : bastides, pont fortifié des Tourelles, la Loire |
+| **Constantinople** | 1453 | Murailles théodosiennes en trois rangs, énorme bombarde (machine de siège unique) |
+| **Pavie** | 1525 | Parc clos de murs, brèches à ouvrir, bosquets |
 
 | # | Nom | Inspiration | Particularités |
 |---|---|---|---|
@@ -247,6 +297,7 @@ Règles de level design :
 
 ## 12. Progression et persistance
 - Pas de progression obligatoire en V1.
+- **Sauvegarde automatique de la partie en cours** (décidé le 2026-10-24) : en solo contre l'IA comme en hotseat, le log de la partie (configuration, graine, commandes) est enregistré en local à chaque commande. Après un rafraîchissement, un plantage ou un redémarrage, le jeu propose **Reprendre la partie** : il rejoue le log jusqu'au dernier tick, ce qui redonne exactement le même état (déterminisme). Une partie terminée efface sa sauvegarde.
 - Persistance locale : équipes (noms, blasons, compositions), schémas, options, statistiques simples (parties, victoires, plus gros dégât en un tir), dernier replay.
 - P2 : déblocage cosmétique (meubles héraldiques, chapeaux) par exploits.
 

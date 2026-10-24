@@ -73,6 +73,12 @@ La priorité est le moteur : simulation, règles, réseau, IA. Jusqu'au lot 9, t
 | 3.6 | Schémas de règles et écran de configuration de partie (greybox) | Les presets du GDD §6 sont disponibles |
 | 3.7 | Usure du terrain par toutes les armes (`chipRadius`, GDD §4.7) | Un test : N flèches percent un mur de pierre bâtie d'épaisseur connue ; replay de référence |
 | 3.8 | Structures à points de vie : calque d'appartenance, PV, états fissurée / ruine, effondrement en blocs qui tombent et écrasent (GDD §4.7, TECH_SPEC §5.4) | Une tour de la carte de test touchée au feu grégeois se fissure puis s'effondre, les combattants dessous sont blessés ; déterminisme vert |
+| 3.9 | Sauvegarde automatique de la partie en cours et reprise après rafraîchissement ou plantage (GDD §12) | Rafraîchir la page en pleine partie, reprendre : même hash d'état qu'avant |
+| 3.10 | Aide en tutoriel illustré (GDD §9) | Chaque page tient sur un écran de tablette |
+| 3.11 | Cuisine de campagne (GDD §4.9) : apparition décroissante, équité par équipe, soin au tir | Test : sur 1 000 parties simulées, écart d'apparitions entre équipes ≤ 1 par partie |
+| 3.12 | Bêtes des marges : lièvres et escargots (GDD §4.10) | Un test par effet ; replay de référence |
+| 3.13 | Déplacement par tour : marche limitée ou un seul saut (GDD §3.1) | Tests : la marche s'arrête au budget ; pas de saut après avoir marché, pas de marche après un saut |
+| 3.14 | Choix libre du combattant à chaque tour (GDD §2.2) | Tests : on choisit un autre combattant avant d'agir, pas après ; le même peut jouer deux tours de suite |
 
 ## M4 — Arsenal complet
 | # | Tâche | CA |
@@ -81,10 +87,12 @@ La priorité est le moteur : simulation, règles, réseau, IA. Jusqu'au lot 9, t
 | 4.2 | Ruche, faucon | idem |
 | 4.3 | Volée de trébuchet, pluie de flèches | idem |
 | 4.4 | Épée, masse, charge à l'écu | idem |
-| 4.5 | Grappin (V1 : un seul ancrage) | idem |
+| 4.5 | Grappin (V1 : un seul ancrage) et escalade au grappin (GDD §4.4 : sortir d'un trou, monter sur un rempart ; 10 PV, fin du tour) | idem ; un combattant au fond d'un trou de 300 px en sort |
 | 4.6 | Mur de pierres, échelle, bannière | idem |
 | 4.7 | Pioche, sape, chausse-trape (visibilité par équipe), miracle | idem |
 | 4.8 | UI d'arsenal (greybox) + munitions | Accessible au clavier et au tactile |
+| 4.9 | Machines de siège : baliste, scorpion, catapulte, trébuchet, bélier (GDD §4.8) | Un replay de référence par machine ; une machine détruite s'effondre |
+| 4.10 | Mèche du pot en tours (1 = ce tour, 2 = tour suivant, 3 = dans deux tours), pots posés persistants entre les tours (GDD §4.1) | Un pot à mèche 2 explose au début du tour suivant ; replay de référence |
 
 ## M5 — IA
 | # | Tâche | CA |
@@ -117,7 +125,7 @@ La priorité est le moteur : simulation, règles, réseau, IA. Jusqu'au lot 9, t
 |---|---|---|
 | 7.1 **[art]** | Rigs et animations des 5 autres classes | — |
 | 7.2 **[art]** | Assets de toutes les armes et VFX P1 | — |
-| 7.3 **[art]** | Cartes Ela, Camp, Arche, Tour, Verger | Chacune passe `maps:build` et `maps:soak` |
+| 7.3 **[art]** | Cartes du GDD §10, dont les grandes batailles (Hastings, Azincourt, Pavie…) | Chacune passe `maps:build` et `maps:soak` |
 | 7.4 **[tech]** | Menus complets, écran titre, victoire, « passez la main », « tournez l'appareil » | — |
 | 7.5 **[tech]** | Éditeur de blason et gestion des équipes (persistance) | — |
 | 7.6 **[art]** | Audio P1 complet | — |

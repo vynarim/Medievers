@@ -2,6 +2,7 @@
 // drawn from the mask in the manuscript manner (ink outline, grass, wavy strata); carves clear the tile pixels the mask turned to air, so the picture
 // matches the collision mask pixel for pixel. At most 4 tiles are re-uploaded per frame (§9).
 import Phaser from 'phaser';
+import { MASK_PALETTE } from '../content/materials.ts';
 import { Material } from '../sim/terrain/material.ts';
 import { COLORS } from '../ui/tokens.ts';
 
@@ -30,6 +31,10 @@ const FALLBACK: readonly [Rgb, Rgb] = [rgb(COLORS.roseGarance), rgb(COLORS.roseG
 const GRASS = rgb(COLORS.vertDeGris);
 const GRASS_LIGHT = rgb(COLORS.vertTendre);
 const INK = rgb(COLORS.encre);
+/** Mask PNG colours per material, for the debug view of the raw collision mask. */
+const MASK_RGB: Record<number, Rgb> = Object.fromEntries(
+  MASK_PALETTE.map((c) => [c.material, [c.r, c.g, c.b] as const]),
+);
 /** px: ink outline (cerne) along every edge with the air, ASSETS §1.1 */
 const CERNE = 3;
 /** px: depth of the grass on top of earth */
@@ -61,6 +66,8 @@ export class TerrainLayer {
   private readonly dirty = new Map<number, [number, number, number, number]>();
 
   private readonly mask: () => MaskView;
+  /** debug: paint the raw mask colours instead of the greybox look */
+  private maskView = false;
 
   constructor(scene: Phaser.Scene, mask: () => MaskView) {
     this.mask = mask;
@@ -91,6 +98,21 @@ export class TerrainLayer {
         this.images.push(scene.add.image(x, y, key).setOrigin(0, 0).setDepth(4));
       }
     }
+  }
+
+  /** Debug overlay (F1): shows the raw collision mask, repainted a few tiles per frame. */
+  setMaskView(on: boolean): void {
+    if (on === this.maskView) return;
+    this.maskView = on;
+    const m = this.mask();
+    this.tiles.forEach((tile, i) =>
+      this.dirty.set(i, [
+        tile.x,
+        tile.y,
+        Math.min(m.width - 1, tile.x + tile.w - 1),
+        Math.min(m.height - 1, tile.y + tile.h - 1),
+      ]),
+    );
   }
 
   /** Marks the area of a carve (px, centre and radius) for repaint. */
@@ -160,7 +182,8 @@ export class TerrainLayer {
         const o = (ly * w + lx) * 4;
         if (mat === Material.Air) continue; // alpha stays 0
         let c: Rgb;
-        if (nearAir(airAt, wx, wy)) c = INK;
+        if (this.maskView) c = MASK_RGB[mat] ?? INK;
+        else if (nearAir(airAt, wx, wy)) c = INK;
         else if (mat === Material.Earth && !solidAt(wx, wy - GRASS_DEPTH)) {
           // Grass in tufts: lighter blades every few px.
           c = (wx + (wy >> 2)) % 7 < 2 ? GRASS_LIGHT : GRASS;

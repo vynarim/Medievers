@@ -20,6 +20,17 @@ export interface TurnRules {
    * commentary can be seen (GDD §2.2: 2 s). Absent from logs recorded before 2026-10-24: 0.
    */
   readonly settleTicks?: number;
+  /**
+   * After the shot, the unit keeps the action time left (at least retreatTicks) to use the
+   * moves it has not used, and may end the turn itself (GDD §2.2, 2026-10-24). Absent from
+   * older logs: a fixed retreatTicks.
+   */
+  readonly moveAfterShot?: boolean;
+  /**
+   * The team picks which of its units plays, at the start of each turn, even the same one turn
+   * after turn (GDD §2.2, 2026-10-24). Absent from older logs: fixed rotation.
+   */
+  readonly freeSelect?: boolean;
 }
 
 export interface MatchRules {
@@ -41,6 +52,8 @@ export const CLASSIC_RULES: MatchRules = {
     retreatTicks: 3 * TICKS_PER_SECOND,
     maxResolutionTicks: 30 * TICKS_PER_SECOND,
     settleTicks: 2 * TICKS_PER_SECOND,
+    moveAfterShot: true,
+    freeSelect: true,
   },
   startHp: 100,
   unit: UNIT_RULES,

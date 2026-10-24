@@ -12,6 +12,8 @@ export class UiIntents {
   selectWeapon: WeaponId | null = null;
   fuse: number | null = null;
   skip = false;
+  /** a unit of the active team clicked to play it this turn */
+  selectUnit: number | null = null;
 
   /** Returns and clears the one-shot intents. */
   take(): {
@@ -19,17 +21,20 @@ export class UiIntents {
     selectWeapon: WeaponId | null;
     fuse: number | null;
     skip: boolean;
+    selectUnit: number | null;
   } {
     const out = {
       jump: this.jump,
       selectWeapon: this.selectWeapon,
       fuse: this.fuse,
       skip: this.skip,
+      selectUnit: this.selectUnit,
     };
     this.jump = null;
     this.selectWeapon = null;
     this.fuse = null;
     this.skip = false;
+    this.selectUnit = null;
     return out;
   }
 }

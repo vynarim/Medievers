@@ -123,8 +123,37 @@ describe('turn loop', () => {
     );
   });
 
-  it('gives the retreat time after a shot', () => {
+  it('keeps the action time after a shot; « Fin du tour » ends it; no moves left ends it', () => {
     const d = new Driver(DUEL, 1);
+    d.until('action');
+    const left = d.sim.view().turn.phaseTicks;
+    d.step([
+      { t: 'aim', angle: 3072 },
+      { t: 'fire', power: 100 },
+    ]);
+    expect(d.sim.view().turn.phase).toBe('retreat');
+    expect(d.sim.view().turn.phaseTicks).toBeGreaterThanOrEqual(left - 2);
+    d.step([{ t: 'skip' }]);
+    expect(d.sim.view().turn.phase).toBe('resolution');
+
+    // Walk the whole budget, fire: the turn ends once the shot is over.
+    const w = new Driver({ ...DUEL, teams: [{ spawns: [300] }, { spawns: [1000] }] }, 1);
+    w.until('action');
+    w.step([{ t: 'move', dir: -1 }]);
+    while (w.sim.view().turn.moveLeft > 0) w.step();
+    w.step([
+      { t: 'move', dir: 0 },
+      { t: 'aim', angle: 3072 },
+      { t: 'fire', power: 100 },
+    ]);
+    for (let i = 0; i < 600 && w.sim.view().turn.phase === 'retreat'; i++) w.step();
+    expect(w.sim.view().turn.phase).not.toBe('retreat');
+  });
+
+  it('gives a fixed retreat time to logs recorded before moveAfterShot', () => {
+    const turn: TurnRules = { ...RULES_60HP.turn };
+    delete (turn as { moveAfterShot?: boolean }).moveAfterShot;
+    const d = new Driver({ ...DUEL, rules: { ...RULES_60HP, turn } }, 1);
     d.until('action');
     d.step([
       { t: 'aim', angle: 3072 },
@@ -152,6 +181,32 @@ describe('turn loop', () => {
     const x1 = unit(d, 1).x;
     d.step();
     expect(unit(d, 1).x).toBe(x1);
+  });
+
+  it('lets the team choose its unit before it acts, even the same one again', () => {
+    const config: MatchConfig = {
+      rules: CLASSIC_RULES,
+      teams: [{ spawns: [100, 200] }, { spawns: [900, 1000] }],
+    };
+    const d = new Driver(config, 3);
+    d.until('action');
+    expect(d.sim.view().turn.activeUnitId).toBe(1);
+    d.step([{ t: 'selectUnit', unitId: 2 }]);
+    expect(d.sim.view().turn.activeUnitId).toBe(2);
+    d.step([{ t: 'selectUnit', unitId: 3 }]); // not its team
+    expect(d.sim.view().turn.activeUnitId).toBe(2);
+    d.step([{ t: 'move', dir: 1 }]);
+    d.step([
+      { t: 'move', dir: 0 },
+      { t: 'selectUnit', unitId: 1 },
+    ]); // already moved
+    expect(d.sim.view().turn.activeUnitId).toBe(2);
+    d.step([{ t: 'skip' }]);
+    d.until('action'); // team 1
+    d.step([{ t: 'skip' }]);
+    d.until('action'); // team 0 again: unit 1 is proposed, unit 2 plays again
+    d.step([{ t: 'selectUnit', unitId: 2 }]);
+    expect(d.sim.view().turn.activeUnitId).toBe(2);
   });
 
   it('rotates through the units of each team', () => {
@@ -227,6 +282,47 @@ describe('turn loop', () => {
     const at = old.sim.view().tick;
     old.until('transition');
     expect(old.sim.view().tick - at).toBe(0);
+  });
+
+  it('stops walking when the move budget is spent; a turn has a walk or one jump', () => {
+    const rules: MatchRules = {
+      ...RULES_60HP,
+      unit: { ...RULES_60HP.unit, moveBudget: 100 },
+    };
+    const d = new Driver({ ...DUEL, rules, teams: [{ spawns: [300] }, { spawns: [1000] }] }, 1);
+    d.until('action');
+    const x0 = unit(d, 1).x;
+    d.step([{ t: 'move', dir: 1 }]);
+    for (let i = 0; i < 200; i++) d.step();
+    const walked = unit(d, 1).x - x0;
+    expect(walked).toBeGreaterThanOrEqual(100 * 256);
+    expect(walked).toBeLessThanOrEqual(100 * 256 + rules.unit.walkSpeed);
+    expect(d.sim.view().turn.moveLeft).toBe(0);
+    // Out of breath: no more jumps either.
+    d.step([
+      { t: 'move', dir: 0 },
+      { t: 'jump', kind: 'forward' },
+    ]);
+    expect(unit(d, 1).grounded).toBe(true);
+
+    const j = new Driver({ ...DUEL, rules, teams: [{ spawns: [300] }, { spawns: [1000] }] }, 1);
+    j.until('action');
+    j.step([{ t: 'jump', kind: 'forward' }]);
+    expect(j.sim.view().turn.moveLeft).toBe(0);
+    expect(unit(j, 1).grounded).toBe(false);
+    // Landed: no walking after a jump.
+    for (let i = 0; i < 200; i++) j.step();
+    const xl = unit(j, 1).x;
+    j.step([{ t: 'move', dir: 1 }]);
+    for (let i = 0; i < 30; i++) j.step();
+    expect(unit(j, 1).x).toBe(xl);
+    // A unit that walked a little cannot jump any more.
+    const w = new Driver({ ...DUEL, rules, teams: [{ spawns: [300] }, { spawns: [1000] }] }, 1);
+    w.until('action');
+    w.step([{ t: 'move', dir: 1 }]);
+    w.step([{ t: 'move', dir: 0 }]);
+    w.step([{ t: 'jump', kind: 'forward' }]);
+    expect(unit(w, 1).grounded).toBe(true);
   });
 
   it('ends the turn at once when the active unit hurts itself', () => {

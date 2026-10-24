@@ -181,7 +181,7 @@ describe('falling', () => {
 
 describe('jumps', () => {
   it('jumps forward and lands ahead, jumps back higher', () => {
-    const t = terrainFrom(600, 300, () => 250);
+    const t = terrainFrom(1400, 300, () => 250);
     const a = standingUnit(t, 300);
     expect(jump(a, 'forward', UNIT_RULES)).toBe(true);
     expect(jump(a, 'forward', UNIT_RULES)).toBe(false);
@@ -194,6 +194,21 @@ describe('jumps', () => {
     fallUntilLanded(b, t);
     expect(px(b.x)).toBeLessThan(300);
     expect(250 - b.airPeakY).toBeGreaterThan(forwardPeak);
+  });
+
+  it('takes off from an upward slope instead of sticking to it', () => {
+    // Ground rising 1 px every 2 px to the right of x = 300.
+    const t = terrainFrom(1400, 600, (x) => (x <= 300 ? 400 : 400 - Math.floor((x - 300) / 2)));
+    const u = standingUnit(t, 300);
+    jump(u, 'forward', UNIT_RULES);
+    fallUntilLanded(u, t);
+    expect(px(u.x)).toBeGreaterThan(400);
+    // Logs recorded before the fix keep the old physics: the slope stops the take-off.
+    const oldRules = { ...UNIT_RULES, slopeTakeoff: false };
+    const old = standingUnit(t, 300);
+    jump(old, 'forward', oldRules);
+    for (let i = 0; i < 2000 && !stepUnitPhysics(old, t, oldRules).landed; i++);
+    expect(px(old.x)).toBeLessThan(px(u.x));
   });
 
   it('stops against a wall in mid-air', () => {

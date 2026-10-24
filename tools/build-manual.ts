@@ -62,6 +62,7 @@ const UNIT_VALUES: Record<string, string> = {
   fallPxPerHp: frNumber(UNIT_RULES.fallPxPerHp),
   fallMaxDamage: frNumber(UNIT_RULES.fallMaxDamage),
   fall200: frNumber(fallDamage(200, UNIT_RULES)),
+  moveBudget: frNumber(UNIT_RULES.moveBudget ?? 0),
 };
 
 const seconds = (ticks: number): string => `${frNumber(ticks / 60)} s`;

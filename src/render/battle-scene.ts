@@ -22,6 +22,10 @@ import { GameUi, loadOverrides } from '../ui/game-ui.ts';
 import { t } from '../ui/i18n.ts';
 import { applyOverrides, type TuningOverrides } from '../ui/tuning-model.ts';
 import { COLORS, css } from '../ui/tokens.ts';
+import { AutoSaver, clearSave } from '../app/autosave.ts';
+import { replay, type GameLog } from '../sim/log.ts';
+import { Scenery } from './scenery.ts';
+import { FixedStep } from './fixed-step.ts';
 import { TerrainLayer } from './terrain-layer.ts';
 
 export interface BattleData {
@@ -30,11 +34,15 @@ export interface BattleData {
   readonly seed: number;
   /** match rules, the Classique scheme with the playtest overrides applied */
   readonly rules: MatchRules;
+  /** a saved match to resume: its log replaces seed and rules */
+  readonly resume?: GameLog;
 }
 
 const TICK_MS = 1000 / TICKS_PER_SECOND;
 /** Catch-up limit: at most 5 sim steps per frame (TECH_SPEC §3). */
 const MAX_STEPS_PER_FRAME = 5;
+/** Longest frame taken into account, ms */
+const MAX_FRAME_MS = 250;
 /** Reference screen height: the default zoom shows as much world on any screen height. */
 const REF_HEIGHT = 1080;
 /** Default zoom at the reference height */
@@ -73,6 +81,8 @@ export class BattleScene extends Phaser.Scene {
   private data_!: BattleData;
   private input_!: PhaserLocalInput;
   private terrain!: TerrainLayer;
+  private scenery!: Scenery;
+  private saver!: AutoSaver;
   private world!: Phaser.GameObjects.Graphics;
   private debugGfx!: Phaser.GameObjects.Graphics;
   private labels = new Map<number, Phaser.GameObjects.Text>();
@@ -82,7 +92,7 @@ export class BattleScene extends Phaser.Scene {
   private commentary!: Commentary;
   private bursts: Burst[] = [];
   private selectedUnit: number | null = null;
-  private acc = 0;
+  private readonly clock = new FixedStep(TICK_MS, MAX_STEPS_PER_FRAME, MAX_FRAME_MS);
   private interp = new Map<string, Interp>();
   private debug = false;
   private paused = false;
@@ -98,7 +108,7 @@ export class BattleScene extends Phaser.Scene {
 
   init(data: BattleData): void {
     this.data_ = data;
-    this.acc = 0;
+    this.clock.reset();
     this.interp.clear();
     this.labels.clear();
     this.bursts = [];
@@ -112,7 +122,12 @@ export class BattleScene extends Phaser.Scene {
       rules,
       teams: map.spawns.map((spawns) => ({ spawns })),
     };
-    this.sim = new Sim(config, seed, mask);
+    const resume = this.data_.resume;
+    // A saved match replays to where it was left: same seed, same commands, same state.
+    this.sim = resume ? replay(resume, mask) : new Sim(config, seed, mask);
+    this.saver = resume
+      ? new AutoSaver(resume.config, resume.seed, resume.mapId, [...resume.commands])
+      : new AutoSaver(config, seed, map.id);
 
     const cam = this.cameras.main;
     cam.setBackgroundColor(css(COLORS.velin));
@@ -123,6 +138,7 @@ export class BattleScene extends Phaser.Scene {
       .tileSprite(0, 0, map.width, map.height, this.diaperTexture())
       .setOrigin(0, 0)
       .setDepth(0);
+    this.scenery = new Scenery(this, this.sim.view().terrain);
     this.terrain = new TerrainLayer(this, () => this.sim.view().terrain);
     this.world = this.add.graphics().setDepth(6);
     this.debugGfx = this.add.graphics().setDepth(20);
@@ -155,6 +171,7 @@ export class BattleScene extends Phaser.Scene {
     // Debug text on its own unzoomed camera; the main camera only sees the world.
     const worldObjects = [
       page,
+      ...this.scenery.objects,
       ...this.terrain.images,
       this.world,
       this.debugGfx,
@@ -193,8 +210,22 @@ export class BattleScene extends Phaser.Scene {
     this.events.once('shutdown', () => this.scale.off('resize', onResize));
     this.commentary = new Commentary(this.ui.hud, () => this.restart(loadOverrides()));
     const turn = this.sim.view().turn;
-    this.commentary.announceTurn(turn.number, turn.activeTeam, turn.activeUnitId, this.time.now);
+    if (resume) {
+      this.ui.hud.announce(
+        t('hud.resumed'),
+        t('hud.turn', { n: turn.number }),
+        t('hud.resumedSub'),
+        COLORS.lapis,
+        this.time.now,
+      );
+    } else {
+      this.commentary.announceTurn(turn.number, turn.activeTeam, turn.activeUnitId, this.time.now);
+    }
+    // Leaving or refreshing the page saves the exact tick, not the last second.
+    const onHide = (): void => this.saver.flush(this.sim.view().tick, Infinity);
+    window.addEventListener('pagehide', onHide);
     this.events.once('shutdown', () => {
+      window.removeEventListener('pagehide', onHide);
       this.input_.dispose();
       this.ui.destroy();
     });
@@ -228,8 +259,10 @@ export class BattleScene extends Phaser.Scene {
 
   /** New match on the same map, with the next seed. */
   private restart(overrides: TuningOverrides): void {
+    clearSave();
     this.scene.restart({
-      ...this.data_,
+      map: this.data_.map,
+      mask: this.data_.mask,
       rules: applyOverrides(CLASSIC_RULES, overrides),
       seed: (this.data_.seed + 0x9e3779b9) >>> 0,
     });
@@ -286,7 +319,10 @@ export class BattleScene extends Phaser.Scene {
   override update(time: number, delta: number): void {
     this.fps += (1000 / Math.max(1, delta) - this.fps) * 0.05;
     const k = (name: string): boolean => this.pressed.has(name);
-    if (k('f1')) this.debug = !this.debug;
+    if (k('f1')) {
+      this.debug = !this.debug;
+      this.terrain.setMaskView(this.debug);
+    }
     if (k('p')) this.paused = !this.paused;
     if (k('n')) this.stepOnce = true;
     if (k('c')) this.resetView();
@@ -315,18 +351,11 @@ export class BattleScene extends Phaser.Scene {
     if (this.paused || this.ui.blocking) {
       if (this.stepOnce && !this.ui.blocking) this.tick();
       this.stepOnce = false;
-      this.acc = 0;
+      this.clock.reset();
     } else {
-      let steps = 0;
-      this.acc += Math.min(delta, 250);
-      while (this.acc >= TICK_MS && steps < MAX_STEPS_PER_FRAME) {
-        this.tick();
-        this.acc -= TICK_MS;
-        steps++;
-      }
-      if (steps === MAX_STEPS_PER_FRAME) this.acc = 0;
+      for (let n = this.clock.advance(delta); n > 0; n--) this.tick();
     }
-    const alpha = this.paused || this.ui.blocking ? 1 : this.acc / TICK_MS;
+    const alpha = this.paused || this.ui.blocking ? 1 : this.clock.alpha;
 
     const click = this.input_.takeClick();
     if (click) this.selectAt(click.x, click.y);
@@ -338,6 +367,9 @@ export class BattleScene extends Phaser.Scene {
       if (u) this.ui.setCardSide(u.x / SUBPX > cam.worldView.centerX ? 'left' : 'right');
     }
 
+    const v = this.sim.view();
+    if (v.turn.phase !== 'gameOver') this.saver.flush(v.tick, time);
+    this.scenery.update(delta, v.turn.wind, v.terrain);
     this.terrain.flush();
     this.updateCamera(alpha, delta);
     this.drawWorld(alpha, time);
@@ -361,13 +393,20 @@ export class BattleScene extends Phaser.Scene {
       );
     this.selectedUnit = hit?.id ?? null;
     this.ui.selectUnit(this.selectedUnit);
+    // A click on one of the playing team's units hands it the turn (the sim decides if allowed).
+    const v = this.sim.view();
+    if (hit && hit.team === v.turn.activeTeam && hit.id !== v.turn.activeUnitId) {
+      this.input_.ui.selectUnit = hit.id;
+    }
   }
 
   private tick(): void {
     this.snapshotPositions();
     const view = this.sim.view();
     const cmds = this.input_.poll(view.tick + 1, view);
+    this.saver.record(view.tick + 1, cmds, this.time.now);
     const events = this.sim.step(cmds);
+    if (events.some((e) => e.e === 'gameOver')) clearSave();
     this.handleEvents(events);
   }
 
@@ -475,6 +514,7 @@ export class BattleScene extends Phaser.Scene {
   private updateCamera(alpha: number, delta: number): void {
     const cam = this.cameras.main;
     const pan = this.input_.pan;
+    this.input_.updateEdge(this.game.loop.time);
     const edge = this.input_.edge;
     if (edge.x !== 0 || edge.y !== 0) {
       const step = (EDGE_SCROLL_SPEED * Math.min(delta, 50)) / 1000;

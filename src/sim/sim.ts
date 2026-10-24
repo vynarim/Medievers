@@ -8,7 +8,7 @@ import { createExplosionQueue, explode, takeDueExplosions } from './explosions/e
 import { ANGLE_MASK, cosQ14 } from './math/angle.ts';
 import { FNV_OFFSET, hashInt } from './math/hash.ts';
 import { createPrng, nextRange } from './math/prng.ts';
-import { subToPx } from './math/fixed.ts';
+import { SUBPX, subToPx } from './math/fixed.ts';
 import type { Phase, MatchConfig, SimState, TeamState } from './state.ts';
 import type { Mask } from './terrain/mask.ts';
 import { createTerrain, terrainHash } from './terrain/terrain.ts';
@@ -118,6 +118,7 @@ function createState(config: MatchConfig, seed: number, mask: Mask): SimState {
       weapon: 'bow',
       fuse: 0,
       walkDir: 0,
+      moveLeft: 0,
       fired: false,
     },
     nextEntityId: nextId,
@@ -174,6 +175,7 @@ function startTurn(s: SimState, events: SimEvent[]): void {
   t.weapon = 'bow';
   t.fuse = 0;
   t.fired = false;
+  t.moveLeft = (s.rules.unit.moveBudget ?? 0) * SUBPX;
   setPhase(s, 'transition', s.rules.turn.transitionTicks, events);
   events.push({ e: 'turnStarted', turn: t.number, team: team.id, unitId: unit.id, wind: t.wind });
 }
@@ -182,15 +184,23 @@ function applyCommand(s: SimState, c: GameCommand, events: SimEvent[]): void {
   const t = s.turn;
   const canAct = t.phase === 'action';
   const canMove = canAct || t.phase === 'retreat';
+  if (c.t === 'selectUnit') {
+    selectUnit(s, c.unitId);
+    return;
+  }
   const u = unitById(s, t.activeUnitId);
   if (!u?.alive || !canMove) return;
   switch (c.t) {
     case 'move':
       t.walkDir = c.dir;
       break;
-    case 'jump':
-      jump(u, c.kind, s.rules.unit);
+    case 'jump': {
+      // With a move budget, a turn has either a walk or a single jump (GDD §3.1).
+      const budget = s.rules.unit.moveBudget;
+      if (budget !== undefined && t.moveLeft !== budget * SUBPX) return;
+      if (jump(u, c.kind, s.rules.unit) && budget !== undefined) t.moveLeft = 0;
       break;
+    }
     case 'aim':
       if (!canAct) return;
       t.aim = c.angle & ANGLE_MASK;
@@ -215,11 +225,15 @@ function applyCommand(s: SimState, c: GameCommand, events: SimEvent[]): void {
       if (t.fuse === 0) t.fuse = s.rules.weapons[wi]?.defaultFuse ?? 0;
       fire(s, u, c.power, events);
       t.fired = true;
-      setPhase(s, 'retreat', s.rules.turn.retreatTicks, events);
+      const after = s.rules.turn.moveAfterShot
+        ? Math.max(t.phaseTicks, s.rules.turn.retreatTicks)
+        : s.rules.turn.retreatTicks;
+      setPhase(s, 'retreat', after, events);
       break;
     }
     case 'skip':
-      if (canAct) setPhase(s, 'resolution', 0, events);
+      // « Fin du tour »: before the shot, or after it when the moves outlive the shot.
+      if (canAct || s.rules.turn.moveAfterShot) setPhase(s, 'resolution', 0, events);
       break;
   }
 }
@@ -229,8 +243,16 @@ function advanceTick(s: SimState, phaseJustSet: boolean, events: SimEvent[]): vo
   const active = unitById(s, t.activeUnitId);
   const hpBefore = active?.hp ?? 0;
 
-  if (active?.alive && t.walkDir !== 0 && (t.phase === 'action' || t.phase === 'retreat')) {
+  const budgeted = s.rules.unit.moveBudget !== undefined;
+  if (
+    active?.alive &&
+    t.walkDir !== 0 &&
+    (t.phase === 'action' || t.phase === 'retreat') &&
+    (!budgeted || t.moveLeft > 0)
+  ) {
+    const x0 = active.x;
     walk(active, s.terrain, t.walkDir, s.rules.unit);
+    if (budgeted) t.moveLeft = Math.max(0, t.moveLeft - Math.abs(active.x - x0));
   }
 
   for (const u of s.units) {
@@ -277,7 +299,9 @@ function advancePhase(
     case 'action':
     case 'retreat':
       // Hit during its own turn, the active unit stops at once (GDD §2.2).
-      if (activeHurt || --t.phaseTicks <= 0) setPhase(s, 'resolution', 0, events);
+      if (activeHurt || --t.phaseTicks <= 0 || nothingLeftToDo(s)) {
+        setPhase(s, 'resolution', 0, events);
+      }
       break;
     case 'resolution': {
       t.resolutionTicks++;
@@ -299,6 +323,37 @@ function advancePhase(
     case 'gameOver':
       break;
   }
+}
+
+/**
+ * Hands the turn to another unit of the active team (rules.turn.freeSelect), as long as the
+ * current one has not moved, jumped or fired yet.
+ */
+function selectUnit(s: SimState, unitId: number): void {
+  const t = s.turn;
+  if (!s.rules.turn.freeSelect || t.fired || t.walkDir !== 0) return;
+  if (t.phase !== 'transition' && t.phase !== 'action') return;
+  const budget = s.rules.unit.moveBudget;
+  if (budget !== undefined && t.moveLeft !== budget * SUBPX) return;
+  const team = s.teams[t.activeTeam];
+  const idx = team?.unitIds.indexOf(unitId) ?? -1;
+  const unit = unitById(s, unitId);
+  if (!team || idx < 0 || !unit?.alive || unitId === t.activeUnitId) return;
+  t.activeUnitId = unitId;
+  team.lastPlayed = idx;
+  t.aim = unit.facing > 0 ? AIM_UP_RIGHT : AIM_UP_LEFT;
+}
+
+/** After the shot, no move left and the shot is over: the turn ends without waiting. */
+function nothingLeftToDo(s: SimState): boolean {
+  const t = s.turn;
+  return (
+    t.phase === 'retreat' &&
+    s.rules.turn.moveAfterShot === true &&
+    s.rules.unit.moveBudget !== undefined &&
+    t.moveLeft === 0 &&
+    settled(s)
+  );
 }
 
 /** Everything has stopped: no shot, no pending explosion, all units at rest. */
@@ -379,6 +434,8 @@ function hashState(s: SimState): number {
     t.fired ? 1 : 0,
   ])
     int(v);
+  // Hashed only when the rule exists, so logs recorded before it keep their reference hashes.
+  if (s.rules.unit.moveBudget !== undefined) int(t.moveLeft);
   int(s.nextEntityId);
   int(s.winner ?? -2);
   return h;

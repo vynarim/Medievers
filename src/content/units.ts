@@ -17,15 +17,27 @@ export interface UnitRules {
   readonly fallPxPerHp: number;
   /** HP: maximum fall damage */
   readonly fallMaxDamage: number;
+  /**
+   * px a unit may walk in one turn, if it does not jump; a jump takes the whole turn's move
+   * (GDD §3.1). Absent from logs recorded before 2026-10-24: unlimited walking and jumps.
+   */
+  readonly moveBudget?: number;
+  /**
+   * A rising unit blocked sideways by the ground keeps going if rising clears it, so a jump
+   * from a slope takes off (2026-10-24). Absent from older logs, which keep the old physics.
+   */
+  readonly slopeTakeoff?: boolean;
 }
 
 export const UNIT_RULES: UnitRules = {
   walkSpeed: 384,
   maxStep: 12,
   slopeWindow: 7,
-  jumpForward: { vx: 640, vy: -1280 },
-  jumpBack: { vx: 256, vy: -1920 },
+  jumpForward: { vx: 2100, vy: -2304 },
+  jumpBack: { vx: 256, vy: -2688 },
   fallSafeHeight: 160,
   fallPxPerHp: 8,
   fallMaxDamage: 30,
+  moveBudget: 280,
+  slopeTakeoff: true,
 };
