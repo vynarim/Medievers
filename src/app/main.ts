@@ -5,6 +5,7 @@ import { GREYBOX_MAPS } from '../content/maps.ts';
 import { BattleScene, battleMap, onlineBattle, type BattleData } from '../render/battle-scene.ts';
 import type { GameLog } from '../sim/log.ts';
 import { showSetupScreen } from '../ui/setup-screen.ts';
+import { showTitleScreen } from '../ui/title-screen.ts';
 import { t } from '../ui/i18n.ts';
 import { loadSetup, rulesFor, saveSetup, type MatchSetup } from './match-setup.ts';
 import { loadSave } from './autosave.ts';
@@ -92,7 +93,7 @@ async function boot(): Promise<void> {
   const saved = save ? await mapOfLog(save) : null;
   if (code) rejoinFlow(code, play, choose);
   else if (save && saved) start(setup, saved, { resume: save });
-  else choose();
+  else showTitleScreen(choose, () => joinFlow(play, choose));
   // Dev builds expose the game for browser-driven checks (Playwright); stripped from production.
   if (import.meta.env.DEV) (window as unknown as { medieverse: Phaser.Game }).medieverse = game;
 }

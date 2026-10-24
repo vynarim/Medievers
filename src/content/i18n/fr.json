@@ -1,5 +1,9 @@
 {
   "game.title": "Medieverse",
+  "title.sub": "Batailles fort peu glorieuses",
+  "title.quip": "Où l'on voit des chevaliers se jeter des pots de feu, des lièvres voler des flèches et un dragon passer sans rien demander à personne.",
+  "title.enter": "Entrer en lice",
+  "title.colophon": "D'après les enluminures de la Bible de Maciejowski, vers 1250. Aucun manuscrit n'a été maltraité.",
   "maps.greyboxValley": "La Vallée grise",
   "factions.lion": "Maison du Lion d'Or",
   "factions.towers": "Maison des Trois Tours",
@@ -1334,7 +1338,7 @@
   "setup.unitMore": "Un combattant de plus",
   "setup.houseMore": "+ Une maison",
   "setup.houseLess": "− Une maison",
-  "setup.note": "Une maison a un Roi au plus ; en Régicide, elle en a toujours un. Les maisons jouent à tour de rôle sur le même appareil.",
+  "setup.note": "Une maison a un Roi au plus ; en Régicide, elle en a toujours un. En ligne, celui qui crée la partie joue la 1ʳᵉ maison (et la 3ᵉ), son adversaire la 2ᵉ (et la 4ᵉ).",
   "setup.start": "À la bataille !",
   "setup.cancel": "Retour à la partie",
   "tip.resting": "Il a joué au tour précédent de sa maison : il souffle ce tour-ci.",
