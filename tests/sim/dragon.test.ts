@@ -22,11 +22,15 @@ function mask(): Mask {
 // Only the dragon: no wind, kitchen, fire, barrels, reliquaries or beasts; it always comes.
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const { kitchen, burn, barrels, crates, beasts, deluge, weather, ...BASE } = CLASSIC_RULES;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const { swing, swingTicks, ...LEVEL } = DRAGON_RULES;
 const RULES: MatchRules = {
   ...BASE,
   wind: { ...CLASSIC_RULES.wind, max: 0 },
   dragon: { ...DRAGON_RULES, spawnPermille: 1000 },
 };
+/** A level flight, as in older logs, to measure its height over the relief. */
+const LEVEL_RULES: MatchRules = { ...RULES, dragon: { ...LEVEL, spawnPermille: 1000 } };
 
 function match(rules: MatchRules = RULES): Sim {
   const sim = new Sim({ rules, teams: [{ spawns: [300] }, { spawns: [700, 1300] }] }, 3, mask());
@@ -42,7 +46,7 @@ function run(sim: Sim, ticks: number): SimEvent[] {
 
 describe('dragon (GDD §4.11)', () => {
   it('hugs the relief just over the units, within reach of an arrow, then leaves', () => {
-    const sim = match();
+    const sim = match(LEVEL_RULES);
     const d = sim.view().dragon;
     expect(d).not.toBeNull();
     const low = 500 - DRAGON_RULES.clearance - DRAGON_HALF_HEIGHT;
@@ -68,6 +72,20 @@ describe('dragon (GDD §4.11)', () => {
     expect(ys['10']).toBe(high);
     expect(ys['3']).toBe(low);
     expect(events).toContainEqual({ e: 'dragonGone' });
+  });
+
+  it('climbs and sinks a little as it flies, never under its lowest', () => {
+    const sim = match();
+    const low = 500 - DRAGON_RULES.clearance - DRAGON_HALF_HEIGHT;
+    const ys = new Set<number>();
+    for (let i = 0; i < 600; i++) {
+      sim.step();
+      const d = sim.view().dragon;
+      // Over the plain only (the hill is x 950 to 1050).
+      if (d && Math.abs((d.x >> 8) - 1000) > 300) ys.add(d.y >> 8);
+    }
+    expect(Math.max(...ys)).toBeLessThanOrEqual(low);
+    expect(low - Math.min(...ys)).toBeGreaterThan((DRAGON_RULES.swing ?? 0) / 2);
   });
 
   it('never comes in a match without the rule', () => {

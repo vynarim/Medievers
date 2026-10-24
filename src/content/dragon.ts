@@ -15,6 +15,13 @@ export interface DragonRules {
    * point of the whole map, out of reach)
    */
   readonly clearance: number;
+  /**
+   * px it climbs and sinks over the relief as it flies, rising up to this much higher than its
+   * lowest, and ticks one swing up and down lasts (2026-10-25). Absent from older logs: a level
+   * flight.
+   */
+  readonly swing?: number;
+  readonly swingTicks?: number;
 }
 
 export const DRAGON_RULES: DragonRules = {
@@ -22,6 +29,8 @@ export const DRAGON_RULES: DragonRules = {
   speed: 2 * 256,
   diveSpeed: 12 * 256,
   clearance: 100,
+  swing: 70,
+  swingTicks: 300,
 };
 
 /** px: the dragon's body, around its centre, where a shot or a blast touches it */

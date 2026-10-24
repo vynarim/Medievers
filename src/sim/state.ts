@@ -211,6 +211,8 @@ export interface Dragon {
   prey: number;
   /** it has eaten (or had nobody to eat): it flies up and away */
   fed: boolean;
+  /** tick it came into the sky: the swing of its flight starts there */
+  readonly born: number;
 }
 
 /** A lasting trick played by a beast on a unit. trick: content/beasts.ts Trick. */

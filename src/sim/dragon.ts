@@ -7,6 +7,7 @@ import { DRAGON_BITE, DRAGON_HALF_HEIGHT, DRAGON_HALF_WIDTH } from '../content/d
 import type { SimEvent } from './events.ts';
 import type { Explosion } from './explosions/explosion.ts';
 import { SUBPX, idiv, subToPx } from './math/fixed.ts';
+import { ANGLE_FULL, cosQ14 } from './math/angle.ts';
 import { isqrt } from './math/isqrt.ts';
 import { nextRange } from './math/prng.ts';
 import type { SimState } from './state.ts';
@@ -15,6 +16,9 @@ import { UNIT_HEIGHT } from './units/unit.ts';
 
 /** px: a unit's middle, above its feet, where the dragon bites */
 const BITE_HEIGHT = UNIT_HEIGHT >> 1;
+
+/** Q14 one: cos runs from -SWING_ONE to SWING_ONE */
+const SWING_ONE = 1 << 14;
 
 /** px between two columns sampled to find the ground under the dragon */
 const GROUND_SAMPLE = 8;
@@ -47,7 +51,15 @@ export function dragonAtAction(s: SimState, events: SimEvent[]): void {
   const w = s.terrain.width;
   const x = dir > 0 ? -DRAGON_HALF_WIDTH : w + DRAGON_HALF_WIDTH;
   const y = flightY(s, x, r.clearance);
-  s.dragon = { id: s.nextEntityId++, x: x * SUBPX, y: y * SUBPX, dir, prey: 0, fed: false };
+  s.dragon = {
+    id: s.nextEntityId++,
+    x: x * SUBPX,
+    y: y * SUBPX,
+    dir,
+    prey: 0,
+    fed: false,
+    born: s.tick,
+  };
   events.push({ e: 'dragonAppeared', dir });
 }
 
@@ -95,7 +107,12 @@ export function stepDragon(s: SimState, events: SimEvent[]): void {
   } else {
     // Across, rising and sinking with the relief under it, as fast as it flies.
     d.x += d.dir * r.speed;
-    const dy = flightY(s, subToPx(d.x), r.clearance) * SUBPX - d.y;
+    // It also climbs and sinks as it goes, never lower than just over the units' heads.
+    const swing =
+      r.swing && r.swingTicks
+        ? (r.swing * (SWING_ONE - cosQ14(idiv((s.tick - d.born) * ANGLE_FULL, r.swingTicks)))) >> 15
+        : 0;
+    const dy = (flightY(s, subToPx(d.x), r.clearance) - swing) * SUBPX - d.y;
     d.y += Math.max(-r.speed, Math.min(r.speed, dy));
   }
   const w = s.terrain.width;

@@ -97,10 +97,9 @@ export function onlineBattle(m: OnlineMatch): BattleData {
   };
 }
 
-/** the dragon's drawing: its scale, ms per quarter wing beat, px it bobs while crossing */
+/** the dragon's drawing: its scale, and ms per quarter wing beat */
 const DRAGON_SCALE = 1.15;
 const DRAGON_FLAP = 210;
-const DRAGON_BOB = 12;
 /** Playback speeds of the replay viewer. */
 const REPLAY_SPEEDS = [1, 2, 4] as const;
 
@@ -1418,7 +1417,7 @@ export class BattleScene extends Phaser.Scene {
   }
 
   /**
-   * The dragon (GDD §4.11): it flaps across, bobbing a little; it swoops head first on its prey,
+   * The dragon (GDD §4.11): it flaps across (the sim makes it climb and sink); it swoops head first on its prey,
    * and climbs away once fed.
    */
   private drawDragon(alpha: number, time: number): void {
@@ -1439,7 +1438,7 @@ export class BattleScene extends Phaser.Scene {
       .setVisible(true)
       .setTexture(`dragon_${beat === 0 ? 0 : beat === 2 ? 2 : 1}`)
       .setFlipX(d.dir < 0)
-      .setPosition(x, y + (flying ? Math.sin(time / 900) * DRAGON_BOB : 0))
+      .setPosition(x, y)
       .setRotation(
         flying ? 0 : Math.max(-1.2, Math.min(1.2, Math.atan2(vy, Math.abs(vx) || 1) * d.dir)),
       );

@@ -937,6 +937,8 @@ function hashState(s: SimState): number {
   if (s.rules.dragon) {
     const d = s.dragon;
     for (const v of d ? [d.id, d.x, d.y, d.dir, d.prey, d.fed ? 1 : 0] : [-1]) int(v);
+    // Hashed only with the swing, so logs recorded before it keep their reference hashes.
+    if (d && s.rules.dragon.swing !== undefined) int(d.born);
   }
   if (s.rules.crates) {
     int(s.crates.length);
