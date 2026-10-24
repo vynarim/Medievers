@@ -2,6 +2,7 @@
 // and the rest in textura, framed in vermilion and gold fillets. DOM over the canvas.
 import { t } from './i18n.ts';
 import { button, el, uiRoot } from './overlay.ts';
+import { renderTutorial } from './tutorial.ts';
 
 const STYLE = `
 #ui .title-screen { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
@@ -25,9 +26,14 @@ const STYLE = `
 #ui .title-screen .actions { justify-content: center; }
 #ui .title-screen .actions button { min-width: 220px; font-size: 20px; }
 #ui .title-screen .colophon { margin-top: 22px; font-size: 13px; color: var(--brun); }
+#ui .title-screen .author { margin-top: 6px; font-family: var(--caps); font-size: 16px; color: var(--encre); }
+#ui .title-screen .author a { color: var(--lapis); pointer-events: auto; user-select: text; }
 `;
 
 let styled = false;
+
+const AUTHOR = 'vynarim';
+const AUTHOR_URL = 'https://github.com/vynarim';
 
 export interface TitleChoices {
   /** a match in progress (saved, online, or the one paused behind): take it up again */
@@ -59,12 +65,20 @@ export function showTitleScreen(choices: TitleChoices): void {
     then();
   };
   const first = choices.resume ?? choices.enter;
+  let helpOpen = false;
   const onKey = (e: KeyboardEvent): void => {
-    if (e.key !== 'Enter') return;
+    if (e.key !== 'Enter' || helpOpen) return;
     e.stopPropagation();
     close(first);
   };
   window.addEventListener('keydown', onKey, true);
+  // « Un jeu de vynarim », the name linking to the author's GitHub.
+  const author = el('div', 'author');
+  const link = el('a', '', AUTHOR);
+  link.href = AUTHOR_URL;
+  link.target = '_blank';
+  link.rel = 'noopener';
+  author.append(t('title.by'), ' ', link);
   const actions = el('div', 'actions');
   const resume = choices.resume;
   if (resume) {
@@ -76,7 +90,22 @@ export function showTitleScreen(choices: TitleChoices): void {
   enter.addEventListener('click', () => close(choices.enter));
   const join = button(t('setup.onlineJoin'));
   join.addEventListener('click', () => close(choices.join));
-  actions.append(enter, join);
+  // The illustrated tutorial, straight from the title, over it.
+  const help = button(t('title.help'));
+  help.addEventListener('click', () => {
+    const veil = el('div', 'veil');
+    const panel = el('div', 'modal panel help');
+    helpOpen = true;
+    const shut = (): void => {
+      helpOpen = false;
+      veil.remove();
+      panel.remove();
+    };
+    veil.addEventListener('pointerdown', shut);
+    renderTutorial(panel, shut);
+    root.append(veil, panel);
+  });
+  actions.append(enter, join, help);
   folio.append(
     title,
     el('div', 'rule'),
@@ -84,6 +113,7 @@ export function showTitleScreen(choices: TitleChoices): void {
     el('div', 'quip', t('title.quip')),
     actions,
     el('div', 'colophon', t('title.colophon')),
+    author,
   );
   screen.append(folio);
   root.append(screen);
