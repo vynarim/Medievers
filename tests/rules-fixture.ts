@@ -6,8 +6,8 @@ export * from '../src/content/rules.ts';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const { placementTicks, ...turn }: TurnRules = CLASSIC.turn;
-// Nor the dragon, which would cross the sky at random: it has its own tests.
+// Nor the dragon and the unicorn, which would come at random: they have their own tests.
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const { dragon, ...classic } = CLASSIC;
+const { dragon, unicorn, ...classic } = CLASSIC;
 
 export const CLASSIC_RULES: MatchRules = { ...classic, turn };

@@ -51,6 +51,7 @@ import { targetFor, wallAngle, wallLength, wallRefusal, wallSize } from '../sim/
 import { isProjectile, isTargeted, type WeaponDef } from '../content/weapons.ts';
 import { rulesFor, saveSetup, type MatchSetup } from '../app/match-setup.ts';
 import { showSetupScreen } from '../ui/setup-screen.ts';
+import { unicornTextures } from './unicorn-art.ts';
 import { showTitleScreen } from '../ui/title-screen.ts';
 import { StructureState, type StructurePlacement } from '../content/structures.ts';
 import { buildMap, mapForLog, type BuiltMap } from '../app/map-build.ts';
@@ -105,6 +106,9 @@ export function onlineBattle(m: OnlineMatch): BattleData {
   };
 }
 
+/** the unicorn's gallop: ms per stride, px it springs at each */
+const UNICORN_STRIDE = 140;
+const UNICORN_HOP = 6;
 /** the dragon's drawing: its scale, and ms per quarter wing beat */
 const DRAGON_SCALE = 1.15;
 const DRAGON_FLAP = 210;
@@ -175,6 +179,8 @@ export class BattleScene extends Phaser.Scene {
   private world!: Phaser.GameObjects.Graphics;
   /** the dragon of the sim (GDD §4.11), painted by SkyLife */
   private dragonImg!: Phaser.GameObjects.Image;
+  /** the unicorn of the sim (GDD §4.12) */
+  private unicornImg!: Phaser.GameObjects.Image;
   /** turns-left figures over the pots resting on the map, by pot id */
   private readonly potLabels = new Map<number, Phaser.GameObjects.Text>();
   /** the map object whose bubble is open */
@@ -305,6 +311,12 @@ export class BattleScene extends Phaser.Scene {
       .setScale(DRAGON_SCALE)
       .setDepth(6.6)
       .setVisible(false);
+    unicornTextures(this);
+    this.unicornImg = this.add
+      .image(0, 0, 'unicorn_0')
+      .setOrigin(0.5, 1)
+      .setDepth(5.9)
+      .setVisible(false);
     this.burnGfx = this.add.graphics().setDepth(5.5);
     this.waterGfx = this.add.graphics().setDepth(6.5);
     this.weatherGfx = this.add.graphics().setDepth(11);
@@ -329,6 +341,7 @@ export class BattleScene extends Phaser.Scene {
       ...this.terrain.images,
       this.world,
       this.dragonImg,
+      this.unicornImg,
       this.burnGfx,
       this.waterGfx,
       this.weatherGfx,
@@ -1067,6 +1080,7 @@ export class BattleScene extends Phaser.Scene {
     for (const s of v.shots) put(`s${s.projectile.id}`, s.projectile.x, s.projectile.y);
     for (const c of v.crates) put(`c${c.id}`, c.x, c.y);
     if (v.dragon) put(`d${v.dragon.id}`, v.dragon.x, v.dragon.y);
+    if (v.unicorn) put(`n${v.unicorn.id}`, v.unicorn.x, v.unicorn.y);
     for (const key of this.interp.keys()) if (!seen.has(key)) this.interp.delete(key);
   }
 
@@ -1131,6 +1145,7 @@ export class BattleScene extends Phaser.Scene {
     this.drawCrates(g, alpha, time);
     this.drawBeast(g, delta, time);
     this.drawDragon(alpha, time);
+    this.drawUnicorn(alpha, time);
     this.drawPots(g, time);
     this.drawMines(g, time);
     this.drawFlames(g, time);
@@ -1455,6 +1470,23 @@ export class BattleScene extends Phaser.Scene {
       .setRotation(
         flying ? 0 : Math.max(-1.2, Math.min(1.2, Math.atan2(vy, Math.abs(vx) || 1) * d.dir)),
       );
+  }
+
+  /** The unicorn (GDD §4.12), galloping along the ground. */
+  private drawUnicorn(alpha: number, time: number): void {
+    const u = this.sim.view().unicorn;
+    const img = this.unicornImg;
+    if (!u) {
+      img.setVisible(false);
+      return;
+    }
+    const [x, y] = this.pos(`n${u.id}`, alpha, u.x, u.y);
+    const frame = Math.floor(time / UNICORN_STRIDE) % 2;
+    img
+      .setVisible(true)
+      .setTexture(`unicorn_${frame}`)
+      .setFlipX(u.dir < 0)
+      .setPosition(x, y - Math.abs(Math.sin((time * Math.PI) / UNICORN_STRIDE)) * UNICORN_HOP);
   }
 
   /**

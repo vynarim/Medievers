@@ -15,6 +15,7 @@ import { queueExplosion } from '../explosions/explosion.ts';
 import { barrelOnSegment, igniteBarrel } from '../barrels.ts';
 import { beastOnSegment, killBeast } from '../beasts.ts';
 import { dragonOnSegment, enrageDragon } from '../dragon.ts';
+import { touchUnicorn, unicornOnSegment } from '../unicorn.ts';
 import { crateOnSegment, burstCrate } from '../crates.ts';
 import { segmentTouchesKitchen, useKitchen } from '../kitchen.ts';
 import { fuseTurnsOf, maybeRest } from '../pots.ts';
@@ -182,6 +183,7 @@ function strike(
   if (crate !== null) burstCrate(state, crate, events);
   if (segmentTouchesKitchen(state, u.x, cy, x, y)) useKitchen(state, events);
   if (beastOnSegment(state, u.x, cy, x, y)) killBeast(state, events);
+  if (unicornOnSegment(state, u.x, cy, x, y)) touchUnicorn(state, u.id, events);
   if (isSolidNear(state, subToPx(x), subToPx(y))) {
     shotHitsStructure(state, subToPx(x), subToPx(y), scaled(def.damage, pct), def.id, events);
   }
@@ -292,6 +294,11 @@ export function stepShots(state: SimState, events: SimEvent[]): void {
     if (dragonOnSegment(state, fromX, fromY, p.x, p.y)) {
       const shooter = state.units.find((x) => x.id === p.ownerId);
       enrageDragon(state, shooter?.team ?? state.turn.activeTeam, events);
+      if (stops) impact = { kind: 'outOfMap', x: p.x, y: p.y };
+    }
+    // A shot that touches the unicorn gives the shooter back all its HP (GDD §4.12).
+    if (unicornOnSegment(state, fromX, fromY, p.x, p.y)) {
+      touchUnicorn(state, p.ownerId, events);
       if (stops) impact = { kind: 'outOfMap', x: p.x, y: p.y };
     }
     // A shot that touches a reliquary bursts it (GDD §4.5).

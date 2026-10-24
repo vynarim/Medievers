@@ -214,6 +214,15 @@ export class Commentary {
         case 'dragonAppeared':
           this.hud.say(pick('quip.dragon'), now);
           break;
+        case 'unicornAppeared':
+          this.hud.say(pick('quip.unicorn'), now);
+          break;
+        case 'unicornTouched':
+          this.hud.say(
+            pick('quip.unicornTouched', { name: unitName(e.unitId), heal: e.heal }),
+            now,
+          );
+          break;
         case 'dragonEnraged':
           this.hud.say(pick('quip.dragonEnraged', { name: unitName(e.unitId) }), now);
           break;

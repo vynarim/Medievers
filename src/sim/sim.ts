@@ -35,6 +35,7 @@ import { blastReachesBarrels, burnBarrels, placeBarrels, stepBarrels } from './b
 import { blastReachesCrates, burnCrates, maybeDropCrate, stepCrates } from './crates.ts';
 import { beastsTurnEnd, blastReachesBeast, hasAffliction, panicAtAction } from './beasts.ts';
 import { blastReachesDragon, dragonAtAction, dragonBusy, stepDragon } from './dragon.ts';
+import { blastReachesUnicorn, stepUnicorn, unicornAtAction } from './unicorn.ts';
 import { Trick } from '../content/beasts.ts';
 import { blastMovesPots, potsTurn, stepPots } from './pots.ts';
 import { kitchenTurn, inKitchen, stepKitchen, useKitchen } from './kitchen.ts';
@@ -180,6 +181,7 @@ function createState(config: MatchConfig, seed: number, mask: Mask): SimState {
     crates: [],
     beast: null,
     dragon: null,
+    unicorn: null,
     pots: [],
     dig: null,
     mines: [],
@@ -524,6 +526,7 @@ function advanceTick(s: SimState, phaseJustSet: boolean, events: SimEvent[]): vo
   stepShots(s, events);
   stepMines(s, events);
   stepDragon(s, events);
+  stepUnicorn(s, events);
 
   for (const e of takeDueExplosions(s.explosions, s.tick)) {
     const res = explode(e, s.terrain, s.units, s.rules.explosion, (u) => blastTakenPct(s, u));
@@ -536,6 +539,7 @@ function advanceTick(s: SimState, phaseJustSet: boolean, events: SimEvent[]): vo
     blastReachesCrates(s, e, events);
     blastReachesBeast(s, e, events);
     blastReachesDragon(s, e, events);
+    blastReachesUnicorn(s, e, events);
     blastMovesPots(s, e);
     blastReachesMines(s, e, events);
     spawnFlames(s, e);
@@ -580,6 +584,7 @@ function advancePhase(
         setPhase(s, 'action', s.rules.turn.actionTicks, events);
         panicAtAction(s, events);
         dragonAtAction(s, events);
+        unicornAtAction(s, events);
       }
       break;
     case 'action':
@@ -939,6 +944,10 @@ function hashState(s: SimState): number {
     for (const v of d ? [d.id, d.x, d.y, d.dir, d.prey, d.fed ? 1 : 0] : [-1]) int(v);
     // Hashed only with the swing, so logs recorded before it keep their reference hashes.
     if (d && s.rules.dragon.swing !== undefined) int(d.born);
+  }
+  if (s.rules.unicorn) {
+    const u = s.unicorn;
+    for (const v of u ? [u.id, u.x, u.y, u.dir] : [-1]) int(v);
   }
   if (s.rules.crates) {
     int(s.crates.length);

@@ -63,6 +63,10 @@ export type SimEvent =
   | { readonly e: 'dragonEnraged'; readonly unitId: number }
   | { readonly e: 'dragonAte'; readonly unitId: number }
   | { readonly e: 'dragonGone' }
+  | { readonly e: 'unicornAppeared'; readonly dir: -1 | 1 }
+  /** a shot of this unit touched it: `heal` HP back, all it had lost */
+  | { readonly e: 'unicornTouched'; readonly unitId: number; readonly heal: number }
+  | { readonly e: 'unicornGone' }
   | { readonly e: 'beastGone' }
   | { readonly e: 'panicked'; readonly unitId: number }
   | { readonly e: 'potPlaced'; readonly id: number; readonly turns: number }

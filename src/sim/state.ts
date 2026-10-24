@@ -215,6 +215,16 @@ export interface Dragon {
   readonly born: number;
 }
 
+/** The unicorn of the margins (GDD §4.12). */
+export interface Unicorn {
+  readonly id: number;
+  /** sub-px: hooves, on the ground */
+  x: number;
+  y: number;
+  /** -1 galloping left, 1 right */
+  readonly dir: -1 | 1;
+}
+
 /** A lasting trick played by a beast on a unit. trick: content/beasts.ts Trick. */
 export interface Affliction {
   readonly unitId: number;
@@ -268,6 +278,8 @@ export interface SimState {
   beast: Beast | null;
   /** null when it is not in the sky; always null without rules.dragon */
   dragon: Dragon | null;
+  /** null when it is not galloping by; always null without rules.unicorn */
+  unicorn: Unicorn | null;
   /** sorted by id */
   readonly pots: PlacedPot[];
   /** the pick or the sap at work; null otherwise */

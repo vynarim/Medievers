@@ -214,6 +214,10 @@ Un tir, un coup de masse ou une explosion qui touche la bête la renvoie dans sa
 
 De temps en temps (12 % de chances au début d'un tour), un dragon des marges traverse le ciel en rase-mottes : il suit le relief, juste au-dessus de la tête des combattants, et monte par-dessus les collines et les tours ; il ondule aussi en volant, montant et descendant un peu. Une flèche l'atteint sans peine. **Ne lui tirez pas dessus** : touché, même sans dégâts, il pique sur un combattant d'une maison adverse tiré au hasard, l'avale tout rond, puis repart. Le tour attend qu'il ait fini. Une explosion qui l'atteint le fâche de la même façon, comme si la maison qui joue avait tiré.
 
+### La licorne {{st:jeu}}
+
+Très rarement (2,5 % de chances au début d'un tour), une licorne traverse le champ de bataille au galop, en suivant le relief. **Touchez-la** d'une flèche, d'une pierre ou d'un coup de masse : votre combattant **retrouve tous ses points de vie**, et elle disparaît.
+
 ### Le parchemin brûle {{st:jeu}}
 
 Après deux tours de table, un moine maladroit renverse sa chandelle : **la carte prend feu à ses deux bouts**. À la fin de chaque tour de table, le feu mange 60 pixels de plus de chaque côté. Un combattant qui se trouve dans la partie brûlée à la fin d'un tour perd **20 PV**, à chaque tour. Les armées n'ont donc pas intérêt à rester sur les bords : il faut se rapprocher de l'ennemi. Une cuisine de campagne rattrapée par le feu s'éteint. **Quand les deux feux se rejoignent au milieu, la partie s'arrête** : la maison à qui il reste le plus de points de vie, tous ses combattants vivants comptés, l'emporte. Réglages : onglet **Parchemin en feu**.
