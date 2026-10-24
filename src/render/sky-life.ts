@@ -21,8 +21,9 @@ const DRAGON_SPEED = 120;
 /** ms per wing beat */
 const BIRD_FLAP = 140;
 const DRAGON_FLAP = 420;
-/** parallax of the rainbow: far behind, with the hills */
-const RAINBOW_SCROLL = 0.3;
+/** px of the rainbow texture: its outer radius, and the width of its five bands */
+const RAINBOW_OUTER = 494;
+const RAINBOW_BANDS = 5 * 22;
 
 const between = ([a, b]: readonly [number, number]): number => a + Math.random() * (b - a);
 
@@ -336,7 +337,7 @@ function drawRainbow(ctx: Ctx, w: number, h: number): void {
   const band = 22;
   const cx = w / 2;
   const cy = h;
-  const outer = h - 6;
+  const outer = RAINBOW_OUTER;
   bands.forEach((c, i) => {
     ctx.strokeStyle = css(c);
     ctx.lineWidth = band;
@@ -351,6 +352,12 @@ function drawRainbow(ctx: Ctx, w: number, h: number): void {
     ctx.arc(cx, cy, r, Math.PI, 0);
     ctx.stroke();
   }
+}
+
+/** The far landscape the rainbow stands in: its parallax, and the y of its ground at an x. */
+export interface FarGround {
+  readonly scroll: readonly [number, number];
+  readonly groundAt: (x: number) => number;
 }
 
 interface Flyer {
@@ -370,6 +377,7 @@ export class SkyLife {
   private readonly rainbow: Phaser.GameObjects.Image;
   private readonly skyBottom: number;
   private readonly trees: () => readonly { x: number; y: number }[];
+  private readonly far: FarGround;
   private nextFlock = between([4_000, 10_000]);
   private nextDragon = between(DRAGON_EVERY);
   private nextRainbow = between(RAINBOW_EVERY);
@@ -382,10 +390,12 @@ export class SkyLife {
     scene: Phaser.Scene,
     skyBottom: number,
     trees: () => readonly { x: number; y: number }[],
+    far: FarGround,
   ) {
     this.scene = scene;
     this.skyBottom = skyBottom;
     this.trees = trees;
+    this.far = far;
     const tex = (key: string, w: number, h: number, draw: (ctx: Ctx) => void): string => {
       if (scene.textures.exists(key)) return key;
       const t = scene.textures.createCanvas(key, w, h);
@@ -410,7 +420,8 @@ export class SkyLife {
     this.rainbow = scene.add
       .image(0, 0, rainbowKey)
       .setOrigin(0.5, 1)
-      .setScrollFactor(RAINBOW_SCROLL, 0.6)
+      .setScrollFactor(far.scroll[0], far.scroll[1])
+      // Just behind the far hills: its feet go into them.
       .setDepth(0.5)
       .setAlpha(0)
       .setVisible(false);
@@ -535,14 +546,15 @@ export class SkyLife {
 
   private showRainbow(): void {
     const cam = this.scene.cameras.main;
+    const [fx] = this.far.scroll;
     // A factor-f object at x shows at x + scroll·(1 − f): put it about the middle of the screen.
-    const x = cam.midPoint.x - cam.scrollX * (1 - RAINBOW_SCROLL) + (Math.random() - 0.5) * 400;
-    const y = this.skyBottom - cam.scrollY * (1 - 0.6) + 120;
-    this.rainbow
-      .setPosition(x, y)
-      .setScale(0.8 + Math.random() * 0.5)
-      .setAlpha(0)
-      .setVisible(true);
+    const x = cam.midPoint.x - cam.scrollX * (1 - fx) + (Math.random() - 0.5) * 400;
+    const scale = 0.8 + Math.random() * 0.5;
+    // Both feet stand on the far ground: the bow's base at the lower of the two, a little
+    // into the hill, so neither foot hangs in the air.
+    const foot = (RAINBOW_OUTER - RAINBOW_BANDS / 2) * scale;
+    const y = Math.max(this.far.groundAt(x - foot), this.far.groundAt(x + foot)) + 6 * scale;
+    this.rainbow.setPosition(x, y).setScale(scale).setAlpha(0).setVisible(true);
     this.rainbowAge = 0;
   }
 }

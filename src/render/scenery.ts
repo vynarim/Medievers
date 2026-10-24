@@ -9,6 +9,8 @@ import { SkyLife } from './sky-life.ts';
 import type { MaskView } from './terrain-layer.ts';
 import type { MapTheme } from '../content/maps.ts';
 import {
+  COAST_GROUND,
+  HOLY_LAND_GROUND,
   coastProps,
   drawFarCoast,
   drawFarHolyLand,
@@ -876,19 +878,22 @@ export function layer(ctx: Ctx, alpha: number, draw: (l: Ctx) => void): void {
   ctx.globalAlpha = 1;
 }
 
+// Periodic in FAR_W so the tile repeats without a seam.
+const farCrest =
+  (y0: number, amp: number, period: number) =>
+  (x: number): number => {
+    const k = (x / FAR_W) * Math.PI * 2;
+    return y0 - amp * Math.sin(k * period) - amp * 0.4 * Math.sin(k * period * 3 + 1);
+  };
+/** Far-landscape crest of the valley's back hill (the rainbow stands on it too). */
+const VALLEY_GROUND = farCrest(300, 40, 4);
+
 /**
  * The far landscape: soft hills, a castle, farms, an inn, mills, trees and grazing beasts;
  * muted so the play stays readable. FAR_W is one repeat of the tile.
  */
 function drawFar(ctx: Ctx): void {
   ctx.clearRect(0, 0, FAR_W, FAR_H);
-  // Periodic in FAR_W so the tile repeats without a seam.
-  const crest =
-    (y0: number, amp: number, period: number) =>
-    (x: number): number => {
-      const k = (x / FAR_W) * Math.PI * 2;
-      return y0 - amp * Math.sin(k * period) - amp * 0.4 * Math.sin(k * period * 3 + 1);
-    };
   const hill = (l: Ctx, top: (x: number) => number, color: number, alpha: number): void => {
     l.globalAlpha = alpha;
     l.fillStyle = css(color);
@@ -924,8 +929,8 @@ function drawFar(ctx: Ctx): void {
     for (let x = x0; x <= x1; x += 6) y = Math.max(y, top(x));
     return y;
   };
-  const back = crest(300, 40, 4);
-  const front = crest(380, 26, 6);
+  const back = VALLEY_GROUND;
+  const front = farCrest(380, 26, 6);
   // The back hill and everything on it fade together.
   const backAlpha = 0.62;
   layer(ctx, backAlpha, (l) => {
@@ -1075,11 +1080,13 @@ export class Scenery {
       t.refresh();
       return key;
     };
+    const farX = -mask.width;
+    const farY = mask.height * 0.32;
     const far = scene.add
       // Three map widths, starting one to the left, so the parallax never shows an edge.
       .tileSprite(
-        -mask.width,
-        mask.height * 0.32,
+        farX,
+        farY,
         mask.width * 3,
         FAR_H,
         tex(
@@ -1092,6 +1099,8 @@ export class Scenery {
       .setOrigin(0, 0)
       .setScrollFactor(FAR_SCROLL, 0.8)
       .setDepth(1);
+    const farCrestOf =
+      theme === 'coast' ? COAST_GROUND : theme === 'holyLand' ? HOLY_LAND_GROUND : VALLEY_GROUND;
     this.objects.push(far);
 
     const cloudKeys: string[] = [];
@@ -1162,7 +1171,11 @@ export class Scenery {
       this.objects.push(image);
     }
 
-    this.sky = new SkyLife(scene, mask.height * 0.4, () => this.props.filter((p) => p.tree));
+    this.sky = new SkyLife(scene, mask.height * 0.4, () => this.props.filter((p) => p.tree), {
+      scroll: [FAR_SCROLL, 0.8],
+      // The tile repeats every FAR_W from its left edge.
+      groundAt: (x) => farY + farCrestOf((((x - farX) % FAR_W) + FAR_W) % FAR_W),
+    });
     this.objects.push(...this.sky.objects);
   }
 

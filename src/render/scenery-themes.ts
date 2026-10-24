@@ -38,6 +38,11 @@ const crest =
     return y0 - amp * Math.sin(k * period + phase) - amp * 0.35 * Math.sin(k * period * 3 + 1);
   };
 
+/** Far-landscape crest of the land the coast's hills stand on (the rainbow stands on it too). */
+export const COAST_GROUND = crest(390, 22, 5, 0.7);
+/** Far-landscape crest of the Holy Land's back hills (the rainbow stands on it too). */
+export const HOLY_LAND_GROUND = crest(300, 36, 3);
+
 /** A filled band under a crest, inked along the crest only (the sides would show as seams). */
 function band(l: Ctx, top: (x: number) => number, color: number, alpha: number): void {
   l.globalAlpha = alpha;
@@ -240,7 +245,7 @@ function beached(ctx: Ctx, x: number, base: number): void {
 export function drawFarCoast(ctx: Ctx): void {
   ctx.clearRect(0, 0, FAR_W, FAR_H);
   const horizon = 250;
-  const front = crest(390, 22, 5, 0.7);
+  const front = COAST_GROUND;
   layer(ctx, 0.7, (l) => {
     sea(l, horizon);
     abbey(l, 1500, horizon + 70);
@@ -479,7 +484,7 @@ function tent(ctx: Ctx, x: number, base: number, w: number, color: number): void
 
 export function drawFarHolyLand(ctx: Ctx): void {
   ctx.clearRect(0, 0, FAR_W, FAR_H);
-  const back = crest(300, 36, 3);
+  const back = HOLY_LAND_GROUND;
   const front = crest(385, 30, 7, 1.3);
   layer(ctx, 0.62, (l) => {
     band(l, back, COLORS.or, 0.5 / 0.62);
