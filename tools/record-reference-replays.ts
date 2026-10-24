@@ -388,6 +388,29 @@ const SCRIPTS: readonly Script[] = [
       }
     },
   },
+  {
+    name: 'ladder',
+    description:
+      'Climbing (GDD §4.4) the ladder of the hills map: up while held, clinging, down again, ' +
+      'then letting go by walking off it.',
+    mapId: 'hills',
+    seed: 1190,
+    config: { rules: NO_PLACEMENT, teams: [{ spawns: [1166] }, { spawns: [300] }] },
+    play: (r) => {
+      r.until('action');
+      r.step([{ t: 'climb', dir: -1 }]);
+      r.steps(150);
+      r.step([{ t: 'climb', dir: 0 }]);
+      r.steps(30);
+      r.step([{ t: 'climb', dir: 1 }]);
+      r.steps(40);
+      r.step([{ t: 'climb', dir: 0 }]);
+      r.step([{ t: 'move', dir: -1 }]);
+      r.steps(30);
+      r.step([{ t: 'move', dir: 0 }]);
+      r.until('transition');
+    },
+  },
 ];
 
 const force = process.argv.includes('--force');

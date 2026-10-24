@@ -12,10 +12,12 @@ import { SUBPX, idiv, subToPx } from './math/fixed.ts';
 import type { Phase, MatchConfig, SimState, TeamState } from './state.ts';
 import type { Mask } from './terrain/mask.ts';
 import { createTerrain, terrainHash } from './terrain/terrain.ts';
+import { climb, ladderAt } from './units/climb.ts';
 import {
   atRest,
   createUnit,
   jump,
+  release,
   settle,
   stepUnitPhysics,
   walk,
@@ -153,6 +155,7 @@ function createState(config: MatchConfig, seed: number, mask: Mask): SimState {
       weapon: 'bow',
       fuse: 0,
       walkDir: 0,
+      climbDir: 0,
       turnHold: 0,
       moveLeft: 0,
       fired: false,
@@ -195,6 +198,7 @@ function setPhase(s: SimState, phase: Phase, ticks: number, events: SimEvent[]):
   s.turn.phaseTicks = ticks;
   s.turn.resolutionTicks = 0;
   s.turn.walkDir = 0;
+  s.turn.climbDir = 0;
   events.push({ e: 'phase', phase });
 }
 
@@ -316,10 +320,16 @@ function applyCommand(s: SimState, c: GameCommand, events: SimEvent[]): void {
   if (!u?.alive || !canMove) return;
   // In its shell (snail trick): no walking nor jumping this turn, shooting is fine.
   const shelled = s.rules.beasts !== undefined && hasAffliction(s, u.id, Trick.Shell);
-  if (shelled && (c.t === 'move' || c.t === 'jump')) return;
+  if (shelled && (c.t === 'move' || c.t === 'jump' || c.t === 'climb')) return;
   switch (c.t) {
+    case 'climb':
+      if (s.rules.unit.climbSpeed === undefined) return;
+      t.climbDir = c.dir;
+      if (c.dir !== 0) t.walkDir = 0;
+      break;
     case 'move': {
       t.walkDir = c.dir;
+      if (c.dir !== 0) t.climbDir = 0;
       // Walking the other way turns round on the spot first: no walk spent (rules.unit.turnTicks).
       const turnTicks = s.rules.unit.turnTicks;
       if (turnTicks !== undefined && c.dir !== 0 && c.dir !== u.facing && u.grounded) {
@@ -399,6 +409,21 @@ function advanceTick(s: SimState, phaseJustSet: boolean, events: SimEvent[]): vo
     const slimed = s.rules.beasts !== undefined && hasAffliction(s, active.id, Trick.Slime);
     const spent = Math.abs(active.x - x0) * (slimed ? 2 : 1);
     if (budgeted) t.moveLeft = Math.max(0, t.moveLeft - spent);
+  } else if (
+    active?.alive &&
+    t.climbDir !== 0 &&
+    (t.phase === 'action' || t.phase === 'retreat') &&
+    (!budgeted || t.moveLeft > 0)
+  ) {
+    // Climbing spends the walk like walking (GDD §4.4).
+    const px = climb(active, s.terrain, t.climbDir, s.rules.unit);
+    const slimed = s.rules.beasts !== undefined && hasAffliction(s, active.id, Trick.Slime);
+    const cost = idiv(px * SUBPX * (s.rules.unit.climbCostPct ?? 100), 100) * (slimed ? 2 : 1);
+    if (budgeted) t.moveLeft = Math.max(0, t.moveLeft - cost);
+  }
+  // A unit whose ladder has gone (carved away) lets go.
+  for (const u of s.units) {
+    if (u.climbing && !ladderAt(s.terrain, subToPx(u.x), subToPx(u.y))) release(u);
   }
 
   for (const u of s.units) {
@@ -495,7 +520,7 @@ function advancePhase(
  */
 export function canSwitchUnit(s: SimView): boolean {
   const t = s.turn;
-  if (!s.rules.turn.freeSelect || t.fired || t.walkDir !== 0) return false;
+  if (!s.rules.turn.freeSelect || t.fired || t.walkDir !== 0 || t.climbDir !== 0) return false;
   if (t.phase !== 'transition' && t.phase !== 'action') return false;
   const budget = s.rules.unit.moveBudget;
   return budget === undefined || t.moveLeft === budget * SUBPX;
@@ -643,7 +668,8 @@ function hashState(s: SimState): number {
   for (const u of s.units) {
     for (const v of [u.id, u.team, u.x, u.y, u.vx, u.vy, u.hp, u.facing, u.airPeakY, u.stillTicks])
       int(v);
-    int((u.grounded ? 1 : 0) | (u.knocked ? 2 : 0) | (u.alive ? 4 : 0));
+    // The climbing bit is only ever set with rules.unit.climbSpeed: older hashes stay the same.
+    int((u.grounded ? 1 : 0) | (u.knocked ? 2 : 0) | (u.alive ? 4 : 0) | (u.climbing ? 8 : 0));
   }
   int(s.shots.length);
   for (const shot of s.shots) {
@@ -686,6 +712,7 @@ function hashState(s: SimState): number {
   // Hashed only when the rule exists, so logs recorded before it keep their reference hashes.
   if (s.rules.unit.moveBudget !== undefined) int(t.moveLeft);
   if (s.rules.unit.turnTicks !== undefined) int(t.turnHold);
+  if (s.rules.unit.climbSpeed !== undefined) int(t.climbDir);
   if (s.rules.turn.noRepeat) int(t.restingUnitId);
   if (s.rules.turn.placementTicks !== undefined) {
     int(s.placing.length);

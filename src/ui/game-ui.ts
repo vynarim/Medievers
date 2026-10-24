@@ -6,6 +6,7 @@ import { FACTIONS, unitName } from '../content/factions.ts';
 import type { UiIntents } from '../input/ui-intents.ts';
 import { canSwitchUnit, nextTeammate, type SimView } from '../sim/sim.ts';
 import { classOf, maxHpOf, mayUse } from '../sim/classes.ts';
+import { canClimb } from '../sim/units/climb.ts';
 import { Hud } from './hud.ts';
 import { renderTutorial } from './tutorial.ts';
 import { t } from './i18n.ts';
@@ -55,6 +56,11 @@ export class GameUi {
   private readonly fuses: HTMLElement;
   private readonly skip: HTMLButtonElement;
   private readonly resetView: HTMLButtonElement;
+  /** ↓, shown at a ladder only */
+  private readonly down: HTMLButtonElement;
+  /** Fire, in the colour of the house that plays */
+  private readonly fire: HTMLButtonElement;
+  private fireColour = -1;
   private readonly actionButtons: HTMLButtonElement[] = [];
   private readonly veil: HTMLElement;
   private readonly arsenal: HTMLElement;
@@ -87,7 +93,7 @@ export class GameUi {
      */
     const act = (
       b: HTMLButtonElement,
-      when: 'walk' | 'jump' | 'action' | 'end' | 'switch' = 'action',
+      when: 'walk' | 'jump' | 'up' | 'action' | 'end' | 'switch' = 'action',
       tip = '',
     ): HTMLButtonElement => {
       b.dataset.when = when;
@@ -111,11 +117,25 @@ export class GameUi {
         'walk',
         'tip.walkLeft',
       ),
+      // ↑: the high jump, or, at a ladder, climb up while held (GDD §4.4).
       act(
-        this.click(button(t('ui.jumpUp'), 'icon'), () => (i.jump = 'back')),
-        'jump',
+        holdButton(
+          t('ui.jumpUp'),
+          (h) => {
+            if (!h) i.climb = 0;
+            else if (this.onLadder()) i.climb = -1;
+            else i.jump = 'back';
+          },
+          'icon',
+        ),
+        'up',
         'tip.jumpUp',
       ),
+      (this.down = act(
+        holdButton(t('ui.climbDown'), (h) => (i.climb = h ? 1 : 0), 'icon hidden'),
+        'walk',
+        'tip.climbDown',
+      )),
       act(
         holdButton(t('ui.walkRight'), (h) => (i.walk = h ? 1 : 0), 'icon'),
         'walk',
@@ -146,7 +166,7 @@ export class GameUi {
         'action',
         'tip.spin',
       ),
-      act(holdButton(t('ui.fire'), (h) => (i.charge = h), 'fire')),
+      (this.fire = act(holdButton(t('ui.fire'), (h) => (i.charge = h), 'fire'))),
     );
     // Worms' « worm select »: hands the turn to the next unit of the team (GDD §2.2).
     const switchUnit = act(
@@ -301,6 +321,15 @@ export class GameUi {
     const moveLeft = budget === 0 || view.turn.moveLeft > 0;
     const jumpLeft = budget === 0 || view.turn.moveLeft === budget;
     const canSwitch = canSwitchUnit(view) && nextTeammate(view) !== null;
+    const ladder = this.onLadder();
+    this.down.classList.toggle('hidden', !ladder);
+    // Who plays is never in doubt: Fire wears the colours of the house whose turn it is.
+    const colour = FACTIONS[view.turn.activeTeam]?.primary ?? COLORS.vermillon;
+    if (colour !== this.fireColour) {
+      this.fireColour = colour;
+      this.fire.style.background = css(colour);
+      this.fire.style.borderColor = css(colour);
+    }
     for (const b of this.actionButtons) {
       const when = b.dataset.when;
       b.disabled =
@@ -310,9 +339,11 @@ export class GameUi {
             ? !canMove || !moveLeft
             : when === 'jump'
               ? !canMove || !jumpLeft
-              : when === 'end'
-                ? !canMove
-                : phase !== 'action';
+              : when === 'up'
+                ? !canMove || (ladder ? !moveLeft : !jumpLeft)
+                : when === 'end'
+                  ? !canMove
+                  : phase !== 'action';
     }
     // Before the shot it passes the turn; after it, it ends the turn.
     const skipLabel = phase === 'retreat' ? t('ui.endTurn') : t('ui.skip');
@@ -439,6 +470,13 @@ export class GameUi {
         this.card.append(el('h3', '', `${t('card.weapon')} : ${t(`weapons.${def.id}`)}`), list);
       }
     }
+  }
+
+  /** The playing unit can climb a ladder where it stands. */
+  private onLadder(): boolean {
+    const v = this.view;
+    const u = v?.units.find((x) => x.id === v.turn.activeUnitId);
+    return v !== null && u !== undefined && u.alive && canClimb(v.terrain, u, v.rules.unit);
   }
 
   /** The passive and the drawback of a class, with this match's values (GDD §3.2). */

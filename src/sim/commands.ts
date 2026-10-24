@@ -5,6 +5,8 @@ import type { WeaponId } from '../content/weapons.ts';
 export type GameCommand =
   /** walking state: -1 left, 1 right, 0 stop; persists until changed */
   | { readonly t: 'move'; readonly dir: -1 | 0 | 1 }
+  /** climbing state on a ladder: -1 up, 1 down, 0 stop; persists until changed */
+  | { readonly t: 'climb'; readonly dir: -1 | 0 | 1 }
   /**
    * dir: side to jump towards, the unit turning first if needed (on-screen arc buttons);
    * absent: the side the unit faces

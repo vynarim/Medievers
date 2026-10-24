@@ -68,6 +68,8 @@ export interface Unit {
   /** consecutive ticks spent still on the ground */
   stillTicks: number;
   alive: boolean;
+  /** clinging to a ladder (rules.unit.climbSpeed): grounded, but held by the ladder */
+  climbing?: boolean;
 }
 
 export function createUnit(id: number, team: number, xPx: number, yPx: number, hp: number): Unit {
@@ -134,6 +136,8 @@ export type WalkResult = 'moved' | 'blocked' | 'fell';
 export function walk(u: Unit, t: Terrain, dir: -1 | 1, rules: UnitRules): WalkResult {
   u.facing = dir;
   if (!u.grounded) return 'blocked';
+  // Walking off a ladder lets go of it: the unit steps onto ground or falls.
+  if (u.climbing) u.climbing = false;
   const startPx = subToPx(u.x);
   const targetPx = subToPx(u.x + dir * rules.walkSpeed);
   let px = startPx;
@@ -170,8 +174,14 @@ export function walk(u: Unit, t: Terrain, dir: -1 | 1, rules: UnitRules): WalkRe
 }
 
 function leaveGround(u: Unit): void {
+  if (u.climbing) u.climbing = false;
   u.grounded = false;
   u.airPeakY = subToPx(u.y);
+}
+
+/** Lets go of whatever holds the unit up (a ladder that is gone): it falls from here. */
+export function release(u: Unit): void {
+  leaveGround(u);
 }
 
 /** Throws a unit (explosion, direct hit): it bounces and slides until it stops. */
@@ -213,6 +223,10 @@ export interface PhysicsResult {
  */
 export function stepUnitPhysics(u: Unit, t: Terrain, rules: UnitRules): PhysicsResult {
   const res: PhysicsResult = { landed: false, fallDamage: 0, outOfMap: false };
+  if (u.climbing) {
+    u.stillTicks++;
+    return res;
+  }
   if (u.grounded) {
     if (u.knocked) slide(u, t);
     if (!u.grounded) return res;

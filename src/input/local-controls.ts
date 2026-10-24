@@ -4,6 +4,7 @@ import type { WeaponDef, WeaponId } from '../content/weapons.ts';
 import { MAX_POWER, type GameCommand } from '../sim/commands.ts';
 import { atan2Bam } from '../sim/math/angle.ts';
 import type { SimView } from '../sim/sim.ts';
+import { canClimb } from '../sim/units/climb.ts';
 
 /** Input state sampled once per tick. Presses are edges: true on the tick of the press only. */
 export interface RawInput {
@@ -23,6 +24,8 @@ export interface RawInput {
   selectUnit: number | null;
   /** px: map column chosen for the next unit, during the placement */
   place: number | null;
+  /** ↑ / ↓ buttons held on a ladder: -1 up, 1 down */
+  climb: -1 | 0 | 1;
   /** charge key held (gauge aiming) */
   charge: boolean;
   nextWeaponPressed: boolean;
@@ -50,6 +53,7 @@ export const emptyInput = (): RawInput => ({
   skipPressed: false,
   selectUnit: null,
   place: null,
+  climb: 0,
   charge: false,
   nextWeaponPressed: false,
   flipPressed: false,
@@ -85,6 +89,7 @@ export function aimFor(elevation: number, facing: number): number {
 
 export class LocalControls {
   private walkSent: -1 | 0 | 1 = 0;
+  private climbSent: -1 | 0 | 1 = 0;
   private pendingJumpTick = -1;
   private charging = false;
   /** 0..1024 while charging, for the HUD gauge */
@@ -111,6 +116,20 @@ export class LocalControls {
     if (dir !== this.walkSent) {
       out.push({ t: 'move', dir });
       this.walkSent = dir;
+    }
+    // On a ladder, ↑ and ↓ (keys or buttons) climb instead of aiming (GDD §4.4).
+    const onLadder = canClimb(view.terrain, unit, view.rules.unit);
+    const climbDir: -1 | 0 | 1 =
+      input.climb !== 0
+        ? input.climb
+        : onLadder && input.up !== input.down
+          ? input.up
+            ? -1
+            : 1
+          : 0;
+    if (climbDir !== this.climbSent) {
+      out.push({ t: 'climb', dir: climbDir });
+      this.climbSent = climbDir;
     }
     // Turning around (walking or flipping) mirrors the aim so the elevation stays the same.
     const flip = input.flipPressed && dir === 0 && turn.phase === 'action';
@@ -173,7 +192,7 @@ export class LocalControls {
       // Arrowhead dragged: aim at the pointer, on either side (the sim turns the unit).
       const aim = atan2Bam(input.aimAt.y, input.aimAt.x);
       if (aim !== turn.aim) out.push({ t: 'aim', angle: aim });
-    } else {
+    } else if (!onLadder) {
       // Keyboard aim.
       const delta = (input.up ? AIM_SPEED : 0) - (input.down ? AIM_SPEED : 0);
       elevation = Math.max(-ELEVATION_MAX, Math.min(ELEVATION_MAX, elevation + delta));
@@ -200,6 +219,7 @@ export class LocalControls {
 
   private reset(): void {
     this.walkSent = 0;
+    this.climbSent = 0;
     this.pendingJumpTick = -1;
     this.charging = false;
     this.power = 0;

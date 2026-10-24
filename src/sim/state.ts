@@ -84,6 +84,8 @@ export interface TurnState {
   fuse: number;
   /** walking state of the active unit */
   walkDir: -1 | 0 | 1;
+  /** climbing state of the active unit (rules.unit.climbSpeed): -1 up, 1 down */
+  climbDir: -1 | 0 | 1;
   /** ticks left turning round on the spot before walking (rules.unit.turnTicks) */
   turnHold: number;
   /** sub-px of walking left this turn (rules.unit.moveBudget); unused when there is no budget */

@@ -61,6 +61,7 @@ Un chroniqueur à l'humour douteux commente la partie {{st:jeu}} : chaque tour s
 - **Marcher** : un combattant avance de {{unit:walkSpeedPx}} pixel par instant de jeu, franchit une marche de {{unit:maxStep}} pixels au plus et grimpe des pentes jusqu'à environ 60°. Au bord d'un précipice, il tombe.
 - **Sauter** : **↶** et **↷** font un saut long vers la gauche ou vers la droite (le combattant se retourne au besoin) ; **↑** fait un saut haut, très haut en reculant un peu, pour sortir d'un trou ou grimper sur un rebord. Au clavier, Entrée saute loin devant, Entrée deux fois saute haut.
 - **Marcher ou sauter** : à chaque tour, c'est l'un ou l'autre. Soit on marche, {{unit:moveBudget}} pixels au plus (environ 10 largeurs de combattant) ; soit on fait un seul saut, qui porte bien plus loin (environ 15 largeurs) mais toujours à la même distance. La barre verte sous le nom de la maison montre la marche qui reste.
+- **Grimper** : au pied d'une échelle, maintenez **↑** pour monter ; **↓** (qui n'apparaît qu'à une échelle) pour descendre. Au clavier, ↑ et ↓ grimpent tant qu'on est à l'échelle. En haut, le combattant se hisse sur le rempart ; marcher de côté lui fait lâcher l'échelle. Grimper use la marche du tour, mais à moitié prix : 2 pixels d'échelle pour 1 pixel de marche.
 - **Se retourner** est gratuit : un appui bref vers l'autre côté retourne le combattant sur place, sans marcher. Un combattant qui commence son tour près d'un bout de la carte est déjà tourné vers l'intérieur.
 - **Tomber** : une chute de plus de {{unit:fallSafeHeight}} pixels blesse. On perd 1 PV tous les {{unit:fallPxPerHp}} pixels de chute en plus, jusqu'à {{unit:fallMaxDamage}} PV au maximum. Une chute de 200 pixels coûte donc {{unit:fall200}} PV.
 - **Mourir** : à 0 PV, en sortant de la carte par les bords, ou en tombant dans l'eau. Le combattant laisse une petite stèle qui roule et glisse comme un objet.
@@ -272,7 +273,7 @@ En bas à droite, les armes :
 - **Mèche 1 à 5** : visible avec le pot de feu grégeois ;
 - **⇄ Combattant** : donner la main au combattant suivant de votre maison, avant d'avoir bougé ou tiré ;
 - **Passer** : finir son tour sans tirer ;
-- **Tirer** : maintenir pour charger la puissance, relâcher pour tirer. Une jauge pleine repart de zéro : rien ne part tout seul, il faut lâcher au bon moment.
+- **Tirer** est aux couleurs de la maison qui joue : on sait toujours à qui c'est le tour. Maintenir pour charger la puissance, relâcher pour tirer. Une jauge pleine repart de zéro : rien ne part tout seul, il faut lâcher au bon moment.
 
 Au-dessus, le cartouche de l'arme en main montre la jauge de puissance. En haut à droite : **⤢** (plein écran, comme F11 ; un second appui en sort), **◎** (revenir au zoom par défaut et recentrer ; il n'apparaît que lorsque vous avez zoomé ou déplacé la vue), **Aide** (un petit tutoriel illustré en sept pages : le but, le tour, se déplacer, viser, tirer, le vent, la caméra), **Réglages** et **Pause**. La souris posée contre un bord de l'écran fait défiler la carte. Le menu de pause (aussi sur Échap) propose de reprendre, de recommencer la partie, de lire l'aide ou d'ouvrir les réglages ; le temps est arrêté tant qu'il est ouvert, comme pendant l'aide et les réglages.
 

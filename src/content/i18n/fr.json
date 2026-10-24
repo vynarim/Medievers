@@ -286,7 +286,7 @@
   "tip.walkRight": "Marcher à droite (→)",
   "tip.jumpLeft": "Saut long vers la gauche, environ 15 largeurs (Entrée : saut long devant soi)",
   "tip.jumpRight": "Saut long vers la droite, environ 15 largeurs (Entrée : saut long devant soi)",
-  "tip.jumpUp": "Saut haut, en reculant un peu : pour sortir d'un trou ou monter sur une marche (Entrée deux fois)",
+  "tip.jumpUp": "Saut haut, en reculant un peu : pour sortir d'un trou ou monter sur une marche (Entrée deux fois). Au pied d'une échelle : maintenir pour grimper (ou touche ↑)",
   "tip.switchUnit": "Donner la main au combattant suivant de la maison, tant que personne n'a bougé ni tiré (ou cliquer sur un combattant)",
   "tip.fullscreen": "Plein écran (F11)",
   "tip.fullscreenExit": "Quitter le plein écran (Échap)",
@@ -396,5 +396,7 @@
   "tuning.delugeTime": "Début (au plus tard)",
   "tuning.delugeRise": "Montée par tour",
   "tuning.delugeDamage": "PV perdus par tour",
-  "units.minutes": "min"
+  "units.minutes": "min",
+  "ui.climbDown": "↓",
+  "tip.climbDown": "Descendre l'échelle (maintenir, ou touche ↓)"
 }

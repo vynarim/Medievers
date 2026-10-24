@@ -33,6 +33,13 @@ export interface UnitRules {
    * older logs: the unit turns and walks at once.
    */
   readonly turnTicks?: number;
+  /**
+   * sub-px per tick up or down a ladder (GDD §4.4); climbing spends the turn's walk like walking.
+   * Absent from older logs: ladders cannot be climbed.
+   */
+  readonly climbSpeed?: number;
+  /** percent of the walk a climbed pixel costs (50: a ladder twice the walk per turn) */
+  readonly climbCostPct?: number;
 }
 
 export const UNIT_RULES: UnitRules = {
@@ -47,4 +54,6 @@ export const UNIT_RULES: UnitRules = {
   moveBudget: 280,
   slopeTakeoff: true,
   turnTicks: 12,
+  climbSpeed: 256,
+  climbCostPct: 50,
 };

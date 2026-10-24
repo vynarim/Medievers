@@ -4,6 +4,8 @@ import type { WeaponId } from '../content/weapons.ts';
 export class UiIntents {
   /** walking button held: -1 left, 1 right */
   walk: -1 | 0 | 1 = 0;
+  /** ↑ or ↓ held on a ladder: -1 up, 1 down */
+  climb: -1 | 0 | 1 = 0;
   /** aim button held: the aim sweeps all the way round */
   spin = false;
   /** fire button held (gauge) */

@@ -242,6 +242,7 @@ export class PhaserLocalInput implements InputSource {
     input.right = k.right.isDown || k.d.isDown || this.ui.walk > 0;
     input.up = k.up.isDown;
     input.down = k.down.isDown;
+    input.climb = this.ui.climb;
     input.spin = this.ui.spin;
     input.charge = k.space.isDown || this.ui.charge;
     input.jumpKind = ui.jump;

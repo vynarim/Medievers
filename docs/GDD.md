@@ -130,6 +130,8 @@ Toutes les valeurs sont des défauts dans `src/content/weapons.ts`, ajustables p
 | **Miracle** | Téléportation vers un point libre désigné ; fin de tour | 1 |
 | **Passer son tour** | — | ∞ |
 
+- **Grimper aux échelles** (programmé le 2026-10-25, sur retour de playtest) : les échelles des cartes (matière « échelle » du masque) se grimpent dès maintenant, avant l'outil Échelle. Au pied d'une échelle (ou au sommet), **↑** maintenu monte et **↓** descend, au clavier comme à l'écran (le bouton ↓ n'apparaît qu'à une échelle ; à l'échelle, ↑ ↓ du clavier grimpent au lieu de viser). Le combattant s'y tient sans tomber ; en haut, il se hisse sur le sol à côté ; en bas, il pose pied à terre ; marcher de côté le fait lâcher. Grimper dépense la marche du tour à moitié prix (1 px de marche pour 2 px d'échelle, `unit.climbCostPct`) et, comme la marche, interdit le saut ensuite. Vitesse 1 px par instant (`unit.climbSpeed`, absent des vieux logs : pas d'escalade). Une échelle détruite fait lâcher prise.
+
 ### 4.5 Reliquaires (caisses)
 - Probabilité d'apparition en fin de tour : 30 %, 3 reliquaires au plus sur la carte. Un ange descend en planant (1 px par instant) et dépose un coffret ; il est sensible au vent pendant la descente, plus une fois posé. Il tombe hors des bouts de carte et des parties brûlées (programmé le 2026-10-24, `src/content/crates.ts`).
 - Contenu : 10 % de pièges ; sinon 35 % de fioles de baume (+25 PV, sans dépasser les PV de départ) et 65 % de reliquaires d'armes (+1 munition d'une arme à munitions limitées, tirée au hasard).
