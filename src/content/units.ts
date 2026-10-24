@@ -52,6 +52,11 @@ export interface UnitRules {
    * the walk (climbCostPct).
    */
   readonly ladderEndsTurn?: boolean;
+  /**
+   * Taking a ladder is the turn's action, like a shot, not a move (2026-10-25): it is only taken
+   * before the shot, never after it. Absent from older logs: after the shot too.
+   */
+  readonly ladderIsAction?: boolean;
 }
 
 export const UNIT_RULES: UnitRules = {
@@ -70,4 +75,5 @@ export const UNIT_RULES: UnitRules = {
   climbCostPct: 50,
   ladderReach: 28,
   ladderEndsTurn: true,
+  ladderIsAction: true,
 };

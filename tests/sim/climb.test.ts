@@ -208,6 +208,30 @@ describe('ladders that end the turn (rules.unit.ladderEndsTurn)', () => {
     expect(sim.view().turn.phase).toBe('resolution');
   });
 
+  it('are the action of the turn: taken before the shot, never after it', () => {
+    const sim = start(578, WHOLE);
+    sim.step([
+      { t: 'aim', angle: 3072 + 200 },
+      { t: 'fire', power: 300 },
+    ]);
+    expect(sim.view().turn.phase).toBe('retreat');
+    press(sim, -1);
+    for (let i = 0; i < 30; i++) sim.step();
+    expect(unit(sim).y).toBe(500);
+    expect(sim.view().turn.climbDir).toBe(0);
+    // Without the rule, as in older logs, the ladder is still taken after the shot.
+    const { ladderIsAction, ...old } = WHOLE.unit;
+    expect(ladderIsAction).toBe(true);
+    const before = start(578, { ...WHOLE, unit: old });
+    before.step([
+      { t: 'aim', angle: 3072 + 200 },
+      { t: 'fire', power: 300 },
+    ]);
+    press(before, -1);
+    for (let i = 0; i < 30; i++) before.step();
+    expect(unit(before).y).toBeLessThan(500);
+  });
+
   it('ignore every other order on the way', () => {
     const sim = start(578, WHOLE);
     press(sim, -1);

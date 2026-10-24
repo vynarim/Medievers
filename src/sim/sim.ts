@@ -352,6 +352,8 @@ function applyCommand(s: SimState, c: GameCommand, events: SimEvent[]): void {
   switch (c.t) {
     case 'climb':
       if (s.rules.unit.climbSpeed === undefined) return;
+      // Taking a ladder is the turn's action: before the shot only (rules.unit.ladderIsAction).
+      if (s.rules.unit.ladderIsAction && c.dir !== 0 && !canAct) return;
       // A press that cannot climb a pixel (no ladder, or already at its end) spends nothing.
       if (s.rules.unit.ladderEndsTurn && c.dir !== 0) {
         if (climb({ ...u }, s.terrain, c.dir, s.rules.unit) === 0) return;

@@ -458,7 +458,10 @@ export class GameUi {
     const canSwitch = canSwitchUnit(view) && nextTeammate(view) !== null;
     const ladder = this.onLadder();
     // A ladder that ends the turn is taken whatever the walk left (rules.unit.ladderEndsTurn).
-    const climbLeft = view.rules.unit.ladderEndsTurn === true || moveLeft;
+    // A ladder that is the turn's action is only taken before the shot (rules.unit.ladderIsAction).
+    const climbLeft =
+      (view.rules.unit.ladderEndsTurn === true || moveLeft) &&
+      (view.rules.unit.ladderIsAction !== true || phase === 'action');
     this.down.classList.toggle('hidden', !ladder);
     // Who plays is never in doubt: Fire wears the colours of the house whose turn it is.
     const colour = FACTIONS[view.turn.activeTeam]?.primary ?? COLORS.vermillon;
