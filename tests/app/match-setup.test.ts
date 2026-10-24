@@ -15,7 +15,6 @@ describe('match setup (BACKLOG 3.6)', () => {
       map: 'valley',
       scheme: 'classic',
       regicide: false,
-      fog: true,
       lineups: [['knight']],
     });
     expect(one.lineups).toHaveLength(2);
@@ -27,12 +26,6 @@ describe('match setup (BACKLOG 3.6)', () => {
     const old = { scheme: 'classic', regicide: false, lineups: [['knight'], ['knight']] };
     expect(fixSetup(old as never).map).toBe('valley');
     expect(fixSetup({ ...defaultSetup(false), map: 'holyLand' }).map).toBe('holyLand');
-  });
-
-  it('keeps the caltrop fog on unless turned off (an old saved setup has no option)', () => {
-    const old = { scheme: 'classic', regicide: false, lineups: [['knight'], ['knight']] };
-    expect(fixSetup(old as never).fog).toBe(true);
-    expect(fixSetup({ ...defaultSetup(false), fog: false }).fog).toBe(false);
   });
 
   it('gives each scheme its rules (GDD §6)', () => {

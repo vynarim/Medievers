@@ -194,8 +194,6 @@ export class BattleScene extends Phaser.Scene {
   private manualCamera = false;
   /** watching the replay of a match (the replay viewer): every chausse-trape is shown */
   private replaying = false;
-  /** caltrop fog (GDD §6): the house that last took the device, -1 before the first turn */
-  private handedTo = -1;
   /** the commands of the match being watched, and its log */
   private watch: ReplayInput | null = null;
   private watchLog: GameLog | null = null;
@@ -227,7 +225,6 @@ export class BattleScene extends Phaser.Scene {
     this.selectedUnit = null;
     this.infoRef = null;
     this.tip = null;
-    this.handedTo = -1;
     // The scene object outlives a restart: a match chosen from the paused one starts running.
     this.paused = false;
     this.stepOnce = false;
@@ -661,7 +658,6 @@ export class BattleScene extends Phaser.Scene {
       return;
     }
 
-    this.handOver();
     const active = this.activeUnit();
     this.input_.unitCentre = active
       ? { x: active.x / SUBPX, y: active.y / SUBPX - UNIT_HEIGHT / 2 }
@@ -753,20 +749,6 @@ export class BattleScene extends Phaser.Scene {
     this.online = null;
     this.remote = null;
     this.newMatch();
-  }
-
-  /**
-   * Caltrop fog (GDD §6): when the turn goes to another house, « Passez la main » stops the clock
-   * and hides every caltrop until that house has taken the device. Not while the armies are
-   * placed (no caltrop yet), nor in a replay or once the match is over.
-   */
-  private handOver(): void {
-    if (!this.data_.setup.fog || this.replaying || this.online || this.ui.handingOver) return;
-    const turn = this.sim.view().turn;
-    if (turn.phase === 'gameOver' || turn.phase === 'placement') return;
-    if (turn.activeTeam === this.handedTo) return;
-    const team = turn.activeTeam;
-    this.ui.showHandover(team, () => (this.handedTo = team));
   }
 
   /**
@@ -2006,18 +1988,17 @@ export class BattleScene extends Phaser.Scene {
   }
 
   /**
-   * Chausse-trapes: iron caltrops, seen only by the house that laid them, and by every house
-   * while a sapper plays (GDD §3.2); all of them once the match is over, and always without the
-   * fog (GDD §6). None while the device changes hands. A ring while not armed.
+   * Chausse-trapes: iron caltrops. Online, a player sees those of its own houses, and all of them
+   * while its sapper plays (GDD §3.2); everyone sees them all once the match is over, in a replay,
+   * and in a trial match on one device. A ring while not armed.
    */
   private drawMines(g: Phaser.GameObjects.Graphics, time: number): void {
-    if (this.ui.handingOver) return;
     const v = this.sim.view();
-    const all = !this.data_.setup.fog || v.turn.phase === 'gameOver' || this.replaying;
-    const seen = this.online
-      ? v.teams.flatMap((team) => (this.mine(team.id) ? visibleMines(v, team.id) : []))
-      : visibleMines(v, v.turn.activeTeam);
-    for (const m of all ? v.mines : seen) {
+    const all = !this.online || v.turn.phase === 'gameOver' || this.replaying;
+    const seen = all
+      ? v.mines
+      : v.teams.flatMap((team) => (this.mine(team.id) ? visibleMines(v, team.id) : []));
+    for (const m of seen) {
       const x = m.x / SUBPX;
       const y = m.y / SUBPX;
       const f = FACTIONS[m.team];

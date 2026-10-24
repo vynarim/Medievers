@@ -135,7 +135,7 @@ La **masse d'armes** est jouable {{st:jeu}} : le bouton devient « Frapper » ; 
 | **Pioche** {{st:jeu}} | « Creuser » : creuse droit vers le bas pendant 3 s, environ 90 px dans la terre (180 pour un Sapeur), plus lentement dans la pierre, pas du tout dans la roche. Le temps du tour s'arrête pendant qu'on creuse | 2 |
 | **Sape** {{st:jeu}} | « Creuser » : un tunnel à plat, ou en biais à 45° vers le haut ou le bas selon la visée, pendant 4 s (environ 180 px, 360 pour un Sapeur) ; le combattant le suit | 2 |
 | **Échelle** | Pose une échelle de 200 px que tout le monde peut emprunter | 2 |
-| **Chausse-trape** {{st:jeu}} | « Poser » : le piège tombe juste devant vous. Il s'arme en 2 s puis saute sous le premier combattant qui marche dessus, ami ou ennemi : 40 dégâts dans un rayon de 50 px. Une explosion proche le fait sauter aussi. Seule la maison qui joue voit ses propres pièges (et ceux des autres quand c'est un Sapeur qui joue), si le **brouillard des chausse-trapes** est actif ; sinon, tous les pièges sont visibles de tous | 2 |
+| **Chausse-trape** {{st:jeu}} | « Poser » : le piège tombe juste devant vous. Il s'arme en 2 s puis saute sous le premier combattant qui marche dessus, ami ou ennemi : 40 dégâts dans un rayon de 50 px. Une explosion proche le fait sauter aussi. En ligne, chacun ne voit que les pièges de ses maisons (et tous quand c'est son Sapeur qui joue) | 2 |
 | **Miracle** | Vous téléporte sur un point libre ; votre tour s'arrête | 1 |
 | **Passer son tour** | — | ∞ |
 

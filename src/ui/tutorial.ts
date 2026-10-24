@@ -79,12 +79,33 @@ const DRAWINGS: readonly string[] = [
   svg(`${ground(170)}${figure(200, 160, C.red, 1, true)}
     <path d="M 202 60 A 60 60 0 1 1 152 152" fill="none" stroke="${C.gold}" stroke-width="10"/>
     ${aimDots(202, 120, 0.8, -0.6)}`),
-  // 6. Wind and terrain: the wind gauge, a crater revealing the page.
+  // 6. The battlefield: the wind gauge, a crater revealing the page, a tower.
   svg(`${ground(170)}<circle cx="300" cy="182" r="30" fill="${C.vellum}"/>
+    <rect x="70" y="80" width="44" height="86" fill="${C.grey}" stroke="${C.ink}" stroke-width="3"/>
+    <path d="M 70 80 v -12 h 10 v 12 m 7 0 v -12 h 10 v 12 m 7 0 v -12 h 10 v 12" fill="none"
+      stroke="${C.ink}" stroke-width="3"/>
     <rect x="110" y="30" width="260" height="16" fill="${C.vellum}" stroke="${C.ink}" stroke-width="3"/>
     <rect x="240" y="30" width="90" height="16" fill="${C.azur}"/>
     <line x1="240" y1="24" x2="240" y2="52" stroke="${C.ink}" stroke-width="3"/>`),
-  // 7. Camera and menus.
+  // 7. The classes: six figures, each with its mark.
+  svg(`${ground(170)}${[C.red, C.green, C.ochre, C.earth, C.vellum, C.blue]
+    .map((c, i) => figure(60 + i * 72, 162, c, 1, i === 5))
+    .join('')}
+    <polygon points="404,72 410,58 416,70 422,56 428,72" fill="${C.gold}" stroke="${C.ink}"
+      stroke-width="2"/>`),
+  // 8. Online: two screens, one code between them.
+  svg(`<rect x="30" y="40" width="150" height="104" rx="6" fill="${C.vellum}" stroke="${C.ink}"
+      stroke-width="3"/>
+    <rect x="300" y="40" width="150" height="104" rx="6" fill="${C.vellum}" stroke="${C.ink}"
+      stroke-width="3"/>
+    ${figure(105, 132, C.red, 1)}${figure(375, 132, C.blue, -1)}
+    <rect x="182" y="78" width="116" height="34" rx="4" fill="${C.blue}" stroke="${C.ink}"
+      stroke-width="3"/>
+    <text x="240" y="102" text-anchor="middle" font-size="20" fill="${C.gold}"
+      font-family="serif">K7M-2QX</text>
+    <path d="M 150 170 Q 240 196 330 170" fill="none" stroke="${C.ink}" stroke-width="3"
+      stroke-dasharray="8 6"/>`),
+  // 9. Camera and menus.
   svg(`<rect x="60" y="30" width="360" height="140" fill="none" stroke="${C.ink}" stroke-width="3"
       stroke-dasharray="10 8"/>${ground(170)}${figure(240, 160, C.red, 1, true)}
     <circle cx="420" cy="30" r="22" fill="${C.vellum}" stroke="${C.ink}" stroke-width="3"/>
