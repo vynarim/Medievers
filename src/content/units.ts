@@ -1,8 +1,6 @@
 // Unit movement and damage rules (GDD §3.1). Speeds in sub-pixels per tick (256 = 1 px).
 
 export interface UnitRules {
-  /** HP at match start (GDD §3.1, options 50 / 150 / 200) */
-  readonly startHp: number;
   /** sub-px per tick; 384 = 1.5 px/tick */
   readonly walkSpeed: number;
   /** px: highest step a walking unit climbs */
@@ -22,7 +20,6 @@ export interface UnitRules {
 }
 
 export const UNIT_RULES: UnitRules = {
-  startHp: 100,
   walkSpeed: 384,
   maxStep: 12,
   slopeWindow: 7,

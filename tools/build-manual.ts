@@ -6,6 +6,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { marked } from 'marked';
 import { chromium } from 'playwright';
 import { MASK_PALETTE, MATERIALS } from '../src/content/materials.ts';
+import { CLASSIC_RULES } from '../src/content/rules.ts';
 import { UNIT_RULES } from '../src/content/units.ts';
 import { Material, type MaterialId } from '../src/sim/terrain/material.ts';
 import { fallDamage } from '../src/sim/units/unit.ts';
@@ -54,13 +55,22 @@ const frNumber = (n: number): string => n.toLocaleString('fr-FR', { maximumFract
 
 /** {{unit:<key>}} values, read from src/content/units.ts. */
 const UNIT_VALUES: Record<string, string> = {
-  startHp: frNumber(UNIT_RULES.startHp),
+  startHp: frNumber(CLASSIC_RULES.startHp),
   walkSpeedPx: frNumber(UNIT_RULES.walkSpeed / 256),
   maxStep: frNumber(UNIT_RULES.maxStep),
   fallSafeHeight: frNumber(UNIT_RULES.fallSafeHeight),
   fallPxPerHp: frNumber(UNIT_RULES.fallPxPerHp),
   fallMaxDamage: frNumber(UNIT_RULES.fallMaxDamage),
   fall200: frNumber(fallDamage(200, UNIT_RULES)),
+};
+
+const seconds = (ticks: number): string => `${frNumber(ticks / 60)} s`;
+
+/** {{rules:<key>}} values, read from the Classique scheme in src/content/rules.ts. */
+const RULE_VALUES: Record<string, string> = {
+  transition: seconds(CLASSIC_RULES.turn.transitionTicks),
+  action: seconds(CLASSIC_RULES.turn.actionTicks),
+  retreat: seconds(CLASSIC_RULES.turn.retreatTicks),
 };
 
 function edition(): string {
@@ -84,6 +94,11 @@ const source = readFileSync(new URL('manuel.md', dir), 'utf8')
   .replace(/\{\{unit:(\w+)\}\}/g, (_, key: string) => {
     const value = UNIT_VALUES[key];
     if (value === undefined) throw new Error(`unknown unit value {{unit:${key}}}`);
+    return value;
+  })
+  .replace(/\{\{rules:(\w+)\}\}/g, (_, key: string) => {
+    const value = RULE_VALUES[key];
+    if (value === undefined) throw new Error(`unknown rules value {{rules:${key}}}`);
     return value;
   })
   .replace(/\{\{st:(\w+)\}\}/g, (_, key: string) => {

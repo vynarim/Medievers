@@ -32,19 +32,20 @@ Deux à quatre **maisons** s'affrontent sur une carte peinte, chacune avec trois
 
 Le ton est **burlesque**. Les personnages gardent la gravité figée des enluminures, mais subissent des catastrophes absurdes. Il n'y a pas de sang : les coups font voler des étoiles, des plumes et des éclats de vélin.
 
-## 2. Le déroulement d'un tour {{st:prevu}}
+## 2. Le déroulement d'un tour {{st:moteur}}
 
 | Phase | Durée | Ce qui se passe |
 |---|---|---|
-| Transition | 2 s | La caméra rejoint votre combattant. Le vent du tour s'affiche. |
-| Action | 45 s | Vous vous déplacez librement, choisissez une arme, visez et tirez. |
-| Repli | 3 s | Après le tir, vous pouvez encore bouger pour vous mettre à l'abri, mais plus attaquer. |
+| Transition | {{rules:transition}} | La caméra rejoint votre combattant. Le vent du tour s'affiche. |
+| Action | {{rules:action}} | Vous vous déplacez librement, choisissez une arme, visez et tirez. |
+| Repli | {{rules:retreat}} | Après le tir, vous pouvez encore bouger pour vous mettre à l'abri, mais plus attaquer. |
 | Résolution | variable | Le jeu attend que tout soit retombé : projectiles, explosions, chutes. Le sablier est en pause. |
 | Fin de tour | — | Les effets de fin de tour s'appliquent, et un reliquaire peut tomber du ciel. |
 
 - Le sablier **ne s'arrête pas** pendant que vous visez : la pression du temps fait partie du jeu.
 - Un combattant **touché pendant son propre tour** termine son tour aussitôt.
-- Par défaut, vos combattants jouent à tour de rôle. Une option permet de choisir librement lequel joue.
+- Vos combattants jouent à tour de rôle, dans l'ordre de l'équipe. Une option permettra de choisir librement lequel joue.
+- Les morts sont constatées à la fin de la résolution : un combattant à 0 PV ne tombe qu'une fois que tout s'est arrêté.
 
 ## 3. Vos combattants
 
@@ -133,7 +134,7 @@ Chaque carte est une peinture, doublée d'une carte invisible des matières. Ce 
 
 Quand une explosion creuse la terre, le décor peint disparaît et laisse voir **le vélin** de la page, avec un bord déchiré.
 
-### 5.2 Le vent {{st:prevu}}
+### 5.2 Le vent {{st:moteur}}
 
 Le vent change à chaque tour, de −10 (fort vers la gauche) à +10 (fort vers la droite). Il dévie les flèches, les pierres de fronde, la ruche, le faucon et la bannière, mais pas les pots. Une bannière en haut de l'écran montre sa force et son sens. Au-delà de 7, un petit ange souffle dans la marge. Une option permet de supprimer le vent.
 

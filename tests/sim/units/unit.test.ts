@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { MATERIAL_RULES } from '../../../src/content/materials.ts';
+import { CLASSIC_RULES } from '../../../src/content/rules.ts';
 import { UNIT_RULES } from '../../../src/content/units.ts';
 import { SUBPX, subToPx } from '../../../src/sim/math/fixed.ts';
 import { Material, createTerrain, type Terrain } from '../../../src/sim/terrain/index.ts';
@@ -28,7 +29,7 @@ function terrainFrom(width: number, height: number, ground: (x: number) => numbe
 }
 
 function standingUnit(t: Terrain, xPx: number): Unit {
-  const u = createUnit(1, 0, xPx, 0, UNIT_RULES.startHp);
+  const u = createUnit(1, 0, xPx, 0, CLASSIC_RULES.startHp);
   expect(settle(u, t)).toBe(true);
   return u;
 }

@@ -32,6 +32,7 @@
 
 - Unité active : rotation par équipe (unité suivante vivante), ou choix libre (option « sélection libre », comme Worms).
 - Le timer se met en pause pendant la visée de précision ? **Non** (le temps est une pression voulue). Il se met en pause pendant la résolution.
+- Garde-fou : une résolution est coupée au bout de 30 s, pour qu'une entité bloquée ne fige jamais la partie (`src/content/rules.ts`).
 
 ### 2.3 Fin de partie
 - Victoire : dernière équipe avec ≥ 1 unité vivante.

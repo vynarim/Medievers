@@ -4,7 +4,7 @@ import type { ExplosionRules } from '../../content/world.ts';
 import { SUBPX, idiv, subToPx } from '../math/fixed.ts';
 import { isqrt } from '../math/isqrt.ts';
 import { carveCircle, type Terrain } from '../terrain/terrain.ts';
-import { UNIT_HEIGHT, type Unit } from '../units/unit.ts';
+import { UNIT_HEIGHT, launch, type Unit } from '../units/unit.ts';
 
 export interface Explosion {
   /** sub-px */
@@ -84,10 +84,7 @@ function knock(u: Unit, dx: number, dy: number, dist: number, speed: number, lif
     u.vy += idiv(dy * speed, dist);
   }
   u.vy -= idiv(speed * liftPct, 100);
-  u.knocked = true;
-  u.grounded = false;
-  u.stillTicks = 0;
-  u.airPeakY = subToPx(u.y);
+  launch(u);
 }
 
 /** An explosion waiting for its tick (chain reactions resolve on the following tick). */

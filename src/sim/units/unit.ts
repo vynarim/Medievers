@@ -174,6 +174,13 @@ function leaveGround(u: Unit): void {
   u.airPeakY = subToPx(u.y);
 }
 
+/** Throws a unit (explosion, direct hit): it bounces and slides until it stops. */
+export function launch(u: Unit): void {
+  u.knocked = true;
+  u.stillTicks = 0;
+  leaveGround(u);
+}
+
 /** Starts a jump; only from the ground. */
 export function jump(u: Unit, kind: 'forward' | 'back', rules: UnitRules): boolean {
   if (!u.grounded) return false;
@@ -324,6 +331,7 @@ export function settle(u: Unit, t: Terrain): boolean {
       u.grounded = true;
       u.vx = 0;
       u.vy = 0;
+      u.airPeakY = y;
       return true;
     }
   }
