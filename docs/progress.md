@@ -1,15 +1,14 @@
 # Medievers — état de session
 
 ## État courant
-- **Lot 1 (M1, moteur headless) terminé**, gate M1 PASS ([rapport](reports/gates/2026-10-24-M1.md)).
-- **Lot 2 (M2, greybox)** : toutes les tâches 2.1 à 2.9 sont codées. 2.6 vient d'être livrée : pad tactile (DOM, en bas à gauche), pincement pour zoomer, double tap pour recentrer. S'y ajoutent la pause sur Échap (menu Reprendre / Recommencer / Aide / Réglages ; le temps s'arrête aussi pendant l'aide et les réglages) et le demi-tour sur place (T ou ⇄, commande `aim` existante, aucun changement du sim). Reste la gate M2.
-- **Habillage provisoire « manuscrit »** à la demande de l'utilisateur, en attendant la charte finale : polices embarquées (UnifrakturMaguntia, IM Fell), panneaux en vélin à filet d'or, HUD en DOM (`src/ui/hud.ts`), fond diapré, terrain cerné d'encre avec herbe et strates ondulées, figurines provisoires, auréole et flèche sur l'unité active, éclats d'explosion.
-- **Humour à la Monty Python** (demande de l'utilisateur) : annonces de tour, répliques sur tir, blessure, tir ami, mort, tir raté, et onomatopées médiévales (`src/ui/commentary.ts`, textes `quip.*`, `boom.*`, `whack.*` dans `fr.json`). Ce sont des pastiches, pas des citations de films (droits d'auteur), règle notée au GDD §1.
+- **M1 terminé** (gate PASS). **M2 : gate du 2026-10-24 = NOT ASSESSED** ([rapport](reports/gates/2026-10-24-M2.md)) : tous les CA sont verts sauf deux qui attendent l'utilisateur, 60 fps mesurés 10 min à l'écran (2.1) et une tablette réelle (2.6).
+- Livré aujourd'hui sur retours de playtest (tout est poussé) : habillage « manuscrit » provisoire (polices embarquées, panneaux vélin, décor en parallaxe avec château, fermes, moulins et bêtes), humour Monty Python (annonces, répliques, onomatopées, pastiches seulement), choix libre du combattant à chaque tour, déplacement par tour (marche de 280 px **ou** un saut), tir qui ne termine plus le tour, pause sur Échap, tutoriel illustré dans Aide, sauvegarde automatique et reprise, barre d'action unique et centrée avec actions grisées, F1 avec masque brut.
+- Planifié dans le GDD et le BACKLOG (décidé avec l'utilisateur, pas encore programmé) : décors destructibles à points de vie (3.7, 3.8), cuisine de campagne (3.11), lièvres et escargots (3.12), machines de siège (4.9), mèche du pot en tours (4.10), escalade au grappin (4.5), cartes de grandes batailles (7.3), étude vue isométrique E1 ([étude](etudes/vue-isometrique.md), recommandation : garder la 2D de profil).
 
 ## À reprendre en premier
-1. **Playtest de l'utilisateur** sur l'habillage et le ton, puis `/milestone-gate M2`. Les CA 2.4 « tactile » et 2.6 « tablette réelle » resteront NOT ASSESSED — needs human.
-2. **Lot 3 (M3, règles complètes)**, en commençant par 3.1 : classes et talents dans `content/classes.ts` (la fiche affiche « sans classe » d'ici là).
-3. **À chaque mécanique livrée** : manuel (`docs/manual/manuel.md` + `pnpm run manual`), champs de réglage (`tuningGroups`) et GDD dans le même commit.
+1. **Clore M2** : quand l'utilisateur aura fait les deux vérifications humaines du rapport, consigner le résultat et passer la gate à PASS.
+2. **Lot 3 (M3)** : 3.1 classes et passifs (le Chevalier en armure en fait partie), puis les nouvelles tâches dans l'ordre que l'utilisateur choisira (3.7 à 3.14).
+3. **À chaque mécanique livrée** : manuel + `pnpm run manual`, champs de réglage, GDD, et commit + push automatique (préférence de l'utilisateur).
 
 ## Dettes connues / à ne pas refaire
 - **Mode navigateur de Vitest** : Firefox y plante sur ce poste (« page crashed »). Le déterminisme navigateur passe donc par `tools/browser-determinism.ts` (Playwright direct, Vite en mode serveur). Ne pas y revenir.
@@ -18,11 +17,14 @@
 - **Pointeur** : avec la caméra HUD, `pointer.worldX` est faux. Utiliser `cameras.main.getWorldPoint`.
 - **TypeScript 6.0.3, pas 7** : typescript-eslint exige une version inférieure à 6.1. Imports relatifs avec `.ts` et `erasableSyntaxOnly` (pas de propriétés de paramètre dans les constructeurs) : Node exécute `src/` et `tools/` directement.
 - **pnpm** : le global virtual store est activé parce que le projet est sous OneDrive. Corepack échoue en EPERM : pnpm 12 est installé via `npm i -g`. Les « agent skills » de Phaser attendent `pnpm approve`, non approuvés : la décision revient à l'utilisateur.
-- **Valeurs provisoires** (sauts, projection 40/HP, vent 2/point, vitesses des armes) : l'utilisateur les réglera lui-même via ⚙ Réglages quand le jeu sera plus complet. Ne pas les retoucher de notre côté.
+- **Valeurs provisoires** (projection 40/HP, vent 2/point, vitesses des armes) : l'utilisateur les réglera lui-même via ⚙ Réglages. Exception : marche 280 px et saut long ≈ 420 px, fixés par l'utilisateur le 2026-10-24.
+- **Nouvelles règles = champs optionnels** de `MatchRules` (`settleTicks`, `moveAfterShot`, `freeSelect`, `moveBudget`, `slopeTakeoff`) : absents des logs anciens, ils gardent leurs hashes de référence. Garder ce schéma tant que les replays de référence ne sont pas régénérés avec accord.
+- **Sondes navigateur** : une fenêtre Chromium visible mais masquée tombe à 1 image/s ; lancer les sondes fonctionnelles sans tête, et la mesure de fps seulement à l'écran, par un humain.
+- **Sauvegarde** : `localStorage.clear()` puis rechargement ne suffit pas à repartir de zéro, car `pagehide` réécrit la sauvegarde ; retirer la clé `medievers.save.v1` avant de recharger, ou utiliser « Recommencer la partie ».
 - **UI en DOM** au-dessus du canvas (`src/ui/overlay.ts`) : les boutons ont `tabIndex=-1` et `preventDefault` sur `mousedown`, sinon Espace et les flèches activent les boutons au lieu du jeu. Les champs du panneau stoppent la propagation de `keydown`.
 - **Commits** : sans ligne « Co-Authored-By » (préférence de l'utilisateur, historique réécrit).
 - **Navigateur Playwright du MCP** : le rAF y tourne à ~1 Hz (fenêtre en arrière-plan), le jeu semble figé. Ce n'est pas un problème de perf (≈ 1,3 ms par frame) : pour tester, avancer à la main avec `window.medievers.step(performance.now(), 1000 / 60)` et piloter `scene.input_.ui`.
 - **Tablette 4:3** : `Scale.FIT` en 16:9 laisse des bandes et rapetisse le monde ; le HUD DOM, lui, occupe tout l'écran. À revoir avec l'écran de jeu final (M8), pas avant.
 
 ## État git
-Branche `main`. Le lot « 2.6 + pause + habillage + commentaires » est commité localement, non poussé.
+Branche `main`, à jour avec `origin/main` après le commit du rapport de gate M2.
