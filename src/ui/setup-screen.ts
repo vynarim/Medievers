@@ -29,7 +29,7 @@ const STYLE = `
   width: 118px; border: 2px solid var(--encre); border-radius: 4px; background: var(--ceruse);
   color: var(--encre); }
 #ui .setup .tools { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
-#ui .setup .tools button, #ui .setup .start button { white-space: nowrap; }
+#ui .setup .tools button, #ui .setup .start button { white-space: nowrap; flex: none; }
 #ui .setup .tools .note { flex: 1 1 auto; margin: 0 0 0 8px; font-size: 15px; }
 #ui .setup .start { margin-top: 12px; display: flex; justify-content: flex-end; gap: 8px; }
 `;
@@ -47,6 +47,8 @@ export function showSetupScreen(
   onWatch?: (log: GameLog) => void,
   /** online matches (GDD §6): create one with this setup, or join one by its code */
   online?: { host: (setup: MatchSetup) => void; join: () => void },
+  /** i18n key of the button that calls onCancel: back to the match, or to the title */
+  cancelKey = 'setup.cancel',
 ): () => void {
   const root = uiRoot();
   if (!styled) {
@@ -206,7 +208,7 @@ export function showSetupScreen(
       onStart(setup);
     });
     if (onCancel) {
-      const back = button(t('setup.cancel'));
+      const back = button(t(cancelKey));
       back.addEventListener('click', () => {
         close();
         onCancel();

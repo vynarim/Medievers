@@ -66,7 +66,7 @@ async function boot(): Promise<void> {
         saveSetup(chosen);
         start(chosen, buildMap(chosen.map, seed));
       },
-      undefined,
+      title,
       (log) => {
         void mapOfLog(log).then((map) => {
           if (map) start(setup, map, { replay: log });
@@ -83,6 +83,7 @@ async function boot(): Promise<void> {
         },
         join: () => joinFlow(play, choose),
       },
+      'setup.toTitle',
     );
   };
   // A match left in progress (refresh, crash, reboot) resumes where it was; otherwise the houses
@@ -97,11 +98,14 @@ async function boot(): Promise<void> {
     : save && saved
       ? () => start(setup, saved, { resume: save })
       : undefined;
-  showTitleScreen({
-    ...(resume ? { resume } : {}),
-    enter: choose,
-    join: () => joinFlow(play, choose),
-  });
+  function title(): void {
+    showTitleScreen({
+      ...(resume ? { resume } : {}),
+      enter: choose,
+      join: () => joinFlow(play, choose),
+    });
+  }
+  title();
   // Dev builds expose the game for browser-driven checks (Playwright); stripped from production.
   if (import.meta.env.DEV) (window as unknown as { medieverse: Phaser.Game }).medieverse = game;
 }
