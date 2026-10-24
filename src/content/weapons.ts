@@ -107,6 +107,11 @@ export interface WeaponDef {
   /** px: melee reach, from the body centre along the aim */
   readonly reach?: number;
   /**
+   * melee: percent of the knockback at zero power, rising to 100 at full power, charged like a
+   * shot (2026-10-24). Absent from older logs: the full knockback, struck at once.
+   */
+  readonly knockbackMinPct?: number;
+  /**
    * The fuse is set in turns (GDD §4.1, 2026-10-24): 1 = this turn, after this many ticks;
    * 2 = at the start of the next turn; 3 = in two turns, the pot resting on the map meanwhile.
    * Absent from older logs: a fuse in seconds.
@@ -126,8 +131,9 @@ export interface WeaponDef {
 export const isTargeted = (w: WeaponDef): boolean =>
   w.behavior === 'build' || w.behavior === 'strike';
 
-/** The gauge sets something (speed or distance); the others act at once on fire. */
-export const usesPower = (w: WeaponDef): boolean => isProjectile(w) || isTargeted(w);
+/** The gauge sets something (speed, distance, a blow's knockback); the others act at once. */
+export const usesPower = (w: WeaponDef): boolean =>
+  isProjectile(w) || isTargeted(w) || w.knockbackMinPct !== undefined;
 
 /** Weapons that throw something through the air along the aim (they have a flight preview). */
 export const isProjectile = (w: WeaponDef): boolean =>
@@ -235,6 +241,7 @@ export const WEAPONS: readonly WeaponDef[] = [
     defaultFuse: 0,
     ammo: -1,
     reach: 34,
+    knockbackMinPct: 20,
   },
   {
     // Pioche: 3 s straight down; about 90 px in earth, twice that for a sapper.

@@ -117,7 +117,7 @@ Déjà jouables {{st:jeu}} : **arc**, **arbalète**, **fronde**, **pot de feu gr
 
 ### 4.3 Mêlée
 
-La **masse d'armes** est jouable {{st:jeu}} : le bouton devient « Frapper » ; un appui (ou Espace) frappe aussitôt, à 34 pixels devant vous dans la direction visée, et envoie l'ennemi très loin. Les autres armes de mêlée sont {{st:prevu}}.
+La **masse d'armes** est jouable {{st:jeu}} : le bouton devient « Frapper ». Elle se charge comme un tir : maintenez « Frapper » (ou Espace), la jauge se remplit, relâchez pour frapper, à 34 pixels devant vous dans la direction visée. Les dégâts sont toujours les mêmes ; plus la jauge est pleine, plus l'ennemi vole loin (jauge vide : un cinquième de la distance). Les autres armes de mêlée sont {{st:prevu}}.
 
 | Arme | Dégâts | Recul | À savoir |
 |---|---|---|---|

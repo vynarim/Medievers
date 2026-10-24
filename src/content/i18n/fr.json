@@ -1374,7 +1374,7 @@
   "hud.wallLength.1": "courte",
   "hud.wallLength.2": "moyenne",
   "hud.wallLength.3": "longue",
-  "hud.hint.melee": "Viser le côté à frapper (↑ ↓ ou la pointe rouge) · Espace ou « Frapper » : frappe aussitôt",
+  "hud.hint.melee": "Viser le côté à frapper (↑ ↓ ou la pointe rouge) · Espace ou « Frapper » : maintenir, relâcher pour frapper ; plus la jauge est pleine, plus l'ennemi vole loin",
   "hud.hint.dig": "Pioche : creuse vers le bas · Sape : à plat ou en biais selon la visée · Espace ou « Creuser »",
   "hud.hint.mine": "Espace ou « Poser » : la chausse-trape tombe devant le combattant",
   "hud.hint.build": "Cliquez sur la carte pour poser le mur · la visée le tourne, les boutons 1 à 3 règlent sa longueur",

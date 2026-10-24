@@ -67,7 +67,7 @@ export function fire(
   const damagePct = pct !== 100 ? { damagePct: pct } : {};
   if (def.behavior === 'melee') {
     events.push({ e: 'shotFired', shotId: id, weapon: def.id });
-    strike(state, u, def, angle, pct, events);
+    strike(state, u, def, angle, pct, power, events);
     events.push({ e: 'shotEnded', shotId: id });
     return true;
   }
@@ -158,9 +158,14 @@ function strike(
   def: WeaponDef,
   angle: number,
   pct: number,
+  power: number,
   events: SimEvent[],
 ) {
   const reach = (def.reach ?? 0) * SUBPX;
+  // Charged like a shot: the power sets how far the blow throws (knockbackMinPct..100).
+  const min = def.knockbackMinPct;
+  const p = Math.max(0, Math.min(power, MAX_POWER));
+  const knock = min === undefined ? 100 : min + idiv((100 - min) * p, MAX_POWER);
   const dx = cosQ14(angle);
   const dy = sinQ14(angle);
   const cy = u.y - (UNIT_HEIGHT * SUBPX) / 2;
@@ -168,7 +173,7 @@ function strike(
   const y = cy + mulQ14(reach, dy);
   for (const other of state.units) {
     if (!other.alive || other.id === u.id || !touchesUnit(other, x, y, STRIKE_RADIUS)) continue;
-    directHit(other, def, scaled(def.damage, pct), state.rules.explosion, dx, dy, events);
+    directHit(other, def, scaled(def.damage, pct), state.rules.explosion, dx, dy, events, knock);
   }
   const barrel = barrelOnSegment(state, u.x, cy, x, y);
   if (barrel !== null) igniteBarrel(state, barrel, 1);
@@ -191,10 +196,14 @@ function directHit(
   vx: number,
   vy: number,
   events: SimEvent[],
+  knockPct = 100,
 ): void {
   u.hp = Math.max(0, u.hp - damage);
   events.push({ e: 'unitDamaged', unitId: u.id, damage });
-  const speed = idiv(def.damage * rules.knockbackPerHp * def.knockbackPct, 100);
+  const speed = idiv(
+    idiv(def.damage * rules.knockbackPerHp * def.knockbackPct, 100) * knockPct,
+    100,
+  );
   const len = isqrt(vx * vx + vy * vy);
   if (len > 0) {
     u.vx += idiv(vx * speed, len);

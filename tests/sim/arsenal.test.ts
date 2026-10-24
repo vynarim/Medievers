@@ -92,6 +92,24 @@ describe('mace', () => {
     expect(u?.vx).toBeGreaterThan(0);
   });
 
+  it('throws further the more it is charged', () => {
+    const vx = (power: number) => {
+      const sim = duel(CALM, 300, 330);
+      sim.step([
+        { t: 'selectWeapon', id: 'mace' },
+        { t: 'aim', angle: 0 },
+        { t: 'fire', power },
+      ]);
+      return sim.view().units.find((x) => x.id === 2)?.vx ?? 0;
+    };
+    const min = def('mace')?.knockbackMinPct ?? 0;
+    const full = vx(1024);
+    expect(vx(0)).toBeGreaterThan(0);
+    expect(vx(0)).toBeLessThan(vx(512));
+    expect(vx(512)).toBeLessThan(full);
+    expect(Math.abs(vx(0) - Math.trunc((full * min) / 100))).toBeLessThanOrEqual(2);
+  });
+
   it('misses a unit out of reach', () => {
     const sim = duel(CALM, 300, 420);
     const events = run(
