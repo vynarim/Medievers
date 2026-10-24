@@ -198,6 +198,7 @@ Les lièvres et les escargots des marges du manuscrit entrent dans la bataille. 
 | **Escargot** | Bave : marche réduite de moitié pendant 2 tours · Coquille : la victime ne peut ni marcher ni sauter à son prochain tour (elle peut tirer) · Morsure lente : 3 dégâts par tour pendant 3 tours |
 
 - Une bête peut être tuée par un tir (10 PV) ; elle ne rapporte rien, sauf la paix.
+- Précisions de programmation (2026-10-24) : tout se passe **à la fin de chaque tour** : les effets durables agissent, la bête avance (le lièvre est arrêté par une montée de plus de 40 px, l'escargot passe partout), puis, s'il n'y a pas de bête, 8 % de chances qu'une sorte d'un bord (hors parties brûlées). La proie est le combattant vivant le plus proche en x ; la bête l'atteint à 26 px. N'importe quel tir, coup de masse ou explosion qui la touche la tue. Le feu du parchemin la chasse. « Prochain tour » et « tours » de la bave et de la coquille comptent les tours où la victime joue ; la morsure et la ruade comptent tous les tours. Le chapardage prend une munition de l'arme à munitions limitées la plus rare de la maison. Valeurs dans `src/content/beasts.ts` (`MatchRules.beasts`, absent des vieux logs), réglables dans ⚙ Réglages ; effets durables affichés au-dessus du nom et dans la fiche.
 
 ## 5. Vent
 - Valeur entière de −10 à +10, tirée par PRNG à chaque tour. Une option permet de le figer à 0.

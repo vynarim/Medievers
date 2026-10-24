@@ -130,6 +130,20 @@ export function tuningGroups(rules: MatchRules): TuningGroup[] {
           },
         ]
       : []),
+    ...(rules.beasts
+      ? [
+          {
+            titleKey: 'tuning.group.beasts',
+            fields: [
+              field('beasts.spawnPermille', 'tuning.beastChance', 'units.percent', 10, 1, 0, 100),
+              field('beasts.hareStep', 'tuning.hareStep', 'units.px', 1, 10, 0, 2000),
+              field('beasts.snailStep', 'tuning.snailStep', 'units.px', 1, 10, 0, 1000),
+              field('beasts.kickDamage', 'tuning.kickDamage', 'units.hp', 1, 1, 0, 100),
+              field('beasts.biteDamage', 'tuning.biteDamage', 'units.hp', 1, 1, 0, 50),
+            ],
+          },
+        ]
+      : []),
     ...(rules.kitchen
       ? [
           {

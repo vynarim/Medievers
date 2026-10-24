@@ -23,6 +23,8 @@ import {
 } from './units/unit.ts';
 import { blastReachesBarrels, burnBarrels, placeBarrels, stepBarrels } from './barrels.ts';
 import { blastReachesCrates, burnCrates, maybeDropCrate, stepCrates } from './crates.ts';
+import { beastsTurnEnd, blastReachesBeast, hasAffliction, panicAtAction } from './beasts.ts';
+import { Trick } from '../content/beasts.ts';
 import { kitchenTurn, inKitchen, stepKitchen, useKitchen } from './kitchen.ts';
 import { fire, stepShots } from './weapons/weapons.ts';
 
@@ -130,6 +132,8 @@ function createState(config: MatchConfig, seed: number, mask: Mask): SimState {
     kitchen: null,
     barrels: [],
     crates: [],
+    beast: null,
+    afflictions: [],
     burnPx: 0,
     kitchenCounts: teams.map(() => 0),
     winner: null,
@@ -208,6 +212,9 @@ function applyCommand(s: SimState, c: GameCommand, events: SimEvent[]): void {
   }
   const u = unitById(s, t.activeUnitId);
   if (!u?.alive || !canMove) return;
+  // In its shell (snail trick): no walking nor jumping this turn, shooting is fine.
+  const shelled = s.rules.beasts !== undefined && hasAffliction(s, u.id, Trick.Shell);
+  if (shelled && (c.t === 'move' || c.t === 'jump')) return;
   switch (c.t) {
     case 'move': {
       t.walkDir = c.dir;
@@ -286,7 +293,10 @@ function advanceTick(s: SimState, phaseJustSet: boolean, events: SimEvent[]): vo
   ) {
     const x0 = active.x;
     walk(active, s.terrain, t.walkDir, s.rules.unit);
-    if (budgeted) t.moveLeft = Math.max(0, t.moveLeft - Math.abs(active.x - x0));
+    // Snail slime: every step counts double (GDD §4.10).
+    const slimed = s.rules.beasts !== undefined && hasAffliction(s, active.id, Trick.Slime);
+    const spent = Math.abs(active.x - x0) * (slimed ? 2 : 1);
+    if (budgeted) t.moveLeft = Math.max(0, t.moveLeft - spent);
   }
 
   for (const u of s.units) {
@@ -314,6 +324,7 @@ function advanceTick(s: SimState, phaseJustSet: boolean, events: SimEvent[]): vo
     for (const h of res.hits) events.push({ e: 'unitDamaged', unitId: h.unitId, damage: h.damage });
     blastReachesBarrels(s, e);
     blastReachesCrates(s, e, events);
+    blastReachesBeast(s, e, events);
     // A blast that reaches the kitchen counts as a touch (GDD §4.9).
     if (inKitchen(s, e.x, e.y, e.radius * SUBPX)) useKitchen(s, events);
   }
@@ -335,7 +346,10 @@ function advancePhase(
   if (phaseJustSet && t.phase !== 'resolution') return;
   switch (t.phase) {
     case 'transition':
-      if (--t.phaseTicks <= 0) setPhase(s, 'action', s.rules.turn.actionTicks, events);
+      if (--t.phaseTicks <= 0) {
+        setPhase(s, 'action', s.rules.turn.actionTicks, events);
+        panicAtAction(s, events);
+      }
       break;
     case 'action':
     case 'retreat':
@@ -468,6 +482,7 @@ function burnTurn(s: SimState, events: SimEvent[]): void {
 
 function endTurn(s: SimState, events: SimEvent[]): void {
   burnTurn(s, events);
+  beastsTurnEnd(s, events);
   maybeDropCrate(s, events);
   callDeaths(s, events);
   const alive = s.teams.filter((team) => teamAlive(s, team));
@@ -538,6 +553,12 @@ function hashState(s: SimState): number {
   if (s.rules.unit.turnTicks !== undefined) int(t.turnHold);
   if (s.rules.turn.noRepeat) int(t.restingUnitId);
   if (s.rules.burn) int(s.burnPx);
+  if (s.rules.beasts) {
+    const b = s.beast;
+    for (const v of b ? [b.id, b.kind, b.x, b.y] : [-1]) int(v);
+    int(s.afflictions.length);
+    for (const a of s.afflictions) for (const v of [a.unitId, a.trick, a.turns]) int(v);
+  }
   if (s.rules.crates) {
     int(s.crates.length);
     for (const c of s.crates)

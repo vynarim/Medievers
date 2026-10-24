@@ -12,7 +12,7 @@ function flatMask(): Mask {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const { kitchen, ...RULES } = CLASSIC_RULES;
+const { kitchen, beasts, crates, barrels, ...RULES } = CLASSIC_RULES;
 
 /** Plays `turns` turns where everybody passes; returns the events. */
 function passTurns(sim: Sim, turns: number): SimEvent[] {

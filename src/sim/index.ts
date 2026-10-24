@@ -12,5 +12,6 @@ export * from './sim.ts';
 export * from './kitchen.ts';
 export * from './barrels.ts';
 export * from './crates.ts';
+export * from './beasts.ts';
 export * from './log.ts';
 export * from './replay-file.ts';

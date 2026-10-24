@@ -13,7 +13,7 @@ function flatMask(): Mask {
 
 // No wind, no kitchen, no fire: only the barrels change things.
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const { kitchen, burn, ...BASE } = CLASSIC_RULES;
+const { kitchen, burn, crates, beasts, ...BASE } = CLASSIC_RULES;
 const CALM: MatchRules = { ...BASE, wind: { ...CLASSIC_RULES.wind, max: 0 } };
 
 function toAction(sim: Sim): void {

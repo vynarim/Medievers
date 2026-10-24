@@ -44,6 +44,19 @@ export type SimEvent =
       readonly heal: number;
     }
   | { readonly e: 'crateBurst'; readonly id: number; readonly trap: boolean }
+  /** px */
+  | { readonly e: 'beastAppeared'; readonly kind: number; readonly x: number; readonly y: number }
+  /** px */
+  | { readonly e: 'beastMoved'; readonly x: number; readonly y: number }
+  | {
+      readonly e: 'beastStruck';
+      readonly kind: number;
+      readonly unitId: number;
+      readonly trick: number;
+    }
+  | { readonly e: 'beastKilled' }
+  | { readonly e: 'beastGone' }
+  | { readonly e: 'panicked'; readonly unitId: number }
   /** px burnt away at each end of the map, after the fire spread */
   | { readonly e: 'burnSpread'; readonly px: number }
   | { readonly e: 'gameOver'; readonly winner: number };

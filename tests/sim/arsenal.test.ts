@@ -14,7 +14,7 @@ function flatMask(): Mask {
 
 // Only the arsenal under test: no wind, kitchen, fire, barrels or reliquaries.
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const { kitchen, burn, barrels, crates, ...BASE } = CLASSIC_RULES;
+const { kitchen, burn, barrels, crates, beasts, ...BASE } = CLASSIC_RULES;
 const CALM: MatchRules = { ...BASE, wind: { ...CLASSIC_RULES.wind, max: 0 } };
 
 function duel(rules: MatchRules, a: number, b: number): Sim {

@@ -18,6 +18,7 @@ import type { Terrain } from '../sim/terrain/terrain.ts';
 import { UNIT_HALF_WIDTH, UNIT_HEIGHT, type Unit } from '../sim/units/unit.ts';
 import { BARREL_HEIGHT, BARREL_WIDTH } from '../content/barrels.ts';
 import { CRATE_HEIGHT, CRATE_WIDTH } from '../content/crates.ts';
+import { BeastKind, Trick } from '../content/beasts.ts';
 import { Commentary, type Pop } from '../ui/commentary.ts';
 import { FONT_CAPS, FONT_TEXT, FONT_TITLE } from '../ui/fonts.ts';
 import { GameUi, loadOverrides } from '../ui/game-ui.ts';
@@ -99,6 +100,8 @@ export class BattleScene extends Phaser.Scene {
   private scenery!: Scenery;
   private saver!: AutoSaver;
   private world!: Phaser.GameObjects.Graphics;
+  /** drawn position of the beast, easing after the sim's */
+  private beastShown: { x: number; y: number } | null = null;
   /** the burnt ends of the parchment, over the terrain, under the units */
   private burnGfx!: Phaser.GameObjects.Graphics;
   private debugGfx!: Phaser.GameObjects.Graphics;
@@ -424,7 +427,7 @@ export class BattleScene extends Phaser.Scene {
     this.scenery.update(delta, v.turn.wind, v.terrain);
     this.terrain.flush();
     this.updateCamera(alpha, delta);
-    this.drawWorld(alpha, time);
+    this.drawWorld(alpha, time, delta);
     this.drawBurn(time);
     if (this.debug) this.drawDebug();
     else {
@@ -610,7 +613,7 @@ export class BattleScene extends Phaser.Scene {
     cam.centerOn(cx + (f.x - cx) * k, cy + (f.y - cy) * k);
   }
 
-  private drawWorld(alpha: number, time: number): void {
+  private drawWorld(alpha: number, time: number, delta: number): void {
     const g = this.world;
     g.clear();
     const v = this.sim.view();
@@ -619,6 +622,7 @@ export class BattleScene extends Phaser.Scene {
     this.drawKitchen(g, time);
     this.drawBarrels(g);
     this.drawCrates(g, alpha, time);
+    this.drawBeast(g, delta, time);
     for (const u of v.units) {
       const label = this.labels.get(u.id);
       const [x, y] = this.pos(`u${u.id}`, alpha, u.x, u.y);
@@ -643,6 +647,7 @@ export class BattleScene extends Phaser.Scene {
         label.setText(`${unitName(u.id)}\n${u.hp}`);
         label.setColor(css(primary));
         label.setBackgroundColor(css(isActive ? COLORS.or : COLORS.ceruse));
+        this.drawAfflictions(g, u.id, x, y - UNIT_HEIGHT - 12 - label.height - 10);
       }
       if (isActive) {
         // Bobbing pointer above the name: who plays is never in doubt.
@@ -819,6 +824,89 @@ export class BattleScene extends Phaser.Scene {
         g.fillTriangle(x, y - 6, x, y + 6, x + inward * h * 0.55 - flick, y);
       }
     }
+  }
+
+  /**
+   * The beast of the margins: a hare with long ears or a snail with a spiral shell. It moves
+   * between turns in one go; the drawing hops (hare) or slides (snail) after it.
+   */
+  private drawBeast(g: Phaser.GameObjects.Graphics, delta: number, time: number): void {
+    const b = this.sim.view().beast;
+    if (!b) {
+      this.beastShown = null;
+      return;
+    }
+    const tx = b.x / SUBPX;
+    const ty = b.y / SUBPX;
+    const shown = this.beastShown ?? { x: tx, y: ty };
+    const hare = b.kind === BeastKind.Hare;
+    const k = Math.min(1, (delta / 1000) * (hare ? 3 : 0.8));
+    shown.x += (tx - shown.x) * k;
+    shown.y += (ty - shown.y) * k;
+    this.beastShown = shown;
+    const moving = Math.abs(tx - shown.x) > 2;
+    const facing = tx >= shown.x ? 1 : -1;
+    const x = shown.x;
+    const hop = hare && moving ? Math.abs(Math.sin(time / 110)) * 18 : 0;
+    const y = shown.y - hop;
+    g.lineStyle(2, COLORS.encre, 1);
+    if (hare) {
+      g.fillStyle(COLORS.terreOmbre, 1);
+      g.fillEllipse(x, y - 9, 26, 15);
+      g.strokeEllipse(x, y - 9, 26, 15);
+      g.fillEllipse(x + facing * 12, y - 16, 12, 10);
+      g.strokeEllipse(x + facing * 12, y - 16, 12, 10);
+      // Long ears, the pride of the margins.
+      for (const dx of [8, 13]) {
+        g.fillEllipse(x + facing * dx, y - 30, 5, 18);
+        g.strokeEllipse(x + facing * dx, y - 30, 5, 18);
+      }
+      g.fillStyle(COLORS.ceruse, 1);
+      g.fillCircle(x - facing * 13, y - 11, 4);
+      g.fillStyle(COLORS.encre, 1);
+      g.fillCircle(x + facing * 15, y - 18, 1.5);
+    } else {
+      g.fillStyle(COLORS.vertTendre, 1);
+      g.fillEllipse(x + facing * 4, y - 4, 30, 8);
+      g.strokeEllipse(x + facing * 4, y - 4, 30, 8);
+      g.lineBetween(x + facing * 16, y - 6, x + facing * 20, y - 16);
+      g.lineBetween(x + facing * 13, y - 6, x + facing * 14, y - 15);
+      g.fillStyle(COLORS.ocre, 1);
+      g.fillCircle(x - facing * 2, y - 14, 11);
+      g.strokeCircle(x - facing * 2, y - 14, 11);
+      g.beginPath();
+      g.arc(x - facing * 2, y - 14, 6, 0, Math.PI * 1.5);
+      g.strokePath();
+      g.beginPath();
+      g.arc(x - facing * 2, y - 14, 2.5, 0, Math.PI * 1.5);
+      g.strokePath();
+    }
+  }
+
+  /** Small marks over a unit's label for the tricks a beast played on it. */
+  private drawAfflictions(g: Phaser.GameObjects.Graphics, unitId: number, x: number, y: number) {
+    const marks = this.sim.view().afflictions.filter((a) => a.unitId === unitId);
+    marks.forEach((a, i) => {
+      const cx = x - (marks.length - 1) * 9 + i * 18;
+      g.lineStyle(2, COLORS.encre, 1);
+      if (a.trick === Trick.Slime) {
+        g.fillStyle(COLORS.vertTendre, 1);
+        g.fillCircle(cx, y, 6);
+        g.strokeCircle(cx, y, 6);
+      } else if (a.trick === Trick.Shell) {
+        g.fillStyle(COLORS.ocre, 1);
+        g.fillCircle(cx, y, 7);
+        g.strokeCircle(cx, y, 7);
+        g.strokeCircle(cx, y, 3);
+      } else if (a.trick === Trick.Bite) {
+        g.fillStyle(COLORS.vermillon, 1);
+        g.fillTriangle(cx - 6, y - 5, cx + 6, y - 5, cx, y + 6);
+      } else {
+        g.fillStyle(COLORS.or, 1);
+        g.fillRect(cx - 2, y - 8, 4, 10);
+        g.fillCircle(cx, y + 6, 2);
+      }
+    });
   }
 
   /** Reliquaries: a gilt coffer with a cross, under an angel's wings while it comes down. */

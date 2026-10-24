@@ -100,6 +100,23 @@ export interface Crate {
   landed: boolean;
 }
 
+/** A beast of the margins (GDD §4.10). kind: content/beasts.ts BeastKind. */
+export interface Beast {
+  readonly id: number;
+  readonly kind: number;
+  /** sub-px: base */
+  x: number;
+  y: number;
+}
+
+/** A lasting trick played by a beast on a unit. trick: content/beasts.ts Trick. */
+export interface Affliction {
+  readonly unitId: number;
+  readonly trick: number;
+  /** turns left */
+  turns: number;
+}
+
 export interface SimState {
   tick: number;
   readonly prng: PrngState;
@@ -118,6 +135,9 @@ export interface SimState {
   barrels: Barrel[];
   /** sorted by id */
   readonly crates: Crate[];
+  beast: Beast | null;
+  /** sorted by unit id, then trick */
+  readonly afflictions: Affliction[];
   /** px burnt away at each end of the map (rules.burn); 0 without it */
   burnPx: number;
   /** kitchens that appeared on each team's turn, for fairness (GDD §4.9) */

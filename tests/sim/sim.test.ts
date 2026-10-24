@@ -26,7 +26,7 @@ function flatMask(): Mask {
 
 // No field kitchen in the scripted duels: it would stand between the two units.
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const { kitchen, ...NO_KITCHEN } = CLASSIC_RULES;
+const { kitchen, crates, beasts, barrels, ...NO_KITCHEN } = CLASSIC_RULES;
 const RULES_60HP: MatchRules = { ...NO_KITCHEN, startHp: 60 };
 
 /** Two teams facing each other, 120 px apart: a level bow shot always connects. */

@@ -1,0 +1,298 @@
+{
+ "version": 1,
+ "config": {
+  "rules": {
+   "turn": {
+    "transitionTicks": 120,
+    "actionTicks": 2700,
+    "retreatTicks": 180,
+    "maxResolutionTicks": 1800,
+    "settleTicks": 120,
+    "moveAfterShot": true,
+    "retreatMaxTicks": 300,
+    "freeSelect": true,
+    "noRepeat": true
+   },
+   "unitsPerTeam": 4,
+   "startHp": 100,
+   "unit": {
+    "walkSpeed": 384,
+    "maxStep": 12,
+    "slopeWindow": 7,
+    "jumpForward": {
+     "vx": 2100,
+     "vy": -2304
+    },
+    "jumpBack": {
+     "vx": 256,
+     "vy": -2688
+    },
+    "fallSafeHeight": 160,
+    "fallPxPerHp": 8,
+    "fallMaxDamage": 30,
+    "moveBudget": 280,
+    "slopeTakeoff": true,
+    "turnTicks": 12
+   },
+   "wind": {
+    "max": 10,
+    "accelPerUnit": 2
+   },
+   "explosion": {
+    "knockbackPerHp": 40,
+    "liftPct": 35
+   },
+   "weapons": [
+    {
+     "id": "bow",
+     "behavior": "directHit",
+     "projectileRadius": 0,
+     "windPct": 100,
+     "maxSpeed": 6144,
+     "damage": 35,
+     "explosionRadius": 0,
+     "chipRadius": 3,
+     "knockbackPct": 60,
+     "bouncePct": 0,
+     "defaultFuse": 0,
+     "ammo": -1
+    },
+    {
+     "id": "sling",
+     "behavior": "directHit",
+     "projectileRadius": 2,
+     "windPct": 100,
+     "maxSpeed": 5120,
+     "damage": 25,
+     "explosionRadius": 0,
+     "chipRadius": 5,
+     "knockbackPct": 250,
+     "bouncePct": 0,
+     "defaultFuse": 0,
+     "ammo": -1
+    },
+    {
+     "id": "greekFire",
+     "behavior": "fusedBouncer",
+     "projectileRadius": 5,
+     "windPct": 0,
+     "maxSpeed": 4608,
+     "damage": 45,
+     "explosionRadius": 60,
+     "knockbackPct": 100,
+     "bouncePct": 45,
+     "defaultFuse": 180,
+     "ammo": 3
+    },
+    {
+     "id": "crossbow",
+     "behavior": "directHit",
+     "projectileRadius": 0,
+     "windPct": 40,
+     "maxSpeed": 7680,
+     "damage": 45,
+     "explosionRadius": 0,
+     "chipRadius": 4,
+     "knockbackPct": 80,
+     "bouncePct": 0,
+     "defaultFuse": 0,
+     "ammo": 2,
+     "fixedPower": true
+    },
+    {
+     "id": "pitchPot",
+     "behavior": "cluster",
+     "projectileRadius": 5,
+     "windPct": 0,
+     "maxSpeed": 4352,
+     "damage": 30,
+     "explosionRadius": 50,
+     "knockbackPct": 100,
+     "bouncePct": 40,
+     "defaultFuse": 180,
+     "ammo": 1,
+     "fragments": {
+      "count": 5,
+      "damage": 15,
+      "radius": 30,
+      "speed": 1536
+     }
+    },
+    {
+     "id": "mace",
+     "behavior": "melee",
+     "projectileRadius": 0,
+     "windPct": 0,
+     "maxSpeed": 0,
+     "damage": 30,
+     "explosionRadius": 0,
+     "knockbackPct": 320,
+     "bouncePct": 0,
+     "defaultFuse": 0,
+     "ammo": -1,
+     "reach": 34
+    }
+   ],
+   "kitchen": {
+    "healHp": 30,
+    "chanceStartPermille": 250,
+    "chanceDecayPct": 80,
+    "chanceFloorPermille": 20,
+    "lifeRounds": 2,
+    "placeTolerancePct": 10
+   },
+   "burn": {
+    "startRound": 2,
+    "advancePx": 120,
+    "damage": 20
+   },
+   "barrels": {
+    "count": 5,
+    "damage": 40,
+    "radius": 70,
+    "chainDelay": 8
+   },
+   "crates": {
+    "chancePermille": 300,
+    "maxOnMap": 3,
+    "trapPermille": 100,
+    "balmPermille": 350,
+    "balmHp": 25,
+    "fallSpeed": 256,
+    "windDrift": 20,
+    "blastDamage": 15,
+    "blastRadius": 40,
+    "trapDamage": 35,
+    "trapRadius": 60
+   },
+   "beasts": {
+    "spawnPermille": 1000,
+    "hareStep": 300,
+    "snailStep": 60,
+    "hareClimb": 40,
+    "kickDamage": 15,
+    "kickSpeed": 2400,
+    "slimeTurns": 2,
+    "biteDamage": 3,
+    "biteTurns": 3
+   }
+  },
+  "teams": [
+   {
+    "spawns": [
+     300,
+     600
+    ]
+   },
+   {
+    "spawns": [
+     1000,
+     1300
+    ]
+   }
+  ]
+ },
+ "seed": 1250,
+ "mapId": "hills",
+ "commands": [
+  [
+   121,
+   {
+    "t": "skip"
+   }
+  ],
+  [
+   362,
+   {
+    "t": "skip"
+   }
+  ],
+  [
+   603,
+   {
+    "t": "skip"
+   }
+  ],
+  [
+   844,
+   {
+    "t": "skip"
+   }
+  ],
+  [
+   1085,
+   {
+    "t": "skip"
+   }
+  ],
+  [
+   1326,
+   {
+    "t": "skip"
+   }
+  ],
+  [
+   1567,
+   {
+    "t": "skip"
+   }
+  ],
+  [
+   1808,
+   {
+    "t": "skip"
+   }
+  ],
+  [
+   2049,
+   {
+    "t": "skip"
+   }
+  ],
+  [
+   2355,
+   {
+    "t": "skip"
+   }
+  ],
+  [
+   2596,
+   {
+    "t": "skip"
+   }
+  ],
+  [
+   2837,
+   {
+    "t": "skip"
+   }
+  ],
+  [
+   3148,
+   {
+    "t": "skip"
+   }
+  ],
+  [
+   3455,
+   {
+    "t": "skip"
+   }
+  ],
+  [
+   3696,
+   {
+    "t": "skip"
+   }
+  ],
+  [
+   3937,
+   {
+    "t": "skip"
+   }
+  ]
+ ],
+ "endTick": 4125,
+ "description": "Beasts of the margins (GDD §4.10), one out at every chance: they hunt the nearest unit between turns and play their tricks; everybody passes for 16 turns.",
+ "expectedHash": "800709c7"
+}

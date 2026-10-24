@@ -335,7 +335,10 @@ export class GameUi {
     const mate = !active && u.team === v.turn.activeTeam && v.turn.phase !== 'gameOver';
     const switchable = mate && canSwitchUnit(v) && u.id !== v.turn.restingUnitId;
     const resting = mate && u.id === v.turn.restingUnitId;
-    const signature = `${u.hp}|${u.alive}|${u.grounded}|${active}|${switchable}|${resting}|${v.turn.weapon}|${v.turn.phase}`;
+    const marks = v.afflictions
+      .filter((a) => a.unitId === u.id)
+      .map((a) => `${a.trick}:${a.turns}`);
+    const signature = `${marks.join(',')}|${u.hp}|${u.alive}|${u.grounded}|${active}|${switchable}|${resting}|${v.turn.weapon}|${v.turn.phase}`;
     if (signature === this.cardSignature) return;
     this.cardSignature = signature;
 
@@ -382,6 +385,9 @@ export class GameUi {
       el('div', '', `${t('card.hp')} : ${u.hp} / ${v.rules.startHp}`),
       hpBar,
       el('div', '', `${t('card.state')} : ${state}`),
+      ...v.afflictions
+        .filter((a) => a.unitId === u.id)
+        .map((a) => el('div', 'note', t(`card.trick.${a.trick}`, { turns: a.turns }))),
       el('h3', '', t('card.class')),
       el('div', '', t('card.noClass')),
       el('h3', '', t('card.rules')),

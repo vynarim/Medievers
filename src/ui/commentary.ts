@@ -145,6 +145,18 @@ export class Commentary {
           }
           break;
         }
+        case 'beastAppeared':
+          this.hud.say(pick(e.kind === 0 ? 'quip.hare' : 'quip.snail'), now);
+          break;
+        case 'beastStruck':
+          this.hud.say(pick(`quip.trick${e.trick}`, { name: unitName(e.unitId) }), now);
+          break;
+        case 'beastKilled':
+          this.hud.say(pick('quip.beastKilled'), now);
+          break;
+        case 'panicked':
+          this.hud.say(pick('quip.panicked', { name: unitName(e.unitId) }), now);
+          break;
         case 'crateDropped':
           this.hud.say(pick('quip.crate'), now);
           break;

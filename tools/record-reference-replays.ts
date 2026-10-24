@@ -3,6 +3,7 @@
 // Existing files are kept unless --force is given: a reference hash only changes after an
 // intended rule change, with `regen-hash: <reason>` in the commit message (.claude/rules/tests.md).
 import { existsSync, writeFileSync } from 'node:fs';
+import { BEAST_RULES } from '../src/content/beasts.ts';
 import { CRATE_RULES } from '../src/content/crates.ts';
 import { KITCHEN_RULES } from '../src/content/kitchen.ts';
 import { CLASSIC_RULES } from '../src/content/rules.ts';
@@ -255,6 +256,25 @@ const SCRIPTS: readonly Script[] = [
           { t: 'aim', angle: team === 0 ? 3800 - turn * 20 : 2340 + turn * 20 },
           { t: 'fire', power: 640 + turn * 30 },
         ]);
+        r.until('transition');
+      }
+    },
+  },
+  {
+    name: 'margins',
+    description:
+      'Beasts of the margins (GDD §4.10), one out at every chance: they hunt the nearest unit ' +
+      'between turns and play their tricks; everybody passes for 16 turns.',
+    mapId: 'hills',
+    seed: 1250,
+    config: {
+      rules: { ...CLASSIC_RULES, beasts: { ...BEAST_RULES, spawnPermille: 1000 } },
+      teams: [{ spawns: [300, 600] }, { spawns: [1000, 1300] }],
+    },
+    play: (r) => {
+      for (let turn = 0; turn < 16; turn++) {
+        r.until('action');
+        r.step([{ t: 'skip' }]);
         r.until('transition');
       }
     },

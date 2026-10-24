@@ -11,6 +11,7 @@ import { SUBPX, idiv, mulQ14, subToPx } from '../math/fixed.ts';
 import { isqrt } from '../math/isqrt.ts';
 import { queueExplosion } from '../explosions/explosion.ts';
 import { barrelOnSegment, igniteBarrel } from '../barrels.ts';
+import { beastOnSegment, killBeast } from '../beasts.ts';
 import { crateOnSegment, burstCrate } from '../crates.ts';
 import { segmentTouchesKitchen, useKitchen } from '../kitchen.ts';
 import { carveCircle } from '../terrain/terrain.ts';
@@ -81,6 +82,7 @@ function strike(state: SimState, u: Unit, def: WeaponDef, angle: number, events:
   const crate = crateOnSegment(state, u.x, cy, x, y);
   if (crate !== null) burstCrate(state, crate, events);
   if (segmentTouchesKitchen(state, u.x, cy, x, y)) useKitchen(state, events);
+  if (beastOnSegment(state, u.x, cy, x, y)) killBeast(state, events);
   if (def.chipRadius) carveCircle(state.terrain, subToPx(x), subToPx(y), def.chipRadius);
 }
 
@@ -164,6 +166,11 @@ export function stepShots(state: SimState, events: SimEvent[]): void {
     const barrel = barrelOnSegment(state, fromX, fromY, p.x, p.y);
     if (barrel !== null) {
       igniteBarrel(state, barrel, 1);
+      if (stops) impact = { kind: 'outOfMap', x: p.x, y: p.y };
+    }
+    // A shot that touches a beast of the margins puts it down (GDD §4.10).
+    if (beastOnSegment(state, fromX, fromY, p.x, p.y)) {
+      killBeast(state, events);
       if (stops) impact = { kind: 'outOfMap', x: p.x, y: p.y };
     }
     // A shot that touches a reliquary bursts it (GDD §4.5).

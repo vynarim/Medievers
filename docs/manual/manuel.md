@@ -179,6 +179,17 @@ De temps en temps, au début d'un tour, **un foyer avec un chaudron** s'installe
 - Une seule cuisine à la fois ; si personne n'y touche, elle s'éteint au bout de deux tours de table.
 - Toutes ces valeurs se règlent dans l'onglet **Cuisine de campagne** des réglages. Une partie commencée avant l'arrivée de la cuisine n'en aura pas : recommencez la partie pour la voir.
 
+### Les bêtes des marges {{st:jeu}}
+
+Les lièvres et les escargots qui peuplent les marges du manuscrit se mêlent parfois à la bataille : à la fin d'un tour, il y a 8 % de chances qu'une bête sorte d'un bord de la carte. Elle n'est d'aucun camp. À la fin de chaque tour, elle avance vers le combattant le plus proche : le **lièvre** bondit de 300 pixels (mais un mur l'arrête), l'**escargot** rampe de 60 pixels (et passe à travers tout). Quand elle l'atteint, elle lui joue un tour au hasard, puis disparaît :
+
+| Bête | Tours possibles |
+|---|---|
+| **Lièvre** | *Ruade* : 15 PV et une belle projection · *Chapardage* : il vole une munition de votre arme la plus rare · *Panique* : au début de son prochain tour, la victime saute en arrière malgré elle |
+| **Escargot** | *Bave* : pendant deux de ses tours, sa marche compte double · *Coquille* : à son prochain tour, ni marche ni saut (il peut tirer) · *Morsure lente* : 3 PV à chaque fin de tour, trois fois |
+
+Un tir, un coup de masse ou une explosion qui touche la bête la renvoie dans sa marge. Les effets en cours s'affichent au-dessus du nom du combattant et dans sa fiche.
+
 ### Le parchemin brûle {{st:jeu}}
 
 Après deux tours de table, un moine maladroit renverse sa chandelle : **la carte prend feu à ses deux bouts**. À la fin de chaque tour de table, le feu mange 120 pixels de plus de chaque côté. Un combattant qui se trouve dans la partie brûlée à la fin d'un tour perd **20 PV**, à chaque tour. Les armées n'ont donc pas intérêt à rester sur les bords : il faut se rapprocher de l'ennemi. Une cuisine de campagne rattrapée par le feu s'éteint. Réglages : onglet **Parchemin en feu**.

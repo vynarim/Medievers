@@ -1,6 +1,7 @@
 // Match rules (GDD §2, §6): every tunable value of a match. They travel in the match config,
 // so a game log replays with the values it was played with. Times in ticks (60 per second).
 import { BARREL_RULES, type BarrelRules } from './barrels.ts';
+import { BEAST_RULES, type BeastRules } from './beasts.ts';
 import { BURN_RULES, type BurnRules } from './burn.ts';
 import { CRATE_RULES, type CrateRules } from './crates.ts';
 import { KITCHEN_RULES, type KitchenRules } from './kitchen.ts';
@@ -70,6 +71,8 @@ export interface MatchRules {
   readonly barrels?: BarrelRules;
   /** reliquaries brought down by angels (GDD §4.5); absent from older logs: none */
   readonly crates?: CrateRules;
+  /** hares and snails out of the margins (GDD §4.10); absent from older logs: none */
+  readonly beasts?: BeastRules;
 }
 
 /** « Classique » rules scheme (GDD §6). */
@@ -95,6 +98,7 @@ export const CLASSIC_RULES: MatchRules = {
   burn: BURN_RULES,
   barrels: BARREL_RULES,
   crates: CRATE_RULES,
+  beasts: BEAST_RULES,
 };
 
 /** Index of a weapon in the match arsenal; throws for a weapon the match does not have. */
