@@ -218,4 +218,13 @@ Medievers est développé avec l'aide de [Claude Code](https://claude.com/claude
 - **Source d'inspiration** : la Bible de Maciejowski, dite aussi *Crusader Bible* ou *Morgan Picture Bible*, est conservée à la Morgan Library & Museum de New York sous la cote **MS M.638** : [notice du manuscrit](https://www.themorgan.org/manuscript/158530), [feuillets en ligne](https://www.themorgan.org/collection/Crusader-Bible). Voir aussi [Wikipédia](https://fr.wikipedia.org/wiki/Bible_de_Maciejowski).
 - L'œuvre est du domaine public, mais les conditions de réutilisation des photographies numériques de la Morgan restent à vérifier. Les scans servent donc **uniquement de référence de style** et ne sont jamais intégrés au jeu.
 - Les maisons héraldiques sont **fictives**. Les décors reprennent des épisodes du manuscrit sans aucune narration religieuse.
-- **Licence** : pas encore définie. En attendant, tous droits réservés.
+
+## Licence
+
+| Partie | Licence |
+|---|---|
+| Code source, configuration, outils, tests et documentation | [MIT](LICENSE) |
+| Assets du jeu (`assets/`, `public/assets/`) : illustrations, rigs, cartes, musique, sons | **Tous droits réservés** ([assets/LICENSE.md](assets/LICENSE.md)) |
+| Éléments de tiers | Leur propre licence, listée dans [CREDITS.md](CREDITS.md) |
+
+Le code est libre de réutilisation. Les graphismes et le son, qui font l'identité du jeu, ne le sont pas sans autorisation.
