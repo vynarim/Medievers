@@ -38,6 +38,11 @@ export interface StructureRules {
   /** HP: least and most a falling block takes from a unit */
   readonly crushMin: number;
   readonly crushMax: number;
+  /**
+   * px: height of the towers the match builds on the map (placements with `build`), above the
+   * ground at their middle (2026-10-25)
+   */
+  readonly towerHeight: number;
 }
 
 export const STRUCTURE_RULES: StructureRules = {
@@ -54,14 +59,25 @@ export const STRUCTURE_RULES: StructureRules = {
   crushPxPerHp: 4,
   crushMin: 10,
   crushMax: 40,
+  towerHeight: 320,
 };
 
-/** A structure as a map declares it: px rectangle [x, y, w, h] over its pixels in the mask. */
-export interface StructurePlacement {
-  readonly id: number;
-  readonly type: StructureType;
-  readonly rect: readonly [number, number, number, number];
-}
+/**
+ * A structure as a map declares it: either a px rectangle [x, y, w, h] over its pixels in the
+ * mask, or a tower the match builds on the ground (`build`), as high as rules.towerHeight.
+ */
+export type StructurePlacement =
+  | {
+      readonly id: number;
+      readonly type: StructureType;
+      readonly rect: readonly [number, number, number, number];
+    }
+  | {
+      readonly id: number;
+      readonly type: 'tower';
+      /** px: left edge and width of the tower; the side of its ladder (-1 west, 1 east) */
+      readonly build: { readonly x: number; readonly width: number; readonly ladder: -1 | 1 };
+    };
 
 /** Structure states, as the sim stores them. */
 export const StructureState = { Intact: 0, Cracked: 1, Ruin: 2, Fallen: 3 } as const;

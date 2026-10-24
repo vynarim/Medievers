@@ -1277,5 +1277,6 @@
   "quip.draw.3": "Aucun vainqueur. Le mouton, lui, s'estime gagnant.",
   "quip.draw.4": "Égalité parfaite : zéro partout, et beaucoup de fumée.",
   "quip.draw.5": "La bataille est finie faute de combattants. Les moines notent « match nul » et vont dîner.",
-  "quip.draw.6": "Il ne reste que le champ, l'herbe et un vague remords."
+  "quip.draw.6": "Il ne reste que le champ, l'herbe et un vague remords.",
+  "tuning.towerHeight": "Hauteur des tours"
 }

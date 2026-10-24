@@ -102,6 +102,11 @@ export function fullTerrainHash(t: Terrain): number {
   return h;
 }
 
+/** Every chunk's hash must be computed again (the terrain was edited in place). */
+export function markAllDirty(t: Terrain): void {
+  t.hashDirty.fill(1);
+}
+
 function markDirty(t: Terrain, x0: number, y0: number, x1: number, y1: number): void {
   for (let cy = y0 >> CHUNK_SHIFT; cy <= y1 >> CHUNK_SHIFT; cy++) {
     for (let cx = x0 >> CHUNK_SHIFT; cx <= x1 >> CHUNK_SHIFT; cx++) {

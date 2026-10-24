@@ -14,7 +14,14 @@ import type { Explosion } from './explosions/explosion.ts';
 import { SUBPX, idiv, subToPx } from './math/fixed.ts';
 import type { Block, SimState, Structure } from './state.ts';
 import { Material } from './terrain/material.ts';
-import { isSolid, liftRect, materialOf, stamp, type Terrain } from './terrain/terrain.ts';
+import {
+  isSolid,
+  liftRect,
+  markAllDirty,
+  materialOf,
+  stamp,
+  type Terrain,
+} from './terrain/terrain.ts';
 import {
   GRAVITY,
   TERMINAL_VELOCITY,
@@ -34,6 +41,65 @@ const CRUSH_PUSH = 3 * SUBPX;
 /** px a unit buried by rubble may be lifted to get free */
 const UNBURY = 48;
 
+/** px: thickness of a built tower's solid parapet, the floor of its battlement */
+const PARAPET = 14;
+/** px: merlons on the parapet, high and wide, every MERLON_STEP px */
+const MERLON_H = 18;
+const MERLON_W = 16;
+const MERLON_STEP = 32;
+/** px: battlement kept free of merlons on the ladder side, to step on from the ladder */
+const LANDING = 40;
+/** px: how deep a built tower goes under the lowest ground of its foot */
+const FOOTING = 20;
+/** px: gap between a tower's face and its ladder, and the ladder's width */
+const LADDER_GAP = 6;
+const LADDER_W = 4;
+
+/** Highest solid row of column x, or the map height. */
+function groundAt(t: Terrain, x: number): number {
+  for (let y = 0; y < t.height; y++) if (isSolid(t, x, y)) return y;
+  return t.height;
+}
+
+/**
+ * Builds a tower on the ground (2026-10-25): a body of masonry seen behind the play (units and
+ * shots pass in front of it), a solid parapet with merlons on top to stand on, and a ladder up
+ * one face. Returns the rectangle it covers, ladder included.
+ */
+function buildTower(
+  t: Terrain,
+  x0: number,
+  width: number,
+  height: number,
+  ladder: -1 | 1,
+): [number, number, number, number] {
+  const x1 = x0 + width;
+  let foot = 0;
+  for (let x = x0; x < x1; x++) foot = Math.max(foot, groundAt(t, x));
+  const top = Math.max(MERLON_H + 1, groundAt(t, x0 + (width >> 1)) - height);
+  const bottom = Math.min(t.height, foot + FOOTING);
+  const put = (x: number, y: number, m: number): void => {
+    if (x < 0 || y < 0 || x >= t.width || y >= t.height) return;
+    const i = y * t.width + x;
+    if (t.data[i] === Material.Air) t.data[i] = m;
+  };
+  for (let x = x0; x < x1; x++) {
+    const free = ladder < 0 ? x < x0 + LANDING : x >= x1 - LANDING;
+    const merlon = !free && (x - x0) % MERLON_STEP < MERLON_W;
+    for (let y = merlon ? top - MERLON_H : top; y < bottom; y++) {
+      put(x, y, y < top + PARAPET ? Material.BuiltStone : Material.Backdrop);
+    }
+  }
+  const lx = ladder < 0 ? x0 - LADDER_GAP - LADDER_W : x1 + LADDER_GAP;
+  for (let x = lx; x < lx + LADDER_W; x++) {
+    for (let y = top; y < groundAt(t, x); y++) put(x, y, Material.Ladder);
+  }
+  markAllDirty(t);
+  const left = Math.min(x0, lx);
+  const right = Math.max(x1, lx + LADDER_W);
+  return [left, top - MERLON_H, right - left, bottom - top + MERLON_H];
+}
+
 /** Builds the ownership layer and the structures of a new match. */
 export function initStructures(
   terrain: Terrain,
@@ -44,12 +110,21 @@ export function initStructures(
   const owners = new Uint8Array(terrain.width * terrain.height);
   const structures: Structure[] = [];
   for (const p of [...placements].sort((a, b) => a.id - b.id)) {
-    const [x0, y0, w, h] = p.rect;
+    const rect =
+      'build' in p
+        ? buildTower(terrain, p.build.x, p.build.width, rules.towerHeight, p.build.ladder)
+        : p.rect;
+    const [x0, y0, w, h] = rect;
     for (let y = Math.max(0, y0); y < Math.min(terrain.height, y0 + h); y++) {
       for (let x = Math.max(0, x0); x < Math.min(terrain.width, x0 + w); x++) {
         // Masonry, timber and ladders belong to a structure, never the ground it stands on.
         const m = materialOf(terrain, x, y);
-        if (m === Material.BuiltStone || m === Material.Wood || m === Material.Ladder) {
+        if (
+          m === Material.BuiltStone ||
+          m === Material.Backdrop ||
+          m === Material.Wood ||
+          m === Material.Ladder
+        ) {
           owners[y * terrain.width + x] = p.id;
         }
       }
@@ -57,7 +132,7 @@ export function initStructures(
     structures.push({
       id: p.id,
       type: p.type,
-      rect: p.rect,
+      rect,
       hp: rules.defs[p.type].hp,
       state: StructureState.Intact,
       struck: [],

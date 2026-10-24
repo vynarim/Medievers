@@ -99,6 +99,7 @@ export interface Sim {
   - `3` pierre bâtie (mur posé, destructible, résistance ×1,5)
   - `4` bois (destructible)
   - `5` échelle (praticable, non solide pour les projectiles)
+  - `6` maçonnerie de fond (corps des tours, 2026-10-25 : dessinée, destructible, résistance ×1,5, ni les unités ni les projectiles ne s'y arrêtent)
 - Le masque est découpé en **chunks de 256 × 256**, chacun avec un flag `dirty` et un hash.
 - Le masque source est un PNG dont les couleurs sont fixes par matériau (table dans `content/materials.ts`). Il est converti en `Uint8Array` au chargement, avec un cache possible en `.bin` lors du build (P1).
 
@@ -148,6 +149,7 @@ export interface Sim {
 
 ### 5.4 Usure et structures (GDD §4.7)
 - **Usure** : `WeaponDef.chipRadius` (px) creuse un disque à l'impact d'un projectile sans explosion, avec la résistance du matériau comme pour les explosions. 0 désactive.
+- **Tours construites** (2026-10-25) : une structure peut être déclarée `{ id, type: 'tower', build: { x, width, ladder } }` ; le sim la construit au début de la partie, haute de `structures.towerHeight` px au-dessus du sol en son milieu : corps en maçonnerie de fond, chemin de ronde solide de 14 px avec merlons (sauf 40 px côté échelle), échelle contre une face, fondation 20 px sous le sol le plus bas.
 - **Calque d'appartenance** : un `Uint8Array` parallèle au masque donne l'id de structure de chaque pixel (0 = aucune). Il est produit au chargement à partir de `map.json` (`structures: [{ "id", "type", "rect" }]`, ou un `structures.png` si les formes l'exigent).
 - **État** : `structures: { id, type, hp, state }[]`, trié par id, inclus dans le hash. Un coup applique ses dégâts aux structures dont l'emprise croise le rayon d'impact (une seule fois par structure et par coup), pondérés par `StructureDef.damagePct[weapon]`.
 - **Effondrement** : à 0 PV, les pixels restants de la structure (pierre bâtie, bois, échelles du rectangle déclaré) sont retirés du masque et découpés en blocs de 32 × 32 au plus. Ils basculent du côté opposé au coup (vitesse latérale proportionnelle à la hauteur au-dessus de la base) et ne s'impriment qu'à 40 % de leur hauteur en gravats. Chaque bloc est un corps entier (position et vitesse en sub-px, sans rotation) qui tombe sous la gravité, inflige des dégâts de chute aux unités qu'il traverse, puis s'imprime dans le masque en terre (gravats) quand il se pose. L'ordre est celui des ids de bloc ; la résolution du tour attend que tous les blocs soient posés.

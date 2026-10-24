@@ -41,6 +41,8 @@ const MATERIAL_RGB: Record<number, readonly Rgb[]> = {
   [Material.BuiltStone]: [rgb(COLORS.ceruse), pale(COLORS.velin, 0.2)],
   [Material.Wood]: [rgb(COLORS.terreOmbre), pale(COLORS.ocre, 0.1)],
   [Material.Ladder]: [rgb(COLORS.or), rgb(COLORS.ocre)],
+  // Masonry behind the play: the same ashlar, a shade darker, so it reads as background.
+  [Material.Backdrop]: [pale(COLORS.roche, 0.55), pale(COLORS.velin, 0.05)],
 };
 const FALLBACK: readonly Rgb[] = [rgb(COLORS.roseGarance)];
 const HIGHLIGHT = rgb(COLORS.ceruse);
@@ -215,7 +217,7 @@ export class TerrainLayer {
         else if (mat === Material.Earth && !solidAt(wx, wy - GRASS_DEPTH)) {
           // Grass in tufts: lighter blades every few px.
           c = (wx + (wy >> 2)) % 7 < 2 ? GRASS_LIGHT : GRASS;
-        } else if (mat === Material.BuiltStone) {
+        } else if (mat === Material.BuiltStone || mat === Material.Backdrop) {
           // Ashlar: courses of dressed stones, mortar joints, a lighter top edge to each stone.
           const course = Math.floor(wy / COURSE);
           const sx = (wx + (course & 1) * (STONE >> 1)) % STONE;

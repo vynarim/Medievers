@@ -151,6 +151,7 @@ export function tuningGroups(rules: MatchRules): TuningGroup[] {
           {
             titleKey: 'tuning.group.structures',
             fields: [
+              field('structures.towerHeight', 'tuning.towerHeight', 'units.px', 1, 10, 60, 900),
               field('structures.defs.tower.hp', 'tuning.towerHp', 'units.hp', 1, 10, 1, 2000),
               field('structures.defs.wall.hp', 'tuning.wallHp', 'units.hp', 1, 10, 1, 2000),
               field('structures.defs.bridge.hp', 'tuning.bridgeHp', 'units.hp', 1, 10, 1, 2000),

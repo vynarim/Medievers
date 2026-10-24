@@ -27,6 +27,10 @@ const MATERIAL_NAMES: Record<MaterialId, [string, string]> = {
   [Material.BuiltStone]: ['Pierre bâtie', 'Les murs posés et les remparts.'],
   [Material.Wood]: ['Bois', 'Planches, coques et échafaudages.'],
   [Material.Ladder]: ['Échelle', 'On y grimpe ; les projectiles la traversent.'],
+  [Material.Backdrop]: [
+    'Maçonnerie de fond',
+    'Le corps des tours : on passe devant, les tirs aussi ; seul le chemin de ronde arrête.',
+  ],
 };
 
 function materialsTable(): string {

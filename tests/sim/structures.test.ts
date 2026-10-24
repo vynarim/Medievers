@@ -128,3 +128,49 @@ describe('structures with hit points (GDD §4.7)', () => {
     }
   });
 });
+
+describe('towers built by the match (2026-10-25)', () => {
+  function flat(): Sim {
+     
+    const rules: MatchRules = {
+      ...CALM,
+      structures: { ...STRUCTURE_RULES, towerHeight: 200 },
+    };
+    return new Sim(
+      {
+        rules,
+        teams: [{ spawns: [400] }, { spawns: [1000] }],
+        structures: [{ id: 1, type: 'tower', build: { x: 600, width: 100, ladder: -1 } }],
+      },
+      1,
+      loadMask('flat'),
+    );
+  }
+
+  it('rise to the set height, with a solid parapet, a body behind the play and a ladder', () => {
+    const v = flat().view();
+    const t = v.terrain;
+    const at = (x: number, y: number) => t.data[y * t.width + x];
+    // Ground at 500: the parapet's top is 200 px above it.
+    expect(at(650, 299)).toBe(Material.Air);
+    expect(at(650, 300)).toBe(Material.BuiltStone);
+    expect(at(650, 400)).toBe(Material.Backdrop);
+    expect(at(591, 400)).toBe(Material.Ladder);
+    const [x, y, w, h] = v.structures[0]?.rect ?? [0, 0, 0, 0];
+    expect(x).toBeLessThanOrEqual(590);
+    expect(y).toBeLessThan(300);
+    expect(x + w).toBe(700);
+    expect(y + h).toBeGreaterThan(500);
+  });
+
+  it('let units walk in front of them', () => {
+    const sim = flat();
+    for (let i = 0; i < 2000 && sim.view().turn.phase !== 'action'; i++) sim.step();
+    sim.step([{ t: 'move', dir: 1 }]);
+    for (let i = 0; i < 200; i++) sim.step();
+    const u = sim.view().units[0];
+    // Past the tower's west face (600) without climbing it.
+    expect((u?.x ?? 0) >> 8).toBeGreaterThan(640);
+    expect((u?.y ?? 0) >> 8).toBe(500);
+  });
+});

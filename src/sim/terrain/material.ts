@@ -7,11 +7,13 @@ export const Material = {
   BuiltStone: 3,
   Wood: 4,
   Ladder: 5,
+  /** masonry seen behind the play (a tower's body): drawn, not an obstacle (2026-10-25) */
+  Backdrop: 6,
 } as const;
 
 export type MaterialId = (typeof Material)[keyof typeof Material];
 
-export const MATERIAL_COUNT = 6;
+export const MATERIAL_COUNT = 7;
 
 /** Colour of a material in the source mask PNG. */
 export interface MaskColor {

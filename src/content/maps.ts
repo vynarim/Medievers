@@ -29,9 +29,9 @@ export const GREYBOX_MAPS: readonly MapDef[] = [
       [3420, 2950, 2620],
     ],
     structures: [
-      { id: 1, type: 'tower', rect: [1328, 860, 132, 460] },
+      { id: 1, type: 'tower', build: { x: 1340, width: 120, ladder: -1 } },
       { id: 2, type: 'wall', rect: [1900, 700, 40, 600] },
-      { id: 3, type: 'tower', rect: [2560, 840, 142, 480] },
+      { id: 3, type: 'tower', build: { x: 2560, width: 130, ladder: 1 } },
     ],
   },
 ];

@@ -8,6 +8,7 @@ export const MASK_PALETTE: readonly MaskColor[] = [
   { material: Material.BuiltStone, r: 200, g: 196, b: 184 }, // #c8c4b8
   { material: Material.Wood, r: 176, g: 112, b: 48 }, // #b07030
   { material: Material.Ladder, r: 255, g: 0, b: 255 }, // #ff00ff
+  { material: Material.Backdrop, r: 160, g: 154, b: 140 }, // #a09a8c
 ];
 
 export interface MaterialDef {
@@ -35,6 +36,7 @@ export const MATERIALS: readonly MaterialDef[] = [
   },
   { id: Material.Wood, solid: true, climbable: false, destructible: true, resistancePct: 100 },
   { id: Material.Ladder, solid: false, climbable: true, destructible: true, resistancePct: 100 },
+  { id: Material.Backdrop, solid: false, climbable: false, destructible: true, resistancePct: 150 },
 ];
 
 /** MATERIALS reshaped for the terrain, indexed by material id. */
