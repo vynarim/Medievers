@@ -9,8 +9,7 @@
 | Rendu / input / audio / scènes | Phaser | **À figer en M0** : vérifier l'état de Phaser 3.x vs 4.x (stabilité, API WebGL/render textures, support tactile) avant de choisir. Ne pas supposer. |
 | Tests | Vitest (unitaires + déterminisme), Playwright (smoke E2E, P1) | |
 | Workers | Web Worker natif (`new Worker(new URL(...), {type:'module'})`) | IA et validation de cartes |
-| Réseau LAN | WebRTC `RTCDataChannel` | §8 |
-| QR | Bibliothèque légère de génération et de lecture de QR (à choisir en M9) | Lecture caméra optionnelle, le copier-coller reste le fallback |
+| En ligne | Firebase : Realtime Database, Authentication (anonyme), Hosting ; projet `videogames-06` | §8, ADR 0002 |
 | Lint / format | ESLint + Prettier, règle custom interdisant les imports interdits dans `src/sim/` | |
 | PWA | P1 : manifest + service worker (installation tablette, plein écran) | |
 
@@ -66,7 +65,7 @@ export interface Sim {
 ```
 
 - `MatchConfig` : équipes, classes, schéma de règles, seed.
-- Le **log de partie** est `{ version, config, seed, mapId, commands: Array<[tick, GameCommand]> }`. Il sert à la fois de replay, de fixture de test et de flux LAN.
+- Le **log de partie** est `{ version, config, seed, mapId, commands: Array<[tick, GameCommand]> }`. Il sert à la fois de replay, de fixture de test et de reprise d'une partie en ligne.
 
 ## 3. Déterminisme
 
@@ -194,32 +193,44 @@ public/assets/maps/<mapId>/
 - Variété : 3 à 4 têtes par classe, 2 coiffes, symétrie gauche/droite par `scaleX = -1`.
 - Alternative possible si l'outillage le justifie : Spine ou DragonBones. Il faut alors vérifier la licence du runtime Spine (payante pour un usage commercial) et la maintenance de DragonBones avant de choisir. **La V1 part sur le format maison**, plus simple à piloter avec Claude Code.
 
-## 8. LAN (jalon M9)
+## 8. En ligne (jalon M9)
 
-### 8.1 Option A : WebRTC sans serveur (cible)
-- `RTCPeerConnection({ iceServers: [] })` : candidats host uniquement, sans STUN, en LAN.
-- Signaling manuel :
-  1. L'hôte crée l'offre et attend la fin du gathering ICE. Il compresse le SDP (minification des lignes + deflate + base64url) et l'affiche en **QR code et en code texte**.
-  2. L'invité colle ou scanne l'offre, génère la réponse et l'affiche en QR et en texte.
-  3. L'hôte colle ou scanne la réponse, et la connexion s'établit.
-- Un DataChannel fiable et ordonné, protocole JSON versionné :
-  - `hello { protocolVersion, buildHash }` : refus si les builds diffèrent ;
-  - `config { MatchConfig, seed, mapId }` : envoyé par l'hôte ;
-  - `cmd { tick, cmds[] }` : diffusé en continu par le joueur actif, pour une vision en direct ;
-  - `turnEnd { turn, hash }` : envoyé par les deux pairs, et un écart déclenche une alerte de désync ;
-  - `ping` / `pong`, `pause`, `resign`.
-- Modèle : **lockstep par tour**. Seul le joueur actif émet ; le pair passif applique les commandes avec un tampon d'environ 6 ticks (100 ms). Le pair actif retarde aussi sa propre application de 6 ticks pour rester aligné. Les hashes sont comparés à chaque fin de tour.
-- Reconnexion : l'hôte conserve le log complet, et un pair qui revient reçoit `config + commands` puis rejoue en accéléré.
-- **Incertitudes à lever par un spike (M9.1)** :
-  - Chrome et Safari masquent l'IP locale derrière des noms `.local` (mDNS) ; il faut vérifier qu'ils se résolvent entre les deux PC sur le réseau cible ;
-  - comportement de Firefox ;
-  - isolation client de certaines box ou réseaux Wi-Fi invités ;
-  - taille du SDP compressé, pour qu'il reste lisible en QR.
+Décidé le 2026-10-24 : le jeu à distance remplace le LAN 2 PC (WebRTC sans serveur). Raisons et options écartées : [ADR 0002](adr/0002-online-transport.md).
 
-### 8.2 Option B : fallback mini-serveur local
-- `tools/lan-server/` : un serveur Node (WebSocket + service statique du build) empaqueté en exécutable unique (pkg, bun compile ou équivalent, à choisir au moment voulu).
-- L'hôte lance l'exécutable, qui affiche une URL `http://<ip-lan>:<port>` ; l'invité l'ouvre dans son navigateur.
-- Même protocole qu'en A, seul le transport change (`Transport` interface : `send`, `onMessage`, `close`).
+### 8.1 Firebase
+- Projet `videogames-06`, partagé par les jeux vidéo de l'utilisateur. Medieverse y a son application web, son site d'hébergement (`medieverse-06`) et son espace de données (`/medieverse/` dans la base par défaut, puis une instance Realtime Database dédiée une fois le projet en Blaze).
+- Connexion **anonyme** : chaque appareil a un `uid` stable (persisté par le SDK), ce qui permet de reprendre une partie après un rechargement.
+- Aucun serveur de calcul : la base ne sert que de boîte aux lettres entre les deux pairs.
+
+### 8.2 Salle et code
+- L'hôte crée `/medieverse/rooms/{code}` : `{ v, host: uid, guest: null, createdAt }`. Le code fait 6 caractères pris dans un alphabet sans ambiguïté (`23456789ABCDEFGHJKMNPQRSTUVWXYZ`), affiché `XXX-XXX`.
+- L'invité saisit le code et s'inscrit dans `guest` (la place doit être libre, ou déjà la sienne).
+- Messages : `/medieverse/rooms/{code}/to/{host|guest}/{pushId}`. Chaque pair écrit dans la boîte de l'autre et lit la sienne ; il efface chaque message lu.
+- Règles de sécurité (`database.rules.json`) : seuls l'hôte et l'invité lisent et écrivent leur salle ; un message est une chaîne de 64 Ko au plus.
+- Nettoyage : l'hôte efface la salle en fin de partie. Le nettoyage des salles abandonnées attend Blaze (fonction programmée).
+
+### 8.3 Protocole
+JSON, versionné par `PROTOCOL_VERSION` (`src/net/protocol.ts`) ; tout changement de message l'incrémente.
+- `hello { protocolVersion, buildHash, tick }` : à chaque connexion ; un écart de version ou de build refuse la partie. `tick` dit jusqu'où le pair a joué (0 : il n'a rien).
+- `start { setup, rules, seed, delay }` : envoyé par l'hôte ; les deux pairs construisent la même carte et la même configuration.
+- `frames { from, cmds }` : les commandes des ticks `from..from + cmds.length - 1`, par lots.
+- `turnEnd { turn, hash }` : à chaque début de tour, par les deux pairs ; un écart affiche l'écran de désync. Une désync n'est jamais corrigée en silence.
+- `resume { start, frames }` : la configuration et toutes les commandes produites, pour un pair qui revient sans état.
+- `pause { on }`, `resign`.
+
+### 8.4 Lockstep
+- Chaque tick `t` a exactement **un producteur** : le pair qui contrôle la maison active dans l'état du tick `t - D - 1`. Les maisons paires sont à l'hôte, les impaires à l'invité.
+- Le producteur décide des commandes du tick `t` quand il atteint le tick `t - D - 1`, les garde et les envoie. Les deux pairs les appliquent au tick `t` : le **délai** `D` est le même des deux côtés (30 ticks, une demi-seconde, porté par `start`). Les ticks `1..D` sont vides.
+- Un pair ne joue le tick `t` que s'il en a les commandes ; sinon il attend. Le changement de producteur entre deux tours ne crée ni trou ni chevauchement, puisque la propriété de chaque tick se lit dans un état que les deux pairs calculent à l'identique.
+- Les lots partent tous les 6 ticks (100 ms) ou dès qu'ils portent une commande.
+- Les menus qui arrêtent l'horloge (pause, aide, réglages) envoient `pause` : les deux pairs s'arrêtent.
+- Reprise : un pair qui revient (page rechargée) envoie `hello { tick: 0 }` ; l'autre lui envoie `resume`. Le pair rejoue en accéléré, puis le lockstep reprend.
+- Les tests tournent sur un transport en mémoire, avec latence et désordre simulés (`tests/net/`).
+
+### 8.5 À faire au passage en Blaze
+- Instance Realtime Database dédiée à Medieverse (changement d'URL dans la configuration).
+- Fonction programmée qui efface les salles abandonnées.
+- Alerte de budget sur le compte de facturation.
 
 ## 9. Performance
 

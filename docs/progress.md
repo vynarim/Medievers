@@ -14,8 +14,9 @@
 
 ## À reprendre en premier
 1. **Clore M2** : quand l'utilisateur aura fait les deux vérifications humaines du rapport, consigner le résultat et passer la gate à PASS.
-2. **Lot 3 (M3)** : **M3 terminé**, gate du 2026-10-24 = **PASS** ([rapport](reports/gates/2026-10-24-M3.md)). Prochaine étape : lot 4 (LAN, M9).
-3. **À chaque mécanique livrée** : manuel + `pnpm run manual`, champs de réglage, GDD, et commit + push automatique (préférence de l'utilisateur).
+2. **Lot 3 (M3)** : **M3 terminé**, gate du 2026-10-24 = **PASS** ([rapport](reports/gates/2026-10-24-M3.md)). Prochaine étape : lot 4, **le jeu en ligne** (M9, remplace le LAN, décidé le 2026-10-24).
+3. **Passer le projet Firebase `videogames-06` en Blaze** (action de l'utilisateur, dans la console : roue dentée › Utilisation et facturation). Ensuite : instance Realtime Database dédiée à Medieverse, nettoyage planifié des salles abandonnées, alerte de budget à 1 € (BACKLOG 9.7, TECH_SPEC §8.5). Blaze servira aussi aux mails.
+4. **À chaque mécanique livrée** : manuel + `pnpm run manual`, champs de réglage, GDD, et commit + push automatique (préférence de l'utilisateur).
 
 ## Dettes connues / à ne pas refaire
 - **Mode navigateur de Vitest** : Firefox y plante sur ce poste (« page crashed »). Le déterminisme navigateur passe donc par `tools/browser-determinism.ts` (Playwright direct, Vite en mode serveur). Ne pas y revenir.

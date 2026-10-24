@@ -17,7 +17,7 @@ Tous les skills qui rendent un verdict distinguent **NOT ASSESSED** de PASS : un
 
 ## Rules (`.claude/rules/*.md`, chargées selon les chemins touchés)
 
-`sim`, `content`, `render`, `ai`, `net`, `tests`, `assets`, `docs`, `skills`. Elles déclinent par dossier les invariants de `CLAUDE.md`, notamment le pas fixe en ticks dans `sim/` et le lockstep P2P dans `net/`.
+`sim`, `content`, `render`, `ai`, `net`, `tests`, `assets`, `docs`, `skills`. Elles déclinent par dossier les invariants de `CLAUDE.md`, notamment le pas fixe en ticks dans `sim/` et le lockstep pair à pair dans `net/`.
 
 ## Prérequis
 

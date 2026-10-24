@@ -39,7 +39,7 @@ Jeu Web 2D d'artillerie au tour par tour, dans l'esprit de *Worms*, dessiné à 
 | 📜 | **Le manuscrit vivant** | Tout ressemble à une page enluminée : aplats, cernes noirs, fonds or, cadres architecturés. Le terrain détruit révèle le vélin. |
 | 💥 | **Chaos lisible** | Physique imprévisible mais toujours compréhensible. Chaque tir raté peut devenir drôle. |
 | ⏳ | **Tour par tour accessible** | Une partie se comprend en 2 minutes et se maîtrise en 20 heures. |
-| 🏠 | **Local d'abord** | On joue ensemble dans la même pièce : contre l'IA, en hotseat sur un seul appareil, puis en LAN. |
+| 🏠 | **Local d'abord** | On joue ensemble dans la même pièce : contre l'IA, en hotseat sur un seul appareil, puis à distance, en ligne. |
 
 Le ton est **burlesque** : les personnages gardent la gravité figée des enluminures, visages impassibles et gestes hiératiques, mais subissent des catastrophes absurdes. Pas de sang : les coups font voler des étoiles, des plumes et des éclats de vélin. Public visé : 10 ans et plus.
 
@@ -76,8 +76,7 @@ Toutes les unités partagent le même arsenal. Chaque classe ajoute un passif.
 | Hotseat, de 2 à 4 joueurs sur le même appareil | V1 |
 | Mixte, humains et IA | V1 |
 | Replays exportables en JSON | V1 |
-| LAN entre 2 PC (WebRTC, sans serveur) | Jalon M9 |
-| Jeu en ligne | Hors périmètre |
+| En ligne, 2 joueurs à distance (partie rejointe par un code) | Jalon M9 |
 
 ### Six cartes inspirées du manuscrit
 
@@ -117,7 +116,7 @@ flowchart LR
     subgraph inputs["InputSource"]
         L[Local<br/>clavier · souris · tactile]
         A[IA<br/>Web Worker]
-        R[Remote<br/>WebRTC]
+        R[Remote<br/>en ligne]
         P[Replay<br/>JSON]
     end
     inputs -- GameCommand --> S["src/sim<br/>moteur déterministe<br/>60 ticks/s, entiers uniquement"]
@@ -141,7 +140,7 @@ src/
   sim/        moteur déterministe (state, tick, physics, terrain, weapons, rules)
     math/     fixed-point, LUT trigo, PRNG, hash
   ai/         IA (Web Worker, utilise sim/ en headless)
-  net/        LAN : WebRTC, signaling manuel, lockstep
+  net/        en ligne : protocole, lockstep, transports
   input/      InputSource : Local, AI, Remote, Replay
   render/     scènes Phaser, tuiles de terrain, cutout rig, VFX, caméra
   ui/         menus, HUD, options
@@ -190,7 +189,7 @@ pnpm run dev        # http://localhost:5173
 | **M6** | Pipeline artistique et *vertical slice* | |
 | **M7** | Contenu V1 : 6 cartes, 8 maisons | |
 | **M8** | Finition et plateforme : PWA, options, accessibilité | |
-| **M9** | LAN entre 2 PC (WebRTC) | |
+| **M9** | En ligne, 2 joueurs à distance | |
 
 Le détail des tâches et des critères d'acceptation est dans [docs/BACKLOG.md](docs/BACKLOG.md). Un jalon n'est clos qu'après une *gate* qui vérifie chaque critère par une preuve exécutée.
 
@@ -200,7 +199,7 @@ Le détail des tâches et des critères d'acceptation est dans [docs/BACKLOG.md]
 |---|---|
 | [Manuel du joueur (PDF)](docs/manual/Medieverse-Manuel-du-joueur.pdf) | Toutes les règles expliquées au joueur, avec l'état de chacune (en jeu, moteur prêt, prévu). Régénéré par `pnpm run manual` |
 | [docs/GDD.md](docs/GDD.md) | Game design : règles, unités, arsenal, modes, IA, contrôles, UI, cartes |
-| [docs/TECH_SPEC.md](docs/TECH_SPEC.md) | Architecture, déterminisme, terrain, physique, formats, LAN, budgets de performance |
+| [docs/TECH_SPEC.md](docs/TECH_SPEC.md) | Architecture, déterminisme, terrain, physique, formats, jeu en ligne, budgets de performance |
 | [docs/ASSETS.md](docs/ASSETS.md) | Direction artistique, conventions et liste des assets |
 | [docs/BACKLOG.md](docs/BACKLOG.md) | Jalons, tâches et critères d'acceptation |
 | [docs/adr/](docs/adr/) | Décisions d'architecture (ADR) |

@@ -12,8 +12,8 @@ Documents de référence (à lire avant toute tâche structurante) :
 
 | Sujet | Décision |
 |---|---|
-| Modes | Solo vs IA, hotseat 2 joueurs (même appareil), LAN 2 PC en jalon tardif |
-| Online | Hors périmètre |
+| Modes | Solo vs IA, hotseat 2 joueurs (même appareil), en ligne 2 joueurs à distance (jalon M9) |
+| En ligne | Décidé le 2026-10-24, remplace le LAN : partie créée par un joueur, rejointe par un code ; transport Firebase Realtime Database (projet `videogames-06`, partagé avec les futurs jeux vidéo), connexion anonyme, hébergement Firebase. Cf. `docs/adr/0002-online-transport.md` |
 | Unités | Hybride : arsenal partagé + 1 passif par classe |
 | Simulation | Déterministe, module pur sans dépendance au rendu |
 | Physique | Collision pixel vs masque bitmap, maison. Pas de Matter.js / Box2D |
@@ -22,7 +22,6 @@ Documents de référence (à lire avant toute tâche structurante) :
 | Paquets | pnpm (projet sous OneDrive : store global et `enableGlobalVirtualStore` pour que `node_modules` ne contienne que des liens) |
 | Visée | Drag-to-aim ET jauge angle+puissance, choix en options |
 | Cartes | Image peinte + masque PNG + JSON. Pas d'éditeur in-game en V1 |
-| LAN | WebRTC DataChannel, appairage manuel par QR/code, sans serveur ; fallback mini-serveur Node local |
 | Factions | Maisons héraldiques fictives, blason personnalisable |
 | Ton | Gameplay burlesque, humour à la Monty Python (pastiches, pas de citations) ; décors inspirés d'épisodes du manuscrit et de grandes batailles médiévales |
 
@@ -43,7 +42,7 @@ src/
   sim/          # moteur déterministe (state, tick, physics, terrain, weapons, rules)
     math/       # fixed-point, trig LUT, PRNG, hash
   ai/           # IA (s'exécute en Web Worker, utilise sim/ en headless)
-  net/          # LAN : WebRTC, signaling manuel, lockstep
+  net/          # en ligne : protocole, lockstep, transports (mémoire, Firebase)
   input/        # InputSource : Local, AI, Remote, Replay
   render/       # Phaser scenes, terrain chunks, cutout rig, VFX, camera
   ui/           # menus, HUD, options

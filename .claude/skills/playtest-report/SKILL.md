@@ -1,7 +1,7 @@
 ---
 name: playtest-report
-description: "Prépare une session de playtest de Medieverse (protocole et grille d'observation selon le mode : hotseat, vs IA, tablette, LAN) ou transforme des notes brutes de playtest en rapport structuré avec bugs, ressentis et actions routées vers le BACKLOG. Usage : « /playtest-report prepare hotseat » ou « /playtest-report <notes collées> »."
-argument-hint: "prepare <hotseat|ia|tablette|lan> | analyse <notes ou chemin>"
+description: "Prépare une session de playtest de Medieverse (protocole et grille d'observation selon le mode : hotseat, vs IA, tablette, en ligne) ou transforme des notes brutes de playtest en rapport structuré avec bugs, ressentis et actions routées vers le BACKLOG. Usage : « /playtest-report prepare hotseat » ou « /playtest-report <notes collées> »."
+argument-hint: "prepare <hotseat|ia|tablette|en-ligne> | analyse <notes ou chemin>"
 allowed-tools: Read, Glob, Grep, Write
 ---
 
@@ -22,7 +22,7 @@ Produis `docs/playtests/<date>-<mode>-protocole.md` :
   - *hotseat* : clarté de l'écran « passez la main » ;
   - *IA* : l'action de l'IA est-elle lisible ? Le niveau ressenti correspond-il au niveau réglé ?
   - *tablette* : cibles tactiles, pouce qui masque la visée, gestes système parasites ;
-  - *LAN* : temps d'appairage, latence perçue, désyncs.
+  - *En ligne* : temps pour se retrouver par le code, latence perçue, désyncs, reprise après rechargement.
 - **Questions de fin** : 5 au maximum, ouvertes.
 
 ## Mode `analyse`

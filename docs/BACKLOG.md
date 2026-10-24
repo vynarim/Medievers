@@ -13,7 +13,7 @@ La priorité est le moteur : simulation, règles, réseau, IA. Jusqu'au lot 9, t
 | 1 | Moteur de simulation headless + déterminisme inter-navigateurs | M1, dont 1.10 (ex-9.3) | M1 |
 | 2 | Greybox jouable | M2 | M2 |
 | 3 | Règles complètes | M3 | M3 |
-| 4 | Connexions LAN | M9 (9.1, 9.2, 9.4, 9.5, 9.6 si besoin) | M9 |
+| 4 | Jeu en ligne (remplace le LAN, décidé le 2026-10-24) | M9 | M9 |
 | 5 | IA | M5 | M5 |
 | 6 | Arsenal complet (chaque arme livrée avec son support IA) | M4 | M4 |
 | 7 | Moteur de présentation, sans art final | Tâches **[tech]** de M6 et M7 | M6 [tech], M7 [tech] |
@@ -140,9 +140,20 @@ La priorité est le moteur : simulation, règles, réseau, IA. Jusqu'au lot 9, t
 | 8.4 | i18n EN | — |
 | 8.5 | Équilibrage (tableur de paramètres ; soak IA contre IA par arme) | Aucune arme n'est utilisée dans plus de 30 % des kills IA |
 
-## M9 — LAN
+## M9 — En ligne
+Décidé le 2026-10-24 : le jeu à distance par code remplace le LAN 2 PC ([ADR 0002](adr/0002-online-transport.md), TECH_SPEC §8).
+
 | # | Tâche | CA |
 |---|---|---|
+| 9.1 | Projet Firebase `videogames-06` : application web, connexion anonyme, Realtime Database, site d'hébergement `medieverse-06` | Le build est servi en HTTPS sur le site ; un client anonyme lit et écrit `/medieverse/` |
+| 9.2 | Interface `Transport` + `RemoteInputSource` + protocole (TECH_SPEC §8.3) | Tests avec un transport en mémoire (latence, désordre) |
+| 9.3 | *Déplacée en 1.10* | — |
+| 9.4 | Créer une partie et la rejoindre par un code ; règles de sécurité de la salle | Deux navigateurs se retrouvent par le code en moins de 1 min ; un troisième est refusé |
+| 9.5 | Lockstep par tour, détection de désync, reprise par rejeu | Désync simulée détectée ; une page rechargée reprend la partie au même hash |
+| 9.6 | Partie complète à distance | Une partie jouée jusqu'à la victoire entre deux appareils sur deux réseaux différents (vérification humaine) |
+| 9.7 | **Passage du projet en Blaze** (action de l'utilisateur), puis instance de base dédiée, nettoyage planifié des salles abandonnées, alerte de budget | Base dédiée en service ; une salle de plus de 48 h est effacée |
+
+---|---|---|
 | 9.1 | **Spike WebRTC** : 2 PC du réseau cible, `iceServers: []`, signaling par copier-coller ; tester Chrome↔Chrome, Chrome↔Firefox et Edge ; mesurer la taille du SDP compressé | Rapport Go/No-Go dans `docs/adr/0002-lan-transport.md` |
 | 9.2 | Interface `Transport` + `RemoteInputSource` + protocole (TECH_SPEC §8.1) | Tests avec un transport en mémoire |
 | 9.3 | *Déplacée en 1.10* | — |
@@ -161,8 +172,8 @@ La priorité est le moteur : simulation, règles, réseau, IA. Jusqu'au lot 9, t
 | Risque | Impact | Mitigation |
 |---|---|---|
 | Incohérence de style des assets générés | Fort | Planche de référence, génération en pose unique puis découpe, retouche des cernes (ASSETS §9) |
-| Désync inter-navigateurs | Fort en LAN | Entiers uniquement, LUT figée, test inter-navigateurs en M9.3 |
+| Désync inter-navigateurs | Fort en ligne | Entiers uniquement, LUT figée, test inter-navigateurs en M9.3 |
 | Performance terrain sur tablette | Moyen | Tuiles de 512, upload limité aux tuiles dirty, profilage dès M2 sur un appareil réel |
-| Signaling WebRTC en LAN (mDNS) | Moyen | Spike M9.1 et fallback B |
+| Coût Firebase en Blaze | Faible | Messages par lots, salles effacées, alerte de budget (9.7) |
 | Droits sur les scans et la musique | Moyen | Scans en référence uniquement ; enregistrements sous licence vérifiée |
 | Lisibilité au tactile (petits éléments) | Moyen | Cibles de 48 px minimum, tests sur appareil dès M2.6 |

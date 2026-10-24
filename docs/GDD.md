@@ -228,7 +228,7 @@ Les lièvres et les escargots des marges du manuscrit entrent dans la bataille. 
 | Escarmouche vs IA | ✅ | 1 humain vs 1–3 IA |
 | Hotseat | ✅ | 2–4 humains, même appareil ; écran « Passez la main à … » entre deux tours si l'option « Brouillard des chausse-trapes » est active. Programmé le 2026-10-24 : option de l'écran de préparation (`MatchSetup.fog`, active par défaut, affichage seulement : ni le sim ni le log ne la voient) ; l'écran paraît chaque fois que le tour passe à une autre maison (pas pendant le placement des armées, ni en fin de partie, ni dans la visionneuse), arrête l'horloge et ne dessine aucun piège tant que la maison suivante n'a pas touché « À nous la main ! » ; Échap ne le ferme pas |
 | Mixte | ✅ | Humains + IA |
-| LAN 2 PC | Jalon M9 | 1 humain par machine, cf. TECH_SPEC §8 |
+| En ligne | Jalon M9 | 2 joueurs à distance, un par appareil (décidé le 2026-10-24, remplace le LAN 2 PC). L'un crée la partie sur l'écran de préparation et reçoit un **code** ; l'autre le saisit dans « Rejoindre une partie ». Les maisons paires (1ʳᵉ, 3ᵉ) sont à l'hôte, les impaires à l'invité. Chacun ne voit que les chausse-trapes de ses maisons (et toutes pendant le tour de son Sapeur) ; pas d'écran « Passez la main ». Les gestes de l'adversaire s'affichent avec environ une demi-seconde de retard. Une page rechargée reprend la partie par le même code. Cf. TECH_SPEC §8 |
 | Défis | P2 | Puzzles à munitions imposées, du type « tuer 3 unités en 1 tour » |
 | Replays | ✅ | Revoir la dernière partie, exporter et importer en JSON. Programmé le 2026-10-25 : « Revoir la partie » sur la tapisserie de fin rejoue le log depuis le premier instant (`ReplayInput`, une `InputSource` comme les autres) ; barre de lecture : pause, ×1 ×2 ×4, depuis le début, exporter (JSON), quitter ; la dernière partie terminée est gardée par le navigateur et l'écran de préparation propose de la revoir ou d'importer un fichier |
 
@@ -366,4 +366,4 @@ Règles de level design :
 - Langues : français, puis anglais en P1 (clés i18n dès V1).
 
 ## 14. Hors périmètre V1
-Jeu en ligne, éditeur de cartes in-game, campagne scénarisée, plus de 4 équipes, cosmétiques à débloquer, voix.
+Jeu en ligne à plus de 2 joueurs ou avec matchmaking, éditeur de cartes in-game, campagne scénarisée, plus de 4 équipes, cosmétiques à débloquer, voix.
