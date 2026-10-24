@@ -3,11 +3,12 @@
 ## État courant
 - **M1 terminé** (gate PASS). **M2 : gate du 2026-10-24 = NOT ASSESSED** ([rapport](reports/gates/2026-10-24-M2.md)) : tous les CA sont verts sauf deux qui attendent l'utilisateur, 60 fps mesurés 10 min à l'écran (2.1) et une tablette réelle (2.6).
 - Livré aujourd'hui sur retours de playtest (tout est poussé) : habillage « manuscrit » provisoire (polices embarquées, panneaux vélin, décor en parallaxe avec château, fermes, moulins et bêtes), humour Monty Python (annonces, répliques, onomatopées, pastiches seulement), choix libre du combattant à chaque tour, déplacement par tour (marche de 280 px **ou** un saut), tir qui ne termine plus le tour, pause sur Échap, tutoriel illustré dans Aide, sauvegarde automatique et reprise, barre d'action unique et centrée avec actions grisées, F1 avec masque brut.
+- Livré ensuite (2026-10-24, soir) : interface qui rapetisse sur petit écran, pad ↶ ◀ ↑ ▶ ↷, bouton ⇄ Combattant et clic sur le nom, plein écran, bouton ◎ seulement hors vue par défaut, vue par défaut qui cadre tous les combattants, oiseaux / dragon / arc-en-ciel, réglages en onglets, **3.7 usure du terrain** (replay `wall-arrows`), **3.11 cuisine de campagne** (replay `field-kitchen`). Étude [règles face à Worms](etudes/regles-vs-worms.md) : recommandations à arbitrer par l'utilisateur.
 - Planifié dans le GDD et le BACKLOG (décidé avec l'utilisateur, pas encore programmé) : décors destructibles à points de vie (3.7, 3.8), cuisine de campagne (3.11), lièvres et escargots (3.12), machines de siège (4.9), mèche du pot en tours (4.10), escalade au grappin (4.5), cartes de grandes batailles (7.3), étude vue isométrique E1 ([étude](etudes/vue-isometrique.md), recommandation : garder la 2D de profil).
 
 ## À reprendre en premier
 1. **Clore M2** : quand l'utilisateur aura fait les deux vérifications humaines du rapport, consigner le résultat et passer la gate à PASS.
-2. **Lot 3 (M3)** : 3.1 classes et passifs (le Chevalier en armure en fait partie), puis les nouvelles tâches dans l'ordre que l'utilisateur choisira (3.7 à 3.14).
+2. **Lot 3 (M3)** : 3.7, 3.9, 3.10, 3.11, 3.13 et 3.14 sont faits. Restent 3.1 classes et passifs, 3.2 Déluge, 3.3 reliquaires, 3.4 barils, 3.5, 3.6, 3.8, 3.12, dans l'ordre que l'utilisateur choisira ; voir aussi les recommandations de l'étude E2 (repli limité après le tir, demi-tour gratuit).
 3. **À chaque mécanique livrée** : manuel + `pnpm run manual`, champs de réglage, GDD, et commit + push automatique (préférence de l'utilisateur).
 
 ## Dettes connues / à ne pas refaire
