@@ -1,13 +1,14 @@
 // Weapon behaviours (CLAUDE.md: one WeaponDef in content + one behaviour here).
-//  - directHit: arrow or stone; damages and pushes the unit it hits, vanishes on terrain.
+//  - directHit: arrow or stone; damages and pushes the unit it hits, chips the ground it strikes.
 //  - fusedBouncer: pot that bounces until its fuse runs out, then explodes.
 import { weaponDefIn } from '../../content/rules.ts';
 import type { WeaponDef } from '../../content/weapons.ts';
 import type { ExplosionRules } from '../../content/world.ts';
 import { cosQ14, sinQ14 } from '../math/angle.ts';
-import { SUBPX, idiv, mulQ14 } from '../math/fixed.ts';
+import { SUBPX, idiv, mulQ14, subToPx } from '../math/fixed.ts';
 import { isqrt } from '../math/isqrt.ts';
 import { queueExplosion } from '../explosions/explosion.ts';
+import { carveCircle } from '../terrain/terrain.ts';
 import { bounce, createProjectile, stepProjectile } from '../projectiles/projectile.ts';
 import type { SimEvent } from '../events.ts';
 import type { FlyingShot, SimState } from '../state.ts';
@@ -82,6 +83,13 @@ export function stepShots(state: SimState, events: SimEvent[]): void {
       if (impact?.kind === 'unit') {
         const u = state.units.find((x) => x.id === impact.unitId);
         if (u) directHit(u, def, state.rules.explosion, p.vx, p.vy, events);
+      } else if (impact?.kind === 'terrain' && def.chipRadius) {
+        // Every shot wears the ground down: enough arrows go through a wall (GDD §4.7).
+        const x = subToPx(impact.x);
+        const y = subToPx(impact.y);
+        if (carveCircle(state.terrain, x, y, def.chipRadius) > 0) {
+          events.push({ e: 'terrainCarved', x, y, radius: def.chipRadius });
+        }
       }
       ended = impact !== null;
     } else {

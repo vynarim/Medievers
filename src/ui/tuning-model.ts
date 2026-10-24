@@ -46,6 +46,9 @@ function weaponFields(w: WeaponDef): TuningField[] {
     field(`${p}.knockbackPct`, 'tuning.knockbackPct', 'units.percent', 1, 10, 0, 1000),
     field(`${p}.ammo`, 'tuning.ammo', 'units.ammo', 1, 1, -1, 99),
   ];
+  if (w.chipRadius !== undefined) {
+    fields.push(field(`${p}.chipRadius`, 'tuning.chipRadius', 'units.px', 1, 1, 0, 30));
+  }
   if (w.behavior === 'fusedBouncer') {
     fields.push(
       field(`${p}.explosionRadius`, 'tuning.explosionRadius', 'units.px', 1, 1, 1, 300),

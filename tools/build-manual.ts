@@ -73,6 +73,8 @@ const RULE_VALUES: Record<string, string> = {
   action: seconds(CLASSIC_RULES.turn.actionTicks),
   retreat: seconds(CLASSIC_RULES.turn.retreatTicks),
   settle: seconds(CLASSIC_RULES.turn.settleTicks ?? 0),
+  chipBow: `${CLASSIC_RULES.weapons.find((w) => w.id === 'bow')?.chipRadius ?? 0}`,
+  chipSling: `${CLASSIC_RULES.weapons.find((w) => w.id === 'sling')?.chipRadius ?? 0}`,
 };
 
 function edition(): string {

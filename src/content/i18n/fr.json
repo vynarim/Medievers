@@ -93,6 +93,7 @@
   "tuning.knockbackPct": "Recul infligé",
   "tuning.ammo": "Munitions (-1 = illimitées)",
   "tuning.explosionRadius": "Rayon d'explosion",
+  "tuning.chipRadius": "Usure du terrain : rayon du trou à l'impact",
   "tuning.bouncePct": "Rebond (vitesse conservée)",
   "tuning.defaultFuse": "Mèche par défaut",
   "units.hp": "PV",

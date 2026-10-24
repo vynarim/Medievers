@@ -134,7 +134,7 @@ Toutes les valeurs sont des défauts dans `src/content/weapons.ts`, ajustables p
 - **Terrain indestructible** : roche peinte et piliers de cadre.
 
 ### 4.7 Décors destructibles (décidé le 2026-10-24)
-- **Tout tir abîme le décor.** Les armes sans explosion entament le terrain au point d'impact : un petit cratère de quelques pixels (flèche 3 px, pierre de fronde 5 px, valeurs à régler en playtest). Percer un mur à l'arc prend très longtemps, mais reste possible.
+- **Tout tir abîme le décor.** Les armes sans explosion entament le terrain au point d'impact : un petit cratère de quelques pixels (flèche 3 px, pierre de fronde 5 px, `chipRadius` dans `src/content/weapons.ts`, réglable), réduit par la résistance du matériau comme une explosion. Percer un mur à l'arc prend du temps, mais reste possible : six flèches bien alignées traversent un mur de pierre bâtie de 20 px (test `tests/sim/terrain-wear.test.ts`, replay de référence `wall-arrows`).
 - **Les structures ont des points de vie** : tours, murailles, ponts, échafaudages, arbres. Chaque structure d'une carte est déclarée dans `map.json` avec son type ; les PV et la sensibilité par type vivent dans `src/content/structures.ts`.
 - Chaque coup qui touche une structure lui retire des PV : les dégâts de l'arme, multipliés selon le matériau (le feu grégeois ronge le bois deux fois plus vite que la pierre, une flèche ne fait qu'un quart de ses dégâts à une muraille). Le cratère creusé s'ajoute, comme pour le terrain.
 - **États visibles** : intacte, fissurée (66 % des PV ou moins), en ruine (33 % ou moins). Le rendu ajoute des fissures et fait tomber des éclats.

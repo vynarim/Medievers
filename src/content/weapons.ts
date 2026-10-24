@@ -17,6 +17,11 @@ export interface WeaponDef {
   readonly damage: number;
   /** px: explosion radius; 0 for direct-hit weapons */
   readonly explosionRadius: number;
+  /**
+   * px: crater a direct-hit projectile digs where it strikes the ground (GDD §4.7), before the
+   * material's resistance. Absent from logs recorded before 2026-10-24: no wear.
+   */
+  readonly chipRadius?: number;
   /** percent of the standard knockback for direct hits (sling: strong recoil) */
   readonly knockbackPct: number;
   /** percent of speed kept on each bounce (fusedBouncer) */
@@ -36,6 +41,7 @@ export const WEAPONS: readonly WeaponDef[] = [
     maxSpeed: 24 * 256,
     damage: 35,
     explosionRadius: 0,
+    chipRadius: 3,
     knockbackPct: 60,
     bouncePct: 0,
     defaultFuse: 0,
@@ -49,6 +55,7 @@ export const WEAPONS: readonly WeaponDef[] = [
     maxSpeed: 20 * 256,
     damage: 25,
     explosionRadius: 0,
+    chipRadius: 5,
     knockbackPct: 250,
     bouncePct: 0,
     defaultFuse: 0,

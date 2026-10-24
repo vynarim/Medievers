@@ -78,6 +78,31 @@ const SCRIPTS: readonly Script[] = [
       }
     },
   },
+  {
+    name: 'wall-arrows',
+    description:
+      'Terrain wear (GDD §4.7): no wind, eight arrows at the built stone wall of the hills map, ' +
+      'until they dig through it; the other side passes.',
+    mapId: 'hills',
+    seed: 37,
+    config: {
+      rules: { ...CLASSIC_RULES, wind: { ...CLASSIC_RULES.wind, max: 0 } },
+      teams: [{ spawns: [720] }, { spawns: [1300] }],
+    },
+    play: (r) => {
+      for (let shot = 0; shot < 8; shot++) {
+        r.until('action');
+        r.step([
+          { t: 'aim', angle: 60 },
+          { t: 'fire', power: 1024 },
+        ]);
+        r.until('transition');
+        r.until('action');
+        r.step([{ t: 'skip' }]);
+        r.until('transition');
+      }
+    },
+  },
 ];
 
 const force = process.argv.includes('--force');

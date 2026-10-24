@@ -1,0 +1,265 @@
+{
+ "version": 1,
+ "config": {
+  "rules": {
+   "turn": {
+    "transitionTicks": 120,
+    "actionTicks": 2700,
+    "retreatTicks": 180,
+    "maxResolutionTicks": 1800,
+    "settleTicks": 120,
+    "moveAfterShot": true,
+    "freeSelect": true
+   },
+   "startHp": 100,
+   "unit": {
+    "walkSpeed": 384,
+    "maxStep": 12,
+    "slopeWindow": 7,
+    "jumpForward": {
+     "vx": 2100,
+     "vy": -2304
+    },
+    "jumpBack": {
+     "vx": 256,
+     "vy": -2688
+    },
+    "fallSafeHeight": 160,
+    "fallPxPerHp": 8,
+    "fallMaxDamage": 30,
+    "moveBudget": 280,
+    "slopeTakeoff": true
+   },
+   "wind": {
+    "max": 0,
+    "accelPerUnit": 2
+   },
+   "explosion": {
+    "knockbackPerHp": 40,
+    "liftPct": 35
+   },
+   "weapons": [
+    {
+     "id": "bow",
+     "behavior": "directHit",
+     "projectileRadius": 0,
+     "windPct": 100,
+     "maxSpeed": 6144,
+     "damage": 35,
+     "explosionRadius": 0,
+     "chipRadius": 3,
+     "knockbackPct": 60,
+     "bouncePct": 0,
+     "defaultFuse": 0,
+     "ammo": -1
+    },
+    {
+     "id": "sling",
+     "behavior": "directHit",
+     "projectileRadius": 2,
+     "windPct": 100,
+     "maxSpeed": 5120,
+     "damage": 25,
+     "explosionRadius": 0,
+     "chipRadius": 5,
+     "knockbackPct": 250,
+     "bouncePct": 0,
+     "defaultFuse": 0,
+     "ammo": -1
+    },
+    {
+     "id": "greekFire",
+     "behavior": "fusedBouncer",
+     "projectileRadius": 5,
+     "windPct": 0,
+     "maxSpeed": 4608,
+     "damage": 45,
+     "explosionRadius": 60,
+     "knockbackPct": 100,
+     "bouncePct": 45,
+     "defaultFuse": 180,
+     "ammo": -1
+    }
+   ]
+  },
+  "teams": [
+   {
+    "spawns": [
+     720
+    ]
+   },
+   {
+    "spawns": [
+     1300
+    ]
+   }
+  ]
+ },
+ "seed": 37,
+ "mapId": "hills",
+ "commands": [
+  [
+   121,
+   {
+    "t": "aim",
+    "angle": 60
+   }
+  ],
+  [
+   121,
+   {
+    "t": "fire",
+    "power": 1024
+   }
+  ],
+  [
+   3063,
+   {
+    "t": "skip"
+   }
+  ],
+  [
+   3304,
+   {
+    "t": "aim",
+    "angle": 60
+   }
+  ],
+  [
+   3304,
+   {
+    "t": "fire",
+    "power": 1024
+   }
+  ],
+  [
+   6246,
+   {
+    "t": "skip"
+   }
+  ],
+  [
+   6487,
+   {
+    "t": "aim",
+    "angle": 60
+   }
+  ],
+  [
+   6487,
+   {
+    "t": "fire",
+    "power": 1024
+   }
+  ],
+  [
+   9429,
+   {
+    "t": "skip"
+   }
+  ],
+  [
+   9670,
+   {
+    "t": "aim",
+    "angle": 60
+   }
+  ],
+  [
+   9670,
+   {
+    "t": "fire",
+    "power": 1024
+   }
+  ],
+  [
+   12612,
+   {
+    "t": "skip"
+   }
+  ],
+  [
+   12853,
+   {
+    "t": "aim",
+    "angle": 60
+   }
+  ],
+  [
+   12853,
+   {
+    "t": "fire",
+    "power": 1024
+   }
+  ],
+  [
+   15795,
+   {
+    "t": "skip"
+   }
+  ],
+  [
+   16036,
+   {
+    "t": "aim",
+    "angle": 60
+   }
+  ],
+  [
+   16036,
+   {
+    "t": "fire",
+    "power": 1024
+   }
+  ],
+  [
+   18978,
+   {
+    "t": "skip"
+   }
+  ],
+  [
+   19219,
+   {
+    "t": "aim",
+    "angle": 60
+   }
+  ],
+  [
+   19219,
+   {
+    "t": "fire",
+    "power": 1024
+   }
+  ],
+  [
+   22161,
+   {
+    "t": "skip"
+   }
+  ],
+  [
+   22402,
+   {
+    "t": "aim",
+    "angle": 60
+   }
+  ],
+  [
+   22402,
+   {
+    "t": "fire",
+    "power": 1024
+   }
+  ],
+  [
+   25344,
+   {
+    "t": "skip"
+   }
+  ]
+ ],
+ "endTick": 25464,
+ "description": "Terrain wear (GDD §4.7): no wind, eight arrows at the built stone wall of the hills map, until they dig through it; the other side passes.",
+ "expectedHash": "7b854812"
+}

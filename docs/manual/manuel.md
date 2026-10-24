@@ -140,6 +140,8 @@ Chaque carte est une peinture, doublée d'une carte invisible des matières. Ce 
 
 Quand une explosion creuse la terre, le décor peint disparaît et laisse voir **le vélin** de la page, avec un bord déchiré.
 
+**Tout tir abîme le décor.** Une flèche qui se fiche dans le sol y laisse un petit trou de {{rules:chipBow}} pixels de rayon, une pierre de fronde de {{rules:chipSling}} pixels, un peu moins dans la pierre bâtie, plus dure. Percer un mur à l'arc est long, mais possible : il faut environ six flèches bien alignées pour traverser un mur de pierre de 20 pixels.
+
 ### 5.2 Le vent {{st:jeu}}
 
 Le vent change à chaque tour, de −10 (fort vers la gauche) à +10 (fort vers la droite). Il dévie les flèches, les pierres de fronde, la ruche, le faucon et la bannière, mais pas les pots. Une bannière en haut de l'écran montre sa force et son sens. Au-delà de 7, un petit ange souffle dans la marge. Une option permet de supprimer le vent.
@@ -237,7 +239,7 @@ Un clic sur n'importe quel combattant ouvre sa fiche : nom, maison, points de vi
 
 ### Réglages de test {{st:jeu}}
 
-Le bouton **⚙ Réglages** ouvre toutes les valeurs du jeu en cours de réglage : durées du tour, points de vie, vitesse de marche, sauts, chutes, vent, projections, et pour chaque arme ses dégâts, sa vitesse, son rayon, sa mèche, ses munitions. Elles s'appliquent à la partie suivante (**Appliquer et relancer**), le navigateur s'en souvient, et **Valeurs par défaut** remet tout comme avant. Les valeurs d'une partie sont enregistrées avec son replay.
+Le bouton **⚙ Réglages** ouvre toutes les valeurs du jeu en cours de réglage : durées du tour, points de vie, vitesse de marche, sauts, chutes, vent, projections, et pour chaque arme ses dégâts, sa vitesse, son rayon, son usure du terrain, sa mèche, ses munitions. Les valeurs sont rangées par onglets (Tour, Combattants, Vent et explosions, puis une page par arme). Elles s'appliquent à la partie suivante (**Appliquer et relancer**), le navigateur s'en souvient, et **Valeurs par défaut** remet tout comme avant. Les valeurs d'une partie sont enregistrées avec son replay.
 
 ### Sur tablette {{st:jeu}}
 
