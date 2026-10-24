@@ -25,7 +25,7 @@ export const FAR_H = 1000;
 const FAR_SCROLL = 0.45;
 const CLOUD_SCROLL = 0.6;
 /** px per second per wind point */
-const CLOUD_DRIFT = 4;
+const CLOUD_DRIFT = 10;
 /** distinct cloud shapes, shared by all the clouds in the sky */
 const CLOUD_SHAPES = 4;
 const CLOUD_H = 120;
@@ -1193,7 +1193,8 @@ export class Scenery {
   update(delta: number, wind: number, mask: MaskView): void {
     this.sky.update(delta, wind);
     for (const c of this.clouds) {
-      c.x += ((wind * CLOUD_DRIFT + 6) * delta) / 1000;
+      // With the wind: its way, at its strength; still when it is calm.
+      c.x += (wind * CLOUD_DRIFT * delta) / 1000;
       if (c.x > this.width + 200) c.x = -200;
       if (c.x < -200) c.x = this.width + 200;
     }
