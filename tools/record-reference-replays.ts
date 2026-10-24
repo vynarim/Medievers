@@ -6,6 +6,8 @@ import { existsSync, writeFileSync } from 'node:fs';
 import { BEAST_RULES } from '../src/content/beasts.ts';
 import { CRATE_RULES } from '../src/content/crates.ts';
 import { DELUGE_RULES } from '../src/content/deluge.ts';
+import { STRUCTURE_RULES } from '../src/content/structures.ts';
+import { TOWER_STRUCTURES } from '../tests/fixtures/maps/test-maps.ts';
 import { KITCHEN_RULES } from '../src/content/kitchen.ts';
 import { CLASSIC_RULES, type MatchRules } from '../src/content/rules.ts';
 import { formatHash, type MatchConfig, type ReplayFile } from '../src/sim/index.ts';
@@ -433,6 +435,42 @@ const SCRIPTS: readonly Script[] = [
         } else r.step([{ t: 'skip' }]);
         r.until('transition');
       }
+    },
+  },
+  {
+    name: 'tower-collapse',
+    description:
+      'Structures (GDD §4.7) on the tower map: Greek fire and arrows at the tower until it ' +
+      'cracks, falls to ruin and collapses, toppling onto the unit beside it.',
+    mapId: 'tower',
+    seed: 1291,
+    config: {
+      rules: {
+        ...NO_PLACEMENT,
+        wind: { ...NO_PLACEMENT.wind, max: 0 },
+        structures: {
+          ...STRUCTURE_RULES,
+          defs: { ...STRUCTURE_RULES.defs, tower: { ...STRUCTURE_RULES.defs.tower, hp: 100 } },
+        },
+      },
+      teams: [{ spawns: [380] }, { spawns: [680, 1000] }],
+      structures: TOWER_STRUCTURES,
+    },
+    play: (r) => {
+      for (let turn = 0; turn < 10 && r.sim.view().structures[0]?.state !== 3; turn++) {
+        r.until('action');
+        if (r.sim.view().turn.activeTeam === 0) {
+          const pot = turn === 0;
+          r.step([
+            { t: 'selectWeapon', id: pot ? 'greekFire' : 'bow' },
+            ...(pot ? [{ t: 'setFuse', seconds: 1 } as const] : []),
+            { t: 'aim', angle: pot ? 3800 : 4000 },
+            { t: 'fire', power: pot ? 450 : 1024 },
+          ]);
+        } else r.step([{ t: 'skip' }]);
+        r.until('transition');
+      }
+      r.until('transition');
     },
   },
 ];

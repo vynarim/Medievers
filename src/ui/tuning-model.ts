@@ -146,6 +146,19 @@ export function tuningGroups(rules: MatchRules): TuningGroup[] {
           },
         ]
       : []),
+    ...(rules.structures
+      ? [
+          {
+            titleKey: 'tuning.group.structures',
+            fields: [
+              field('structures.defs.tower.hp', 'tuning.towerHp', 'units.hp', 1, 10, 1, 2000),
+              field('structures.defs.wall.hp', 'tuning.wallHp', 'units.hp', 1, 10, 1, 2000),
+              field('structures.defs.bridge.hp', 'tuning.bridgeHp', 'units.hp', 1, 10, 1, 2000),
+              field('structures.crushMax', 'tuning.crushMax', 'units.hp', 1, 5, 0, 200),
+            ],
+          },
+        ]
+      : []),
     ...(rules.flames
       ? [
           {

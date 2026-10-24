@@ -8,6 +8,7 @@ import { KITCHEN_HEIGHT, KITCHEN_WIDTH } from '../content/kitchen.ts';
 import { SUBPX } from '../sim/math/fixed.ts';
 import type { SimView } from '../sim/sim.ts';
 import { t } from './i18n.ts';
+import { StructureState } from '../content/structures.ts';
 import { classOf, maxHpOf } from '../sim/classes.ts';
 import { unitName } from '../content/factions.ts';
 import { UNIT_HEIGHT } from '../sim/units/unit.ts';
@@ -17,7 +18,8 @@ export type ObjectRef =
   | { readonly kind: 'crate'; readonly id: number }
   | { readonly kind: 'pot'; readonly id: number }
   | { readonly kind: 'kitchen' }
-  | { readonly kind: 'beast' };
+  | { readonly kind: 'beast' }
+  | { readonly kind: 'structure'; readonly id: number };
 
 export interface ObjectInfo {
   readonly title: string;
@@ -62,10 +64,17 @@ export function objectAt(v: SimView, x: number, y: number, slop: number): Object
   if (b && inBox(x, y, b.x / SUBPX, b.y / SUBPX, BEAST_WIDTH, BEAST_HEIGHT + 20, slop)) {
     return { kind: 'beast' };
   }
+  // A tower, a wall: the pixel clicked belongs to a standing structure.
+  const px = Math.floor(x);
+  const py = Math.floor(y);
+  if (v.owners && px >= 0 && py >= 0 && px < v.terrain.width && py < v.terrain.height) {
+    const id = v.owners[py * v.terrain.width + px] ?? 0;
+    const st = v.structures.find((c) => c.id === id && c.state !== StructureState.Fallen);
+    if (st && v.terrain.data[py * v.terrain.width + px] !== 0) return { kind: 'structure', id };
+  }
   return null;
 }
 
-/** Name, description and anchor of an object, or null once it has left the map. */
 /** The hover bubble of a unit: name, class and HP; `above` px over its head (its label). */
 export function unitInfo(v: SimView, unitId: number, above: number): ObjectInfo | null {
   const u = v.units.find((x) => x.id === unitId);
@@ -80,9 +89,24 @@ export function unitInfo(v: SimView, unitId: number, above: number): ObjectInfo 
   };
 }
 
+/** Name, description and anchor of an object, or null once it has left the map. */
 export function objectInfo(v: SimView, ref: ObjectRef): ObjectInfo | null {
   const r = v.rules;
   switch (ref.kind) {
+    case 'structure': {
+      const st = v.structures.find((c) => c.id === ref.id);
+      if (!st || st.state === StructureState.Fallen) return null;
+      const [x, y, w] = st.rect;
+      return {
+        title: t(`object.structure.${st.type}`),
+        text: t('object.structure.text', {
+          hp: st.hp,
+          max: r.structures?.defs[st.type].hp ?? st.hp,
+        }),
+        x: x + w / 2,
+        y,
+      };
+    }
     case 'barrel': {
       const b = v.barrels.find((x) => x.id === ref.id);
       if (!b) return null;

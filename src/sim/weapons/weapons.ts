@@ -15,7 +15,7 @@ import { beastOnSegment, killBeast } from '../beasts.ts';
 import { crateOnSegment, burstCrate } from '../crates.ts';
 import { segmentTouchesKitchen, useKitchen } from '../kitchen.ts';
 import { fuseTurnsOf, maybeRest } from '../pots.ts';
-import { carveCircle } from '../terrain/terrain.ts';
+import { carveCircle, isSolid } from '../terrain/terrain.ts';
 import {
   bounce,
   createProjectile,
@@ -27,6 +27,7 @@ import type { FlyingShot, SimState } from '../state.ts';
 import { UNIT_HEIGHT, launch, type Unit } from '../units/unit.ts';
 import { MAX_POWER } from '../commands.ts';
 import { damageDealtPct, throwPct, type ClassView } from '../classes.ts';
+import { shotHitsStructure } from '../structures.ts';
 
 /** px from the hitbox centre to the muzzle */
 const MUZZLE_DISTANCE = 20;
@@ -92,6 +93,18 @@ export function shotSpeed(state: ClassView, u: Unit, def: WeaponDef, power: numb
   return idiv(idiv(def.maxSpeed * p, MAX_POWER) * throwPct(state, u, def), 100);
 }
 
+/** The weapon of a blast, recorded for the structures it reaches (only with rules.structures). */
+const tagged = (state: SimState, def: WeaponDef): { weapon?: WeaponDef['id'] } =>
+  state.rules.structures ? { weapon: def.id } : {};
+
+/** Solid terrain at or right around px (x, y): a blow there strikes the ground. */
+function isSolidNear(state: SimState, x: number, y: number): boolean {
+  for (let dy = -2; dy <= 2; dy++) {
+    for (let dx = -2; dx <= 2; dx++) if (isSolid(state.terrain, x + dx, y + dy)) return true;
+  }
+  return false;
+}
+
 /** Damage of a hit or blast at `pct` percent of `damage` (100: unchanged). */
 const scaled = (damage: number, pct: number | undefined): number =>
   pct === undefined || pct === 100 ? damage : idiv(damage * pct + 50, 100);
@@ -124,6 +137,9 @@ function strike(
   if (crate !== null) burstCrate(state, crate, events);
   if (segmentTouchesKitchen(state, u.x, cy, x, y)) useKitchen(state, events);
   if (beastOnSegment(state, u.x, cy, x, y)) killBeast(state, events);
+  if (isSolidNear(state, subToPx(x), subToPx(y))) {
+    shotHitsStructure(state, subToPx(x), subToPx(y), scaled(def.damage, pct), def.id, events);
+  }
   if (def.chipRadius) carveCircle(state.terrain, subToPx(x), subToPx(y), def.chipRadius);
 }
 
@@ -159,6 +175,7 @@ function burst(state: SimState, shot: FlyingShot, def: WeaponDef, queue: FlyingS
     carveRadius: def.explosionRadius,
     maxDamage: scaled(def.damage, shot.damagePct),
     sourceId: p.id,
+    ...tagged(state, def),
   });
   const f = def.fragments;
   if (!f || f.count <= 0) return;
@@ -239,6 +256,7 @@ export function stepShots(state: SimState, events: SimEvent[]): void {
           carveRadius: f?.radius ?? 0,
           maxDamage: scaled(f?.damage ?? 0, shot.damagePct),
           sourceId: p.id,
+          ...tagged(state, def),
         });
       }
       ended = impact !== null;
@@ -253,6 +271,7 @@ export function stepShots(state: SimState, events: SimEvent[]): void {
         // Every shot wears the ground down: enough arrows go through a wall (GDD §4.7).
         const x = subToPx(impact.x);
         const y = subToPx(impact.y);
+        shotHitsStructure(state, x, y, scaled(def.damage, shot.damagePct), def.id, events);
         if (carveCircle(state.terrain, x, y, def.chipRadius) > 0) {
           events.push({ e: 'terrainCarved', x, y, radius: def.chipRadius });
         }
@@ -278,6 +297,7 @@ export function stepShots(state: SimState, events: SimEvent[]): void {
               maxDamage: scaled(def.damage, shot.damagePct),
               sourceId: p.id,
               ...(def.flames && state.rules.flames ? { flames: true } : {}),
+              ...tagged(state, def),
             });
           }
           ended = true;

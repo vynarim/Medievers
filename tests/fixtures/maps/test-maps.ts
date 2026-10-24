@@ -59,6 +59,21 @@ const hills: TestMapSpec = {
   },
 };
 
+/** Flat earth at y = 500 with a stone tower, x 560–640, rising to y = 260 (GDD §4.7). */
+const tower: TestMapSpec = {
+  id: 'tower',
+  width: 1200,
+  height: 600,
+  material: (x, y) => {
+    if (y >= 580) return Material.Rock;
+    if (x >= 560 && x < 640 && y >= 260 && y < 500) return Material.BuiltStone;
+    return y >= 500 ? Material.Earth : Material.Air;
+  },
+};
+
+/** The structures of the tower map, as its map.json would declare them. */
+export const TOWER_STRUCTURES = [{ id: 1, type: 'tower', rect: [560, 260, 80, 240] }] as const;
+
 export const TEST_MAPS: readonly TestMapSpec[] = [
   {
     id: 'test-mask',
@@ -68,4 +83,5 @@ export const TEST_MAPS: readonly TestMapSpec[] = [
   },
   flat,
   hills,
+  tower,
 ];

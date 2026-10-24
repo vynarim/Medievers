@@ -1,6 +1,7 @@
 // Explosions (TECH_SPEC §5.3): carve a disc, deal damage falling linearly from the centre to
 // the radius, push units radially. Chain reactions are queued for the next tick.
 import type { ExplosionRules } from '../../content/world.ts';
+import type { WeaponId } from '../../content/weapons.ts';
 import { SUBPX, idiv, subToPx } from '../math/fixed.ts';
 import { isqrt } from '../math/isqrt.ts';
 import { carveCircle, type Terrain } from '../terrain/terrain.ts';
@@ -21,6 +22,8 @@ export interface Explosion {
   readonly sourceId: number;
   /** it leaves burning flames on the ground (rules.flames) */
   readonly flames?: boolean;
+  /** weapon that caused it, for the damage to structures (rules.structures); absent: other */
+  readonly weapon?: WeaponId;
 }
 
 export interface UnitHit {

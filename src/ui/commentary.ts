@@ -33,6 +33,8 @@ export class Commentary {
   /** said once per tick: a cleric's blessing, a house leaving after its king */
   private blessed = false;
   private kingFell = false;
+  /** last state seen of each structure, by id */
+  private readonly structureStates = new Map<number, number>();
   /** a shot ended without damage so far: tick, impact point and shooter, to call the miss */
   private pendingMiss: { tick: number; x: number; y: number; unitId: number } | null = null;
 
@@ -58,6 +60,14 @@ export class Commentary {
       f?.primary ?? COLORS.encre,
       now,
     );
+  }
+
+  /** A big « Patatras ! » over a structure that falls. */
+  private fallPop(v: SimView, id: number): Pop[] {
+    const st = v.structures.find((x) => x.id === id);
+    if (!st) return [];
+    const [x, y, w] = st.rect;
+    return [{ x: x + w / 2, y: y - 20, text: pick('crash'), kind: 'boom' }];
   }
 
   /**
@@ -201,6 +211,20 @@ export class Commentary {
         case 'burnSpread':
           this.hud.say(pick(this.burning ? 'quip.burn' : 'quip.burnStart'), now);
           this.burning = true;
+          break;
+        case 'structureHit':
+          // Said when the structure gets worse (cracked, then ruined), not at every scratch.
+          if ((e.state === 1 || e.state === 2) && this.structureStates.get(e.id) !== e.state) {
+            this.hud.say(pick(`quip.structure${e.state}`), now);
+          }
+          this.structureStates.set(e.id, e.state);
+          break;
+        case 'structureFell':
+          pops.push(...this.fallPop(v, e.id));
+          this.hud.say(pick('quip.structureFell'), now);
+          break;
+        case 'crushed':
+          this.hud.say(pick('quip.crushed', { name: unitName(e.unitId) }), now);
           break;
         case 'delugeStarted':
           this.hud.announce(

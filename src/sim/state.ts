@@ -2,6 +2,7 @@
 // can be hashed, cloned for snapshots and sent to the AI worker.
 import type { ClassId } from '../content/classes.ts';
 import type { MatchRules } from '../content/rules.ts';
+import type { StructurePlacement, StructureType } from '../content/structures.ts';
 import type { WeaponId } from '../content/weapons.ts';
 import type { PrngState } from './math/prng.ts';
 import type { ExplosionQueue } from './explosions/explosion.ts';
@@ -23,6 +24,40 @@ export interface MatchConfig {
   readonly teams: readonly TeamConfig[];
   /** px: top of the map's water (map.json waterLevel); absent: no water until the Déluge */
   readonly waterLevel?: number;
+  /** the map's structures with HP (rules.structures; ids 1 to 255) */
+  readonly structures?: readonly StructurePlacement[];
+}
+
+/** A structure of the map (GDD §4.7). state: content/structures.ts StructureState. */
+export interface Structure {
+  readonly id: number;
+  readonly type: StructureType;
+  /** px: x, y, w, h of its footprint */
+  readonly rect: readonly [number, number, number, number];
+  hp: number;
+  state: number;
+  /** units its falling blocks have struck, sorted: each is struck once per collapse */
+  readonly struck: number[];
+}
+
+/** A piece of a collapsed structure, falling (TECH_SPEC §5.4). */
+export interface Block {
+  readonly id: number;
+  /** sub-px: top-left corner */
+  x: number;
+  y: number;
+  /** sub-px/tick */
+  vx: number;
+  vy: number;
+  /** px */
+  readonly w: number;
+  readonly h: number;
+  /** material of each pixel, row by row; 0 = air */
+  readonly data: Uint8Array;
+  /** px fallen since it broke off */
+  fallen: number;
+  /** id of the structure it broke off */
+  readonly from: number;
 }
 
 export interface TeamState {
@@ -194,6 +229,12 @@ export interface SimState {
   readonly afflictions: Affliction[];
   /** px burnt away at each end of the map (rules.burn); 0 without it */
   burnPx: number;
+  /** sorted by id; empty without rules.structures */
+  readonly structures: Structure[];
+  /** structure id of each terrain pixel (0: none); null without structures */
+  readonly owners: Uint8Array | null;
+  /** falling pieces of collapsed structures, sorted by id */
+  blocks: Block[];
   /** sorted by id */
   flames: Flame[];
   /** sorted by unit id; emptied at every turn start */

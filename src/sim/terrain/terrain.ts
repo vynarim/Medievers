@@ -143,6 +143,46 @@ export function carveCircle(t: Terrain, cx: number, cy: number, r: number): numb
   return carved;
 }
 
+/**
+ * Lifts the pixels of rectangle (x, y, w, h) for which `take(index)` is true out of the
+ * terrain: they become air, and their materials are returned row by row (0 where not taken).
+ */
+export function liftRect(
+  t: Terrain,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  take: (index: number) => boolean,
+): Uint8Array {
+  const out = new Uint8Array(w * h);
+  let lifted = 0;
+  for (let j = 0; j < h; j++) {
+    const ty = y + j;
+    if (ty < 0 || ty >= t.height) continue;
+    for (let i = 0; i < w; i++) {
+      const tx = x + i;
+      if (tx < 0 || tx >= t.width) continue;
+      const k = ty * t.width + tx;
+      const m = t.data[k] ?? Material.Air;
+      if (m === Material.Air || !take(k)) continue;
+      out[j * w + i] = m;
+      t.data[k] = Material.Air;
+      lifted++;
+    }
+  }
+  if (lifted > 0) {
+    markDirty(
+      t,
+      Math.max(0, x),
+      Math.max(0, y),
+      Math.min(t.width - 1, x + w - 1),
+      Math.min(t.height - 1, y + h - 1),
+    );
+  }
+  return out;
+}
+
 /** A bitmap shape for stamping (walls, ladders); non-zero pixels are filled. */
 export interface StampShape {
   /** px */

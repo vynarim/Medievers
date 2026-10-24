@@ -38,6 +38,7 @@ import { drawClassMark } from './class-marks.ts';
 import { aimPreviewTicks, classOf, maxHpOf } from '../sim/classes.ts';
 import { shotSpeed } from '../sim/weapons/weapons.ts';
 import { defaultLineup } from '../content/classes.ts';
+import { StructureState } from '../content/structures.ts';
 
 export interface BattleData {
   readonly map: MapDef;
@@ -156,6 +157,7 @@ export class BattleScene extends Phaser.Scene {
     const perTeam = rules.unitsPerTeam ?? map.spawns[0]?.length ?? 3;
     const config: MatchConfig = {
       rules,
+      ...(map.structures ? { structures: map.structures } : {}),
       teams: spawnColumns(mask, map.spawns.length, perTeam).map((spawns) => ({
         spawns,
         ...(rules.classes
@@ -569,6 +571,11 @@ export class BattleScene extends Phaser.Scene {
   private handleEvents(events: readonly SimEvent[]): void {
     for (const e of events) {
       if (e.e === 'terrainCarved') this.terrain.invalidate(e.x, e.y, e.radius);
+      if (e.e === 'terrainChanged') {
+        const half = Math.ceil(Math.max(e.w, e.h) / 2);
+        this.terrain.invalidate(e.x + Math.floor(e.w / 2), e.y + Math.floor(e.h / 2), half);
+      }
+      if (e.e === 'structureFell') this.cameras.main.shake(400, 0.01);
       if (e.e === 'turnStarted' || e.e === 'shotFired') this.manualCamera = false;
       if (e.e === 'explosion') {
         this.cameras.main.shake(180, 0.006);
@@ -725,6 +732,7 @@ export class BattleScene extends Phaser.Scene {
     this.drawBeast(g, delta, time);
     this.drawPots(g, time);
     this.drawFlames(g, time);
+    this.drawStructures(g);
     this.drawPlacementGhost(g, time);
     for (const u of v.units) {
       const label = this.labelFor(u.id);
@@ -987,6 +995,45 @@ export class BattleScene extends Phaser.Scene {
         g.fillStyle(COLORS.or, 0.95);
         g.fillTriangle(x, y - 6, x, y + 6, x + inward * h * 0.55 - flick, y);
       }
+    }
+  }
+
+  /**
+   * Structures (GDD §4.7): ink cracks over a damaged one (more for a ruin), and the falling
+   * blocks of a collapse, as masonry squares.
+   */
+  private drawStructures(g: Phaser.GameObjects.Graphics): void {
+    const v = this.sim.view();
+    for (const st of v.structures) {
+      if (st.state !== StructureState.Cracked && st.state !== StructureState.Ruin) continue;
+      const [rx, ry, rw, rh] = st.rect;
+      const cracks = st.state === StructureState.Ruin ? 7 : 3;
+      g.lineStyle(2.5, COLORS.encre, 0.8);
+      for (let k = 0; k < cracks; k++) {
+        // A fixed zigzag per crack, from the structure's id: cosmetic, stable from frame to frame.
+        const seed = st.id * 97 + k * 31;
+        let x = rx + 10 + ((seed * 13) % Math.max(1, rw - 20));
+        let y = ry + 30 + ((seed * 7) % Math.max(1, rh - 60));
+        g.beginPath();
+        g.moveTo(x, y);
+        for (let j = 0; j < 5; j++) {
+          x += ((seed + j * 5) % 3) * 6 - 6;
+          y += 9 + ((seed + j) % 4) * 3;
+          g.lineTo(x, y);
+        }
+        g.strokePath();
+      }
+    }
+    for (const b of v.blocks) {
+      const x = b.x / SUBPX;
+      const y = b.y / SUBPX;
+      g.fillStyle(COLORS.ceruse, 1);
+      g.fillRect(x, y, b.w, b.h);
+      g.lineStyle(2, COLORS.encre, 1);
+      g.strokeRect(x, y, b.w, b.h);
+      g.lineStyle(1, COLORS.encre, 0.5);
+      g.lineBetween(x, y + b.h / 2, x + b.w, y + b.h / 2);
+      g.lineBetween(x + b.w / 2, y, x + b.w / 2, y + b.h / 2);
     }
   }
 

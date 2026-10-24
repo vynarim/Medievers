@@ -13,6 +13,7 @@ import type { Phase, MatchConfig, SimState, TeamState } from './state.ts';
 import type { Mask } from './terrain/mask.ts';
 import { createTerrain, terrainHash } from './terrain/terrain.ts';
 import { climb, ladderAt } from './units/climb.ts';
+import { blastHitsStructures, initStructures, stepBlocks } from './structures.ts';
 import { drownFlames, flamesTurnEnd, flamesTurnStart, spawnFlames, stepFlames } from './flames.ts';
 import {
   atRest,
@@ -135,6 +136,7 @@ function createState(config: MatchConfig, seed: number, mask: Mask): SimState {
       ...(config.rules.classes && team.classes ? { classes: [...team.classes] } : {}),
     });
   });
+  const built = initStructures(terrain, config.rules.structures, config.structures);
   const s: SimState = {
     tick: 0,
     prng: createPrng(seed),
@@ -173,6 +175,9 @@ function createState(config: MatchConfig, seed: number, mask: Mask): SimState {
       .map(({ unitId, team, x }) => ({ unitId, team, x })),
     afflictions: [],
     burnPx: 0,
+    structures: built.structures,
+    owners: built.owners,
+    blocks: [],
     flames: [],
     scorched: [],
     waterY: config.waterLevel ?? terrain.height,
@@ -459,6 +464,7 @@ function advanceTick(s: SimState, phaseJustSet: boolean, events: SimEvent[]): vo
     blastReachesBeast(s, e, events);
     blastMovesPots(s, e);
     spawnFlames(s, e);
+    blastHitsStructures(s, e, events);
     // A blast that reaches the kitchen counts as a touch (GDD §4.9).
     if (inKitchen(s, e.x, e.y, e.radius * SUBPX)) useKitchen(s, events);
   }
@@ -467,6 +473,7 @@ function advanceTick(s: SimState, phaseJustSet: boolean, events: SimEvent[]): vo
   stepCrates(s, events);
   stepPots(s);
   stepFlames(s, events);
+  stepBlocks(s, events);
   drownThings(s, events);
   drownFlames(s);
 
@@ -587,7 +594,12 @@ function nothingLeftToDo(s: SimState): boolean {
 
 /** Everything has stopped: no shot, no pending explosion, all units at rest. */
 function settled(s: SimState): boolean {
-  return s.shots.length === 0 && s.explosions.items.length === 0 && s.units.every(atRest);
+  return (
+    s.shots.length === 0 &&
+    s.explosions.items.length === 0 &&
+    s.blocks.length === 0 &&
+    s.units.every(atRest)
+  );
 }
 
 /** Units at 0 HP die now (GDD §3.1: deaths are called once everything has stopped). */
@@ -698,6 +710,7 @@ function hashState(s: SimState): number {
     for (const v of [q.tick, q.seq, e.x, e.y, e.radius, e.carveRadius, e.maxDamage, e.sourceId])
       int(v);
     if (e.flames) int(1);
+    if (e.weapon !== undefined) int(weaponIndexIn(s.rules, e.weapon));
   }
   for (const team of s.teams) {
     int(team.lastPlayed);
@@ -729,6 +742,17 @@ function hashState(s: SimState): number {
     for (const p of s.placing) for (const v of [p.unitId, p.team, p.x]) int(v);
   }
   if (s.rules.burn) int(s.burnPx);
+  if (s.rules.structures) {
+    int(s.structures.length);
+    for (const st of s.structures) {
+      for (const v of [st.id, st.hp, st.state]) int(v);
+      for (const id of st.struck) int(id);
+    }
+    int(s.blocks.length);
+    for (const b of s.blocks) {
+      for (const v of [b.id, b.x, b.y, b.vx, b.vy, b.w, b.h, b.fallen, b.from]) int(v);
+    }
+  }
   if (s.rules.flames) {
     int(s.flames.length);
     for (const f of s.flames) for (const v of [f.id, f.x, f.y, f.turns]) int(v);

@@ -6,6 +6,7 @@ import { BURN_RULES, type BurnRules } from './burn.ts';
 import { CLASS_RULES, type ClassRules } from './classes.ts';
 import { DELUGE_RULES, type DelugeRules } from './deluge.ts';
 import { FLAME_RULES, type FlameRules } from './flames.ts';
+import { STRUCTURE_RULES, type StructureRules } from './structures.ts';
 import { CRATE_RULES, type CrateRules } from './crates.ts';
 import { KITCHEN_RULES, type KitchenRules } from './kitchen.ts';
 import { UNIT_RULES, type UnitRules } from './units.ts';
@@ -98,6 +99,8 @@ export interface MatchRules {
   readonly deluge?: DelugeRules;
   /** flames left by the weapons marked `flames` (GDD §4.1); absent from older logs: none */
   readonly flames?: FlameRules;
+  /** structures with HP declared by the map (GDD §4.7); absent from older logs: none */
+  readonly structures?: StructureRules;
 }
 
 /** « Classique » rules scheme (GDD §6). */
@@ -129,6 +132,7 @@ export const CLASSIC_RULES: MatchRules = {
   classes: CLASS_RULES,
   deluge: DELUGE_RULES,
   flames: FLAME_RULES,
+  structures: STRUCTURE_RULES,
 };
 
 /** Index of a weapon in the match arsenal; throws for a weapon the match does not have. */

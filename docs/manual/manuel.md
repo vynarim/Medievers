@@ -151,6 +151,8 @@ Quand une explosion creuse la terre, le décor peint disparaît et laisse voir *
 
 **Tout tir abîme le décor.** Une flèche qui se fiche dans le sol y laisse un petit trou de {{rules:chipBow}} pixels de rayon, une pierre de fronde de {{rules:chipSling}} pixels, un peu moins dans la pierre bâtie, plus dure. Percer un mur à l'arc est long, mais possible : il faut environ six flèches bien alignées pour traverser un mur de pierre de 20 pixels.
 
+**Les tours et les murailles ont des points de vie** {{st:jeu}}. Chaque coup leur en retire : une flèche ne fait qu'un quart de ses dégâts à de la pierre, le feu grégeois toute sa force, et il ronge le bois deux fois plus vite. Un clic sur une tour montre ce qui lui reste. Abîmée, elle se lézarde, puis tombe en ruine ; à 0 PV, **elle s'effondre** : elle bascule du côté opposé au coup qui l'a abattue, ses blocs écrasent les combattants qui se trouvent dessous (jusqu'à 40 PV), et il n'en reste qu'un tas de gravats. Ceux qui étaient perchés dessus tombent avec elle.
+
 ### 5.2 Le vent {{st:jeu}}
 
 Le vent change à chaque tour, de −10 (fort vers la gauche) à +10 (fort vers la droite). Il dévie les flèches, les pierres de fronde, la ruche, le faucon et la bannière, mais pas les pots. Une bannière en haut de l'écran montre sa force et son sens. Au-delà de 7, un petit ange souffle dans la marge. Une option permet de supprimer le vent.
