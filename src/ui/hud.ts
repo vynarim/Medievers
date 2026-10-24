@@ -58,7 +58,11 @@ export class Hud {
     track.append(this.windFill);
     const windRow = el('div', 'wind-row');
     windRow.append(this.windLabel, track);
-    wind.append(el('div', 'game-title', t('game.title')), windRow);
+    // The title's first and last letters in lapis, the rest in vermilion.
+    const name = t('game.title');
+    const title = el('div', 'game-title', name.slice(0, -1));
+    title.append(el('span', 'last', name.slice(-1)));
+    wind.append(title, windRow);
 
     this.timer = el('div', 'hud-timer panel');
     this.timerSecs = el('div', 'secs');

@@ -91,7 +91,7 @@ const STYLE = `
   padding: 4px 18px 6px; display: flex; align-items: center; gap: 18px; }
 #ui .hud-wind .game-title { font-family: var(--title); font-size: 46px; line-height: 1;
   color: var(--vermillon); white-space: nowrap; }
-#ui .hud-wind .game-title::first-letter { color: var(--lapis); }
+#ui .hud-wind .game-title::first-letter, #ui .hud-wind .game-title .last { color: var(--lapis); }
 #ui .hud-wind .wind-row { display: flex; flex-direction: column; align-items: stretch; gap: 4px;
   width: 132px; padding-left: 16px; border-left: 2px solid var(--gilt); }
 #ui .hud-wind .label { font-family: var(--caps); font-size: 15px; white-space: nowrap;
