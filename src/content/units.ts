@@ -27,6 +27,12 @@ export interface UnitRules {
    * from a slope takes off (2026-10-24). Absent from older logs, which keep the old physics.
    */
   readonly slopeTakeoff?: boolean;
+  /**
+   * ticks: walking towards the other side first turns the unit round on the spot for this long,
+   * without moving, so turning round costs no walk and keeps the jump (2026-10-24). Absent from
+   * older logs: the unit turns and walks at once.
+   */
+  readonly turnTicks?: number;
 }
 
 export const UNIT_RULES: UnitRules = {
@@ -40,4 +46,5 @@ export const UNIT_RULES: UnitRules = {
   fallMaxDamage: 30,
   moveBudget: 280,
   slopeTakeoff: true,
+  turnTicks: 12,
 };

@@ -128,16 +128,16 @@ describe('turn loop', () => {
     );
   });
 
-  it('keeps the action time after a shot; « Fin du tour » ends it; no moves left ends it', () => {
+  it('keeps some time after a shot, capped; « Fin du tour » ends it; no moves left ends it', () => {
     const d = new Driver(DUEL, 1);
     d.until('action');
-    const left = d.sim.view().turn.phaseTicks;
     d.step([
       { t: 'aim', angle: 3072 },
       { t: 'fire', power: 100 },
     ]);
     expect(d.sim.view().turn.phase).toBe('retreat');
-    expect(d.sim.view().turn.phaseTicks).toBeGreaterThanOrEqual(left - 2);
+    // 45 s were left: the retreat is capped at 5 s, as in Worms (choose your spot first).
+    expect(d.sim.view().turn.phaseTicks).toBe(CLASSIC_RULES.turn.retreatMaxTicks);
     d.step([{ t: 'skip' }]);
     expect(d.sim.view().turn.phase).toBe('resolution');
 
@@ -153,6 +153,36 @@ describe('turn loop', () => {
     ]);
     for (let i = 0; i < 600 && w.sim.view().turn.phase === 'retreat'; i++) w.step();
     expect(w.sim.view().turn.phase).not.toBe('retreat');
+  });
+
+  it('keeps all the action time after the shot in logs recorded before retreatMaxTicks', () => {
+    const turn: TurnRules = { ...RULES_60HP.turn };
+    delete (turn as { retreatMaxTicks?: number }).retreatMaxTicks;
+    const d = new Driver({ ...DUEL, rules: { ...RULES_60HP, turn } }, 1);
+    d.until('action');
+    const left = d.sim.view().turn.phaseTicks;
+    d.step([
+      { t: 'aim', angle: 3072 },
+      { t: 'fire', power: 100 },
+    ]);
+    expect(d.sim.view().turn.phaseTicks).toBeGreaterThanOrEqual(left - 2);
+  });
+
+  it('turns round on the spot for free: no walk spent, the jump stays', () => {
+    const d = new Driver(DUEL, 1);
+    d.until('action');
+    const u0 = unit(d, 1);
+    const x0 = u0.x;
+    expect(u0.facing).toBe(1);
+    // A short tap on ← : the unit faces left without moving.
+    d.step([{ t: 'move', dir: -1 }]);
+    for (let i = 0; i < 5; i++) d.step();
+    d.step([{ t: 'move', dir: 0 }]);
+    expect(unit(d, 1).facing).toBe(-1);
+    expect(unit(d, 1).x).toBe(x0);
+    expect(d.sim.view().turn.moveLeft).toBe((CLASSIC_RULES.unit.moveBudget ?? 0) * 256);
+    d.step([{ t: 'jump', kind: 'forward' }]);
+    expect(unit(d, 1).vx).toBeLessThan(0);
   });
 
   it('gives a fixed retreat time to logs recorded before moveAfterShot', () => {
@@ -180,7 +210,9 @@ describe('turn loop', () => {
     d.until('action');
     const x0 = unit(d, 1).x;
     d.step([{ t: 'move', dir: -1 }]);
-    for (let i = 0; i < 9; i++) d.step();
+    // Facing right: it first turns round on the spot, then walks.
+    const turn = CLASSIC_RULES.unit.turnTicks ?? 0;
+    for (let i = 0; i < turn + 9; i++) d.step();
     expect(unit(d, 1).x).toBe(x0 - 10 * 384);
     d.step([{ t: 'move', dir: 0 }]);
     const x1 = unit(d, 1).x;

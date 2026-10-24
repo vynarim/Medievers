@@ -44,7 +44,7 @@
 
 ## 4. Recommandations, dans l'ordre
 
-1. **Repli limité après le tir** (point 4) et **demi-tour gratuit** (point 2) : quelques lignes, gros effet sur la tension du tour.
+1. **Repli limité après le tir** (point 4) et **demi-tour gratuit** (point 2) : quelques lignes, gros effet sur la tension du tour. *Fait le 2026-10-24 : repli de 5 s au plus, demi-tour sur place en 0,2 s.*
 2. **Son** : un premier lot de bruitages et de grommelots (ASSETS, audio).
 3. **Reliquaires + munitions limitées + 2 ou 3 armes de plus** (3.3, 4.1) : c'est la variété qui manque le plus.
 4. **Barils et « dernier soupir »** (3.4) : les réactions en chaîne font les meilleurs moments de Worms.

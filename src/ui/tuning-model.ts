@@ -67,6 +67,7 @@ export function tuningGroups(rules: MatchRules): TuningGroup[] {
       fields: [
         field('turn.actionTicks', 'tuning.actionTime', 'units.seconds', TPS, 1, 5, 180),
         field('turn.retreatTicks', 'tuning.retreatTime', 'units.seconds', TPS, 0.5, 0, 15),
+        field('turn.retreatMaxTicks', 'tuning.retreatMax', 'units.seconds', TPS, 0.5, 0, 60),
         field('turn.settleTicks', 'tuning.settleTime', 'units.seconds', TPS, 0.5, 0, 10),
         field('startHp', 'tuning.startHp', 'units.hp', 1, 10, 10, 500),
       ],
@@ -76,6 +77,7 @@ export function tuningGroups(rules: MatchRules): TuningGroup[] {
       fields: [
         field('unit.walkSpeed', 'tuning.walkSpeed', 'units.pxPerTick', SUB, 0.1, 0.2, 6),
         field('unit.maxStep', 'tuning.maxStep', 'units.px', 1, 1, 0, 40),
+        field('unit.turnTicks', 'tuning.turnTime', 'units.seconds', TPS, 0.05, 0, 1),
         field('unit.moveBudget', 'tuning.moveBudget', 'units.px', 1, 50, 0, 5000),
         field('unit.jumpForward.vx', 'tuning.jumpForwardX', 'units.pxPerTick', SUB, 0.25, 0, 15),
         field('unit.jumpForward.vy', 'tuning.jumpForwardY', 'units.pxPerTick', SUB, 0.25, -20, 0),

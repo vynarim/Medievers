@@ -79,6 +79,8 @@
   "tuning.kitchenLife": "S'éteint si personne n'y touche au bout de",
   "tuning.actionTime": "Temps d'action",
   "tuning.retreatTime": "Temps de repli",
+  "tuning.retreatMax": "Temps après le tir, au plus",
+  "tuning.turnTime": "Demi-tour sur place (sans marcher)",
   "tuning.startHp": "Points de vie de départ",
   "tuning.walkSpeed": "Vitesse de marche",
   "tuning.maxStep": "Marche franchissable",

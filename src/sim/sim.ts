@@ -119,6 +119,7 @@ function createState(config: MatchConfig, seed: number, mask: Mask): SimState {
       weapon: 'bow',
       fuse: 0,
       walkDir: 0,
+      turnHold: 0,
       moveLeft: 0,
       fired: false,
     },
@@ -178,6 +179,7 @@ function startTurn(s: SimState, events: SimEvent[]): void {
   t.weapon = 'bow';
   t.fuse = 0;
   t.fired = false;
+  t.turnHold = 0;
   t.moveLeft = (s.rules.unit.moveBudget ?? 0) * SUBPX;
   kitchenTurn(s, events);
   setPhase(s, 'transition', s.rules.turn.transitionTicks, events);
@@ -195,9 +197,16 @@ function applyCommand(s: SimState, c: GameCommand, events: SimEvent[]): void {
   const u = unitById(s, t.activeUnitId);
   if (!u?.alive || !canMove) return;
   switch (c.t) {
-    case 'move':
+    case 'move': {
       t.walkDir = c.dir;
+      // Walking the other way turns round on the spot first: no walk spent (rules.unit.turnTicks).
+      const turnTicks = s.rules.unit.turnTicks;
+      if (turnTicks !== undefined && c.dir !== 0 && c.dir !== u.facing && u.grounded) {
+        u.facing = c.dir;
+        t.turnHold = turnTicks;
+      }
       break;
+    }
     case 'jump': {
       // With a move budget, a turn has either a walk or a single jump (GDD §3.1).
       const budget = s.rules.unit.moveBudget;
@@ -237,9 +246,9 @@ function applyCommand(s: SimState, c: GameCommand, events: SimEvent[]): void {
       if (t.fuse === 0) t.fuse = s.rules.weapons[wi]?.defaultFuse ?? 0;
       fire(s, u, c.power, events);
       t.fired = true;
-      const after = s.rules.turn.moveAfterShot
-        ? Math.max(t.phaseTicks, s.rules.turn.retreatTicks)
-        : s.rules.turn.retreatTicks;
+      const rt = s.rules.turn;
+      const left = Math.min(t.phaseTicks, rt.retreatMaxTicks ?? t.phaseTicks);
+      const after = rt.moveAfterShot ? Math.max(left, rt.retreatTicks) : rt.retreatTicks;
       setPhase(s, 'retreat', after, events);
       break;
     }
@@ -256,7 +265,8 @@ function advanceTick(s: SimState, phaseJustSet: boolean, events: SimEvent[]): vo
   const hpBefore = active?.hp ?? 0;
 
   const budgeted = s.rules.unit.moveBudget !== undefined;
-  if (
+  if (t.turnHold > 0) t.turnHold--;
+  else if (
     active?.alive &&
     t.walkDir !== 0 &&
     (t.phase === 'action' || t.phase === 'retreat') &&
@@ -470,6 +480,7 @@ function hashState(s: SimState): number {
     int(v);
   // Hashed only when the rule exists, so logs recorded before it keep their reference hashes.
   if (s.rules.unit.moveBudget !== undefined) int(t.moveLeft);
+  if (s.rules.unit.turnTicks !== undefined) int(t.turnHold);
   if (s.rules.kitchen) {
     const k = s.kitchen;
     for (const v of k ? [k.x, k.y, k.expiresTurn] : [-1]) int(v);

@@ -28,6 +28,12 @@ export interface TurnRules {
    */
   readonly moveAfterShot?: boolean;
   /**
+   * ticks: with moveAfterShot, the time left after the shot is capped at this (but never below
+   * retreatTicks), so the position is chosen before shooting, as in Worms (GDD §2.2, 2026-10-24).
+   * Absent from older logs: all the action time left.
+   */
+  readonly retreatMaxTicks?: number;
+  /**
    * The team picks which of its units plays, at the start of each turn, even the same one turn
    * after turn (GDD §2.2, 2026-10-24). Absent from older logs: fixed rotation.
    */
@@ -56,6 +62,7 @@ export const CLASSIC_RULES: MatchRules = {
     maxResolutionTicks: 30 * TICKS_PER_SECOND,
     settleTicks: 2 * TICKS_PER_SECOND,
     moveAfterShot: true,
+    retreatMaxTicks: 5 * TICKS_PER_SECOND,
     freeSelect: true,
   },
   startHp: 100,

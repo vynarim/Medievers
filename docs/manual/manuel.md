@@ -40,7 +40,7 @@ Un chroniqueur à l'humour douteux commente la partie {{st:jeu}} : chaque tour s
 |---|---|---|
 | Transition | {{rules:transition}} | La caméra rejoint votre combattant. Le vent du tour s'affiche. |
 | Action | {{rules:action}} | Vous vous déplacez librement, choisissez une arme, visez et tirez. |
-| Après le tir | le temps restant | Le tir ne termine pas le tour : on peut bouger puis tirer, ou tirer puis bouger, avec le déplacement pas encore utilisé. **Fin du tour** termine le tour ; il se termine aussi tout seul quand il ne reste plus de déplacement et que le tir est retombé. |
+| Après le tir | le temps restant, 5 s au plus | Choisissez votre position avant de tirer : après le tir, il ne reste que quelques secondes pour vous mettre à l'abri. Le tir ne termine pas le tour : on peut bouger puis tirer, ou tirer puis bouger, avec le déplacement pas encore utilisé. **Fin du tour** termine le tour ; il se termine aussi tout seul quand il ne reste plus de déplacement et que le tir est retombé. |
 | Résolution | variable, puis {{rules:settle}} | Le jeu attend que tout soit retombé : projectiles, explosions, chutes. Les morts sont alors constatées, puis une courte pause laisse voir le résultat et le commentaire. Le sablier est en pause. |
 | Fin de tour | — | Les effets de fin de tour s'appliquent, et un reliquaire peut tomber du ciel. |
 
@@ -219,7 +219,7 @@ L'IA joue avec les mêmes règles et les mêmes commandes que vous. Elle ne voit
 
 Le combattant qui joue porte une **auréole dorée**, une **flèche** oscille au-dessus de son nom et son cartouche passe à l'or. Une annonce au centre de l'écran rappelle à chaque tour qui a la main.
 
-Il vise **du côté où il regarde** : la ligne de points rouges et dorés, terminée par une pointe de flèche, part de lui. Le plus simple : **attrapez la pointe rouge** à la souris ou au doigt et faites-la glisser où vous voulez viser, même derrière lui ; il se retourne tout seul, et rien ne part tant que vous n'avez pas tiré. Sans souris, maintenez **⟳ Viser** : la visée fait le tour complet, et le combattant se retourne quand elle passe derrière lui. Au clavier, ↑ ↓ lèvent ou baissent la visée, et **T** le retourne sur place ; marcher avec ← → le retourne aussi.
+Il vise **du côté où il regarde** : la ligne de points rouges et dorés, terminée par une pointe de flèche, part de lui. Le plus simple : **attrapez la pointe rouge** à la souris ou au doigt et faites-la glisser où vous voulez viser, même derrière lui ; il se retourne tout seul, et rien ne part tant que vous n'avez pas tiré. Sans souris, maintenez **⟳ Viser** : la visée fait le tour complet, et le combattant se retourne quand elle passe derrière lui. Au clavier, ↑ ↓ lèvent ou baissent la visée, et **T** le retourne sur place. Un appui bref sur ← ou → vers l'autre côté le retourne aussi sans le faire avancer : se retourner ne coûte ni marche ni saut.
 
 ### À la souris {{st:jeu}}
 
