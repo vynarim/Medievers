@@ -22,6 +22,7 @@ export const DELUGE_RULES: DelugeRules = {
   startTurn: 20,
   startTicks: 15 * 60 * 60,
   risePx: 48,
-  damage: 5,
+  // Only the water hurts: nobody it has not reached loses anything (decided 2026-10-25).
+  damage: 0,
   wetDamage: 20,
 };

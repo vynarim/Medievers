@@ -42,7 +42,7 @@
 ### 2.4 Le Déluge (mort subite)
 - Démarre après N tours (défaut : 20 tours ou 15 minutes).
 - Annonce en pleine page enluminée (« Et les eaux montèrent… »).
-- Chaque fin de tour : niveau d'eau +48 px ; toutes les unités perdent 5 PV (option).
+- Chaque fin de tour : niveau d'eau +48 px ; seuls les combattants que l'eau atteint perdent des PV (décidé le 2026-10-25 : les 5 PV pour tous, ressentis comme injustes, sont à 0 par défaut ; réglables).
 - L'eau tue instantanément (noyade).
 - Précisions de programmation (2026-10-25) : valeurs dans `src/content/deluge.ts` (`MatchRules.deluge`, absent des vieux logs : pas de Déluge), réglables dans ⚙ Réglages ; les 5 PV par tour sont réglables, 0 les supprime. Le Déluge commence à la fin du tour N (ou du premier tour fini après 15 minutes de jeu) et l'eau monte dès cette fin de tour, depuis le bas de la carte (ou depuis le niveau d'eau de la carte, `waterLevel`). Un combattant dont les pieds passent sous la surface, à tout instant, **perd 20 PV et est rejeté sur la terre sèche la plus proche** (décidé le 2026-10-25, `deluge.wetDamage`, absent des vieux logs : il se noyait aussitôt) ; il ne se noie que si ses PV tombent à 0 ou s'il n'y a plus de terre hors de l'eau ; on ne peut pas poser un combattant sous l'eau au placement. Tirs, reliquaires, barils, pots posés, cuisine et bête qui passent sous l'eau disparaissent. Rendu : bandes d'outremer et crêtes de vagues enroulées ; annonce « Et les eaux montèrent… ». Replay de référence `deluge`.
 

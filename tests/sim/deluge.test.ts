@@ -46,8 +46,16 @@ describe('water and the Déluge (GDD §2.4)', () => {
     expect(sim.view().waterY).toBe(600);
   });
 
-  it('starts at the end of turn N, then the water rises and bites every turn', () => {
-    const rules: MatchRules = { ...CALM, deluge: { ...DELUGE_RULES, startTurn: 3 } };
+  it('hurts by default only the units the water reaches', () => {
+    const rules: MatchRules = { ...CALM, deluge: { ...DELUGE_RULES, startTurn: 1 } };
+    const sim = new Sim({ rules, teams: [{ spawns: [200] }, { spawns: [1000] }] }, 1, pitMask());
+    // The water rises to 552: under the feet of both units, at 500, it reaches neither.
+    expect(skipTurns(sim, 1)).toContainEqual({ e: 'delugeStarted' });
+    expect(sim.view().units.map((u) => u.hp)).toEqual([100, 100]);
+  });
+
+  it('starts at the end of turn N, then the water rises and, as an option, bites every turn', () => {
+    const rules: MatchRules = { ...CALM, deluge: { ...DELUGE_RULES, startTurn: 3, damage: 5 } };
     const sim = new Sim({ rules, teams: [{ spawns: [200] }, { spawns: [1000] }] }, 1, pitMask());
     const before = skipTurns(sim, 2);
     expect(before.some((e) => e.e === 'delugeStarted')).toBe(false);
