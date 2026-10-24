@@ -1,0 +1,4 @@
+// Allowed in src/sim: integer helpers only.
+export function step(x: number, v: number): number {
+  return Math.imul(x, 3) + Math.trunc(v / 256) + Math.abs(Math.min(x, v));
+}

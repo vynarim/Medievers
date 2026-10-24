@@ -1,0 +1,13 @@
+// Deliberately faulty: every line breaks the src/sim guard. Linted as src/sim/__probe__.ts by sim-guard.test.ts.
+import Phaser from 'phaser';
+import { drawTerrain } from '../render/terrain';
+
+export const roll = Math.random();
+export const s = Math.sin(1);
+export const d = Math.sqrt(2);
+export const p = 2 ** 10;
+export const r = Math['random']();
+export const now = Date.now();
+export const t = performance.now();
+export const w = window.innerWidth;
+setTimeout(() => drawTerrain(Phaser), 0);
