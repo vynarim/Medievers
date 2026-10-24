@@ -1302,5 +1302,8 @@
   "setup.houseLess": "− Une maison",
   "setup.note": "Une maison a un Roi au plus ; en Régicide, elle en a toujours un. Les maisons jouent à tour de rôle sur le même appareil.",
   "setup.start": "À la bataille !",
-  "setup.cancel": "Retour à la partie"
+  "setup.cancel": "Retour à la partie",
+  "tip.resting": "Il a joué au tour précédent de sa maison : il souffle ce tour-ci.",
+  "tip.tooLate": "Trop tard : la maison a déjà bougé ou tiré ce tour.",
+  "tuning.ladderReach": "Échelle : distance de prise, au-delà du corps"
 }

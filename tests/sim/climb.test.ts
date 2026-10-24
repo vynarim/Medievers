@@ -36,7 +36,13 @@ function hold(sim: Sim, cmd: GameCommand, ticks: number): void {
 const unit = (sim: Sim) => {
   const u = sim.view().units[0];
   if (!u) throw new Error('no unit');
-  return { x: u.x >> 8, y: u.y >> 8, climbing: u.climbing === true, grounded: u.grounded, hp: u.hp };
+  return {
+    x: u.x >> 8,
+    y: u.y >> 8,
+    climbing: u.climbing === true,
+    grounded: u.grounded,
+    hp: u.hp,
+  };
 };
 
 describe('ladders (GDD §4.4)', () => {
@@ -103,6 +109,49 @@ describe('ladders (GDD §4.4)', () => {
     hold(sim, { t: 'move', dir: -1 }, 20);
     sim.step([{ t: 'move', dir: 0 }]);
     for (let i = 0; i < 120; i++) sim.step();
+    expect(unit(sim).y).toBe(500);
+  });
+
+  it('are grabbed from a unit width away, the unit stepping to the ladder', () => {
+    // Ladder at 590–594: a body centre at 552 is 24 px from the body's side to it.
+    const sim = start(552);
+    hold(sim, { t: 'climb', dir: -1 }, 30);
+    const u = unit(sim);
+    expect(u.climbing).toBe(true);
+    expect(u.x).toBeGreaterThan(575);
+    expect(u.y).toBeLessThan(500);
+    // Without the tolerance (older logs), the same spot is too far.
+    const { ladderReach, ...old } = RULES.unit;
+    expect(ladderReach).toBe(28);
+    const far = start(552, { ...RULES, unit: old });
+    hold(far, { t: 'climb', dir: -1 }, 30);
+    expect(unit(far).y).toBe(500);
+  });
+
+  it('let the unit hoisted on top stay there while ↑ is still held, without spending the walk', () => {
+    const sim = start(578);
+    hold(sim, { t: 'climb', dir: -1 }, 200);
+    const left = sim.view().turn.moveLeft;
+    for (let i = 0; i < 100; i++) sim.step();
+    expect(unit(sim).climbing).toBe(false);
+    expect(unit(sim).y).toBe(380);
+    expect(sim.view().turn.moveLeft).toBe(left);
+  });
+
+  it('stop a walk on top at the edge above the ladder, then take it down', () => {
+    const sim = start(578);
+    hold(sim, { t: 'climb', dir: -1 }, 200);
+    sim.step([{ t: 'climb', dir: 0 }]);
+    hold(sim, { t: 'move', dir: 1 }, 40);
+    sim.step([{ t: 'move', dir: 0 }]);
+    expect(unit(sim).x).toBeGreaterThan(620);
+    hold(sim, { t: 'move', dir: -1 }, 120);
+    sim.step([{ t: 'move', dir: 0 }]);
+    for (let i = 0; i < 30; i++) sim.step();
+    const edge = unit(sim);
+    expect(edge.y).toBe(380);
+    expect(edge.grounded).toBe(true);
+    hold(sim, { t: 'climb', dir: 1 }, 250);
     expect(unit(sim).y).toBe(500);
   });
 });

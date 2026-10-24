@@ -81,6 +81,7 @@ export function tuningGroups(rules: MatchRules): TuningGroup[] {
         field('unit.maxStep', 'tuning.maxStep', 'units.px', 1, 1, 0, 40),
         field('unit.turnTicks', 'tuning.turnTime', 'units.seconds', TPS, 0.05, 0, 1),
         field('unit.moveBudget', 'tuning.moveBudget', 'units.px', 1, 50, 0, 5000),
+        field('unit.ladderReach', 'tuning.ladderReach', 'units.px', 1, 2, 0, 100),
         field('unit.jumpForward.vx', 'tuning.jumpForwardX', 'units.pxPerTick', SUB, 0.25, 0, 15),
         field('unit.jumpForward.vy', 'tuning.jumpForwardY', 'units.pxPerTick', SUB, 0.25, -20, 0),
         field('unit.jumpBack.vx', 'tuning.jumpBackX', 'units.pxPerTick', SUB, 0.25, 0, 15),

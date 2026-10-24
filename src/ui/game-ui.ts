@@ -70,6 +70,8 @@ export class GameUi {
   /** speech bubble describing the map object last clicked */
   private readonly bubble: HTMLElement;
   private bubbleText = '';
+  /** tiny help bubble over a unit that cannot play (it played the team's last turn) */
+  private readonly tip: HTMLElement;
   private readonly help: HTMLElement;
   private readonly settings: HTMLElement;
   private readonly pause: HTMLElement;
@@ -198,6 +200,7 @@ export class GameUi {
     this.card = el('div', 'card panel hidden');
     this.bubble = el('div', 'bubble panel hidden');
     this.bubble.addEventListener('pointerdown', () => this.showBubble(null, 0, 0));
+    this.tip = el('div', 'tip panel hidden');
     this.help = this.modal('help');
     this.settings = this.modal();
     this.pause = this.modal('pause');
@@ -221,6 +224,7 @@ export class GameUi {
       sys,
       this.card,
       this.bubble,
+      this.tip,
       this.veil,
       this.arsenal,
       this.help,
@@ -310,6 +314,15 @@ export class GameUi {
     }
     this.bubble.style.left = `${Math.round(sx)}px`;
     this.bubble.style.top = `${Math.round(sy)}px`;
+  }
+
+  /** The tiny help bubble at screen px (sx, sy), above a unit, or none. */
+  showTip(text: string | null, sx: number, sy: number): void {
+    this.tip.classList.toggle('hidden', text === null);
+    if (text === null) return;
+    if (this.tip.textContent !== text) this.tip.textContent = text;
+    this.tip.style.left = `${Math.round(sx)}px`;
+    this.tip.style.top = `${Math.round(sy)}px`;
   }
 
   /** Puts the character card on the side of the screen away from its unit. */

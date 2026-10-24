@@ -40,6 +40,12 @@ const STYLE = `
   color: var(--vermillon); margin-bottom: 2px; }
 #ui .bubble::after { content: ''; position: absolute; left: 50%; bottom: -16px; margin-left: -10px;
   border: 10px solid transparent; border-top: 16px solid var(--encre); border-bottom: 0; }
+/* Tiny help bubble over a unit that cannot take the turn (selected but resting). */
+#ui .tip { position: absolute; transform: translate(-50%, calc(-100% - 10px)); width: max-content;
+  max-width: min(220px, calc(100vw - 24px)); padding: 3px 9px 4px; font-size: 13px; line-height: 1.25;
+  border-radius: 9px; text-align: center; pointer-events: none; }
+#ui .tip::after { content: ''; position: absolute; left: 50%; bottom: -9px; margin-left: -6px;
+  border: 6px solid transparent; border-top: 9px solid var(--encre); border-bottom: 0; }
 #ui .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 12px; }
 #ui .tabs button { min-height: 40px; font-size: 16px; }
 #ui button.icon { font-family: var(--text); font-size: 26px; min-width: 52px; padding: 2px 8px; }

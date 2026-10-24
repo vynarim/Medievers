@@ -11,7 +11,7 @@ import { createPrng, nextRange } from './math/prng.ts';
 import { SUBPX, idiv, subToPx } from './math/fixed.ts';
 import type { Phase, MatchConfig, SimState, TeamState } from './state.ts';
 import type { Mask } from './terrain/mask.ts';
-import { createTerrain, terrainHash } from './terrain/terrain.ts';
+import { createTerrain, isSolid, terrainHash } from './terrain/terrain.ts';
 import { climb, ladderAt } from './units/climb.ts';
 import { blastHitsStructures, initStructures, stepBlocks } from './structures.ts';
 import { drownFlames, flamesTurnEnd, flamesTurnStart, spawnFlames, stepFlames } from './flames.ts';
@@ -23,6 +23,7 @@ import {
   settle,
   stepUnitPhysics,
   walk,
+  UNIT_HALF_WIDTH,
   type Unit,
 } from './units/unit.ts';
 import { blastReachesBarrels, burnBarrels, placeBarrels, stepBarrels } from './barrels.ts';
@@ -413,7 +414,23 @@ function advanceTick(s: SimState, phaseJustSet: boolean, events: SimEvent[]): vo
     (!budgeted || t.moveLeft > 0)
   ) {
     const x0 = active.x;
-    walk(active, s.terrain, t.walkDir, s.rules.unit);
+    const y0 = active.y;
+    const wasClimbing = active.climbing === true;
+    const r = walk(active, s.terrain, t.walkDir, s.rules.unit);
+    // At the edge beside a ladder (the top of a tower), the unit stops instead of stepping off,
+    // so it can take the ladder down (rules.unit.ladderReach, 2026-10-25).
+    if (
+      r === 'fell' &&
+      !wasClimbing &&
+      s.rules.unit.ladderReach !== undefined &&
+      ladderAt(s.terrain, subToPx(x0), subToPx(y0), s.rules.unit) &&
+      deepDrop(s, subToPx(active.x), subToPx(y0))
+    ) {
+      active.x = x0;
+      active.y = y0;
+      active.grounded = true;
+      active.airPeakY = subToPx(y0);
+    }
     // Snail slime: every step counts double (GDD §4.10).
     const slimed = s.rules.beasts !== undefined && hasAffliction(s, active.id, Trick.Slime);
     const spent = Math.abs(active.x - x0) * (slimed ? 2 : 1);
@@ -432,7 +449,7 @@ function advanceTick(s: SimState, phaseJustSet: boolean, events: SimEvent[]): vo
   }
   // A unit whose ladder has gone (carved away) lets go.
   for (const u of s.units) {
-    if (u.climbing && !ladderAt(s.terrain, subToPx(u.x), subToPx(u.y))) release(u);
+    if (u.climbing && !ladderAt(s.terrain, subToPx(u.x), subToPx(u.y), s.rules.unit)) release(u);
   }
 
   for (const u of s.units) {
@@ -526,6 +543,19 @@ function advancePhase(
     case 'gameOver':
       break;
   }
+}
+
+/** px: a drop deeper than this beside a ladder is a ledge the walk stops at */
+const LEDGE_DROP = 40;
+
+/** No ground under column x within LEDGE_DROP px below row y (any of the unit's feet). */
+function deepDrop(s: SimState, x: number, y: number): boolean {
+  for (let dy = 0; dy <= LEDGE_DROP; dy++) {
+    for (const dx of [-UNIT_HALF_WIDTH + 1, 0, UNIT_HALF_WIDTH - 1]) {
+      if (isSolid(s.terrain, x + dx, y + dy)) return false;
+    }
+  }
+  return true;
 }
 
 /**

@@ -11,7 +11,7 @@ import type { SimEvent } from '../sim/events.ts';
 import { cosQ14, sinQ14 } from '../sim/math/angle.ts';
 import { SUBPX } from '../sim/math/fixed.ts';
 import { createProjectile, stepProjectile } from '../sim/projectiles/projectile.ts';
-import { Sim } from '../sim/sim.ts';
+import { Sim, canSwitchUnit } from '../sim/sim.ts';
 import type { MatchConfig } from '../sim/state.ts';
 import type { Mask } from '../sim/terrain/mask.ts';
 import type { Terrain } from '../sim/terrain/terrain.ts';
@@ -82,6 +82,8 @@ const FRAME_MARGINS = { top: 130, bottom: 110, side: 30 } as const;
 /** px above the feet and either side of a unit where a click still picks it: its name label */
 const LABEL_REACH = 44;
 const LABEL_HALF_WIDTH = 34;
+/** ms the tiny help bubble over a unit that cannot play stays up */
+const TIP_MS = 2600;
 
 /** Phaser's polygon calls want Vector2 instances. */
 const poly = (points: readonly { x: number; y: number }[]): Phaser.Math.Vector2[] =>
@@ -113,6 +115,8 @@ export class BattleScene extends Phaser.Scene {
   private readonly potLabels = new Map<number, Phaser.GameObjects.Text>();
   /** the map object whose bubble is open */
   private infoRef: ObjectRef | null = null;
+  /** a teammate clicked that cannot take the turn: why, over its head, until `until` (ms) */
+  private tip: { unitId: number; key: string; until: number } | null = null;
   /** drawn position of the beast, easing after the sim's */
   private beastShown: { x: number; y: number } | null = null;
   /** the burnt ends of the parchment, over the terrain, under the units */
@@ -153,6 +157,7 @@ export class BattleScene extends Phaser.Scene {
     this.manualCamera = false;
     this.selectedUnit = null;
     this.infoRef = null;
+    this.tip = null;
   }
 
   create(): void {
@@ -509,6 +514,7 @@ export class BattleScene extends Phaser.Scene {
     this.ui.update(this.sim.view(), this.input_.controls.power, time);
     this.ui.showResetView(this.manualCamera);
     this.updateBubble();
+    this.updateTip();
     if (this.selectedUnit !== null) {
       // The card goes to the half of the screen the unit is not in.
       const u = this.sim.view().units.find((x) => x.id === this.selectedUnit);
@@ -574,7 +580,32 @@ export class BattleScene extends Phaser.Scene {
     const v = this.sim.view();
     if (hit && hit.team === v.turn.activeTeam && hit.id !== v.turn.activeUnitId) {
       this.input_.ui.selectUnit = hit.id;
+      // It cannot take the turn: a tiny bubble over it says why, at once.
+      const choosing = v.turn.phase === 'transition' || v.turn.phase === 'action';
+      const key =
+        hit.id === v.turn.restingUnitId
+          ? 'tip.resting'
+          : choosing && v.rules.turn.freeSelect && !canSwitchUnit(v)
+            ? 'tip.tooLate'
+            : null;
+      this.tip = key && choosing ? { unitId: hit.id, key, until: this.time.now + TIP_MS } : null;
+    } else this.tip = null;
+  }
+
+  /** Keeps the tiny help bubble over its unit while it lasts. */
+  private updateTip(): void {
+    const tip = this.tip;
+    const u = tip ? this.sim.view().units.find((x) => x.id === tip.unitId) : undefined;
+    if (!tip || !u?.alive || this.time.now > tip.until) {
+      this.tip = null;
+      this.ui.showTip(null, 0, 0);
+      return;
     }
+    const cam = this.cameras.main;
+    const [x, y] = this.pos(`u${u.id}`, 1, u.x, u.y);
+    const sx = (x - cam.worldView.x) * cam.zoom;
+    const sy = (y - UNIT_HEIGHT - LABEL_REACH - cam.worldView.y) * cam.zoom;
+    this.ui.showTip(t(tip.key), sx, sy);
   }
 
   /** The living unit under world point (x, y): its figure or its name label. */

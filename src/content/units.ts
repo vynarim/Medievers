@@ -40,6 +40,11 @@ export interface UnitRules {
   readonly climbSpeed?: number;
   /** percent of the walk a climbed pixel costs (50: a ladder twice the walk per turn) */
   readonly climbCostPct?: number;
+  /**
+   * px of tolerance beyond the body's side within which a ladder is grabbed, to climb it up or to
+   * go down it from the top (2026-10-25: a unit's width). Absent from older logs: 6 px.
+   */
+  readonly ladderReach?: number;
 }
 
 export const UNIT_RULES: UnitRules = {
@@ -56,4 +61,5 @@ export const UNIT_RULES: UnitRules = {
   turnTicks: 12,
   climbSpeed: 256,
   climbCostPct: 50,
+  ladderReach: 28,
 };
