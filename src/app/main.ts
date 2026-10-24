@@ -1,24 +1,34 @@
-// Bootstrap: loads the greybox map mask, then starts the battle scene (hotseat, 2 houses).
+// Bootstrap: the fonts, then the setup screen (or the match left in progress), then the battle
+// scene on the chosen map, drawn anew for each match (hotseat, 2 to 4 houses).
 import Phaser from 'phaser';
 import { GREYBOX_MAPS } from '../content/maps.ts';
-import { BattleScene, type BattleData } from '../render/battle-scene.ts';
+import { BattleScene, battleMap, type BattleData } from '../render/battle-scene.ts';
 import type { GameLog } from '../sim/log.ts';
 import { showSetupScreen } from '../ui/setup-screen.ts';
+import { t } from '../ui/i18n.ts';
 import { loadSetup, rulesFor, saveSetup, type MatchSetup } from './match-setup.ts';
 import { loadSave } from './autosave.ts';
 import { loadFonts } from '../ui/fonts.ts';
 import { loadOverrides } from '../ui/game-ui.ts';
 import { decodeMaskPng } from './loaders/mask-png.ts';
+import { buildMap, legacyMap, mapForLog, type BuiltMap } from './map-build.ts';
+
+/** The map a log was played on: drawn again, or for the old greybox logs, loaded. */
+async function mapOfLog(log: GameLog): Promise<BuiltMap | null> {
+  const built = mapForLog(log.mapId);
+  if (built) return built;
+  const def = GREYBOX_MAPS.find((m) => m.id === log.mapId);
+  if (!def?.maskUrl) return null;
+  const res = await fetch(def.maskUrl);
+  if (!res.ok) return null;
+  return legacyMap(def.id, decodeMaskPng(new Uint8Array(await res.arrayBuffer())));
+}
 
 async function boot(): Promise<void> {
-  const map = GREYBOX_MAPS[0];
-  if (!map) throw new Error('no greybox map');
-  const res = await fetch(map.maskUrl);
-  if (!res.ok) throw new Error(`cannot load ${map.maskUrl}: ${res.status}`);
-  const mask = decodeMaskPng(new Uint8Array(await res.arrayBuffer()));
   // Phaser rasterises texts once: the faces must be ready before the first scene.
   await loadFonts();
-  // The match seed is the only non-deterministic input; everything after it replays exactly.
+  // The match seed is the only non-deterministic input; everything after it replays exactly,
+  // the map included.
   const seed = crypto.getRandomValues(new Uint32Array(1))[0] ?? 1;
 
   const game = new Phaser.Game({
@@ -33,33 +43,41 @@ async function boot(): Promise<void> {
   });
   const overrides = loadOverrides();
   const setup = loadSetup(Object.keys(overrides).length > 0);
-  const start = (chosen: MatchSetup, resume?: GameLog, replay?: GameLog): void => {
+  const start = (chosen: MatchSetup, map: BuiltMap, logs: Partial<BattleData> = {}): void => {
     const data: BattleData = {
-      map,
-      mask,
+      ...battleMap(map),
       seed,
       rules: rulesFor(chosen, overrides),
       setup: chosen,
-      ...(resume ? { resume } : {}),
-      ...(replay ? { replay } : {}),
+      ...logs,
     };
     game.scene.add('battle', BattleScene, true, data);
   };
-  // A match left in progress (refresh, crash, reboot) resumes where it was; otherwise the houses
-  // are chosen first, on the setup screen.
-  const save = loadSave();
-  if (save && save.mapId === map.id) start(setup, save);
-  else {
+  const choose = (): void => {
     showSetupScreen(
       setup,
       (chosen) => {
         saveSetup(chosen);
-        start(chosen);
+        start(chosen, buildMap(chosen.map, seed));
       },
       undefined,
-      (log) => start(setup, undefined, log),
+      (log) => {
+        void mapOfLog(log).then((map) => {
+          if (map) start(setup, map, { replay: log });
+          else {
+            window.alert(t('setup.importMap'));
+            choose();
+          }
+        });
+      },
     );
-  }
+  };
+  // A match left in progress (refresh, crash, reboot) resumes where it was; otherwise the houses
+  // are chosen first, on the setup screen.
+  const save = loadSave();
+  const saved = save ? await mapOfLog(save) : null;
+  if (save && saved) start(setup, saved, { resume: save });
+  else choose();
   // Dev builds expose the game for browser-driven checks (Playwright); stripped from production.
   if (import.meta.env.DEV) (window as unknown as { medievers: Phaser.Game }).medievers = game;
 }

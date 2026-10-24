@@ -2,6 +2,8 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { decodeMaskPng } from '../../src/app/loaders/mask-png.ts';
 import type { Mask } from '../../src/sim/terrain/mask.ts';
+import { parseMapId } from '../../src/content/maps.ts';
+import { generateMap } from '../../src/sim/terrain/generate.ts';
 
 const root = new URL('../../', import.meta.url);
 
@@ -14,5 +16,8 @@ export function maskPathFor(mapId: string): URL {
 }
 
 export function loadMask(mapId: string): Mask {
+  // A generated map is drawn again from its theme and seed.
+  const gen = parseMapId(mapId);
+  if (gen) return generateMap(gen.theme, gen.seed).mask;
   return decodeMaskPng(new Uint8Array(readFileSync(maskPathFor(mapId))));
 }

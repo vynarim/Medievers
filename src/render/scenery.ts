@@ -7,10 +7,18 @@ import Phaser from 'phaser';
 import { COLORS, css } from '../ui/tokens.ts';
 import { SkyLife } from './sky-life.ts';
 import type { MaskView } from './terrain-layer.ts';
+import type { MapTheme } from '../content/maps.ts';
+import {
+  coastProps,
+  drawFarCoast,
+  drawFarHolyLand,
+  holyLandProps,
+  type ThemeProps,
+} from './scenery-themes.ts';
 
-const FAR_W = 3200;
+export const FAR_W = 3200;
 /** tall enough for the lower hill to reach below the terrain everywhere */
-const FAR_H = 1000;
+export const FAR_H = 1000;
 /** parallax factor of the far landscape */
 const FAR_SCROLL = 0.45;
 const CLOUD_SCROLL = 0.6;
@@ -20,12 +28,12 @@ const CLOUD_DRIFT = 4;
 const CLOUD_SHAPES = 4;
 const CLOUD_H = 120;
 
-type Ctx = CanvasRenderingContext2D;
+export type Ctx = CanvasRenderingContext2D;
 
-const rnd = (a: number, b: number): number => a + Math.random() * (b - a);
-const pick = <T>(xs: readonly T[]): T => xs[Math.floor(Math.random() * xs.length)] as T;
+export const rnd = (a: number, b: number): number => a + Math.random() * (b - a);
+export const pick = <T>(xs: readonly T[]): T => xs[Math.floor(Math.random() * xs.length)] as T;
 
-const ink = (ctx: Ctx, w = 2): void => {
+export const ink = (ctx: Ctx, w = 2): void => {
   ctx.strokeStyle = css(COLORS.encre);
   ctx.lineWidth = w;
 };
@@ -34,7 +42,13 @@ const ink = (ctx: Ctx, w = 2): void => {
  * Fills the path that `trace` draws, hatches inside it if asked, then inks its outline: the
  * one gesture of the manuscript, a flat field in a dark line.
  */
-function shape(ctx: Ctx, trace: () => void, fill: number, hatch?: () => void, line = 3): void {
+export function shape(
+  ctx: Ctx,
+  trace: () => void,
+  fill: number,
+  hatch?: () => void,
+  line = 3,
+): void {
   ctx.beginPath();
   trace();
   ctx.fillStyle = css(fill);
@@ -52,7 +66,7 @@ function shape(ctx: Ctx, trace: () => void, fill: number, hatch?: () => void, li
 }
 
 /** Rows of little hanging arcs over a box: roof tiles, thatch, the hatching of the manuscript. */
-function scallops(
+export function scallops(
   ctx: Ctx,
   x0: number,
   y0: number,
@@ -80,7 +94,7 @@ function scallops(
 }
 
 /** Coursed ashlar: faint beds and staggered joints over a box. */
-function masonry(ctx: Ctx, x: number, top: number, w: number, h: number): void {
+export function masonry(ctx: Ctx, x: number, top: number, w: number, h: number): void {
   ctx.save();
   ctx.globalAlpha = 0.28;
   ink(ctx, 1);
@@ -112,7 +126,13 @@ function lancet(ctx: Ctx, cx: number, y: number, hw: number, h: number, fill = C
 }
 
 /** Merlons standing on a wall top. */
-function merlons(ctx: Ctx, x: number, top: number, w: number, fill = COLORS.ceruse): void {
+export function merlons(
+  ctx: Ctx,
+  x: number,
+  top: number,
+  w: number,
+  fill: number = COLORS.ceruse,
+): void {
   const m = 8;
   const n = Math.max(2, Math.round((w + 6) / 14));
   const gap = (w - m) / (n - 1);
@@ -123,7 +143,7 @@ function merlons(ctx: Ctx, x: number, top: number, w: number, fill = COLORS.ceru
 }
 
 /** A pole with a gold knop and a swallow-tailed pennant waving in the wind. */
-function pennant(ctx: Ctx, x: number, y: number, color: number): void {
+export function pennant(ctx: Ctx, x: number, y: number, color: number): void {
   const top = y - 22;
   ink(ctx, 2);
   ctx.beginPath();
@@ -381,7 +401,7 @@ function fence(ctx: Ctx, x0: number, x1: number, base: number): void {
 }
 
 /** A farm: a half-timbered house under thatch, a tiled barn, a haystack and a wattle fence. */
-function farm(ctx: Ctx, x: number, base: number): void {
+export function farm(ctx: Ctx, x: number, base: number): void {
   const bx = x + 108;
   shape(
     ctx,
@@ -542,7 +562,7 @@ function windmill(ctx: Ctx, x: number, base: number): void {
   shape(ctx, () => ctx.arc(x, hubY, 5, 0, Math.PI * 2), COLORS.terreOmbre, undefined, 2);
 }
 
-function lollipop(ctx: Ctx, x: number, y: number, r: number, leaf: number, alpha = 1): void {
+export function lollipop(ctx: Ctx, x: number, y: number, r: number, leaf: number, alpha = 1): void {
   ctx.globalAlpha = alpha;
   ctx.lineWidth = 3;
   ctx.strokeStyle = css(COLORS.encre);
@@ -566,7 +586,7 @@ function lollipop(ctx: Ctx, x: number, y: number, r: number, leaf: number, alpha
 }
 
 /** A sheep: a fleece of scallops, black head and legs; head down when grazing. */
-function sheep(ctx: Ctx, x: number, feet: number, f: number, s: number): void {
+export function sheep(ctx: Ctx, x: number, feet: number, f: number, s: number): void {
   const rx = 15 * s;
   const ry = 9.5 * s;
   const cy = feet - 8 * s - ry;
@@ -840,7 +860,7 @@ type Beast = (ctx: Ctx, x: number, feet: number, f: number, s: number) => void;
  * Paints `draw` on a scratch canvas, then lays it down at `alpha`: the whole group fades as one
  * flat sheet, so no line inside it shows through another.
  */
-function layer(ctx: Ctx, alpha: number, draw: (l: Ctx) => void): void {
+export function layer(ctx: Ctx, alpha: number, draw: (l: Ctx) => void): void {
   const canvas = document.createElement('canvas');
   canvas.width = ctx.canvas.width;
   canvas.height = ctx.canvas.height;
@@ -1042,7 +1062,7 @@ export class Scenery {
   private readonly width: number;
   private readonly sky: SkyLife;
 
-  constructor(scene: Phaser.Scene, mask: MaskView) {
+  constructor(scene: Phaser.Scene, mask: MaskView, theme: MapTheme = 'valley') {
     this.width = mask.width;
     const tex = (key: string, w: number, h: number, draw: (ctx: Ctx) => void): string => {
       if (scene.textures.exists(key)) return key;
@@ -1059,7 +1079,12 @@ export class Scenery {
         mask.height * 0.32,
         mask.width * 3,
         FAR_H,
-        tex('far', FAR_W, FAR_H, drawFar),
+        tex(
+          `far_${theme}`,
+          FAR_W,
+          FAR_H,
+          theme === 'coast' ? drawFarCoast : theme === 'holyLand' ? drawFarHolyLand : drawFar,
+        ),
       )
       .setOrigin(0, 0)
       .setScrollFactor(FAR_SCROLL, 0.8)
@@ -1087,26 +1112,32 @@ export class Scenery {
       this.objects.push(c);
     }
 
-    // Trees and flowers on the terrain surface.
-    const treeKey = tex('tree', 70, 110, (ctx) => lollipop(ctx, 35, 108, 22, COLORS.vertDeGris));
-    const flowerKey = tex('flowers', 40, 24, (ctx) => {
-      for (const [x, color] of [
-        [8, COLORS.vermillon],
-        [20, COLORS.lapis],
-        [32, COLORS.or],
-      ] as const) {
-        ctx.strokeStyle = css(COLORS.vertDeGris);
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(x, 24);
-        ctx.lineTo(x, 10);
-        ctx.stroke();
-        ctx.fillStyle = css(color);
-        ctx.beginPath();
-        ctx.arc(x, 8, 5, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    });
+    // Trees and flowers on the terrain surface (palms and shrubs, pines and dune grass).
+    const themed: ThemeProps | null =
+      theme === 'coast' ? coastProps() : theme === 'holyLand' ? holyLandProps() : null;
+    const treeKey = themed
+      ? tex(`tree_${theme}`, 110, 120, themed.tall)
+      : tex('tree', 70, 110, (ctx) => lollipop(ctx, 35, 108, 22, COLORS.vertDeGris));
+    const flowerKey = themed
+      ? tex(`flowers_${theme}`, 40, 24, themed.small)
+      : tex('flowers', 40, 24, (ctx) => {
+          for (const [x, color] of [
+            [8, COLORS.vermillon],
+            [20, COLORS.lapis],
+            [32, COLORS.or],
+          ] as const) {
+            ctx.strokeStyle = css(COLORS.vertDeGris);
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(x, 24);
+            ctx.lineTo(x, 10);
+            ctx.stroke();
+            ctx.fillStyle = css(color);
+            ctx.beginPath();
+            ctx.arc(x, 8, 5, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        });
     const solid = (x: number, y: number): boolean =>
       x >= 0 &&
       y >= 0 &&

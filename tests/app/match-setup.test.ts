@@ -11,10 +11,21 @@ describe('match setup (BACKLOG 3.6)', () => {
   });
 
   it('keeps 2 to 4 houses', () => {
-    const one = fixSetup({ scheme: 'classic', regicide: false, lineups: [['knight']] });
+    const one = fixSetup({
+      map: 'valley',
+      scheme: 'classic',
+      regicide: false,
+      lineups: [['knight']],
+    });
     expect(one.lineups).toHaveLength(2);
     const five = fixSetup({ ...one, lineups: Array(5).fill(['knight']) });
     expect(five.lineups).toHaveLength(4);
+  });
+
+  it('keeps a known map, the valley otherwise (an old saved setup has none)', () => {
+    const old = { scheme: 'classic', regicide: false, lineups: [['knight'], ['knight']] };
+    expect(fixSetup(old as never).map).toBe('valley');
+    expect(fixSetup({ ...defaultSetup(false), map: 'holyLand' }).map).toBe('holyLand');
   });
 
   it('gives each scheme its rules (GDD §6)', () => {

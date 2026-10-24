@@ -3,6 +3,7 @@
 import { CLASS_IDS, type ClassId } from '../content/classes.ts';
 import { FACTIONS } from '../content/factions.ts';
 import { MAX_HOUSES, MAX_UNITS, MIN_HOUSES, SCHEME_IDS } from '../content/schemes.ts';
+import { MAP_THEMES } from '../content/maps.ts';
 import { fixSetup, type MatchSetup } from '../app/match-setup.ts';
 import { loadLastReplay, parseLog } from '../app/autosave.ts';
 import type { GameLog } from '../sim/log.ts';
@@ -59,6 +60,17 @@ export function showSetupScreen(
 
   const render = (): void => {
     panel.replaceChildren(el('h2', '', t('setup.title')));
+
+    // The map: a theme; its land, towers and rocks are drawn anew for each match.
+    panel.append(el('h3', '', t('setup.map')));
+    const maps = el('div', 'row');
+    for (const theme of MAP_THEMES) {
+      const b = button('', `scheme${setup.map === theme ? ' on' : ''}`);
+      b.append(el('b', '', t(`maps.${theme}`)), el('span', '', t(`maps.${theme}.text`)));
+      b.addEventListener('click', () => update({ ...setup, map: theme }));
+      maps.append(b);
+    }
+    panel.append(maps);
 
     panel.append(el('h3', '', t('setup.scheme')));
     const schemes = el('div', 'row');

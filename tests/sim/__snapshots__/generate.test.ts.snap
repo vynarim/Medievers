@@ -1,0 +1,9 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`generated maps (GDD §10) > keep the reference map of each theme (a change here moves every generated replay) 1`] = `
+[
+  "623cff5d",
+  "2838cbfd",
+  "cfa58365",
+]
+`;

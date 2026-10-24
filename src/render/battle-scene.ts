@@ -42,11 +42,30 @@ import { targetFor, wallAngle, wallLength, wallRefusal, wallSize } from '../sim/
 import { isProjectile, isTargeted, type WeaponDef } from '../content/weapons.ts';
 import { rulesFor, saveSetup, type MatchSetup } from '../app/match-setup.ts';
 import { showSetupScreen } from '../ui/setup-screen.ts';
-import { StructureState } from '../content/structures.ts';
+import { StructureState, type StructurePlacement } from '../content/structures.ts';
+import { buildMap, mapForLog, type BuiltMap } from '../app/map-build.ts';
+
+/** The map fields of the battle data, from a built map. */
+export function battleMap(
+  b: BuiltMap,
+): Pick<BattleData, 'map' | 'mask' | 'mapId' | 'structures' | 'waterLevel'> {
+  return {
+    map: b.def,
+    mask: b.mask,
+    mapId: b.mapId,
+    ...(b.structures ? { structures: b.structures } : {}),
+    ...(b.waterLevel !== undefined ? { waterLevel: b.waterLevel } : {}),
+  };
+}
 
 export interface BattleData {
   readonly map: MapDef;
   readonly mask: Mask;
+  /** id of the map in the game logs (theme and seed of a generated map) */
+  readonly mapId: string;
+  /** the map's structures and sea, from its generation (or the fixed map's own) */
+  readonly structures?: readonly StructurePlacement[];
+  readonly waterLevel?: number;
   readonly seed: number;
   /** match rules, from the setup's scheme (and the player's settings for « Personnalisé ») */
   readonly rules: MatchRules;
@@ -179,12 +198,14 @@ export class BattleScene extends Phaser.Scene {
   }
 
   create(): void {
-    const { map, mask, seed, rules, setup } = this.data_;
+    const { map, mask, seed, rules, setup, waterLevel } = this.data_;
+    const structures = this.data_.structures ?? map.structures;
     const lineups = setup.lineups;
     const perTeam = Math.max(...lineups.map((l) => l.length));
     const config: MatchConfig = {
       rules,
-      ...(map.structures ? { structures: map.structures } : {}),
+      ...(structures ? { structures } : {}),
+      ...(waterLevel !== undefined ? { waterLevel } : {}),
       // Each house takes as many of its spawn columns as it has units.
       teams: spawnColumns(mask, lineups.length, perTeam).map((columns, h) => {
         const lineup = lineups[h] ?? [];
@@ -206,7 +227,7 @@ export class BattleScene extends Phaser.Scene {
     const from = watch ?? resume;
     this.saver = from
       ? new AutoSaver(from.config, from.seed, from.mapId, [...from.commands])
-      : new AutoSaver(config, seed, map.id);
+      : new AutoSaver(config, seed, this.data_.mapId);
     this.replaying = watch !== undefined;
     this.watch = watch ? new ReplayInput(watch) : null;
     this.watchLog = watch ?? null;
@@ -220,8 +241,8 @@ export class BattleScene extends Phaser.Scene {
       .tileSprite(0, -SKY_EXTRA, map.width, map.height + SKY_EXTRA, this.diaperTexture())
       .setOrigin(0, 0)
       .setDepth(0);
-    this.scenery = new Scenery(this, this.sim.view().terrain);
-    this.terrain = new TerrainLayer(this, () => this.sim.view().terrain);
+    this.scenery = new Scenery(this, this.sim.view().terrain, map.theme);
+    this.terrain = new TerrainLayer(this, () => this.sim.view().terrain, map.theme);
     this.world = this.add.graphics().setDepth(6);
     this.burnGfx = this.add.graphics().setDepth(5.5);
     this.waterGfx = this.add.graphics().setDepth(6.5);
@@ -414,12 +435,14 @@ export class BattleScene extends Phaser.Scene {
 
   private startMatch(setup: MatchSetup, overrides: TuningOverrides): void {
     clearSave();
+    const seed = (this.data_.seed + 0x9e3779b9) >>> 0;
+    // Each match draws its map anew, from the chosen theme and its own seed.
+    const built = buildMap(setup.map, seed);
     const data: BattleData = {
-      map: this.data_.map,
-      mask: this.data_.mask,
+      ...battleMap(built),
       rules: rulesFor(setup, overrides),
       setup,
-      seed: (this.data_.seed + 0x9e3779b9) >>> 0,
+      seed,
     };
     this.scene.restart(data);
   }
@@ -441,8 +464,15 @@ export class BattleScene extends Phaser.Scene {
       },
       () => (this.paused = false),
       (log) => {
+        const built = mapForLog(log.mapId) ?? (log.mapId === this.data_.mapId ? null : undefined);
+        if (built === undefined) {
+          window.alert(t('setup.importMap'));
+          this.paused = false;
+          return;
+        }
         clearSave();
-        this.scene.restart({ ...this.data_, replay: log } satisfies BattleData);
+        const data: BattleData = { ...this.data_, ...(built ? battleMap(built) : {}), replay: log };
+        this.scene.restart(data);
       },
     );
   }

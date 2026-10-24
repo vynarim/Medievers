@@ -11,10 +11,13 @@ import {
   type SchemeId,
 } from '../content/schemes.ts';
 import { applyOverrides, type TuningOverrides } from '../ui/tuning-model.ts';
+import { MAP_THEMES, type MapTheme } from '../content/maps.ts';
 
 const KEY = 'medievers.setup.v1';
 
 export interface MatchSetup {
+  /** the map's theme; the land itself is drawn anew for each match */
+  readonly map: MapTheme;
   readonly scheme: SchemeId;
   readonly regicide: boolean;
   /** class of each unit of each house; its length is the number of houses */
@@ -23,6 +26,7 @@ export interface MatchSetup {
 
 export function defaultSetup(custom: boolean): MatchSetup {
   return {
+    map: 'valley',
     scheme: custom ? 'custom' : 'classic',
     regicide: false,
     lineups: [defaultLineup(4, false), defaultLineup(4, false)],
@@ -51,7 +55,8 @@ export function fixSetup(s: MatchSetup): MatchSetup {
   const scheme = SCHEME_IDS.includes(s.scheme) ? s.scheme : 'classic';
   const lineups = s.lineups.slice(0, MAX_HOUSES).map((l) => fixLineup(l, s.regicide));
   while (lineups.length < MIN_HOUSES) lineups.push(defaultLineup(4, s.regicide));
-  return { scheme, regicide: s.regicide, lineups };
+  const map = MAP_THEMES.includes(s.map) ? s.map : 'valley';
+  return { map, scheme, regicide: s.regicide, lineups };
 }
 
 export function loadSetup(custom: boolean): MatchSetup {

@@ -10,7 +10,8 @@ import {
   nextU32,
 } from '../../src/sim/math/index.ts';
 import { SIN_Q14 } from '../../src/sim/math/trig-lut.ts';
-import { replay, type ReplayFile } from '../../src/sim/index.ts';
+import { generateMap, replay, type ReplayFile } from '../../src/sim/index.ts';
+import { MAP_THEMES } from '../../src/content/maps.ts';
 
 export type CheckResults = Record<string, number>;
 
@@ -36,6 +37,10 @@ export function runChecks({ maskPng, replays }: CheckInput): CheckResults {
 
   const mask = decodeMaskPng(maskPng);
   const results: CheckResults = { math, prng, mask: hashBytes(FNV_OFFSET, mask.data) };
+  // Generated maps must come out the same everywhere: replays redraw them from their id.
+  for (const theme of MAP_THEMES) {
+    results[`map-${theme}`] = hashBytes(FNV_OFFSET, generateMap(theme, 20261025).mask.data) >>> 0;
+  }
   for (const r of replays) {
     results[r.name] = replay(r.file, decodeMaskPng(r.mapPng)).hash() >>> 0;
   }

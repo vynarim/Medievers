@@ -2,3 +2,4 @@
 export * from './material.ts';
 export * from './mask.ts';
 export * from './terrain.ts';
+export * from './generate.ts';

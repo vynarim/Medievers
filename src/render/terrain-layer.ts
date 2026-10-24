@@ -5,6 +5,7 @@ import Phaser from 'phaser';
 import { MASK_PALETTE } from '../content/materials.ts';
 import { Material } from '../sim/terrain/material.ts';
 import { COLORS } from '../ui/tokens.ts';
+import type { MapTheme } from '../content/maps.ts';
 
 export const TILE_SIZE = 512;
 export const MAX_TILE_UPLOADS_PER_FRAME = 4;
@@ -58,8 +59,85 @@ const STEP_DROP = Array.from({ length: STEP }, (_, u) => {
   const t = (u - STEP / 2) / (STEP / 2);
   return Math.round(18 * Math.sqrt(Math.max(0, 1 - t * t)));
 });
-const GRASS = rgb(COLORS.vertDeGris);
-const GRASS_LIGHT = rgb(COLORS.vertTendre);
+
+/** Gentle waves (the coast): how far below its line a band edge sits at u in [0, STEP). */
+const WAVE_DROP = Array.from({ length: STEP }, (_, u) =>
+  Math.round(9 + 9 * Math.sin((u / STEP) * Math.PI * 4)),
+);
+/** Zigzags like wind ripples on a dune (the Holy Land). */
+const RIPPLE_DROP = Array.from({ length: STEP }, (_, u) => {
+  const p = u % (STEP / 2);
+  return Math.round((Math.abs(p - STEP / 4) * 18) / (STEP / 4));
+});
+
+/** How a map theme paints its ground: strata, top band (grass or sand), stone. */
+interface TerrainStyle {
+  /** the shape of the strata edges, over STEP px: scallops, waves or ripples */
+  readonly drop: readonly number[];
+  /** small marks scattered in the strata (shells, grains of sand); false: plain */
+  readonly grain: (x: number, y: number, band: number) => boolean;
+  readonly grainRgb?: Rgb;
+  readonly tints: Record<number, readonly Rgb[]>;
+  /** the band along the top of the earth, in tufts: dark and light */
+  readonly top: readonly [Rgb, Rgb];
+}
+
+const STYLES: Readonly<Record<MapTheme, TerrainStyle>> = {
+  valley: {
+    drop: STEP_DROP,
+    grain: () => false,
+    tints: MATERIAL_RGB,
+    top: [rgb(COLORS.vertDeGris), rgb(COLORS.vertTendre)],
+  },
+  // Normandy: sand, chalk and salt meadow, dune grass on top.
+  coast: {
+    drop: WAVE_DROP,
+    // Shells and pebbles: little dots in a loose lattice, shifted from band to band.
+    grain: (x, y, band) => {
+      const u = (x + band * 37) % 46;
+      const v = (y + band * 11) % 28;
+      return u >= 20 && u < 24 && v >= 12 && v < 15 && ((x >> 5) + band) % 3 !== 0;
+    },
+    grainRgb: pale(COLORS.terreOmbre, 0.25),
+    tints: {
+      ...MATERIAL_RGB,
+      [Material.Earth]: [
+        pale(COLORS.ocre, 0.55),
+        pale(COLORS.roche, 0.62),
+        pale(COLORS.vertTendre, 0.45),
+        pale(COLORS.ocre, 0.35),
+        pale(COLORS.ceruse, 0.2),
+      ],
+      [Material.Rock]: [
+        pale(COLORS.roche, 0.25),
+        pale(COLORS.lapis, 0.6),
+        pale(COLORS.roche, 0.45),
+      ],
+    },
+    top: [pale(COLORS.vertDeGris, 0.15), pale(COLORS.vertTendre, 0.3)],
+  },
+  // The Holy Land: ochre and rose sand, sandstone walls, a pale sand crust on top.
+  holyLand: {
+    drop: RIPPLE_DROP,
+    // Grains of sand: a fine scatter of darker specks.
+    grain: (x, y) => (x * 31 + y * 17) % 53 === 0 || (x * 13 + y * 29) % 61 === 0,
+    grainRgb: pale(COLORS.terreOmbre, 0.15),
+    tints: {
+      ...MATERIAL_RGB,
+      [Material.Earth]: [
+        pale(COLORS.or, 0.45),
+        pale(COLORS.roseGarance, 0.55),
+        pale(COLORS.ocre, 0.3),
+        pale(COLORS.terreOmbre, 0.6),
+      ],
+      [Material.Rock]: [pale(COLORS.terreOmbre, 0.35), pale(COLORS.roseGarance, 0.4)],
+      [Material.BuiltStone]: [pale(COLORS.ocre, 0.55), pale(COLORS.or, 0.6)],
+      [Material.Backdrop]: [pale(COLORS.ocre, 0.3), pale(COLORS.terreOmbre, 0.55)],
+    },
+    top: [pale(COLORS.or, 0.25), pale(COLORS.ceruse, 0.35)],
+  },
+};
+
 const INK = rgb(COLORS.encre);
 /** Mask PNG colours per material, for the debug view of the raw collision mask. */
 const MASK_RGB: Record<number, Rgb> = Object.fromEntries(
@@ -99,8 +177,11 @@ export class TerrainLayer {
   /** debug: paint the raw mask colours instead of the greybox look */
   private maskView = false;
 
-  constructor(scene: Phaser.Scene, mask: () => MaskView) {
+  private readonly style: TerrainStyle;
+
+  constructor(scene: Phaser.Scene, mask: () => MaskView, theme: MapTheme = 'valley') {
     this.mask = mask;
+    this.style = STYLES[theme];
     const m = mask();
     this.cols = Math.ceil(m.width / TILE_SIZE);
     const rows = Math.ceil(m.height / TILE_SIZE);
@@ -216,13 +297,13 @@ export class TerrainLayer {
         else if (nearAir(airAt, wx, wy)) c = INK;
         else if (mat === Material.Earth && !solidAt(wx, wy - GRASS_DEPTH)) {
           // Grass in tufts: lighter blades every few px.
-          c = (wx + (wy >> 2)) % 7 < 2 ? GRASS_LIGHT : GRASS;
+          c = (wx + (wy >> 2)) % 7 < 2 ? this.style.top[1] : this.style.top[0];
         } else if (mat === Material.BuiltStone || mat === Material.Backdrop) {
           // Ashlar: courses of dressed stones, mortar joints, a lighter top edge to each stone.
           const course = Math.floor(wy / COURSE);
           const sx = (wx + (course & 1) * (STONE >> 1)) % STONE;
           const sy = wy % COURSE;
-          const tints = MATERIAL_RGB[mat] ?? FALLBACK;
+          const tints = this.style.tints[mat] ?? FALLBACK;
           const tint =
             tints[(course + Math.floor((wx + (course & 1) * 17) / STONE)) % tints.length];
           if (sx < 2 || sy < 2) c = MORTAR;
@@ -231,10 +312,10 @@ export class TerrainLayer {
         } else {
           // Strata in rounded steps: each band's lower edge bulges in arcs, ink line on the edge,
           // a white highlight just under it, as on the hills of the manuscript.
-          const tints = MATERIAL_RGB[mat] ?? FALLBACK;
+          const tints = this.style.tints[mat] ?? FALLBACK;
           const row = Math.floor(wy / BAND);
           const shift = (((row * 23) % STEP) + STEP) % STEP;
-          const drop = STEP_DROP[(wx + shift) % STEP] ?? 0;
+          const drop = this.style.drop[(wx + shift) % STEP] ?? 0;
           const v = wy - row * BAND; // 0..BAND-1 inside the nominal band
           const edge = BAND - 20 + drop - 18; // where this band ends, in the next band's space
           const band = v >= edge ? row + 1 : row;
@@ -242,7 +323,7 @@ export class TerrainLayer {
           const base = tints[((band % tints.length) + tints.length) % tints.length] ?? HIGHLIGHT;
           if (d >= 0 && d < 3) c = INK;
           else if (d >= 3 && d < 6) c = HIGHLIGHT;
-          else c = base;
+          else c = this.style.grain(wx, wy, band) ? (this.style.grainRgb ?? INK) : base;
         }
         img.data[o] = c[0];
         img.data[o + 1] = c[1];
