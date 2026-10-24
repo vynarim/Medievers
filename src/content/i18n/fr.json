@@ -1433,6 +1433,7 @@
   "quip.strike.2": "Il pleut des pierres. Le curé n'avait pas prévu ça.",
   "quip.strike.3": "Le trébuchet envoie ses compliments, en granit.",
   "quip.toolRefused": "Pas là : trop loin, sur un combattant, ou en pleine terre.",
+  "quip.strikeRefused": "Rien à frapper à portée de masse : approchez-vous, ou visez de l'autre côté.",
   "quip.burnMet.1": "Les deux feux se rejoignent : il ne reste plus de parchemin. On compte les survivants.",
   "quip.burnMet.2": "Plus une ligne de libre sur la page ! Le copiste arrête la bataille et fait les comptes.",
   "quip.burnMet.3": "Le manuscrit est en cendres. Victoire aux points, comme au tournoi.",

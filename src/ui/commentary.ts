@@ -136,7 +136,7 @@ export class Commentary {
           this.hud.say(pick('quip.mineSprung'), now);
           break;
         case 'toolRefused':
-          this.hud.say(t('quip.toolRefused'), now);
+          this.hud.say(t(e.weapon === 'mace' ? 'quip.strikeRefused' : 'quip.toolRefused'), now);
           break;
         case 'shotEnded': {
           const at = shotAt(e.shotId);

@@ -78,6 +78,8 @@ export class GameUi {
   private readonly down: HTMLButtonElement;
   /** Fire, in the colour of the house that plays */
   private readonly fire: HTMLButtonElement;
+  /** set each frame: the mace in hand has nothing to strike along the aim (Fire greys) */
+  strikeRefused = false;
   private fireColour = -1;
   private readonly arsenalButton: HTMLButtonElement;
   private readonly arsenalArt: HTMLElement;
@@ -487,7 +489,7 @@ export class GameUi {
                   ? !canMove || !climbLeft
                   : when === 'end'
                     ? !canMove
-                    : phase !== 'action';
+                    : phase !== 'action' || (b === this.fire && this.strikeRefused);
     }
     // Before the shot it passes the turn; after it, it ends the turn.
     const skipLabel = phase === 'retreat' ? t('ui.endTurn') : t('ui.skip');

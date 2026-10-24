@@ -114,7 +114,7 @@ Toutes les valeurs sont des défauts dans `src/content/weapons.ts`, ajustables p
 | Arme | Dégâts | Recul | Notes |
 |---|---|---|---|
 | **Épée** | 25 | Faible | Frappe frontale |
-| **Masse d'armes** | 30 | Fort, angle visé | Équivalent batte de baseball : frappe à 34 px dans la direction visée, recul ×3,2 (programmée le 2026-10-24). **Se charge comme un tir** (décidé le 2026-10-24) : la jauge règle la distance de projection, de 20 % du recul à vide à 100 % jauge pleine (`knockbackMinPct`) ; les dégâts ne changent pas |
+| **Masse d'armes** | 30 | Fort, angle visé | Équivalent batte de baseball : frappe à 34 px dans la direction visée, recul ×3,2 (programmée le 2026-10-24). **Se charge comme un tir** (décidé le 2026-10-24) : la jauge règle la distance de projection, de 20 % du recul à vide à 100 % jauge pleine (`knockbackMinPct`) ; les dégâts ne changent pas. **Pas de coup dans le vide** (décidé le 2026-10-25, `needsTarget`) : sans rien à frapper à portée dans la direction visée (combattant, baril, reliquaire, cuisine, bête, licorne, construction ; le sol nu ne compte pas), le bouton Frapper est grisé et le coup est refusé, sans consommer l'action |
 | **Charge à l'écu** | 20 | Moyen | Course de 120 px, renverse tout sur le trajet |
 
 ### 4.4 Utilitaires

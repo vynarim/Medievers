@@ -747,6 +747,7 @@ export class BattleScene extends Phaser.Scene {
 
     const click = this.input_.takeClick();
     if (click) this.selectAt(click.x, click.y);
+    this.ui.strikeRefused = this.sim.strikeRefused();
     this.ui.update(this.sim.view(), this.input_.controls.power, time);
     this.ui.showResetView(this.manualCamera);
     this.updateBubble();

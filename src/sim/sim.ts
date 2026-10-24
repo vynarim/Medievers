@@ -39,7 +39,7 @@ import { blastReachesUnicorn, stepUnicorn, unicornAtAction } from './unicorn.ts'
 import { Trick } from '../content/beasts.ts';
 import { blastMovesPots, potsTurn, stepPots } from './pots.ts';
 import { kitchenTurn, inKitchen, stepKitchen, useKitchen } from './kitchen.ts';
-import { fire, stepShots } from './weapons/weapons.ts';
+import { fire, stepShots, strikeHasTarget } from './weapons/weapons.ts';
 import { blastReachesMines, stepDig, stepMines } from './tools.ts';
 import { weatherTurnEnd } from './weather.ts';
 import { isTargeted, type WeaponId } from '../content/weapons.ts';
@@ -102,6 +102,18 @@ export class Sim {
 
   view(): SimView {
     return this.s;
+  }
+
+  /**
+   * The weapon in hand is a melee one that would strike nothing along the aim (needsTarget): the
+   * blow would be refused, so Fire is greyed.
+   */
+  strikeRefused(): boolean {
+    const s = this.s;
+    const def = s.rules.weapons.find((w) => w.id === s.turn.weapon);
+    const u = s.units.find((x) => x.id === s.turn.activeUnitId);
+    if (!def || !u || def.behavior !== 'melee' || !def.needsTarget) return false;
+    return !strikeHasTarget(s, u, def, s.turn.aim);
   }
 
   /** 32-bit FNV-1a over the canonical state (TECH_SPEC §3). */

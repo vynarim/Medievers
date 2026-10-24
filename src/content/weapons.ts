@@ -112,6 +112,12 @@ export interface WeaponDef {
    */
   readonly knockbackMinPct?: number;
   /**
+   * melee: the blow is only struck at something within reach along the aim (a unit, a barrel, a
+   * coffer, the kitchen, a beast, the unicorn, a structure); otherwise it is refused and the turn
+   * keeps its action (2026-10-25). Absent from older logs: a blow at nothing counts.
+   */
+  readonly needsTarget?: boolean;
+  /**
    * The fuse is set in turns (GDD §4.1, 2026-10-24): 1 = this turn, after this many ticks;
    * 2 = at the start of the next turn; 3 = in two turns, the pot resting on the map meanwhile.
    * Absent from older logs: a fuse in seconds.
@@ -242,6 +248,7 @@ export const WEAPONS: readonly WeaponDef[] = [
     ammo: -1,
     reach: 34,
     knockbackMinPct: 20,
+    needsTarget: true,
   },
   {
     // Pioche: 3 s straight down; about 90 px in earth, twice that for a sapper.

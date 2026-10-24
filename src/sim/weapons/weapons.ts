@@ -63,6 +63,10 @@ export function fire(
     events.push({ e: 'shotEnded', shotId: id });
     return true;
   }
+  // A blow at nothing is refused: the turn keeps its action (needsTarget).
+  if (def.behavior === 'melee' && def.needsTarget && !strikeHasTarget(state, u, def, angle)) {
+    return false;
+  }
   const id = state.nextEntityId++;
   // Majesté: the king's aura raises the damage of the shot (GDD §3.2); stored only when it does.
   const pct = damageDealtPct(state, u);
@@ -146,6 +150,43 @@ function isSolidNear(state: SimState, x: number, y: number): boolean {
   return false;
 }
 
+/** Point the blow of a melee weapon lands on, along the aim at its reach, in sub-px. */
+function strikePoint(u: Unit, def: WeaponDef, angle: number): { x: number; y: number; cy: number } {
+  const reach = (def.reach ?? 0) * SUBPX;
+  const cy = u.y - (UNIT_HEIGHT * SUBPX) / 2;
+  return { x: u.x + mulQ14(reach, cosQ14(angle)), y: cy + mulQ14(reach, sinQ14(angle)), cy };
+}
+
+/**
+ * Something within the reach of a melee blow along the aim: another unit, a barrel, a coffer,
+ * the kitchen, a beast, the unicorn, or a standing structure. The bare ground is no target.
+ */
+export function strikeHasTarget(state: SimState, u: Unit, def: WeaponDef, angle: number): boolean {
+  const { x, y, cy } = strikePoint(u, def, angle);
+  if (state.units.some((o) => o.alive && o.id !== u.id && touchesUnit(o, x, y, STRIKE_RADIUS))) {
+    return true;
+  }
+  if (barrelOnSegment(state, u.x, cy, x, y) !== null) return true;
+  if (crateOnSegment(state, u.x, cy, x, y) !== null) return true;
+  if (segmentTouchesKitchen(state, u.x, cy, x, y)) return true;
+  if (beastOnSegment(state, u.x, cy, x, y)) return true;
+  if (unicornOnSegment(state, u.x, cy, x, y)) return true;
+  const owners = state.owners;
+  if (!owners) return false;
+  const px = subToPx(x);
+  const py = subToPx(y);
+  const t = state.terrain;
+  for (let dy = -2; dy <= 2; dy++) {
+    for (let dx = -2; dx <= 2; dx++) {
+      const qx = px + dx;
+      const qy = py + dy;
+      if (qx < 0 || qy < 0 || qx >= t.width || qy >= t.height) continue;
+      if ((owners[qy * t.width + qx] ?? 0) !== 0 && isSolid(t, qx, qy)) return true;
+    }
+  }
+  return false;
+}
+
 /** Damage of a hit or blast at `pct` percent of `damage` (100: unchanged). */
 const scaled = (damage: number, pct: number | undefined): number =>
   pct === undefined || pct === 100 ? damage : idiv(damage * pct + 50, 100);
@@ -163,16 +204,13 @@ function strike(
   power: number,
   events: SimEvent[],
 ) {
-  const reach = (def.reach ?? 0) * SUBPX;
   // Charged like a shot: the power sets how far the blow throws (knockbackMinPct..100).
   const min = def.knockbackMinPct;
   const p = Math.max(0, Math.min(power, MAX_POWER));
   const knock = min === undefined ? 100 : min + idiv((100 - min) * p, MAX_POWER);
   const dx = cosQ14(angle);
   const dy = sinQ14(angle);
-  const cy = u.y - (UNIT_HEIGHT * SUBPX) / 2;
-  const x = u.x + mulQ14(reach, dx);
-  const y = cy + mulQ14(reach, dy);
+  const { x, y, cy } = strikePoint(u, def, angle);
   for (const other of state.units) {
     if (!other.alive || other.id === u.id || !touchesUnit(other, x, y, STRIKE_RADIUS)) continue;
     directHit(other, def, scaled(def.damage, pct), state.rules.explosion, dx, dy, events, knock);

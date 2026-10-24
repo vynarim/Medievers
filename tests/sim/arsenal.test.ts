@@ -122,6 +122,23 @@ describe('mace', () => {
       5,
     );
     expect(events.some((e) => e.e === 'unitDamaged')).toBe(false);
+    // Nothing in reach: the blow is refused and the turn keeps its action.
+    expect(events).toContainEqual({ e: 'toolRefused', weapon: 'mace' });
+    expect(sim.view().turn.phase).toBe('action');
+    expect(sim.view().turn.fired).toBe(false);
+    expect(sim.strikeRefused()).toBe(true);
+  });
+
+  it('is not refused with someone in reach', () => {
+    const sim = duel(CALM, 300, 330);
+    sim.step([
+      { t: 'selectWeapon', id: 'mace' },
+      { t: 'aim', angle: 0 },
+    ]);
+    expect(sim.strikeRefused()).toBe(false);
+    // Aimed the other way, there is nothing to strike.
+    sim.step([{ t: 'aim', angle: 2048 }]);
+    expect(sim.strikeRefused()).toBe(true);
   });
 });
 
