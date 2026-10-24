@@ -2,9 +2,11 @@
 // Buttons never take keyboard focus, so the keyboard keeps driving the game.
 import { FONT_CAPS, FONT_TEXT, FONT_TITLE } from './fonts.ts';
 import { COLORS, css } from './tokens.ts';
+import { scalableCss, uiScale } from './ui-scale.ts';
 
 const STYLE = `
 :root {
+  --u: 1px; /* set from the window size by uiRoot() */
   --lapis: ${css(COLORS.lapis)}; --vermillon: ${css(COLORS.vermillon)}; --or: ${css(COLORS.or)};
   --ceruse: ${css(COLORS.ceruse)}; --velin: ${css(COLORS.velin)}; --encre: ${css(COLORS.encre)};
   --ocre: ${css(COLORS.ocre)}; --vert: ${css(COLORS.vertDeGris)}; --brun: ${css(COLORS.terreOmbre)};
@@ -151,17 +153,28 @@ const STYLE = `
 #ui .hidden { display: none !important; }
 `;
 
+/** Unscaled rules: touch targets stay 48 px whatever the overlay scale (rules/render.md). */
+const TOUCH_STYLE = `
+@media (pointer: coarse) { #ui button { min-width: 48px; min-height: 48px; } }
+`;
+
 let root: HTMLElement | null = null;
 
 /** The overlay root, created once. */
 export function uiRoot(): HTMLElement {
   if (root) return root;
   const style = document.createElement('style');
-  style.textContent = STYLE;
+  style.textContent = scalableCss(STYLE) + TOUCH_STYLE;
   document.head.appendChild(style);
   root = document.createElement('div');
   root.id = 'ui';
   document.body.appendChild(root);
+  const fit = (): void => {
+    const u = uiScale(window.innerWidth, window.innerHeight);
+    document.documentElement.style.setProperty('--u', `${u}px`);
+  };
+  fit();
+  window.addEventListener('resize', fit);
   return root;
 }
 

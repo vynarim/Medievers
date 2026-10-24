@@ -253,6 +253,7 @@ L'IA joue via `InputSource` et produit les mêmes commandes qu'un humain. Elle �
 - **Bas** : barres de vie par équipe sous forme de phylactères avec blason ; fiche de l'unité active (nom, classe, PV).
 - **Au-dessus des unités** : nom et PV dans un petit cartouche aux couleurs de la maison.
 - **Actions indisponibles grisées** (décidé le 2026-10-24) : marcher après un saut, sauter après avoir marché, tirer ou changer d'arme après le tir… le bouton est grisé. Les boutons d'action forment une seule barre centrée en bas de l'écran.
+- **Taille de l'interface** (décidé le 2026-10-24) : panneaux, boutons et textes sont dessinés pour un écran 1920 × 1080 et rapetissent automatiquement sur une fenêtre plus petite (jusqu'à 60 %), pour laisser voir le champ de bataille ; sur écran tactile, les boutons gardent 48 px au minimum.
 - **Arsenal** : grille d'icônes dans un cadre architecturé (arcades), avec les munitions en chiffres romains ou arabes (option).
 - **Dégâts** : chiffres en écriture gothique qui s'élèvent et s'estompent.
 - **Aide** (décidé le 2026-10-24) : le bouton Aide ouvre un **tutoriel illustré** en quelques pages courtes (le but, un tour de jeu, viser et tirer, les armes, le vent, la caméra, les raccourcis), avec un schéma par page ; on y navigue par Précédent / Suivant.
