@@ -132,9 +132,10 @@ describe('sap (GDD §4.4)', () => {
       ],
       400,
     );
-    run(sim, [], 900);
+    run(sim, [{ t: 'skip' }], 900);
     for (let i = 0; i < 2000 && sim.view().turn.activeTeam !== 0; i++) {
-      if (sim.view().turn.phase === 'action') sim.step([{ t: 'skip' }]);
+      const phase = sim.view().turn.phase;
+      if (phase === 'action' || phase === 'retreat') sim.step([{ t: 'skip' }]);
       else sim.step();
     }
     for (let i = 0; i < 1000 && sim.view().turn.phase !== 'action'; i++) sim.step();

@@ -45,7 +45,7 @@ Un chroniqueur à l'humour douteux commente la partie {{st:jeu}} : chaque tour s
 |---|---|---|
 | Transition | {{rules:transition}} | La caméra rejoint votre combattant. Le vent du tour s'affiche. |
 | Action | {{rules:action}} | Vous vous déplacez librement, choisissez une arme, visez et tirez. |
-| Après le tir | le temps restant, 5 s au plus | Choisissez votre position avant de tirer : après le tir, il ne reste que quelques secondes pour vous mettre à l'abri. Le tir ne termine pas le tour : on peut bouger puis tirer, ou tirer puis bouger, avec le déplacement pas encore utilisé. **Fin du tour** termine le tour ; il se termine aussi tout seul quand il ne reste plus de déplacement et que le tir est retombé. |
+| Après le tir | tout le temps restant | Le déplacement que vous n'avez pas utilisé avant de tirer vous reste après. Le tir ne termine pas le tour : on peut bouger puis tirer, ou tirer puis bouger, avec le déplacement pas encore utilisé. **Fin du tour** termine le tour ; il se termine aussi tout seul quand il ne reste plus de déplacement et que le tir est retombé. |
 | Résolution | variable, puis {{rules:settle}} | Le jeu attend que tout soit retombé : projectiles, explosions, chutes. Les morts sont alors constatées, puis une courte pause laisse voir le résultat et le commentaire. Le sablier est en pause. |
 | Fin de tour | — | Les effets de fin de tour s'appliquent, et un reliquaire peut tomber du ciel. |
 

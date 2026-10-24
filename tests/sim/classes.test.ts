@@ -231,7 +231,7 @@ describe('class passives (GDD §3.2)', () => {
       { t: 'aim', angle: 0 },
       { t: 'fire', power: 1024 },
     ]);
-    const events = run(sim, 600);
+    const events = [...sim.step([{ t: 'skip' }]), ...run(sim, 600)];
     expect(events).toContainEqual({ e: 'unitDied', unitId: 2, cause: 'hp' });
     expect(events).toContainEqual({ e: 'unitDied', unitId: 3, cause: 'kingFell' });
     expect(sim.view().winner).toBe(0);

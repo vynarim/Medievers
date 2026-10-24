@@ -128,16 +128,17 @@ describe('turn loop', () => {
     );
   });
 
-  it('keeps some time after a shot, capped; « Fin du tour » ends it; no moves left ends it', () => {
+  it('keeps the time left after a shot; « Fin du tour » ends it; no moves left ends it', () => {
     const d = new Driver(DUEL, 1);
     d.until('action');
+    const left = d.sim.view().turn.phaseTicks;
     d.step([
       { t: 'aim', angle: 3072 },
       { t: 'fire', power: 100 },
     ]);
     expect(d.sim.view().turn.phase).toBe('retreat');
-    // 45 s were left: the retreat is capped at 5 s, as in Worms (choose your spot first).
-    expect(d.sim.view().turn.phaseTicks).toBe(CLASSIC_RULES.turn.retreatMaxTicks);
+    // The walk not used yet is still there after the shot, and the time to use it.
+    expect(d.sim.view().turn.phaseTicks).toBeGreaterThanOrEqual(left - 2);
     d.step([{ t: 'skip' }]);
     expect(d.sim.view().turn.phase).toBe('resolution');
 
@@ -155,17 +156,15 @@ describe('turn loop', () => {
     expect(w.sim.view().turn.phase).not.toBe('retreat');
   });
 
-  it('keeps all the action time after the shot in logs recorded before retreatMaxTicks', () => {
-    const turn: TurnRules = { ...RULES_60HP.turn };
-    delete (turn as { retreatMaxTicks?: number }).retreatMaxTicks;
+  it('caps the time after the shot with retreatMaxTicks, when a scheme sets it', () => {
+    const turn: TurnRules = { ...RULES_60HP.turn, retreatMaxTicks: 300 };
     const d = new Driver({ ...DUEL, rules: { ...RULES_60HP, turn } }, 1);
     d.until('action');
-    const left = d.sim.view().turn.phaseTicks;
     d.step([
       { t: 'aim', angle: 3072 },
       { t: 'fire', power: 100 },
     ]);
-    expect(d.sim.view().turn.phaseTicks).toBeGreaterThanOrEqual(left - 2);
+    expect(d.sim.view().turn.phaseTicks).toBe(300);
   });
 
   it('turns round on the spot for free: no walk spent, the jump stays', () => {

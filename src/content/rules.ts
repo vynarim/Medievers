@@ -121,7 +121,8 @@ export const CLASSIC_RULES: MatchRules = {
     maxResolutionTicks: 30 * TICKS_PER_SECOND,
     settleTicks: 2 * TICKS_PER_SECOND,
     moveAfterShot: true,
-    retreatMaxTicks: 5 * TICKS_PER_SECOND,
+    // As long as the action itself: the walk not used before the shot stays usable after it.
+    retreatMaxTicks: 45 * TICKS_PER_SECOND,
     freeSelect: true,
     noRepeat: true,
     rememberWeapon: true,

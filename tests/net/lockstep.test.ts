@@ -34,8 +34,12 @@ const START: MatchStart = { setup: defaultSetup(false), rules: CONFIG.rules, see
 function play(role: Role) {
   return (tick: number, sim: Sim): GameCommand[] => {
     const v = sim.view();
-    if (v.turn.phase !== 'action' || roleOfTeam(v.turn.activeTeam) !== role) return [];
     const since = tick % 240;
+    // The walk left after the shot is not wanted: the turn ends a second after it.
+    if (v.turn.phase === 'retreat' && roleOfTeam(v.turn.activeTeam) === role && since === 120) {
+      return [{ t: 'skip' }];
+    }
+    if (v.turn.phase !== 'action' || roleOfTeam(v.turn.activeTeam) !== role) return [];
     if (since === 10) return [{ t: 'move', dir: role === 'host' ? 1 : -1 }];
     if (since === 40) return [{ t: 'move', dir: 0 }];
     if (since === 60) {
