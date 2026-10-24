@@ -146,6 +146,57 @@ export function tuningGroups(rules: MatchRules): TuningGroup[] {
           },
         ]
       : []),
+    ...(rules.classes
+      ? [
+          {
+            titleKey: 'tuning.group.classes',
+            fields: [
+              field(
+                'classes.knight.blastTakenPct',
+                'tuning.knightBlast',
+                'units.percent',
+                1,
+                5,
+                0,
+                100,
+              ),
+              field('classes.knight.jumpPct', 'tuning.knightJump', 'units.percent', 1, 1, 30, 150),
+              field(
+                'classes.archer.previewPct',
+                'tuning.archerPreview',
+                'units.percent',
+                1,
+                10,
+                100,
+                500,
+              ),
+              field(
+                'classes.slinger.throwPct',
+                'tuning.slingerThrow',
+                'units.percent',
+                1,
+                1,
+                100,
+                200,
+              ),
+              field('classes.slinger.hpDelta', 'tuning.slingerHp', 'units.hp', 1, 5, -90, 100),
+              field('classes.cleric.blessHp', 'tuning.clericHeal', 'units.hp', 1, 1, 0, 100),
+              field(
+                'classes.cleric.blessRadius',
+                'tuning.clericRadius',
+                'units.px',
+                1,
+                10,
+                0,
+                1000,
+              ),
+              field('classes.king.auraPct', 'tuning.kingAura', 'units.percent', 1, 1, 100, 200),
+              field('classes.king.auraRadius', 'tuning.kingRadius', 'units.px', 1, 10, 0, 1000),
+              field('classes.king.hpDelta', 'tuning.kingHp', 'units.hp', 1, 5, -90, 100),
+            ],
+          },
+        ]
+      : []),
     ...(rules.kitchen
       ? [
           {

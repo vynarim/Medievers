@@ -8,6 +8,7 @@ import {
   CrateKind,
   type CrateKindId,
 } from '../content/crates.ts';
+import { maxHpOf } from './classes.ts';
 import type { SimEvent } from './events.ts';
 import { queueExplosion, type Explosion } from './explosions/explosion.ts';
 import { SUBPX, idiv, subToPx } from './math/fixed.ts';
@@ -130,7 +131,7 @@ function takeCrate(s: SimState, c: Crate, unitId: number, events: SimEvent[]): v
   s.crates.splice(s.crates.indexOf(c), 1);
   let heal = 0;
   if (c.kind === CrateKind.Balm) {
-    heal = Math.max(0, Math.min(r.balmHp, s.rules.startHp - u.hp));
+    heal = Math.max(0, Math.min(r.balmHp, maxHpOf(s, u) - u.hp));
     u.hp += heal;
   } else {
     const team = s.teams[u.team];

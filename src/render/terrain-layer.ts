@@ -221,7 +221,8 @@ export class TerrainLayer {
           const sx = (wx + (course & 1) * (STONE >> 1)) % STONE;
           const sy = wy % COURSE;
           const tints = MATERIAL_RGB[mat] ?? FALLBACK;
-          const tint = tints[(course + Math.floor((wx + (course & 1) * 17) / STONE)) % tints.length];
+          const tint =
+            tints[(course + Math.floor((wx + (course & 1) * 17) / STONE)) % tints.length];
           if (sx < 2 || sy < 2) c = MORTAR;
           else if (sy < 4) c = HIGHLIGHT;
           else c = tint ?? HIGHLIGHT;
@@ -230,7 +231,7 @@ export class TerrainLayer {
           // a white highlight just under it, as on the hills of the manuscript.
           const tints = MATERIAL_RGB[mat] ?? FALLBACK;
           const row = Math.floor(wy / BAND);
-          const shift = ((row * 23) % STEP + STEP) % STEP;
+          const shift = (((row * 23) % STEP) + STEP) % STEP;
           const drop = STEP_DROP[(wx + shift) % STEP] ?? 0;
           const v = wy - row * BAND; // 0..BAND-1 inside the nominal band
           const edge = BAND - 20 + drop - 18; // where this band ends, in the next band's space

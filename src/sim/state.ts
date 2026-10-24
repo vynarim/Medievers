@@ -1,5 +1,6 @@
 // Complete simulation state. Plain integers, typed arrays and arrays sorted by id only, so it
 // can be hashed, cloned for snapshots and sent to the AI worker.
+import type { ClassId } from '../content/classes.ts';
 import type { MatchRules } from '../content/rules.ts';
 import type { WeaponId } from '../content/weapons.ts';
 import type { PrngState } from './math/prng.ts';
@@ -13,6 +14,8 @@ export type Phase = 'transition' | 'action' | 'retreat' | 'resolution' | 'gameOv
 export interface TeamConfig {
   /** px: spawn column of each unit; units drop to the ground below y = 0 */
   readonly spawns: readonly number[];
+  /** class of each unit, parallel to spawns (rules.classes); absent: no classes */
+  readonly classes?: readonly ClassId[];
 }
 
 export interface MatchConfig {
@@ -28,6 +31,8 @@ export interface TeamState {
   lastPlayed: number;
   /** remaining ammo per weapon index; -1 = unlimited */
   readonly ammo: number[];
+  /** class of each unit, parallel to unitIds; absent without rules.classes */
+  readonly classes?: readonly ClassId[];
 }
 
 export interface FlyingShot {
@@ -39,6 +44,8 @@ export interface FlyingShot {
   readonly fragment?: boolean;
   /** turn-fused pot: turns before it goes off, once it rests (weapon fuseTurns) */
   readonly turns?: number;
+  /** percent of the weapon's damage (king's aura, GDD §3.2); absent: 100 */
+  readonly damagePct?: number;
 }
 
 /** A pot with a fuse in turns, resting on the map (GDD §4.1). */
@@ -50,6 +57,8 @@ export interface PlacedPot {
   /** turn starts left before it goes off */
   turns: number;
   readonly weapon: WeaponId;
+  /** percent of the weapon's damage, from the throw (FlyingShot.damagePct) */
+  readonly damagePct?: number;
 }
 
 export interface TurnState {

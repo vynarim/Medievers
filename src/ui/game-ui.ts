@@ -5,6 +5,7 @@ import { CLASSIC_RULES, type MatchRules } from '../content/rules.ts';
 import { FACTIONS, unitName } from '../content/factions.ts';
 import type { UiIntents } from '../input/ui-intents.ts';
 import { canSwitchUnit, nextTeammate, type SimView } from '../sim/sim.ts';
+import { classOf, maxHpOf, mayUse } from '../sim/classes.ts';
 import { Hud } from './hud.ts';
 import { renderTutorial } from './tutorial.ts';
 import { t } from './i18n.ts';
@@ -337,17 +338,21 @@ export class GameUi {
     const v = this.view;
     if (!v) return;
     const team = v.teams[v.turn.activeTeam];
-    const signature = `${v.turn.weapon}|${team?.ammo.join(',')}|${v.turn.phase}`;
+    const signature = `${v.turn.weapon}|${team?.ammo.join(',')}|${v.turn.phase}|${v.turn.activeUnitId}`;
     if (!force && signature === this.arsenalSignature) return;
     this.arsenalSignature = signature;
     this.arsenal.replaceChildren(this.closeButton(), el('h2', '', t('ui.arsenal')));
     const grid = el('div', 'grid');
+    const unit = v.units.find((u) => u.id === v.turn.activeUnitId);
     v.rules.weapons.forEach((w, idx) => {
       const ammo = team?.ammo[idx] ?? 0;
+      // A cleric may not take up a melee weapon (GDD §3.2).
+      const allowed = !unit || mayUse(v, unit, w);
       const b = button('', `weapon${w.id === v.turn.weapon ? ' on' : ''}`);
       b.append(el('b', '', t(`weapons.${w.id}`)));
       for (const line of weaponLines({ ...w, ammo })) b.append(el('small', '', line));
-      b.disabled = ammo === 0 || v.turn.phase !== 'action';
+      if (!allowed) b.append(el('small', '', t('weapons.forbidden')));
+      b.disabled = ammo === 0 || !allowed || v.turn.phase !== 'action';
       b.addEventListener('click', () => {
         this.opts.intents.selectWeapon = w.id;
         this.show(null);
@@ -375,6 +380,7 @@ export class GameUi {
 
     const faction = FACTIONS[u.team];
     const r = v.rules.unit;
+    const cls = classOf(v, u);
     const state = !u.alive
       ? t('card.state.dead')
       : !u.grounded
@@ -398,7 +404,8 @@ export class GameUi {
     house.style.color = css(faction?.primary ?? COLORS.encre);
     const hpBar = el('div', 'hpbar');
     const fill = el('i');
-    fill.style.width = `${Math.min(100, (u.hp * 100) / Math.max(1, v.rules.startHp))}%`;
+    const maxHp = maxHpOf(v, u);
+    fill.style.width = `${Math.min(100, (u.hp * 100) / maxHp)}%`;
     hpBar.append(fill);
     const rules = el('ul');
     for (const line of [
@@ -413,14 +420,14 @@ export class GameUi {
       this.click(button('✕', 'close'), () => this.selectUnit(null)),
       el('h2', '', unitName(u.id)),
       house,
-      el('div', '', `${t('card.hp')} : ${u.hp} / ${v.rules.startHp}`),
+      el('div', '', `${t('card.hp')} : ${u.hp} / ${maxHp}`),
       hpBar,
       el('div', '', `${t('card.state')} : ${state}`),
       ...v.afflictions
         .filter((a) => a.unitId === u.id)
         .map((a) => el('div', 'note', t(`card.trick.${a.trick}`, { turns: a.turns }))),
-      el('h3', '', t('card.class')),
-      el('div', '', t('card.noClass')),
+      el('h3', '', cls ? `${t('card.class')} : ${t(`classes.${cls}`)}` : t('card.class')),
+      ...this.classLines(v, cls).map((line) => el('div', '', line)),
       el('h3', '', t('card.rules')),
       rules,
     );
@@ -432,6 +439,25 @@ export class GameUi {
         this.card.append(el('h3', '', `${t('card.weapon')} : ${t(`weapons.${def.id}`)}`), list);
       }
     }
+  }
+
+  /** The passive and the drawback of a class, with this match's values (GDD §3.2). */
+  private classLines(v: SimView, cls: string | null): string[] {
+    const c = v.rules.classes;
+    if (!c || !cls) return [t('card.noClass')];
+    const less = (pct: number): number => 100 - pct;
+    const params: Record<string, Record<string, number>> = {
+      knight: { pct: less(c.knight.blastTakenPct) },
+      archer: { pct: c.archer.previewPct - 100 },
+      slinger: { pct: c.slinger.throwPct - 100, hp: -c.slinger.hpDelta },
+      sapper: {},
+      cleric: { hp: c.cleric.blessHp, px: c.cleric.blessRadius },
+      king: { pct: c.king.auraPct - 100, px: c.king.auraRadius, hp: -c.king.hpDelta },
+    };
+    const p = params[cls] ?? {};
+    const lines = [t(`classes.${cls}.passive`, p), t(`classes.${cls}.drawback`, p)];
+    if (cls === 'king' && v.rules.regicide) lines.push(t('classes.king.regicide'));
+    return lines;
   }
 
   private openSettings(): void {

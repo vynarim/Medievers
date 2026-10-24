@@ -30,7 +30,14 @@ export function maybeRest(s: SimState, shot: FlyingShot, bounced: boolean, event
   const p = shot.projectile;
   const slow = Math.abs(p.vx) + Math.abs(p.vy) < REST_SPEED;
   if (!((bounced && slow) || p.age > MAX_FLIGHT)) return false;
-  s.pots.push({ id: p.id, x: p.x, y: p.y, turns: shot.turns ?? 0, weapon: shot.weapon });
+  s.pots.push({
+    id: p.id,
+    x: p.x,
+    y: p.y,
+    turns: shot.turns ?? 0,
+    weapon: shot.weapon,
+    ...(shot.damagePct !== undefined ? { damagePct: shot.damagePct } : {}),
+  });
   s.pots.sort((a, b) => a.id - b.id);
   events.push({ e: 'potPlaced', id: p.id, turns: shot.turns ?? 0 });
   return true;
@@ -48,7 +55,13 @@ function relaunch(s: SimState, index: number, vx: number, vy: number): void {
     gravityPct: 100,
   });
   projectile.clearOfOwner = true;
-  s.shots.push({ projectile, weapon: pot.weapon, fuse: 0, turns: pot.turns });
+  s.shots.push({
+    projectile,
+    weapon: pot.weapon,
+    fuse: 0,
+    turns: pot.turns,
+    ...(pot.damagePct !== undefined ? { damagePct: pot.damagePct } : {}),
+  });
   s.shots.sort((a, b) => a.projectile.id - b.projectile.id);
 }
 
@@ -66,7 +79,7 @@ export function potsTurn(s: SimState, events: SimEvent[]): void {
       y: pot.y - 4 * SUBPX,
       radius: def?.explosionRadius ?? 0,
       carveRadius: def?.explosionRadius ?? 0,
-      maxDamage: def?.damage ?? 0,
+      maxDamage: idiv((def?.damage ?? 0) * (pot.damagePct ?? 100) + 50, 100),
       sourceId: pot.id,
     });
     events.push({ e: 'potLit', id: pot.id });

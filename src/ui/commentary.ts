@@ -30,6 +30,9 @@ export class Commentary {
   private lastUnit = -1;
   /** the ends of the map are already on fire */
   private burning = false;
+  /** said once per tick: a cleric's blessing, a house leaving after its king */
+  private blessed = false;
+  private kingFell = false;
   /** a shot ended without damage so far: tick, impact point and shooter, to call the miss */
   private pendingMiss: { tick: number; x: number; y: number; unitId: number } | null = null;
 
@@ -68,6 +71,8 @@ export class Commentary {
     shotAt: (shotId: number) => { x: number; y: number } | null,
   ): Pop[] {
     const pops: Pop[] = [];
+    this.blessed = false;
+    this.kingFell = false;
     const exploded = events.some((e) => e.e === 'explosion');
     const house = (team: number): string => {
       const f = FACTIONS[team];
@@ -200,12 +205,38 @@ export class Commentary {
         case 'kitchenGone':
           this.hud.say(pick('quip.kitchenGone'), now);
           break;
-        case 'unitDied':
+        case 'unitHealed': {
+          const u = v.units.find((x) => x.id === e.unitId);
+          if (!u) break;
+          pops.push({
+            x: u.x / SUBPX,
+            y: u.y / SUBPX - UNIT_HEIGHT - 20,
+            text: `+${e.heal}`,
+            kind: 'heal',
+          });
+          if (!this.blessed) this.hud.say(pick('quip.bless', { name: unitName(e.unitId) }), now);
+          this.blessed = true;
+          break;
+        }
+        case 'unitDied': {
+          const key = {
+            outOfMap: 'quip.out',
+            hp: 'quip.kill',
+            drowned: 'quip.drowned',
+            kingFell: 'quip.kingFell',
+          }[e.cause];
+          // The house leaving the field after its king is said once, not per unit.
+          if (e.cause === 'kingFell' && this.kingFell) break;
+          if (e.cause === 'kingFell') this.kingFell = true;
           this.hud.say(
-            pick(e.cause === 'outOfMap' ? 'quip.out' : 'quip.kill', { name: unitName(e.unitId) }),
+            pick(key, {
+              name: unitName(e.unitId),
+              house: house(v.units.find((x) => x.id === e.unitId)?.team ?? 0),
+            }),
             now,
           );
           break;
+        }
         case 'gameOver': {
           const f = e.winner >= 0 ? FACTIONS[e.winner] : undefined;
           this.hud.announce(

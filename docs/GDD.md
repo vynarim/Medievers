@@ -37,7 +37,7 @@
 ### 2.3 Fin de partie
 - Victoire : dernière équipe avec ≥ 1 unité vivante.
 - Égalité : toutes les équipes éliminées dans la même résolution.
-- Mode **Régicide** (option) : chaque équipe a un Roi ; sa mort élimine l'équipe.
+- Mode **Régicide** (option) : chaque équipe a un Roi ; sa mort élimine l'équipe. Programmé le 2026-10-25 (`MatchRules.regicide`) : quand les morts sont constatées, les autres combattants d'une maison dont le roi est tombé quittent le champ (morts, cause « roi tombé ») ; une maison sans roi dans sa composition joue avec la règle habituelle.
 
 ### 2.4 Le Déluge (mort subite)
 - Démarre après N tours (défaut : 20 tours ou 15 minutes).
@@ -76,6 +76,7 @@
 
 - Composition d'équipe : libre (option : max 2 par classe), Roi limité à 1.
 - Les passifs sont affichés dans la fiche de l'unité (appui long / survol).
+- Précisions de programmation (2026-10-25) : valeurs dans `src/content/classes.ts` (`MatchRules.classes`, absent des vieux logs : pas de classes), réglables dans ⚙ Réglages ; la composition de chaque maison est dans sa `TeamConfig` (`classes`). *Haubert* s'applique aux explosions seulement (pas aux flèches, chutes ni au feu). *Lourd* : les vitesses de saut du chevalier sont à 84 %, soit des sauts environ 30 % plus courts et moins hauts. *Œil exercé* : la trajectoire prévue s'affiche quand on charge le tir (ou toujours pour l'arbalète, à puissance fixe), sur 22 instants de vol, 44 pour l'archer à l'arc et à l'arbalète. *Bras souple* : armes marquées « lancées » (fronde, feu grégeois, poix), vitesse de départ +15 %. *Maître d'œuvre* : valeur prête, appliquée quand la pioche et la sape arriveront (M4). *Bénédiction* : appliquée en fin de tour du clerc, avant le feu du parchemin, sans dépasser les PV de départ de chacun. *Majesté* : se mesure au moment du tir, entre le tireur et son roi vivant (pas pour le roi lui-même) ; un pot posé garde le bonus de son lancer. Composition par défaut tant que l'écran de préparation ne la change pas : Chevalier, Archer, Frondeur, Clerc, Sapeur, Roi (Roi en premier en Régicide).
 
 ### 3.3 Factions (maisons héraldiques fictives)
 - Une équipe = un nom de maison, un blason (champ + meuble + émaux), une couleur primaire et une couleur secondaire.

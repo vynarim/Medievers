@@ -1,7 +1,8 @@
 // Events emitted by a tick for the renderer and UI. They never feed back into the state.
 import type { WeaponId } from '../content/weapons.ts';
 
-export type DeathCause = 'hp' | 'outOfMap';
+/** kingFell: Régicide, the house's king is dead (GDD §2.3) */
+export type DeathCause = 'hp' | 'outOfMap' | 'drowned' | 'kingFell';
 
 export type SimEvent =
   | {
@@ -27,6 +28,8 @@ export type SimEvent =
       readonly radius: number;
     }
   | { readonly e: 'unitDamaged'; readonly unitId: number; readonly damage: number }
+  /** Bénédiction of a cleric (GDD §3.2) */
+  | { readonly e: 'unitHealed'; readonly unitId: number; readonly heal: number }
   | { readonly e: 'unitDied'; readonly unitId: number; readonly cause: DeathCause }
   /** px: base of the hearth */
   | { readonly e: 'kitchenAppeared'; readonly x: number; readonly y: number }

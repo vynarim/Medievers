@@ -64,18 +64,20 @@ Un chroniqueur à l'humour douteux commente la partie {{st:jeu}} : chaque tour s
 - **Tomber** : une chute de plus de {{unit:fallSafeHeight}} pixels blesse. On perd 1 PV tous les {{unit:fallPxPerHp}} pixels de chute en plus, jusqu'à {{unit:fallMaxDamage}} PV au maximum. Une chute de 200 pixels coûte donc {{unit:fall200}} PV.
 - **Mourir** : à 0 PV, en sortant de la carte par les bords, ou en tombant dans l'eau. Le combattant laisse une petite stèle qui roule et glisse comme un objet.
 
-### 3.2 Les six classes {{st:prevu}}
+### 3.2 Les six classes {{st:jeu}}
 
 Toutes les classes partagent le **même arsenal**. Chacune a en plus un talent, et parfois une contrepartie.
 
 | Classe | Talent | Contrepartie |
 |---|---|---|
-| **Chevalier** | *Haubert* : −25 % de dégâts d'explosion reçus | Saute 30 % moins haut |
-| **Archer** | *Œil exercé* : la trajectoire prévue de l'arc et de l'arbalète s'affiche deux fois plus loin | — |
-| **Frondeur** | *Bras souple* : +15 % de puissance maximale sur les armes lancées | −10 PV maximum |
-| **Sapeur** | *Maître d'œuvre* : creuse deux fois plus vite et voit les chausse-trapes ennemies | — |
+| **Chevalier** | *Haubert* : −25 % de dégâts d'explosion reçus | Lourd : ses sauts portent environ 30 % moins loin et moins haut |
+| **Archer** | *Œil exercé* : la trajectoire prévue (les points dorés qui apparaissent quand on charge le tir) s'affiche deux fois plus loin avec l'arc et l'arbalète | — |
+| **Frondeur** | *Bras souple* : la fronde et les pots partent 15 % plus vite, donc plus loin | −10 PV maximum |
+| **Sapeur** | *Maître d'œuvre* : creuse deux fois plus vite et voit les chausse-trapes ennemies (la pioche, la sape et les chausse-trapes arrivent avec l'arsenal complet) | — |
 | **Clerc** | *Bénédiction* : à la fin de son tour, soigne de 10 PV les alliés à moins de 120 pixels (pas lui-même) | Pas d'armes de mêlée |
-| **Roi** | *Majesté* : les alliés à moins de 200 pixels infligent +10 % de dégâts | −20 PV ; un seul par maison |
+| **Roi** | *Majesté* : les alliés à moins de 200 pixels infligent +10 % de dégâts (il compte au moment du tir) | −20 PV ; un seul par maison |
+
+Chaque maison compose son armée sur l'écran de préparation de la partie. On reconnaît les classes à leur attribut : la couronne du Roi, le carquois de l'Archer, la fronde du Frondeur, la pioche du Sapeur, la crosse du Clerc ; le Chevalier est le combattant en heaume, sans rien de plus. La fiche du combattant (clic sur lui) rappelle son talent et sa contrepartie, avec les valeurs de la partie. Les talents se règlent dans ⚙ Réglages, onglet **Classes**.
 
 ### 3.3 Les maisons {{st:prevu}}
 
@@ -211,7 +213,7 @@ Pour que les parties ne s'éternisent pas, **le Déluge** arrive après 20 tours
 | **LAN** | 2 PC du même réseau, un joueur par machine, sans serveur | {{st:prevu}} |
 | **Replays** | Revoir la dernière partie, l'exporter ou l'importer | {{st:prevu}} |
 
-**Régicide** (option) : chaque maison a un Roi, et sa mort élimine toute la maison.
+**Régicide** (option) {{st:jeu}} : chaque maison a un Roi, et sa mort élimine toute la maison : ses autres combattants quittent aussitôt le champ.
 
 **Schémas de règles** :
 - *Classique* : les valeurs de ce manuel.

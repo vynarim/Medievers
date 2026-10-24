@@ -34,6 +34,10 @@ import { objectAt, objectInfo, type ObjectRef } from '../ui/object-info.ts';
 import { Scenery } from './scenery.ts';
 import { FixedStep } from './fixed-step.ts';
 import { TerrainLayer } from './terrain-layer.ts';
+import { drawClassMark } from './class-marks.ts';
+import { aimPreviewTicks, classOf } from '../sim/classes.ts';
+import { shotSpeed } from '../sim/weapons/weapons.ts';
+import { defaultLineup } from '../content/classes.ts';
 
 export interface BattleData {
   readonly map: MapDef;
@@ -148,7 +152,12 @@ export class BattleScene extends Phaser.Scene {
     const perTeam = rules.unitsPerTeam ?? map.spawns[0]?.length ?? 3;
     const config: MatchConfig = {
       rules,
-      teams: spawnColumns(mask, map.spawns.length, perTeam).map((spawns) => ({ spawns })),
+      teams: spawnColumns(mask, map.spawns.length, perTeam).map((spawns) => ({
+        spawns,
+        ...(rules.classes
+          ? { classes: defaultLineup(spawns.length, rules.regicide === true) }
+          : {}),
+      })),
     };
     const resume = this.data_.resume;
     // A saved match replays to where it was left: same seed, same commands, same state.
@@ -708,6 +717,7 @@ export class BattleScene extends Phaser.Scene {
         g.strokeEllipse(x, y + 2, UNIT_HALF_WIDTH * 5, 18);
       }
       this.drawFigure(g, x, y, u.facing, primary, secondary, isActive, time);
+      drawClassMark(g, classOf(v, u), x, y, u.facing);
 
       if (label) {
         label.setVisible(true);
@@ -730,6 +740,7 @@ export class BattleScene extends Phaser.Scene {
       }
       if (isActive && (turn.phase === 'action' || turn.phase === 'transition')) {
         this.drawAim(g, x, y - UNIT_HEIGHT / 2, turn.aim);
+        if (turn.phase === 'action') this.drawPreview(g, u);
       }
     }
 
@@ -1326,6 +1337,47 @@ export class BattleScene extends Phaser.Scene {
       const armed = this.input_.dragArmed;
       g.lineStyle(armed ? 4 : 2, armed ? COLORS.vermillon : COLORS.encre, armed ? 0.9 : 0.4);
       g.lineBetween(cx, cy, cx + drag.pullX, cy + drag.pullY);
+    }
+  }
+
+  /**
+   * The flight the shot would take at the charged power, for a limited length (GDD §8.1), longer
+   * for an archer with the bow or the crossbow (GDD §3.2). Shown while charging or dragging; the
+   * crossbow, always at full power, shows it at once. Reads the terrain only.
+   */
+  private drawPreview(g: Phaser.GameObjects.Graphics, u: Readonly<Unit>): void {
+    const v = this.sim.view();
+    const def = v.rules.weapons.find((w) => w.id === v.turn.weapon);
+    if (!def || def.behavior === 'melee') return;
+    const power = def.fixedPower ? MAX_POWER : this.input_.controls.power;
+    if (power <= 0) return;
+    const speed = shotSpeed(v, u, def, power);
+    const p = createProjectile(
+      0,
+      u.id,
+      u.x + Math.trunc((20 * SUBPX * cosQ14(v.turn.aim)) / 16384),
+      u.y - (UNIT_HEIGHT * SUBPX) / 2 + Math.trunc((20 * SUBPX * sinQ14(v.turn.aim)) / 16384),
+      Math.trunc((speed * cosQ14(v.turn.aim)) / 16384),
+      Math.trunc((speed * sinQ14(v.turn.aim)) / 16384),
+      { radius: def.projectileRadius, windPct: def.windPct, gravityPct: 100 },
+    );
+    const ticks = aimPreviewTicks(v, u, def);
+    for (let i = 0; i < ticks; i++) {
+      const hit = stepProjectile(
+        p,
+        v.terrain as Terrain,
+        [],
+        v.turn.wind,
+        v.rules.wind.accelPerUnit,
+      );
+      if (hit) break;
+      if (i % 2 === 1) {
+        // Gilt dots that fade towards the end of the line.
+        g.fillStyle(COLORS.or, 1 - (0.7 * i) / ticks);
+        g.lineStyle(1.5, COLORS.encre, 1 - (0.7 * i) / ticks);
+        g.fillCircle(p.x / SUBPX, p.y / SUBPX, 3.5);
+        g.strokeCircle(p.x / SUBPX, p.y / SUBPX, 3.5);
+      }
     }
   }
 

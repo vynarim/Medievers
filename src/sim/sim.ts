@@ -28,6 +28,15 @@ import { Trick } from '../content/beasts.ts';
 import { blastMovesPots, potsTurn, stepPots } from './pots.ts';
 import { kitchenTurn, inKitchen, stepKitchen, useKitchen } from './kitchen.ts';
 import { fire, stepShots } from './weapons/weapons.ts';
+import {
+  blastTakenPct,
+  blessAtTurnEnd,
+  hpForClass,
+  kingOf,
+  maxHpOf,
+  mayUse,
+  unitRulesOf,
+} from './classes.ts';
 
 /** BAM: default aim, 45° above the horizon on the facing side */
 export const AIM_UP_RIGHT = 3584;
@@ -109,7 +118,8 @@ function createState(config: MatchConfig, seed: number, mask: Mask): SimState {
         placing.push({ unitId: id, team: teamId, x: xPx, rank });
         return;
       }
-      const u = createUnit(id, teamId, xPx, 0, config.rules.startHp);
+      const cls = (config.rules.classes && team.classes?.[rank]) || null;
+      const u = createUnit(id, teamId, xPx, 0, hpForClass(config.rules, cls));
       settle(u, terrain);
       units.push(u);
     });
@@ -118,6 +128,7 @@ function createState(config: MatchConfig, seed: number, mask: Mask): SimState {
       unitIds,
       lastPlayed: -1,
       ammo: config.rules.weapons.map((w) => w.ammo),
+      ...(config.rules.classes && team.classes ? { classes: [...team.classes] } : {}),
     });
   });
   const s: SimState = {
@@ -170,6 +181,9 @@ function unitById(s: SimState, id: number): Unit | undefined {
 }
 
 function teamAlive(s: SimState, team: TeamState): boolean {
+  // Régicide: the house stands as long as its king does (GDD §2.3).
+  const king = kingOf(s, team.id);
+  if (king) return king.alive;
   return team.unitIds.some((id) => unitById(s, id)?.alive === true);
 }
 
@@ -247,7 +261,13 @@ function placeUnit(s: SimState, x: number, events: SimEvent[]): boolean {
   const w = s.terrain.width;
   if (x < PLACE_CLEARANCE || x >= w - PLACE_CLEARANCE) return false;
   if (s.units.some((u) => Math.abs(subToPx(u.x) - x) < PLACE_CLEARANCE)) return false;
-  const u = createUnit(next.unitId, next.team, x, 0, s.rules.startHp);
+  const u = createUnit(
+    next.unitId,
+    next.team,
+    x,
+    0,
+    maxHpOf(s, { id: next.unitId, team: next.team }),
+  );
   if (!settle(u, s.terrain)) return false;
   s.placing.shift();
   s.units.push(u);
@@ -310,7 +330,7 @@ function applyCommand(s: SimState, c: GameCommand, events: SimEvent[]): void {
       if (budget !== undefined && t.moveLeft !== budget * SUBPX) return;
       const facing = u.facing;
       if (c.dir !== undefined) u.facing = c.dir;
-      if (!jump(u, c.kind, s.rules.unit)) {
+      if (!jump(u, c.kind, unitRulesOf(s, u))) {
         u.facing = facing;
         break;
       }
@@ -325,7 +345,7 @@ function applyCommand(s: SimState, c: GameCommand, events: SimEvent[]): void {
       u.facing = cosQ14(t.aim) < 0 ? -1 : 1;
       break;
     case 'selectWeapon':
-      if (canAct) {
+      if (canAct && mayUse(s, u, weaponDefIn(s.rules, c.id))) {
         t.weapon = c.id;
         t.fuse = weaponDefIn(s.rules, c.id).defaultFuse;
       }
@@ -338,7 +358,7 @@ function applyCommand(s: SimState, c: GameCommand, events: SimEvent[]): void {
       const team = s.teams[t.activeTeam];
       const wi = weaponIndexIn(s.rules, t.weapon);
       const ammo = team?.ammo[wi] ?? 0;
-      if (!team || ammo === 0) return;
+      if (!team || ammo === 0 || !mayUse(s, u, weaponDefIn(s.rules, t.weapon))) return;
       if (ammo > 0) team.ammo[wi] = ammo - 1;
       if (t.fuse === 0) t.fuse = s.rules.weapons[wi]?.defaultFuse ?? 0;
       fire(s, u, c.power, events);
@@ -394,7 +414,7 @@ function advanceTick(s: SimState, phaseJustSet: boolean, events: SimEvent[]): vo
   stepShots(s, events);
 
   for (const e of takeDueExplosions(s.explosions, s.tick)) {
-    const res = explode(e, s.terrain, s.units, s.rules.explosion);
+    const res = explode(e, s.terrain, s.units, s.rules.explosion, (u) => blastTakenPct(s, u));
     events.push({ e: 'explosion', x: e.x, y: e.y, radius: e.radius });
     if (res.carved > 0) {
       events.push({ e: 'terrainCarved', x: subToPx(e.x), y: subToPx(e.y), radius: e.carveRadius });
@@ -528,6 +548,16 @@ function callDeaths(s: SimState, events: SimEvent[]): void {
       events.push({ e: 'unitDied', unitId: u.id, cause: 'hp' });
     }
   }
+  if (!s.rules.regicide) return;
+  // Régicide: a house whose king has fallen leaves the field (GDD §2.3).
+  for (const u of s.units) {
+    const king = kingOf(s, u.team);
+    if (u.alive && king && !king.alive) {
+      u.alive = false;
+      u.hp = 0;
+      events.push({ e: 'unitDied', unitId: u.id, cause: 'kingFell' });
+    }
+  }
 }
 
 /**
@@ -564,6 +594,7 @@ function burnTurn(s: SimState, events: SimEvent[]): void {
 }
 
 function endTurn(s: SimState, events: SimEvent[]): void {
+  blessAtTurnEnd(s, events);
   burnTurn(s, events);
   beastsTurnEnd(s, events);
   maybeDropCrate(s, events);
@@ -604,6 +635,7 @@ function hashState(s: SimState): number {
     // Only fragments carry the flag, so logs without cluster weapons keep their hashes.
     if (shot.fragment) int(1);
     if (shot.turns !== undefined) int(shot.turns);
+    if (shot.damagePct !== undefined) int(shot.damagePct);
   }
   int(s.explosions.items.length);
   int(s.explosions.nextSeq);
@@ -643,7 +675,10 @@ function hashState(s: SimState): number {
   if (s.rules.burn) int(s.burnPx);
   if (s.rules.weapons.some((w) => w.fuseTurns !== undefined)) {
     int(s.pots.length);
-    for (const p of s.pots) for (const v of [p.id, p.x, p.y, p.turns]) int(v);
+    for (const p of s.pots) {
+      for (const v of [p.id, p.x, p.y, p.turns]) int(v);
+      if (p.damagePct !== undefined) int(p.damagePct);
+    }
   }
   if (s.rules.beasts) {
     const b = s.beast;

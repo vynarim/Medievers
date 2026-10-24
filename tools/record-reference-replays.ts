@@ -6,10 +6,15 @@ import { existsSync, writeFileSync } from 'node:fs';
 import { BEAST_RULES } from '../src/content/beasts.ts';
 import { CRATE_RULES } from '../src/content/crates.ts';
 import { KITCHEN_RULES } from '../src/content/kitchen.ts';
-import { CLASSIC_RULES } from '../src/content/rules.ts';
+import { CLASSIC_RULES, type MatchRules } from '../src/content/rules.ts';
 import { formatHash, type MatchConfig, type ReplayFile } from '../src/sim/index.ts';
 import { loadMask } from './lib/maps-node.ts';
 import { Recorder } from './lib/recorder.ts';
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const { placementTicks, ...TURN_NOW } = CLASSIC_RULES.turn;
+/** Classique, starting on the spawn columns without the placement phase. */
+const NO_PLACEMENT: MatchRules = { ...CLASSIC_RULES, turn: TURN_NOW };
 
 interface Script {
   readonly name: string;
@@ -322,6 +327,34 @@ const SCRIPTS: readonly Script[] = [
           { t: 'selectWeapon', id: 'sling' },
           { t: 'aim', angle: team === 0 ? 3700 : 2440 },
           { t: 'fire', power: 800 },
+        ]);
+        r.until('transition');
+      }
+    },
+  },
+  {
+    name: 'classes-regicide',
+    description:
+      'Classes and Régicide (GDD §2.3, §3.2) on the hills map: knights, archers, slingers, ' +
+      'clerics and kings trade arrows, sling stones and pots until a king falls.',
+    mapId: 'hills',
+    seed: 1214,
+    config: {
+      rules: { ...NO_PLACEMENT, regicide: true, startHp: 60 },
+      teams: [
+        { spawns: [250, 420, 560], classes: ['king', 'cleric', 'slinger'] },
+        { spawns: [1050, 1200, 1380], classes: ['knight', 'archer', 'king'] },
+      ],
+    },
+    play: (r) => {
+      for (let turn = 0; turn < 12 && r.sim.view().turn.phase !== 'gameOver'; turn++) {
+        r.until('action');
+        const team = r.sim.view().turn.activeTeam;
+        const weapon = (['bow', 'sling', 'greekFire'] as const)[turn % 3] ?? 'bow';
+        r.step([
+          { t: 'selectWeapon', id: weapon },
+          { t: 'aim', angle: team === 0 ? 3720 - turn * 13 : 2420 + turn * 13 },
+          { t: 'fire', power: 780 + turn * 17 },
         ]);
         r.until('transition');
       }

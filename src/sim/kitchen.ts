@@ -7,6 +7,7 @@ import {
   KITCHEN_WIDTH,
   type KitchenRules,
 } from '../content/kitchen.ts';
+import { maxHpOf } from './classes.ts';
 import type { SimEvent } from './events.ts';
 import { SUBPX, idiv, subToPx } from './math/fixed.ts';
 import { nextRange } from './math/prng.ts';
@@ -139,7 +140,7 @@ export function useKitchen(s: SimState, events: SimEvent[]): void {
   if (!r || !s.kitchen) return;
   s.kitchen = null;
   const u = s.units.find((x) => x.id === s.turn.activeUnitId);
-  const heal = u?.alive ? Math.max(0, Math.min(r.healHp, s.rules.startHp - u.hp)) : 0;
+  const heal = u?.alive ? Math.max(0, Math.min(r.healHp, maxHpOf(s, u) - u.hp)) : 0;
   if (u && heal > 0) u.hp += heal;
   events.push({ e: 'kitchenUsed', unitId: s.turn.activeUnitId, heal });
 }

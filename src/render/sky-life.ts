@@ -281,7 +281,8 @@ export class SkyLife {
     const fromTree = tree !== undefined && Math.random() < 0.5;
     const dir = Math.random() < 0.5 ? -1 : 1;
     const top = Math.max(40, view.top + 40);
-    const y0 = top + Math.random() * Math.max(60, Math.min(this.skyBottom, view.bottom) - top) * 0.5;
+    const y0 =
+      top + Math.random() * Math.max(60, Math.min(this.skyBottom, view.bottom) - top) * 0.5;
     for (let i = 0; i < n; i++) {
       const b = free[i];
       if (!b) break;
@@ -325,7 +326,11 @@ export class SkyLife {
     // A factor-f object at x shows at x + scroll·(1 − f): put it about the middle of the screen.
     const x = cam.midPoint.x - cam.scrollX * (1 - RAINBOW_SCROLL) + (Math.random() - 0.5) * 400;
     const y = this.skyBottom - cam.scrollY * (1 - 0.6) + 120;
-    this.rainbow.setPosition(x, y).setScale(0.8 + Math.random() * 0.5).setAlpha(0).setVisible(true);
+    this.rainbow
+      .setPosition(x, y)
+      .setScale(0.8 + Math.random() * 0.5)
+      .setAlpha(0)
+      .setVisible(true);
     this.rainbowAge = 0;
   }
 }

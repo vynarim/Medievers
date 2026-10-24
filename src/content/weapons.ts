@@ -53,6 +53,8 @@ export interface WeaponDef {
    * Absent from older logs: a fuse in seconds.
    */
   readonly fuseTurns?: number;
+  /** thrown by hand (sling, pots): the slinger's passive applies (GDD §3.2) */
+  readonly thrown?: boolean;
 }
 
 export const WEAPONS: readonly WeaponDef[] = [
@@ -72,6 +74,7 @@ export const WEAPONS: readonly WeaponDef[] = [
   },
   {
     id: 'sling',
+    thrown: true,
     behavior: 'directHit',
     projectileRadius: 2,
     windPct: 100,
@@ -86,6 +89,7 @@ export const WEAPONS: readonly WeaponDef[] = [
   },
   {
     id: 'greekFire',
+    thrown: true,
     behavior: 'fusedBouncer',
     projectileRadius: 5,
     windPct: 0,
@@ -116,6 +120,7 @@ export const WEAPONS: readonly WeaponDef[] = [
   },
   {
     id: 'pitchPot',
+    thrown: true,
     behavior: 'cluster',
     projectileRadius: 5,
     windPct: 0,

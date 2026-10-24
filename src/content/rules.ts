@@ -3,6 +3,7 @@
 import { BARREL_RULES, type BarrelRules } from './barrels.ts';
 import { BEAST_RULES, type BeastRules } from './beasts.ts';
 import { BURN_RULES, type BurnRules } from './burn.ts';
+import { CLASS_RULES, type ClassRules } from './classes.ts';
 import { CRATE_RULES, type CrateRules } from './crates.ts';
 import { KITCHEN_RULES, type KitchenRules } from './kitchen.ts';
 import { UNIT_RULES, type UnitRules } from './units.ts';
@@ -79,6 +80,13 @@ export interface MatchRules {
   readonly crates?: CrateRules;
   /** hares and snails out of the margins (GDD §4.10); absent from older logs: none */
   readonly beasts?: BeastRules;
+  /**
+   * class passives (GDD §3.2); the line-up of each house is in its TeamConfig. Absent from logs
+   * recorded before 2026-10-25: no classes.
+   */
+  readonly classes?: ClassRules;
+  /** Régicide (GDD §2.3): a house whose king dies is out of the match */
+  readonly regicide?: boolean;
 }
 
 /** « Classique » rules scheme (GDD §6). */
@@ -106,6 +114,7 @@ export const CLASSIC_RULES: MatchRules = {
   barrels: BARREL_RULES,
   crates: CRATE_RULES,
   beasts: BEAST_RULES,
+  classes: CLASS_RULES,
 };
 
 /** Index of a weapon in the match arsenal; throws for a weapon the match does not have. */

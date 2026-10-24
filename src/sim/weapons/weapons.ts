@@ -26,6 +26,7 @@ import type { SimEvent } from '../events.ts';
 import type { FlyingShot, SimState } from '../state.ts';
 import { UNIT_HEIGHT, launch, type Unit } from '../units/unit.ts';
 import { MAX_POWER } from '../commands.ts';
+import { damageDealtPct, throwPct, type ClassView } from '../classes.ts';
 
 /** px from the hitbox centre to the muzzle */
 const MUZZLE_DISTANCE = 20;
@@ -39,14 +40,16 @@ export function fire(state: SimState, u: Unit, power: number, events: SimEvent[]
   const def = weaponDefIn(state.rules, state.turn.weapon);
   const angle = state.turn.aim;
   const id = state.nextEntityId++;
+  // Majesté: the king's aura raises the damage of the shot (GDD §3.2); stored only when it does.
+  const pct = damageDealtPct(state, u);
+  const damagePct = pct !== 100 ? { damagePct: pct } : {};
   if (def.behavior === 'melee') {
     events.push({ e: 'shotFired', shotId: id, weapon: def.id });
-    strike(state, u, def, angle, events);
+    strike(state, u, def, angle, pct, events);
     events.push({ e: 'shotEnded', shotId: id });
     return;
   }
-  const p = def.fixedPower ? MAX_POWER : Math.max(0, Math.min(power, MAX_POWER));
-  const speed = idiv(def.maxSpeed * p, MAX_POWER);
+  const speed = shotSpeed(state, u, def, power);
   const cx = u.x;
   const cy = u.y - (UNIT_HEIGHT * SUBPX) / 2;
   const projectile = createProjectile(
@@ -67,16 +70,49 @@ export function fire(state: SimState, u: Unit, power: number, events: SimEvent[]
       weapon: def.id,
       fuse: turns === 0 ? def.fuseTurns : 0,
       ...(turns > 0 ? { turns } : {}),
+      ...damagePct,
     });
-  } else state.shots.push({ projectile, weapon: def.id, fuse: fused ? state.turn.fuse : 0 });
+  } else {
+    state.shots.push({
+      projectile,
+      weapon: def.id,
+      fuse: fused ? state.turn.fuse : 0,
+      ...damagePct,
+    });
+  }
   events.push({ e: 'shotFired', shotId: id, weapon: def.id });
 }
+
+/**
+ * sub-px/tick: launch speed of `def` thrown by u at power 0..1024 (crossbow: always full), with
+ * the slinger's stronger arm. The renderer uses it for the aim preview.
+ */
+export function shotSpeed(
+  state: ClassView,
+  u: Unit,
+  def: WeaponDef,
+  power: number,
+): number {
+  const p = def.fixedPower ? MAX_POWER : Math.max(0, Math.min(power, MAX_POWER));
+  return idiv(idiv(def.maxSpeed * p, MAX_POWER) * throwPct(state, u, def), 100);
+}
+
+/** Damage of a hit or blast at `pct` percent of `damage` (100: unchanged). */
+const scaled = (damage: number, pct: number | undefined): number =>
+  pct === undefined || pct === 100 ? damage : idiv(damage * pct + 50, 100);
 
 /**
  * Melee blow: every other unit touching the point at `reach` along the aim takes the damage and
  * is thrown along the aim; a barrel there goes up, the kitchen there is used, the ground chips.
  */
-function strike(state: SimState, u: Unit, def: WeaponDef, angle: number, events: SimEvent[]) {
+function strike(
+  state: SimState,
+  u: Unit,
+  def: WeaponDef,
+  angle: number,
+  pct: number,
+  events: SimEvent[],
+) {
   const reach = (def.reach ?? 0) * SUBPX;
   const dx = cosQ14(angle);
   const dy = sinQ14(angle);
@@ -85,7 +121,7 @@ function strike(state: SimState, u: Unit, def: WeaponDef, angle: number, events:
   const y = cy + mulQ14(reach, dy);
   for (const other of state.units) {
     if (!other.alive || other.id === u.id || !touchesUnit(other, x, y, STRIKE_RADIUS)) continue;
-    directHit(other, def, state.rules.explosion, dx, dy, events);
+    directHit(other, def, scaled(def.damage, pct), state.rules.explosion, dx, dy, events);
   }
   const barrel = barrelOnSegment(state, u.x, cy, x, y);
   if (barrel !== null) igniteBarrel(state, barrel, 1);
@@ -100,13 +136,14 @@ function strike(state: SimState, u: Unit, def: WeaponDef, angle: number, events:
 function directHit(
   u: Unit,
   def: WeaponDef,
+  damage: number,
   rules: ExplosionRules,
   vx: number,
   vy: number,
   events: SimEvent[],
 ): void {
-  u.hp = Math.max(0, u.hp - def.damage);
-  events.push({ e: 'unitDamaged', unitId: u.id, damage: def.damage });
+  u.hp = Math.max(0, u.hp - damage);
+  events.push({ e: 'unitDamaged', unitId: u.id, damage });
   const speed = idiv(def.damage * rules.knockbackPerHp * def.knockbackPct, 100);
   const len = isqrt(vx * vx + vy * vy);
   if (len > 0) {
@@ -125,7 +162,7 @@ function burst(state: SimState, shot: FlyingShot, def: WeaponDef, queue: FlyingS
     y: p.y,
     radius: def.explosionRadius,
     carveRadius: def.explosionRadius,
-    maxDamage: def.damage,
+    maxDamage: scaled(def.damage, shot.damagePct),
     sourceId: p.id,
   });
   const f = def.fragments;
@@ -144,7 +181,13 @@ function burst(state: SimState, shot: FlyingShot, def: WeaponDef, queue: FlyingS
       { radius: 2, windPct: 0, gravityPct: 100 },
     );
     child.clearOfOwner = true;
-    queue.push({ projectile: child, weapon: def.id, fuse: 0, fragment: true });
+    queue.push({
+      projectile: child,
+      weapon: def.id,
+      fuse: 0,
+      fragment: true,
+      ...(shot.damagePct !== undefined ? { damagePct: shot.damagePct } : {}),
+    });
   }
 }
 
@@ -199,7 +242,7 @@ export function stepShots(state: SimState, events: SimEvent[]): void {
           y: p.y,
           radius: f?.radius ?? 0,
           carveRadius: f?.radius ?? 0,
-          maxDamage: f?.damage ?? 0,
+          maxDamage: scaled(f?.damage ?? 0, shot.damagePct),
           sourceId: p.id,
         });
       }
@@ -207,7 +250,10 @@ export function stepShots(state: SimState, events: SimEvent[]): void {
     } else if (def.behavior === 'directHit') {
       if (impact?.kind === 'unit') {
         const u = state.units.find((x) => x.id === impact.unitId);
-        if (u) directHit(u, def, state.rules.explosion, p.vx, p.vy, events);
+        if (u) {
+          const damage = scaled(def.damage, shot.damagePct);
+          directHit(u, def, damage, state.rules.explosion, p.vx, p.vy, events);
+        }
       } else if (impact?.kind === 'terrain' && def.chipRadius) {
         // Every shot wears the ground down: enough arrows go through a wall (GDD §4.7).
         const x = subToPx(impact.x);
@@ -234,7 +280,7 @@ export function stepShots(state: SimState, events: SimEvent[]): void {
               y: p.y,
               radius: def.explosionRadius,
               carveRadius: def.explosionRadius,
-              maxDamage: def.damage,
+              maxDamage: scaled(def.damage, shot.damagePct),
               sourceId: p.id,
             });
           }
