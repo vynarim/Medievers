@@ -4,6 +4,7 @@ import type { GameCommand, TimedCommand } from '../sim/commands.ts';
 import { LOG_VERSION, type GameLog } from '../sim/log.ts';
 import type { MatchConfig } from '../sim/state.ts';
 
+// Storage keys keep the game's first name (Medievers), so players keep their saves and settings.
 const KEY = 'medievers.save.v1';
 /** the last match played to its end, for « Revoir la dernière partie » */
 const LAST_KEY = 'medievers.lastReplay.v1';
@@ -119,7 +120,7 @@ export function downloadLog(log: GameLog): void {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `medievers-replay-${log.seed.toString(16)}.json`;
+  a.download = `medieverse-replay-${log.seed.toString(16)}.json`;
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }

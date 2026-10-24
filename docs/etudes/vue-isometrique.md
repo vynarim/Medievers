@@ -4,7 +4,7 @@ Statut : **analyse, aucune décision prise**. Date : 2026-10-24. État du dépô
 
 ## 1. La demande
 
-Étudier le passage de Medievers d'une vue 2D de profil (principe _Worms_) à une vue pseudo-3D vue d'en haut, en 3/4 à la _Zelda: A Link to the Past_ ou en isométrique vrai (_Into the Breach_, _Final Fantasy Tactics_, _Worms 3D_), pour montrer des terrains et une bataille médiévale vus du dessus, avec un plan, une ébauche, la faisabilité et une recommandation, sachant qu'il faut choisir l'une des deux vues.
+Étudier le passage de Medieverse d'une vue 2D de profil (principe _Worms_) à une vue pseudo-3D vue d'en haut, en 3/4 à la _Zelda: A Link to the Past_ ou en isométrique vrai (_Into the Breach_, _Final Fantasy Tactics_, _Worms 3D_), pour montrer des terrains et une bataille médiévale vus du dessus, avec un plan, une ébauche, la faisabilité et une recommandation, sachant qu'il faut choisir l'une des deux vues.
 
 Précision ajoutée par l'utilisateur : dans une version 3D, on doit pouvoir avancer et reculer, zoomer pour voir les troupes, et regarder la bataille de dessus, de face et de côté (caméra libre ou en orbite), tout en gardant le look Maciejowski. Il demande explicitement que l'idée soit **contestée** et pas seulement validée : voir §6, « Le contre-argumentaire ».
 
@@ -42,7 +42,7 @@ Références utiles :
 - **Les machines de siège** : un trébuchet placé sur la carte, une tour de siège qui avance, un bélier contre une porte.
 - **Les formations et le positionnement** : flanquer, s'abriter, tenir une hauteur. Le jeu devient plus tactique et moins burlesque.
 
-En résumé, la vue de dessus ne transforme pas Medievers, elle en fait un **autre jeu**, plus proche d'un _tactics_ d'artillerie que d'un _Worms_.
+En résumé, la vue de dessus ne transforme pas Medieverse, elle en fait un **autre jeu**, plus proche d'un _tactics_ d'artillerie que d'un _Worms_.
 
 ## 3. Le style Maciejowski vu de dessus
 
@@ -159,7 +159,7 @@ Cette section prend le contre-pied de la demande, surtout de la caméra libre (a
 
 ### 6.3 Ce qui reste valable dans l'idée
 
-Le spectacle d'un siège vu d'en haut, l'immersion, le plaisir de tourner autour d'un château sont réels. Une vraie 3D aurait du sens pour **un autre produit** : d'abord sur PC, avec un artiste 3D dans l'équipe et un style assumé « figurines peintes » plutôt que « manuscrit ». Pour Medievers tel que défini, le meilleur compromis 3D serait B (ou C) avec 4 orientations, une inclinaison fixe et le zoom, pas une orbite libre. Ce contre-argumentaire renforce la recommandation du §8.
+Le spectacle d'un siège vu d'en haut, l'immersion, le plaisir de tourner autour d'un château sont réels. Une vraie 3D aurait du sens pour **un autre produit** : d'abord sur PC, avec un artiste 3D dans l'équipe et un style assumé « figurines peintes » plutôt que « manuscrit ». Pour Medieverse tel que défini, le meilleur compromis 3D serait B (ou C) avec 4 orientations, une inclinaison fixe et le zoom, pas une orbite libre. Ce contre-argumentaire renforce la recommandation du §8.
 
 ## 7. Plan proposé
 
@@ -205,7 +205,7 @@ Total : **environ 10 à 14 semaines** de plus pour B, soit l'équivalent de plus
 
 ## 8. Recommandation
 
-**Garder la vue 2D de profil (option A) pour Medievers.** Les raisons :
+**Garder la vue 2D de profil (option A) pour Medieverse.** Les raisons :
 
 1. **Le style l'exige.** La Bible de Maciejowski est en profil, ses sièges aussi. Les piliers du GDD (« le manuscrit vivant », « le terrain détruit révèle le vélin », « chaos lisible ») sont des propriétés de la vue en coupe. La vue de dessus garde la palette et les cernes, pas le langage.
 2. **Le genre l'exige.** Une artillerie à visée libre en vue de dessus pose un problème de lisibilité connu (_Worms 3D_). Les jeux qui réussissent en iso (_Into the Breach_, _FFT_) le font en renonçant à la visée libre : le joueur désigne une case et le jeu calcule l'arc. Ce serait un autre jeu. Quant à la caméra libre (dessus, face, côté), seule la vraie 3D (D) la permet, et c'est l'option la plus chère et la plus éloignée du style (§6).

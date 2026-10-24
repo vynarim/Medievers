@@ -1,4 +1,4 @@
-# Medievers — Spécification technique
+# Medieverse — Spécification technique
 
 ## 1. Stack
 

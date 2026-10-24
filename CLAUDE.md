@@ -1,4 +1,4 @@
-# Medievers — instructions projet pour Claude Code
+# Medieverse — instructions projet pour Claude Code
 
 Jeu Web 2D d'artillerie tour par tour (principe *Worms*), dans le style graphique de la Bible de Maciejowski (Morgan Library, MS M.638, ~1250). Cible : navigateur, orientation paysage, PC (clavier/souris) et tablette (tactile).
 

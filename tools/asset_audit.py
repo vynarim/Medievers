@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Medievers asset audit — measures assets against docs/ASSETS.md.
+"""Medieverse asset audit — measures assets against docs/ASSETS.md.
 
 Emits JSON (default) or Markdown. Every check reports one of:
   PASS | WARN | FAIL | NOT_ASSESSED (with a reason).

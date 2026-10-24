@@ -1,4 +1,4 @@
-# `.claude/` — skills et rules du projet Medievers
+# `.claude/` — skills et rules du projet Medieverse
 
 ## Skills (`/nom` dans Claude Code)
 
@@ -26,4 +26,4 @@ Tous les skills qui rendent un verdict distinguent **NOT ASSESSED** de PASS : un
 
 ## Origine
 
-Ce dossier est inspiré de [Claude Code Game Studios](https://github.com/Donchitos/Claude-Code-Game-Studios) (MIT, © 2026 Donchitos), en particulier le principe « NOT ASSESSED » et la structure des skills asset-audit, balance-check, gate-check, soak-test, perf-profile et playtest-report. Les skills ont été réécrits pour la stack Medievers : Web, TypeScript, Phaser, simulation déterministe.
+Ce dossier est inspiré de [Claude Code Game Studios](https://github.com/Donchitos/Claude-Code-Game-Studios) (MIT, © 2026 Donchitos), en particulier le principe « NOT ASSESSED » et la structure des skills asset-audit, balance-check, gate-check, soak-test, perf-profile et playtest-report. Les skills ont été réécrits pour la stack Medieverse : Web, TypeScript, Phaser, simulation déterministe.

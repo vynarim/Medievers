@@ -1,6 +1,6 @@
 <div align="center">
 
-# Medievers
+# Medieverse
 
 **Des armées enluminées sortent des pages d'un manuscrit du XIIIᵉ siècle et s'affrontent à l'arc, au trébuchet et au feu grégeois, sur des paysages peints qui s'effritent à chaque tir.**
 
@@ -156,8 +156,8 @@ docs/         GDD, spécification technique, assets, backlog, ADR, rapports
 **Prérequis** : [Node.js](https://nodejs.org/) 24 ou plus et [pnpm](https://pnpm.io/installation) 12.
 
 ```bash
-git clone https://github.com/vynarim/Medievers.git
-cd Medievers
+git clone https://github.com/vynarim/Medieverse.git
+cd Medieverse
 pnpm install
 pnpm exec playwright install chromium firefox webkit   # pour pnpm run test:browser
 pnpm run dev        # http://localhost:5173
@@ -198,7 +198,7 @@ Le détail des tâches et des critères d'acceptation est dans [docs/BACKLOG.md]
 
 | Document | Contenu |
 |---|---|
-| [Manuel du joueur (PDF)](docs/manual/Medievers-Manuel-du-joueur.pdf) | Toutes les règles expliquées au joueur, avec l'état de chacune (en jeu, moteur prêt, prévu). Régénéré par `pnpm run manual` |
+| [Manuel du joueur (PDF)](docs/manual/Medieverse-Manuel-du-joueur.pdf) | Toutes les règles expliquées au joueur, avec l'état de chacune (en jeu, moteur prêt, prévu). Régénéré par `pnpm run manual` |
 | [docs/GDD.md](docs/GDD.md) | Game design : règles, unités, arsenal, modes, IA, contrôles, UI, cartes |
 | [docs/TECH_SPEC.md](docs/TECH_SPEC.md) | Architecture, déterminisme, terrain, physique, formats, LAN, budgets de performance |
 | [docs/ASSETS.md](docs/ASSETS.md) | Direction artistique, conventions et liste des assets |
@@ -214,7 +214,7 @@ Le détail des tâches et des critères d'acceptation est dans [docs/BACKLOG.md]
 - **Données** : les valeurs de gameplay (dégâts, rayons, munitions) vivent dans `src/content/`, jamais en dur dans la logique.
 - **Avant de proposer un changement** : `pnpm run check` doit être vert. À partir de M1, le test de déterminisme aussi.
 
-Medievers est développé avec l'aide de [Claude Code](https://claude.com/claude-code). Le dossier [.claude/](.claude/README.md) contient les skills et les règles qui encadrent ce travail : contrôle du déterminisme, gate de jalon, fiches d'assets, équilibrage…
+Medieverse est développé avec l'aide de [Claude Code](https://claude.com/claude-code). Le dossier [.claude/](.claude/README.md) contient les skills et les règles qui encadrent ce travail : contrôle du déterminisme, gate de jalon, fiches d'assets, équilibrage…
 
 ## Références et droits
 

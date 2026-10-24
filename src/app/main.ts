@@ -79,7 +79,7 @@ async function boot(): Promise<void> {
   if (save && saved) start(setup, saved, { resume: save });
   else choose();
   // Dev builds expose the game for browser-driven checks (Playwright); stripped from production.
-  if (import.meta.env.DEV) (window as unknown as { medievers: Phaser.Game }).medievers = game;
+  if (import.meta.env.DEV) (window as unknown as { medieverse: Phaser.Game }).medieverse = game;
 }
 
 void boot();

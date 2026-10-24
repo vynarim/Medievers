@@ -1,4 +1,4 @@
-# Medievers — Backlog et jalons
+# Medieverse — Backlog et jalons
 
 Chaque tâche est dimensionnée pour une session Claude Code. Les critères d'acceptation (CA) sont vérifiables. On ne passe pas au jalon suivant tant que les CA du jalon courant ne sont pas verts.
 

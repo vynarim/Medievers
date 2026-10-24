@@ -1,6 +1,6 @@
 ---
 name: playtest-report
-description: "Prépare une session de playtest de Medievers (protocole et grille d'observation selon le mode : hotseat, vs IA, tablette, LAN) ou transforme des notes brutes de playtest en rapport structuré avec bugs, ressentis et actions routées vers le BACKLOG. Usage : « /playtest-report prepare hotseat » ou « /playtest-report <notes collées> »."
+description: "Prépare une session de playtest de Medieverse (protocole et grille d'observation selon le mode : hotseat, vs IA, tablette, LAN) ou transforme des notes brutes de playtest en rapport structuré avec bugs, ressentis et actions routées vers le BACKLOG. Usage : « /playtest-report prepare hotseat » ou « /playtest-report <notes collées> »."
 argument-hint: "prepare <hotseat|ia|tablette|lan> | analyse <notes ou chemin>"
 allowed-tools: Read, Glob, Grep, Write
 ---

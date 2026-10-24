@@ -1,4 +1,4 @@
-# Medievers — Game Design Document
+# Medieverse — Game Design Document
 
 ## 1. Vision
 

@@ -1,4 +1,4 @@
-# Medievers
+# Medieverse
 
 ## Manuel du joueur
 
@@ -342,4 +342,4 @@ L'énergie rythmique de *Patapon*, remixée en médiéval : tambours en avant, p
 
 ---
 
-*Medievers s'inspire de la Bible de Maciejowski (Morgan Library & Museum, MS M.638, Paris, vers 1250). Les maisons sont fictives.*
+*Medieverse s'inspire de la Bible de Maciejowski (Morgan Library & Museum, MS M.638, Paris, vers 1250). Les maisons sont fictives.*

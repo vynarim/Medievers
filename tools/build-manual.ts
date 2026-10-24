@@ -12,7 +12,7 @@ import { Material, type MaterialId } from '../src/sim/terrain/material.ts';
 import { fallDamage } from '../src/sim/units/unit.ts';
 
 const dir = new URL('../docs/manual/', import.meta.url);
-const OUTPUT = 'Medievers-Manuel-du-joueur.pdf';
+const OUTPUT = 'Medieverse-Manuel-du-joueur.pdf';
 
 const STATUS: Record<string, string> = {
   jeu: '<span class="st st-jeu">En jeu</span>',
@@ -119,7 +119,7 @@ if (leftover) throw new Error(`unknown placeholder ${leftover[0]}`);
 
 const body = await marked.parse(source);
 const css = readFileSync(new URL('manual.css', dir), 'utf8');
-const html = `<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>Medievers — Manuel du joueur</title>
+const html = `<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>Medieverse — Manuel du joueur</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=UnifrakturMaguntia&display=swap" rel="stylesheet">
 <style>${css}</style></head><body>${body}</body></html>`;
@@ -139,7 +139,7 @@ try {
     displayHeaderFooter: true,
     headerTemplate: '<span></span>',
     footerTemplate:
-      '<div style="width:100%;text-align:center;font-size:8pt;color:#6b4a2e;font-family:Georgia,serif">Medievers — Manuel du joueur · <span class="pageNumber"></span> / <span class="totalPages"></span></div>',
+      '<div style="width:100%;text-align:center;font-size:8pt;color:#6b4a2e;font-family:Georgia,serif">Medieverse — Manuel du joueur · <span class="pageNumber"></span> / <span class="totalPages"></span></div>',
   });
   writeFileSync(new URL(OUTPUT, dir), pdf);
   console.log(`wrote docs/manual/${OUTPUT}`);

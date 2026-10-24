@@ -1,4 +1,4 @@
-# Medievers — Direction artistique et liste des assets
+# Medieverse — Direction artistique et liste des assets
 
 ## 1. Charte de style « Maciejowski »
 
@@ -200,7 +200,7 @@ Cartes V1 : Jéricho (P0, carte de référence), Ela, Camp, Arche, Tour, Verger 
 ## 8. Interface
 | Asset | Qté | P |
 |---|---|---|
-| Logo « Medievers » (lettrine historiée + lettrage gothique) | 1 + version compacte | P1 |
+| Logo « Medieverse » (lettrine historiée + lettrage gothique) | 1 + version compacte | P1 |
 | Écran titre (page enluminée, lettrine animable en calques) | 1 composition, environ 6 calques | P1 |
 | Cadres de panneaux (arcature, 9-slice) | 3 | P0 (1) |
 | Boutons (normal, survol, pressé, désactivé ; 9-slice) | 2 styles × 4 | P0 |

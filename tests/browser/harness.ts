@@ -5,7 +5,7 @@ import { runChecks, type CheckResults } from './checks.ts';
 
 declare global {
   interface Window {
-    medieversChecks: () => Promise<CheckResults>;
+    medieverseChecks: () => Promise<CheckResults>;
   }
 }
 
@@ -22,7 +22,7 @@ const mapUrls = import.meta.glob<string>('../fixtures/maps/*.png', {
 const bytes = async (url: string): Promise<Uint8Array> =>
   new Uint8Array(await (await fetch(url)).arrayBuffer());
 
-window.medieversChecks = async () => {
+window.medieverseChecks = async () => {
   const replays = [];
   for (const [path, file] of Object.entries(replayFiles).sort(([a], [b]) => (a < b ? -1 : 1))) {
     const mapUrl = mapUrls[`../fixtures/maps/${file.mapId}.png`];

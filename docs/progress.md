@@ -1,4 +1,4 @@
-# Medievers — état de session
+# Medieverse — état de session
 
 ## État courant
 - **M1 terminé** (gate PASS). **M2 : gate du 2026-10-24 = NOT ASSESSED** ([rapport](reports/gates/2026-10-24-M2.md)) : tous les CA sont verts sauf deux qui attendent l'utilisateur, 60 fps mesurés 10 min à l'écran (2.1) et une tablette réelle (2.6).
@@ -25,10 +25,10 @@
 - **Valeurs provisoires** (projection 40/HP, vent 2/point, vitesses des armes) : l'utilisateur les réglera lui-même via ⚙ Réglages. Exception : marche 280 px et saut long ≈ 420 px, fixés par l'utilisateur le 2026-10-24.
 - **Nouvelles règles = champs optionnels** de `MatchRules` (`settleTicks`, `moveAfterShot`, `freeSelect`, `moveBudget`, `slopeTakeoff`) : absents des logs anciens, ils gardent leurs hashes de référence. Garder ce schéma tant que les replays de référence ne sont pas régénérés avec accord.
 - **Sondes navigateur** : une fenêtre Chromium visible mais masquée tombe à 1 image/s ; lancer les sondes fonctionnelles sans tête, et la mesure de fps seulement à l'écran, par un humain.
-- **Sauvegarde** : `localStorage.clear()` puis rechargement ne suffit pas à repartir de zéro, car `pagehide` réécrit la sauvegarde ; retirer la clé `medievers.save.v1` avant de recharger, ou utiliser « Recommencer la partie ».
+- **Sauvegarde** : `localStorage.clear()` puis rechargement ne suffit pas à repartir de zéro, car `pagehide` réécrit la sauvegarde ; retirer la clé `medieverse.save.v1` avant de recharger, ou utiliser « Recommencer la partie ».
 - **UI en DOM** au-dessus du canvas (`src/ui/overlay.ts`) : les boutons ont `tabIndex=-1` et `preventDefault` sur `mousedown`, sinon Espace et les flèches activent les boutons au lieu du jeu. Les champs du panneau stoppent la propagation de `keydown`.
 - **Commits** : sans ligne « Co-Authored-By » (préférence de l'utilisateur, historique réécrit).
-- **Navigateur Playwright du MCP** : le rAF y tourne à ~1 Hz (fenêtre en arrière-plan), le jeu semble figé. Ce n'est pas un problème de perf (≈ 1,3 ms par frame) : pour tester, avancer à la main avec `window.medievers.step(performance.now(), 1000 / 60)` et piloter `scene.input_.ui`.
+- **Navigateur Playwright du MCP** : le rAF y tourne à ~1 Hz (fenêtre en arrière-plan), le jeu semble figé. Ce n'est pas un problème de perf (≈ 1,3 ms par frame) : pour tester, avancer à la main avec `window.medieverse.step(performance.now(), 1000 / 60)` et piloter `scene.input_.ui`.
 - **Tablette 4:3** : `Scale.FIT` en 16:9 laisse des bandes et rapetisse le monde ; le HUD DOM, lui, occupe tout l'écran. À revoir avec l'écran de jeu final (M8), pas avant.
 
 ## État git

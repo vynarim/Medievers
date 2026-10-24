@@ -1,10 +1,10 @@
-# Étude E2 — Les règles de Medievers face à Worms et Worms Armageddon
+# Étude E2 — Les règles de Medieverse face à Worms et Worms Armageddon
 
 *2026-10-24. Passe de cohérence sur ce qui est programmé aujourd'hui (pas sur ce qui est seulement prévu dans le GDD), comparée aux règles de Worms (1995) et de Worms Armageddon (1999), schéma « Standard ».*
 
 ## 1. Ce qui se passe dans un tour aujourd'hui
 
-| Étape | Medievers (code actuel) | Worms Armageddon (Standard) |
+| Étape | Medieverse (code actuel) | Worms Armageddon (Standard) |
 |---|---|---|
 | Qui joue | Les maisons alternent. Dans la maison, **libre choix** du combattant tant qu'il n'a ni bougé ni tiré (clic, nom ou ⇄) | Les équipes alternent ; les vers tournent **dans l'ordre**. Choisir son ver est un outil (« Worm Select ») ou une option du schéma |
 | Transition | 2 s, caméra et vent | Idem, le temps du tour ne court pas encore |
@@ -32,7 +32,7 @@
 
 ## 3. Ce qui rend Worms vivant, et ce qui manque ici
 
-| Ressort de Worms | Medievers aujourd'hui | Piste |
+| Ressort de Worms | Medieverse aujourd'hui | Piste |
 |---|---|---|
 | **Le son** : voix des vers, cris, explosions, musique | Aucun son | Le plus gros manque. Grommelots médiévaux (« Pardiou ! », « Hélas ! »), bruitages d'onomatopées, cloche de fin de tour |
 | **Réactions des personnages** : ils regardent le projectile, grimacent, fanfaronnent, dansent à la victoire | Figurines figées | Animations simples (respiration, tête qui suit le tir, chute comique, prière avant un tir risqué) |
