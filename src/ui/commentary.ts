@@ -37,6 +37,8 @@ export class Commentary {
   /** said once per tick: a cleric's blessing, a house leaving after its king */
   private blessed = false;
   private kingFell = false;
+  /** the structure about to fall has lost its footing, rather than its HP */
+  private undermined = false;
   /** closes the end screen, while it is up */
   private endScreen: (() => void) | null = null;
   /** last state seen of each structure, by id */
@@ -267,9 +269,13 @@ export class Commentary {
           }
           this.structureStates.set(e.id, e.state);
           break;
+        case 'structureUndermined':
+          this.undermined = true;
+          break;
         case 'structureFell':
           pops.push(...this.fallPop(v, e.id));
-          this.hud.say(pick('quip.structureFell'), now);
+          this.hud.say(pick(this.undermined ? 'quip.undermined' : 'quip.structureFell'), now);
+          this.undermined = false;
           break;
         case 'crushed':
           this.hud.say(pick('quip.crushed', { name: unitName(e.unitId) }), now);

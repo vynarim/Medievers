@@ -275,6 +275,53 @@ function collapse(
   events.push({ e: 'terrainChanged', x: rx, y: ry, w: rw, h: rh });
 }
 
+/**
+ * After the ground has been dug: a tower or a wall with too few of its columns still standing on
+ * the ground (rules.structures.supportPct) collapses, toppling away from the ground it has left.
+ * A column stands when the pixel under its lowest one is solid; a column dug out entirely does
+ * not.
+ */
+export function undermineStructures(s: SimState, events: SimEvent[]): void {
+  const r = s.rules.structures;
+  const owners = s.owners;
+  if (!r || !owners || r.supportPct === undefined) return;
+  const t = s.terrain;
+  const width = t.width;
+  for (const st of s.structures) {
+    if (st.state === StructureState.Fallen || (st.type !== 'tower' && st.type !== 'wall')) continue;
+    const [rx, ry, rw, rh] = st.rect;
+    let columns = 0;
+    let standing = 0;
+    let sumX = 0;
+    for (let x = Math.max(0, rx); x < Math.min(width, rx + rw); x++) {
+      // Its lowest pixel still there; dug-out pixels keep their owner in the layer.
+      let owned = false;
+      let lowest = -1;
+      for (let y = Math.min(t.height, ry + rh) - 1; y >= Math.max(0, ry); y--) {
+        if (owners[y * width + x] !== st.id) continue;
+        owned = true;
+        if (materialOf(t, x, y) !== Material.Air) {
+          lowest = y;
+          break;
+        }
+      }
+      // Columns it never had (the gap beside a ladder) do not count; dug-out ones do.
+      if (!owned) continue;
+      columns++;
+      if (lowest >= 0 && isSolid(t, x, lowest + 1) && owners[(lowest + 1) * width + x] !== st.id) {
+        standing++;
+        sumX += x;
+      }
+    }
+    if (columns === 0 || standing * 100 >= columns * r.supportPct) continue;
+    st.hp = 0;
+    st.state = StructureState.Fallen;
+    events.push({ e: 'structureUndermined', id: st.id });
+    // It topples away from what still holds it: from the middle of its standing columns.
+    collapse(s, st, r, standing > 0 ? idiv(sumX, standing) : rx + (rw >> 1), events);
+  }
+}
+
 /** True when block b, with its top-left at px (x, y), overlaps solid terrain. */
 function blockHits(t: Terrain, b: Block, x: number, y: number): boolean {
   for (let j = 0; j < b.h; j++) {

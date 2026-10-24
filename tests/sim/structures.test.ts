@@ -2,6 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { STRUCTURE_RULES, StructureState } from '../../src/content/structures.ts';
 import { CLASSIC_RULES, type MatchRules } from '../rules-fixture.ts';
 import { Material, Sim, type SimEvent } from '../../src/sim/index.ts';
+import { MAP_THEMES } from '../../src/content/maps.ts';
+import { undermineStructures } from '../../src/sim/structures.ts';
+import { generateMap } from '../../src/sim/terrain/generate.ts';
 import { loadMask } from '../../tools/lib/maps-node.ts';
 import { TOWER_STRUCTURES } from '../fixtures/maps/test-maps.ts';
 
@@ -198,5 +201,71 @@ describe('towers built by the match (2026-10-25)', () => {
     // Stopped at the tower's face, still on the wall, not dropped in front of the tower's body.
     expect((u?.x ?? 0) >> 8).toBeGreaterThanOrEqual(700);
     expect((u?.y ?? 0) >> 8).toBe(400);
+  });
+
+  /** Digs a crater of radius r around px (x, y), hurting nothing. */
+  function dig(sim: Sim, x: number, y: number, r: number): void {
+    const snap = sim.snapshot();
+    snap.explosions.items.push({
+      tick: snap.tick + 1,
+      seq: snap.explosions.nextSeq++,
+      explosion: { x: x * 256, y: y * 256, radius: r, carveRadius: r, maxDamage: 0, sourceId: 900 },
+    });
+    sim.restore(snap);
+  }
+
+  it('stand on a small crater under their foot', () => {
+    const sim = flat();
+    dig(sim, 690, 510, 30);
+    const events = run(sim, 5);
+    expect(events.some((e) => e.e === 'structureUndermined')).toBe(false);
+    expect(sim.view().structures[0]?.state).toBe(StructureState.Intact);
+  });
+
+  it('fall when more than half their foot is dug away, toppling towards the hole', () => {
+    const sim = flat();
+    dig(sim, 700, 520, 70);
+    const events = run(sim, 600);
+    expect(events).toContainEqual({ e: 'structureUndermined', id: 1 });
+    expect(events).toContainEqual({ e: 'structureFell', id: 1 });
+    expect(sim.view().structures[0]?.state).toBe(StructureState.Fallen);
+    expect(sim.view().blocks).toHaveLength(0);
+  });
+
+  it('never fall for want of ground in logs recorded before the rule', () => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { supportPct, ...old } = STRUCTURE_RULES;
+    const sim = new Sim(
+      {
+        rules: { ...CALM, structures: { ...old, towerHeight: 200 } },
+        teams: [{ spawns: [400] }, { spawns: [1000] }],
+        structures: [{ id: 1, type: 'tower', build: { x: 600, width: 100, ladder: -1 } }],
+      },
+      1,
+      loadMask('flat'),
+    );
+    dig(sim, 700, 520, 70);
+    expect(run(sim, 30).some((e) => e.e === 'structureUndermined')).toBe(false);
+  });
+
+  it('all stand on their ground at the start of every generated map', () => {
+    for (const theme of MAP_THEMES) {
+      for (const seed of [1, 2, 3, 4, 5]) {
+        const map = generateMap(theme, seed);
+        const sim = new Sim(
+          {
+            rules: CALM,
+            teams: [{ spawns: [300] }, { spawns: [map.mask.width - 300] }],
+            structures: map.structures,
+            ...(map.waterLevel !== undefined ? { waterLevel: map.waterLevel } : {}),
+          },
+          seed,
+          map.mask,
+        );
+        const events: SimEvent[] = [];
+        undermineStructures(sim.snapshot(), events);
+        expect(events, `${theme}@${seed}`).toEqual([]);
+      }
+    }
   });
 });

@@ -43,6 +43,12 @@ export interface StructureRules {
    * ground at their middle (2026-10-25)
    */
   readonly towerHeight: number;
+  /**
+   * percent of a tower's or a wall's columns that must still stand on the ground: under it, the
+   * structure is undermined and collapses, toppling towards its void (2026-10-25). Absent from
+   * older logs: nothing collapses for want of ground.
+   */
+  readonly supportPct?: number;
 }
 
 export const STRUCTURE_RULES: StructureRules = {
@@ -60,6 +66,7 @@ export const STRUCTURE_RULES: StructureRules = {
   crushMin: 10,
   crushMax: 40,
   towerHeight: 320,
+  supportPct: 50,
 };
 
 /**

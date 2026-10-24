@@ -13,7 +13,12 @@ import type { Phase, MatchConfig, SimState, TeamState } from './state.ts';
 import type { Mask } from './terrain/mask.ts';
 import { createTerrain, isSolid, terrainHash } from './terrain/terrain.ts';
 import { climb, ladderAt } from './units/climb.ts';
-import { blastHitsStructures, initStructures, stepBlocks } from './structures.ts';
+import {
+  blastHitsStructures,
+  initStructures,
+  stepBlocks,
+  undermineStructures,
+} from './structures.ts';
 import { drownFlames, flamesTurnEnd, flamesTurnStart, spawnFlames, stepFlames } from './flames.ts';
 import {
   atRest,
@@ -430,6 +435,7 @@ function advanceTick(s: SimState, phaseJustSet: boolean, events: SimEvent[]): vo
   const t = s.turn;
   const active = unitById(s, t.activeUnitId);
   const hpBefore = active?.hp ?? 0;
+  const firstEvent = events.length;
 
   const budgeted = s.rules.unit.moveBudget !== undefined;
   if (t.turnHold > 0) t.turnHold--;
@@ -540,6 +546,13 @@ function advanceTick(s: SimState, phaseJustSet: boolean, events: SimEvent[]): vo
   stepCrates(s, events);
   stepPots(s);
   stepFlames(s, events);
+  // Ground dug away this tick may leave a tower or a wall without its footing.
+  for (let i = firstEvent; i < events.length; i++) {
+    if (events[i]?.e === 'terrainCarved') {
+      undermineStructures(s, events);
+      break;
+    }
+  }
   stepBlocks(s, events);
   drownThings(s, events);
   drownFlames(s);

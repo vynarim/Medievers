@@ -89,6 +89,8 @@ export type SimEvent =
       readonly state: number;
     }
   | { readonly e: 'structureFell'; readonly id: number }
+  /** its footing dug away, it is about to fall */
+  | { readonly e: 'structureUndermined'; readonly id: number }
   /** a falling block struck a unit */
   | { readonly e: 'crushed'; readonly unitId: number }
   /** the weather (GDD §5 bis): rain begins or stops; px of a lightning strike */
