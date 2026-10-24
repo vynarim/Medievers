@@ -32,7 +32,7 @@ import {
   type Unit,
 } from './units/unit.ts';
 import { blastReachesBarrels, burnBarrels, placeBarrels, stepBarrels } from './barrels.ts';
-import { blastReachesCrates, burnCrates, maybeDropCrate, stepCrates } from './crates.ts';
+import { blastReachesCrates, burnCrates, maybeDropCrate, stepCrates, stepLift } from './crates.ts';
 import { beastsTurnEnd, blastReachesBeast, hasAffliction, panicAtAction } from './beasts.ts';
 import { blastReachesDragon, dragonAtAction, dragonBusy, stepDragon } from './dragon.ts';
 import { blastReachesUnicorn, stepUnicorn, unicornAtAction } from './unicorn.ts';
@@ -194,6 +194,7 @@ function createState(config: MatchConfig, seed: number, mask: Mask): SimState {
     beast: null,
     dragon: null,
     unicorn: null,
+    lift: null,
     pots: [],
     dig: null,
     mines: [],
@@ -361,6 +362,8 @@ function applyCommand(s: SimState, c: GameCommand, events: SimEvent[]): void {
   // In its shell (snail trick): no walking nor jumping this turn, shooting is fine.
   const shelled = s.rules.beasts !== undefined && hasAffliction(s, u.id, Trick.Shell);
   if (shelled && (c.t === 'move' || c.t === 'jump' || c.t === 'climb')) return;
+  // Lifted by an angel: nothing to do but wait to be let go.
+  if (s.lift?.unitId === u.id && (c.t === 'move' || c.t === 'jump' || c.t === 'climb')) return;
   // Digging with the pick or the sap: the tool moves the unit, nothing else does.
   if (s.dig && (c.t === 'move' || c.t === 'jump' || c.t === 'climb')) return;
   switch (c.t) {
@@ -516,7 +519,13 @@ function advanceTick(s: SimState, phaseJustSet: boolean, events: SimEvent[]): vo
   }
   // A unit whose ladder has gone (carved away) lets go.
   for (const u of s.units) {
-    if (u.climbing && !ladderAt(s.terrain, subToPx(u.x), subToPx(u.y), s.rules.unit)) release(u);
+    if (
+      u.climbing &&
+      s.lift?.unitId !== u.id &&
+      !ladderAt(s.terrain, subToPx(u.x), subToPx(u.y), s.rules.unit)
+    ) {
+      release(u);
+    }
   }
 
   stepDig(s, events);
@@ -539,6 +548,7 @@ function advanceTick(s: SimState, phaseJustSet: boolean, events: SimEvent[]): vo
   stepMines(s, events);
   stepDragon(s, events);
   stepUnicorn(s, events);
+  stepLift(s, events);
 
   for (const e of takeDueExplosions(s.explosions, s.tick)) {
     const res = explode(e, s.terrain, s.units, s.rules.explosion, (u) => blastTakenPct(s, u));
@@ -745,6 +755,7 @@ function settled(s: SimState): boolean {
     s.blocks.length === 0 &&
     s.dig === null &&
     !dragonBusy(s) &&
+    s.lift === null &&
     s.units.every(atRest)
   );
 }
@@ -956,6 +967,10 @@ function hashState(s: SimState): number {
     for (const v of d ? [d.id, d.x, d.y, d.dir, d.prey, d.fed ? 1 : 0] : [-1]) int(v);
     // Hashed only with the swing, so logs recorded before it keep their reference hashes.
     if (d && s.rules.dragon.swing !== undefined) int(d.born);
+  }
+  if (s.rules.crates?.angelLift !== undefined) {
+    const l = s.lift;
+    for (const v of l ? [l.unitId, l.top] : [-1]) int(v);
   }
   if (s.rules.unicorn) {
     const u = s.unicorn;

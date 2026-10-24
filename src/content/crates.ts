@@ -22,6 +22,11 @@ export interface CrateRules {
   /** blast of a trapped coffer, touched or shot */
   readonly trapDamage: number;
   readonly trapRadius: number;
+  /**
+   * px: shoot the angel bringing a coffer down, and it lifts the shooter this high in a beam of
+   * light, then lets go: the fall hurts (2026-10-25). Absent from older logs: angels are not hit.
+   */
+  readonly angelLift?: number;
 }
 
 export const CRATE_RULES: CrateRules = {
@@ -37,7 +42,13 @@ export const CRATE_RULES: CrateRules = {
   // A small trap, a nasty surprise rather than a disaster (2026-10-25: was 35 HP over 60 px).
   trapDamage: 20,
   trapRadius: 40,
+  // About 300 px: a fall that costs some 17 HP.
+  angelLift: 300,
 };
+
+/** px: the angel above a coffer coming down, where a shot touches it: half its wingspan, height */
+export const ANGEL_HALF_WIDTH = 40;
+export const ANGEL_HEIGHT = 60;
 
 /** px: size of a reliquary's box, standing on its base point */
 export const CRATE_WIDTH = 26;

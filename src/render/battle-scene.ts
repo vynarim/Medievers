@@ -1168,6 +1168,7 @@ export class BattleScene extends Phaser.Scene {
     this.drawBeast(g, delta, time);
     this.drawDragon(alpha, time);
     this.drawUnicorn(alpha, time);
+    this.drawBeam(g, alpha, time);
     this.drawPots(g, time);
     this.drawMines(g, time);
     this.drawFlames(g, time);
@@ -1492,6 +1493,23 @@ export class BattleScene extends Phaser.Scene {
       .setRotation(
         flying ? 0 : Math.max(-1.2, Math.min(1.2, Math.atan2(vy, Math.abs(vx) || 1) * d.dir)),
       );
+  }
+
+  /** The beam of light an angel lifts a unit in (GDD §4.5), shimmering up to the sky. */
+  private drawBeam(g: Phaser.GameObjects.Graphics, alpha: number, time: number): void {
+    const lift = this.sim.view().lift;
+    const u = lift ? this.sim.view().units.find((x) => x.id === lift.unitId) : undefined;
+    if (!u) return;
+    const [x, y] = this.pos(`u${u.id}`, alpha, u.x, u.y);
+    const shimmer = 0.18 + 0.08 * Math.sin(time / 90);
+    for (const [w, a] of [
+      [70, shimmer],
+      [40, shimmer + 0.12],
+      [14, shimmer + 0.25],
+    ] as const) {
+      g.fillStyle(COLORS.feuilleOr, a);
+      g.fillRect(x - w / 2, -SKY_EXTRA, w, y + SKY_EXTRA + 6);
+    }
   }
 
   /** The unicorn (GDD §4.12), galloping along the ground. */

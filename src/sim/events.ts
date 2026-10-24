@@ -67,6 +67,10 @@ export type SimEvent =
   /** a shot of this unit touched it: `heal` HP back, all it had lost */
   | { readonly e: 'unicornTouched'; readonly unitId: number; readonly heal: number }
   | { readonly e: 'unicornGone' }
+  /** shot by unitId, the angel lifts it in a beam of light */
+  | { readonly e: 'angelLift'; readonly unitId: number }
+  /** the angel lets go of it */
+  | { readonly e: 'angelDropped'; readonly unitId: number }
   /** reached by the water, it was washed up here (px, feet) */
   | { readonly e: 'washedUp'; readonly unitId: number; readonly x: number; readonly y: number }
   | { readonly e: 'beastGone' }

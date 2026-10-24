@@ -16,7 +16,7 @@ import { barrelOnSegment, igniteBarrel } from '../barrels.ts';
 import { beastOnSegment, killBeast } from '../beasts.ts';
 import { dragonOnSegment, enrageDragon } from '../dragon.ts';
 import { touchUnicorn, unicornOnSegment } from '../unicorn.ts';
-import { crateOnSegment, burstCrate } from '../crates.ts';
+import { angelOnSegment, burstCrate, crateOnSegment, shootAngel } from '../crates.ts';
 import { segmentTouchesKitchen, useKitchen } from '../kitchen.ts';
 import { fuseTurnsOf, maybeRest } from '../pots.ts';
 import { carveCircle, isSolid } from '../terrain/terrain.ts';
@@ -337,6 +337,12 @@ export function stepShots(state: SimState, events: SimEvent[]): void {
     // A shot that touches the unicorn gives the shooter back all its HP (GDD §4.12).
     if (unicornOnSegment(state, fromX, fromY, p.x, p.y)) {
       touchUnicorn(state, p.ownerId, events);
+      if (stops) impact = { kind: 'outOfMap', x: p.x, y: p.y };
+    }
+    // A shot that touches an angel bringing a coffer down: up goes the shooter (GDD §4.5).
+    const angel = angelOnSegment(state, fromX, fromY, p.x, p.y);
+    if (angel !== null) {
+      shootAngel(state, angel, p.ownerId, events);
       if (stops) impact = { kind: 'outOfMap', x: p.x, y: p.y };
     }
     // A shot that touches a reliquary bursts it (GDD §4.5).

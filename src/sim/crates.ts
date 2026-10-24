@@ -3,6 +3,8 @@
 // the ground goes; a unit that touches it takes it; a shot or a blast bursts it.
 import {
   CRATE_EDGE_PCT,
+  ANGEL_HALF_WIDTH,
+  ANGEL_HEIGHT,
   CRATE_HEIGHT,
   CRATE_WIDTH,
   CrateKind,
@@ -16,7 +18,10 @@ import { isqrt } from './math/isqrt.ts';
 import { nextRange } from './math/prng.ts';
 import type { Crate, SimState } from './state.ts';
 import { isSolid } from './terrain/terrain.ts';
-import { UNIT_HALF_WIDTH, UNIT_HEIGHT } from './units/unit.ts';
+import { UNIT_HALF_WIDTH, UNIT_HEIGHT, bodyFree, release } from './units/unit.ts';
+
+/** px per tick the beam of light lifts a unit */
+const LIFT_SPEED = 3;
 
 /** px above the top of the map where a coffer appears */
 const DROP_HEIGHT = 60;
@@ -65,6 +70,74 @@ export function crateOnSegment(
     for (const c of s.crates) if (inCrate(c, x, y)) return c.id;
   }
   return null;
+}
+
+/** Id of the first coffer whose angel the segment crosses (rules.crates.angelLift). */
+export function angelOnSegment(
+  s: SimState,
+  x0: number,
+  y0: number,
+  x1: number,
+  y1: number,
+): number | null {
+  if (s.rules.crates?.angelLift === undefined) return null;
+  const flying = s.crates.filter((c) => !c.landed);
+  if (flying.length === 0) return null;
+  const steps = Math.max(1, idiv(Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0)), 2 * SUBPX));
+  for (let i = 0; i <= steps; i++) {
+    const x = x0 + idiv((x1 - x0) * i, steps);
+    const y = y0 + idiv((y1 - y0) * i, steps);
+    for (const c of flying) {
+      const bottom = c.y - CRATE_HEIGHT * SUBPX;
+      if (
+        Math.abs(x - c.x) <= ANGEL_HALF_WIDTH * SUBPX &&
+        y <= bottom &&
+        y >= bottom - ANGEL_HEIGHT * SUBPX
+      ) {
+        return c.id;
+      }
+    }
+  }
+  return null;
+}
+
+/**
+ * Shot by unit `unitId`, the angel of coffer `id` lets its coffer drop and lifts the shooter in
+ * a beam of light, rules.crates.angelLift px up, before letting go of it too.
+ */
+export function shootAngel(s: SimState, id: number, unitId: number, events: SimEvent[]): void {
+  const r = s.rules.crates;
+  const c = s.crates.find((x) => x.id === id);
+  if (!r || r.angelLift === undefined || !c) return;
+  c.landed = true;
+  const u = s.units.find((x) => x.id === unitId);
+  if (!u?.alive || s.lift) return;
+  s.lift = { unitId, top: Math.max(UNIT_HEIGHT, subToPx(u.y) - r.angelLift) };
+  u.climbing = true;
+  u.grounded = true;
+  u.vx = 0;
+  u.vy = 0;
+  events.push({ e: 'angelLift', unitId });
+}
+
+/** Each tick: the lifted unit rises in its beam, and is let go at the top or under a ceiling. */
+export function stepLift(s: SimState, events: SimEvent[]): void {
+  const lift = s.lift;
+  if (!lift) return;
+  const u = s.units.find((x) => x.id === lift.unitId);
+  if (!u?.alive) {
+    s.lift = null;
+    return;
+  }
+  const px = subToPx(u.x);
+  let y = subToPx(u.y);
+  for (let i = 0; i < LIFT_SPEED && y > lift.top && bodyFree(s.terrain, px, y - 1); i++) y--;
+  const done = y <= lift.top || !bodyFree(s.terrain, px, y - 1);
+  u.y = y * SUBPX;
+  if (!done) return;
+  s.lift = null;
+  release(u);
+  events.push({ e: 'angelDropped', unitId: u.id });
 }
 
 /** A coffer shot or caught in a blast bursts: a small blast, a big one if it was trapped. */

@@ -5,8 +5,8 @@ import { button, el, uiRoot } from './overlay.ts';
 import { renderTutorial } from './tutorial.ts';
 
 /** share of the window's width the title page takes, and how far it may grow */
-const TITLE_SHARE = 0.55;
-const TITLE_MAX_SCALE = 1.6;
+const TITLE_SHARE = 0.47;
+const TITLE_MAX_SCALE = 1.4;
 
 const STYLE = `
 #ui .title-screen { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;

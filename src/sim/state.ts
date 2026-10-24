@@ -186,7 +186,7 @@ export interface Crate {
   readonly kind: number;
   /** index in rules.weapons of the weapon a weapon coffer holds; -1 otherwise */
   readonly weapon: number;
-  /** it has touched the ground: no more wind drift */
+  /** it has touched the ground, or lost its angel: no more wind drift, no angel */
   landed: boolean;
 }
 
@@ -280,6 +280,8 @@ export interface SimState {
   dragon: Dragon | null;
   /** null when it is not galloping by; always null without rules.unicorn */
   unicorn: Unicorn | null;
+  /** a unit an angel lifts in its beam of light (rules.crates.angelLift); null otherwise */
+  lift: { readonly unitId: number; readonly top: number } | null;
   /** sorted by id */
   readonly pots: PlacedPot[];
   /** the pick or the sap at work; null otherwise */

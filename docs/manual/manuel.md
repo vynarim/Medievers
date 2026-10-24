@@ -186,6 +186,8 @@ Le vent change à chaque tour, de −10 (fort vers la gauche) à +10 (fort vers 
 - **fiole de baume** : +25 PV (sans dépasser les PV de départ) ;
 - **coffret piégé** (un sur dix) : il vous explose au nez, sans trop de gravité (20 PV au plus, dans un petit rayon).
 
+Ne tirez pas sur l'**ange** qui descend un reliquaire : il lâche le coffret, vous soulève dans un rayon de lumière… puis vous lâche aussi, de haut (environ 17 PV).
+
 Un tir ou une explosion qui touche un reliquaire le fait éclater, et le feu du parchemin le détruit.
 
 ### Les barils de poudre {{st:jeu}}
