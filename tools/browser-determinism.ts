@@ -1,13 +1,14 @@
-// Cross-browser determinism (BACKLOG 1.10): runs tests/browser/checks.ts in Node, Chromium and
-// Firefox and fails unless every result is identical. Usage: pnpm run test:browser
+// Cross-browser determinism (BACKLOG 1.10): runs tests/browser/checks.ts in Node, Chromium (V8),
+// Firefox (SpiderMonkey) and WebKit (JavaScriptCore, as on iPad); fails unless all results match.
+// Usage: pnpm run test:browser
 import { readFileSync } from 'node:fs';
-import { chromium, firefox, type BrowserType } from 'playwright';
+import { chromium, firefox, webkit, type BrowserType } from 'playwright';
 import { createServer } from 'vite';
 import { runChecks, type CheckResults } from '../tests/browser/checks.ts';
 
 const root = new URL('..', import.meta.url);
 const maskPng = new Uint8Array(readFileSync(new URL('tests/fixtures/maps/test-mask.png', root)));
-const engines: Record<string, BrowserType> = { chromium, firefox };
+const engines: Record<string, BrowserType> = { chromium, firefox, webkit };
 
 const server = await createServer({
   root: new URL('tests/browser/', root).pathname.replace(/^\/([A-Za-z]:)/, '$1'),

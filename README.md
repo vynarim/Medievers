@@ -159,7 +159,7 @@ docs/         GDD, spécification technique, assets, backlog, ADR, rapports
 git clone https://github.com/vynarim/Medievers.git
 cd Medievers
 pnpm install
-pnpm exec playwright install chromium firefox   # pour pnpm run test:browser
+pnpm exec playwright install chromium firefox webkit   # pour pnpm run test:browser
 pnpm run dev        # http://localhost:5173
 ```
 
@@ -168,7 +168,7 @@ pnpm run dev        # http://localhost:5173
 | `pnpm run dev` | Serveur de développement Vite |
 | `pnpm run build` | Typecheck puis build statique dans `dist/` |
 | `pnpm test` | Tests Vitest (Node) |
-| `pnpm run test:browser` | Déterminisme : mêmes calculs dans Node, Chromium et Firefox, résultats identiques au bit près |
+| `pnpm run test:browser` | Déterminisme : mêmes calculs dans Node, Chromium, Firefox et WebKit, résultats identiques au bit près |
 | `pnpm run lint` | ESLint, zéro warning toléré |
 | `pnpm run typecheck` | `tsc --noEmit` |
 | `pnpm run check` | Lint, typecheck, tests et test navigateur : à faire passer avant chaque commit |

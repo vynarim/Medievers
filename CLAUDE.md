@@ -60,7 +60,7 @@ docs/
 - `pnpm run dev` — serveur Vite
 - `pnpm run build` — build statique
 - `pnpm test` — Vitest (Node)
-- `pnpm run test:browser` — mêmes sondes de déterminisme dans Node, Chromium et Firefox (Playwright)
+- `pnpm run test:browser` — mêmes sondes de déterminisme dans Node, Chromium, Firefox et WebKit (Playwright)
 - `pnpm run check` — lint + typecheck + tests + test:browser
 - `pnpm run test:determinism` — rejeu des replays de référence de `tests/replays/`
 - `pnpm run sim:headless <replay.json>` — exécution CLI sans rendu

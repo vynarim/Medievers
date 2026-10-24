@@ -47,7 +47,7 @@ La priorité est le moteur : simulation, règles, réseau, IA. Jusqu'au lot 9, t
 | 1.7 | Boucle de tour : phases, timer en ticks, repli, résolution « tout au repos », fin de partie | Partie scriptée de 3 tours jouée jusqu'à la fin |
 | 1.8 | `GameCommand`, `Sim.step`, `snapshot`/`restore`, log de partie | Snapshot, N steps, restore puis N steps donnent le même hash |
 | 1.9 | `pnpm run sim:headless` + `pnpm run test:determinism` avec 2 replays de référence | Rejeu vert en CI |
-| 1.10 | Test de déterminisme inter-navigateurs (anciennement 9.3) : `pnpm run test:browser` exécute les mêmes sondes (`tests/browser/checks.ts`) dans Node, Chromium et Firefox via Playwright, puis les replays de référence dès 1.9 | Hashes identiques à ceux de Node |
+| 1.10 | Test de déterminisme inter-navigateurs (anciennement 9.3) : `pnpm run test:browser` exécute les mêmes sondes (`tests/browser/checks.ts`) dans Node, Chromium, Firefox et WebKit (moteur des navigateurs iPad) via Playwright, puis les replays de référence dès 1.9 | Hashes identiques à ceux de Node |
 
 ## M2 — Greybox jouable
 | # | Tâche | CA |
