@@ -28,7 +28,7 @@ const DOUBLE_TAP_MS = 320;
 const DOUBLE_TAP_SLOP = 40;
 
 type Keys = Record<
-  'left' | 'right' | 'a' | 'd' | 'up' | 'down' | 'enter' | 'space' | 'tab' | 't',
+  'left' | 'right' | 'a' | 'd' | 'up' | 'down' | 'enter' | 'space' | 'tab' | 't' | 'g',
   Phaser.Input.Keyboard.Key
 >;
 
@@ -60,6 +60,7 @@ export class PhaserLocalInput implements InputSource {
     jump: false,
     weapon: false,
     flip: false,
+    rope: false,
     fire: false,
     fuse: null as number | null,
   };
@@ -94,11 +95,13 @@ export class PhaserLocalInput implements InputSource {
       space: K.SPACE,
       tab: K.TAB,
       t: K.T,
+      g: K.G,
     }) as Keys;
     this.fuseKeys = [K.ONE, K.TWO, K.THREE, K.FOUR, K.FIVE].map((k) => kb.addKey(k));
     this.keys.enter.on('down', () => (this.pressed.jump = true));
     this.keys.tab.on('down', () => (this.pressed.weapon = true));
     this.keys.t.on('down', () => (this.pressed.flip = true));
+    this.keys.g.on('down', () => (this.pressed.rope = true));
     this.keys.space.on('down', () => (this.pressed.fire = true));
     this.fuseKeys.forEach((key, i) => key.on('down', () => (this.pressed.fuse = i + 1)));
     scene.input.mouse?.disableContextMenu();
@@ -261,11 +264,19 @@ export class PhaserLocalInput implements InputSource {
     input.jumpPressed = this.pressed.jump;
     input.nextWeaponPressed = this.pressed.weapon || this.weaponClick;
     input.flipPressed = this.pressed.flip;
+    input.ropePressed = this.pressed.rope || ui.rope;
     input.firePressed = this.pressed.fire || ui.firePressed;
     input.target = ui.target;
     input.fusePressed = this.pressed.fuse ?? ui.fuse;
     input.aimAt = this.aimAt;
-    this.pressed = { jump: false, weapon: false, flip: false, fire: false, fuse: null };
+    this.pressed = {
+      jump: false,
+      weapon: false,
+      flip: false,
+      rope: false,
+      fire: false,
+      fuse: null,
+    };
     this.weaponClick = false;
     if (this.drag && this.dragArmed) {
       input.drag = { ...this.drag, released: this.dragReleased };

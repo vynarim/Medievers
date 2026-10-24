@@ -186,3 +186,47 @@ export function climb(u: Unit, t: Terrain, dir: -1 | 1, rules: UnitRules): numbe
   u.airPeakY = py;
   return moved;
 }
+
+/** px: the side of the body, where a wall stands against it */
+const FLANK = UNIT_HALF_WIDTH + 2;
+
+/**
+ * Where a rope takes a unit with its feet at (px, py), facing `facing`, up the wall in front of
+ * it (dir -1) or down the drop in front of it (dir 1): feet row and column on the other side,
+ * no further than rules.unit.wallClimb; null when there is no wall (or drop) there, or it is
+ * higher than that, or a mere step that one walks.
+ */
+export function ropeTarget(
+  t: Terrain,
+  px: number,
+  py: number,
+  facing: -1 | 1,
+  dir: -1 | 1,
+  rules: UnitRules,
+): { x: number; y: number } | null {
+  const max = rules.wallClimb;
+  if (max === undefined) return null;
+  const nx = px + facing * 2 * UNIT_HALF_WIDTH;
+  if (dir < 0) {
+    // A wall at the unit's flank, higher than a step: the lowest ledge above it.
+    if (!isSolidAt(t, px + facing * FLANK, py - 2 * rules.maxStep)) return null;
+    for (let y = py - rules.maxStep - 1; y >= py - max; y--) {
+      if (supported(t, nx, y) && bodyFree(t, nx, y)) return { x: nx, y };
+    }
+    return null;
+  }
+  // A drop in front, deeper than a step: the ground at its foot.
+  for (let y = py - rules.maxStep; y <= py + rules.maxStep; y++) {
+    if (supported(t, nx, y) && bodyFree(t, nx, y)) return null;
+  }
+  for (let y = py + rules.maxStep + 1; y <= py + max; y++) {
+    if (supported(t, nx, y) && bodyFree(t, nx, y)) return { x: nx, y };
+  }
+  return null;
+}
+
+function isSolidAt(t: Terrain, x: number, y: number): boolean {
+  return (
+    x >= 0 && y >= 0 && x < t.width && y < t.height && (t.rules.solid[materialOf(t, x, y)] ?? false)
+  );
+}

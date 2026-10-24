@@ -12,7 +12,7 @@ import { SUBPX, idiv, subToPx } from './math/fixed.ts';
 import type { Phase, MatchConfig, SimState, TeamState } from './state.ts';
 import type { Mask } from './terrain/mask.ts';
 import { createTerrain, isSolid, terrainHash } from './terrain/terrain.ts';
-import { climb, ladderAt } from './units/climb.ts';
+import { climb, ladderAt, ropeTarget } from './units/climb.ts';
 import {
   blastHitsStructures,
   initStructures,
@@ -184,6 +184,7 @@ function createState(config: MatchConfig, seed: number, mask: Mask): SimState {
       fuse: 0,
       walkDir: 0,
       climbDir: 0,
+      rope: null,
       turnHold: 0,
       moveLeft: 0,
       fired: false,
@@ -238,6 +239,7 @@ function setPhase(s: SimState, phase: Phase, ticks: number, events: SimEvent[]):
   s.turn.resolutionTicks = 0;
   s.turn.walkDir = 0;
   s.turn.climbDir = 0;
+  s.turn.rope = null;
   events.push({ e: 'phase', phase });
 }
 
@@ -372,9 +374,26 @@ function applyCommand(s: SimState, c: GameCommand, events: SimEvent[]): void {
       if (s.rules.unit.climbSpeed === undefined) return;
       // Taking a ladder is the turn's action: before the shot only (rules.unit.ladderIsAction).
       if (s.rules.unit.ladderIsAction && c.dir !== 0 && !canAct) return;
-      // A press that cannot climb a pixel (no ladder, or already at its end) spends nothing.
+      // A press that cannot climb a pixel (no ladder, or already at its end) spends nothing,
+      // unless a wall stands there to climb with a rope (rules.unit.wallClimb).
       if (s.rules.unit.ladderEndsTurn && c.dir !== 0) {
-        if (climb({ ...u }, s.terrain, c.dir, s.rules.unit) === 0) return;
+        if (climb({ ...u }, s.terrain, c.dir, s.rules.unit) === 0) {
+          if (!u.grounded || u.climbing) return;
+          const rope = ropeTarget(
+            s.terrain,
+            subToPx(u.x),
+            subToPx(u.y),
+            u.facing,
+            c.dir,
+            s.rules.unit,
+          );
+          if (!rope) return;
+          t.rope = rope;
+          u.climbing = true;
+          u.vx = 0;
+          u.vy = 0;
+          events.push({ e: 'ropeThrown', unitId: u.id });
+        }
       }
       t.climbDir = c.dir;
       if (c.dir !== 0) t.walkDir = 0;
@@ -499,6 +518,15 @@ function advanceTick(s: SimState, phaseJustSet: boolean, events: SimEvent[]): vo
     s.rules.unit.ladderEndsTurn
   ) {
     // The whole ladder, for free, and the turn ends at its end (rules.unit.ladderEndsTurn).
+    if (t.rope) {
+      // Up or down the rope, then over the edge or onto the ground: the turn ends there.
+      if (ropeStep(active, t.rope)) {
+        t.rope = null;
+        t.climbDir = 0;
+        setPhase(s, 'resolution', 0, events);
+      }
+      return;
+    }
     const wasClimbing = active.climbing === true;
     const px = climb(active, s.terrain, t.climbDir, s.rules.unit);
     if (!wasClimbing && active.climbing !== true && px === 0) t.climbDir = 0;
@@ -523,6 +551,7 @@ function advanceTick(s: SimState, phaseJustSet: boolean, events: SimEvent[]): vo
     if (
       u.climbing &&
       s.lift?.unitId !== u.id &&
+      !(s.turn.rope && s.turn.activeUnitId === u.id) &&
       !ladderAt(s.terrain, subToPx(u.x), subToPx(u.y), s.rules.unit)
     ) {
       release(u);
@@ -638,6 +667,26 @@ function advancePhase(
     case 'gameOver':
       break;
   }
+}
+
+/** px per tick a unit goes up or down a rope */
+const ROPE_SPEED = 3;
+
+/**
+ * One tick on the rope: up or down to the target's row, then across to it; true once there, the
+ * unit standing on the ground.
+ */
+function ropeStep(u: Unit, rope: { readonly x: number; readonly y: number }): boolean {
+  const ty = rope.y * SUBPX;
+  const tx = rope.x * SUBPX + SUBPX / 2;
+  const v = ROPE_SPEED * SUBPX;
+  if (u.y !== ty) u.y += Math.max(-v, Math.min(v, ty - u.y));
+  else if (u.x !== tx) u.x += Math.max(-v, Math.min(v, tx - u.x));
+  if (u.y !== ty || u.x !== tx) return false;
+  u.climbing = false;
+  u.grounded = true;
+  u.airPeakY = rope.y;
+  return true;
 }
 
 /** px: a drop deeper than this beside a ladder is a ledge the walk stops at */
@@ -915,6 +964,8 @@ function hashState(s: SimState): number {
   if (s.rules.unit.moveBudget !== undefined) int(t.moveLeft);
   if (s.rules.unit.turnTicks !== undefined) int(t.turnHold);
   if (s.rules.unit.climbSpeed !== undefined) int(t.climbDir);
+  if (s.rules.unit.wallClimb !== undefined)
+    for (const v of t.rope ? [t.rope.x, t.rope.y] : [-1]) int(v);
   if (s.rules.turn.noRepeat) int(t.restingUnitId);
   if (s.rules.turn.placementTicks !== undefined) {
     int(s.placing.length);

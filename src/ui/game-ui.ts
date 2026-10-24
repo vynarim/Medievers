@@ -7,6 +7,7 @@ import type { UiIntents } from '../input/ui-intents.ts';
 import { canSwitchUnit, nextTeammate, type SimView } from '../sim/sim.ts';
 import { classOf, maxHpOf, mayUse } from '../sim/classes.ts';
 import { canClimb } from '../sim/units/climb.ts';
+import { ropeDir } from '../input/local-controls.ts';
 import { Hud } from './hud.ts';
 import { renderTutorial } from './tutorial.ts';
 import { houseName } from './house-names.ts';
@@ -82,6 +83,8 @@ export class GameUi {
   private readonly resetView: HTMLButtonElement;
   /** ↓, shown at a ladder only */
   private readonly down: HTMLButtonElement;
+  /** « Grimper »: shown where a rope goes up or down a wall */
+  private readonly rope: HTMLButtonElement;
   /** Fire, in the colour of the house that plays */
   private readonly fire: HTMLButtonElement;
   /** set each frame: the mace in hand has nothing to strike along the aim (Fire greys) */
@@ -132,7 +135,7 @@ export class GameUi {
      */
     const act = (
       b: HTMLButtonElement,
-      when: 'walk' | 'jump' | 'up' | 'down' | 'action' | 'end' | 'switch' = 'action',
+      when: 'walk' | 'jump' | 'up' | 'down' | 'rope' | 'action' | 'end' | 'switch' = 'action',
       tip = '',
     ): HTMLButtonElement => {
       b.dataset.when = when;
@@ -174,6 +177,11 @@ export class GameUi {
         holdButton(t('ui.climbDown'), (h) => (i.climb = h ? 1 : 0), 'icon hidden'),
         'down',
         'tip.climbDown',
+      )),
+      (this.rope = act(
+        this.click(button(t('ui.rope'), 'hidden'), () => (i.rope = true)),
+        'rope',
+        'tip.rope',
       )),
       act(
         holdButton(t('ui.walkRight'), (h) => (i.walk = h ? 1 : 0), 'icon'),
@@ -487,6 +495,11 @@ export class GameUi {
       (view.rules.unit.ladderEndsTurn === true || moveLeft) &&
       (view.rules.unit.ladderIsAction !== true || phase === 'action');
     this.down.classList.toggle('hidden', !ladder);
+    // A wall to climb (or a drop to go down) with a rope, before the shot (rules.unit.wallClimb).
+    const active = view.units.find((x) => x.id === view.turn.activeUnitId);
+    const rope =
+      !ladder && active?.alive === true && active.grounded && ropeDir(view, active) !== 0;
+    this.rope.classList.toggle('hidden', !rope);
     // Who plays is never in doubt: Fire wears the colours of the house whose turn it is.
     const colour = FACTIONS[view.turn.activeTeam]?.primary ?? COLORS.vermillon;
     if (colour !== this.fireColour) {
@@ -509,9 +522,11 @@ export class GameUi {
                 ? !canMove || (ladder ? !climbLeft : !jumpLeft)
                 : when === 'down'
                   ? !canMove || !climbLeft
-                  : when === 'end'
-                    ? !canMove
-                    : phase !== 'action' || (b === this.fire && this.strikeRefused);
+                  : when === 'rope'
+                    ? phase !== 'action'
+                    : when === 'end'
+                      ? !canMove
+                      : phase !== 'action' || (b === this.fire && this.strikeRefused);
     }
     // Before the shot it passes the turn; after it, it ends the turn.
     const skipLabel = phase === 'retreat' ? t('ui.endTurn') : t('ui.skip');

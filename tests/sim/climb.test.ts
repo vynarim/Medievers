@@ -232,6 +232,40 @@ describe('ladders that end the turn (rules.unit.ladderEndsTurn)', () => {
     expect(unit(before).y).toBeLessThan(500);
   });
 
+  it('let a unit facing a wall without a ladder climb it with a rope, ending the turn', () => {
+    // East face of the tower (x 700), no ladder there; the unit faces it.
+    const sim = start(715, WHOLE);
+    const snap = sim.snapshot();
+    const u0 = snap.units[0];
+    if (u0) u0.facing = -1;
+    sim.restore(snap);
+    const events = [...sim.step([{ t: 'climb', dir: -1 }])];
+    sim.step([{ t: 'climb', dir: 0 }]);
+    expect(events).toContainEqual({ e: 'ropeThrown', unitId: 1 });
+    runUntilNot(sim, 'action');
+    const u = unit(sim);
+    expect(u.y).toBe(380);
+    expect(u.x).toBeLessThan(700);
+    expect(u.hp).toBe(100);
+    expect(sim.view().turn.phase).toBe('resolution');
+  });
+
+  it('take no rope where there is no wall, nor in logs recorded before', () => {
+    const open = start(400, WHOLE);
+    press(open, -1);
+    expect(open.view().turn.rope).toBeNull();
+    const { wallClimb, ...old } = WHOLE.unit;
+    expect(wallClimb).toBeGreaterThan(0);
+    const sim = start(715, { ...WHOLE, unit: old });
+    const snap = sim.snapshot();
+    const u0 = snap.units[0];
+    if (u0) u0.facing = -1;
+    sim.restore(snap);
+    press(sim, -1);
+    expect(sim.view().turn.rope).toBeNull();
+    expect(unit(sim).y).toBe(500);
+  });
+
   it('ignore every other order on the way', () => {
     const sim = start(578, WHOLE);
     press(sim, -1);

@@ -152,6 +152,8 @@ export interface TurnState {
   walkDir: -1 | 0 | 1;
   /** climbing state of the active unit (rules.unit.climbSpeed): -1 up, 1 down */
   climbDir: -1 | 0 | 1;
+  /** px: where the rope up or down a wall takes the active unit (rules.unit.wallClimb); null otherwise */
+  rope: { readonly x: number; readonly y: number } | null;
   /** ticks left turning round on the spot before walking (rules.unit.turnTicks) */
   turnHold: number;
   /** sub-px of walking left this turn (rules.unit.moveBudget); unused when there is no budget */

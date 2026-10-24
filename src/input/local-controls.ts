@@ -4,7 +4,7 @@ import { isTargeted, usesPower, type WeaponDef, type WeaponId } from '../content
 import { MAX_POWER, type GameCommand } from '../sim/commands.ts';
 import { atan2Bam } from '../sim/math/angle.ts';
 import type { SimView } from '../sim/sim.ts';
-import { canClimb } from '../sim/units/climb.ts';
+import { canClimb, ropeTarget } from '../sim/units/climb.ts';
 
 /** Input state sampled once per tick. Presses are edges: true on the tick of the press only. */
 export interface RawInput {
@@ -35,6 +35,8 @@ export interface RawInput {
   nextWeaponPressed: boolean;
   /** turn around on the spot, keeping the elevation */
   flipPressed: boolean;
+  /** « Grimper » (G): a rope up the wall in front, or down the drop in front */
+  ropePressed: boolean;
   /** aim button held: the aim sweeps all the way round, turning the unit as it passes behind */
   spin: boolean;
   /** 1..5 when a fuse key was pressed this tick */
@@ -58,6 +60,7 @@ export const emptyInput = (): RawInput => ({
   selectUnit: null,
   place: null,
   climb: 0,
+  ropePressed: false,
   charge: false,
   firePressed: false,
   target: null,
@@ -91,6 +94,19 @@ export function elevationOf(aim: number, facing: number): number {
 /** Aim angle for an elevation (positive = up) and a facing direction. */
 export function aimFor(elevation: number, facing: number): number {
   return (facing > 0 ? -elevation : 2048 + elevation) & 4095;
+}
+
+/** Which way a rope takes the unit: -1 up the wall in front, 1 down the drop in front, 0 none. */
+export function ropeDir(
+  view: SimView,
+  u: { readonly x: number; readonly y: number; readonly facing: -1 | 1 },
+): -1 | 0 | 1 {
+  const px = u.x >> 8;
+  const py = u.y >> 8;
+  const rules = view.rules.unit;
+  if (ropeTarget(view.terrain, px, py, u.facing, -1, rules)) return -1;
+  if (ropeTarget(view.terrain, px, py, u.facing, 1, rules)) return 1;
+  return 0;
 }
 
 export class LocalControls {
@@ -147,6 +163,14 @@ export class LocalControls {
     if (climbDir !== this.climbSent) {
       out.push({ t: 'climb', dir: climbDir });
       this.climbSent = climbDir;
+    }
+    // « Grimper »: up the wall in front if there is one to climb, else down the drop in front.
+    if (input.ropePressed && turn.phase === 'action') {
+      const dir = ropeDir(view, unit);
+      if (dir !== 0) {
+        out.push({ t: 'climb', dir });
+        this.climbSent = dir;
+      }
     }
     // Turning around (walking or flipping) mirrors the aim so the elevation stays the same.
     const flip = input.flipPressed && dir === 0 && turn.phase === 'action';

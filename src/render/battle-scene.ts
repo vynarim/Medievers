@@ -1170,6 +1170,7 @@ export class BattleScene extends Phaser.Scene {
     this.drawUnicorn(alpha, time);
     this.drawBeam(g, alpha, time);
     this.drawTowerFires(g, time);
+    this.drawRope(g, alpha);
     this.drawPots(g, time);
     this.drawMines(g, time);
     this.drawFlames(g, time);
@@ -1494,6 +1495,20 @@ export class BattleScene extends Phaser.Scene {
       .setRotation(
         flying ? 0 : Math.max(-1.2, Math.min(1.2, Math.atan2(vy, Math.abs(vx) || 1) * d.dir)),
       );
+  }
+
+  /** The rope a unit goes up or down a wall on, from the edge of the wall to its hands. */
+  private drawRope(g: Phaser.GameObjects.Graphics, alpha: number): void {
+    const v = this.sim.view();
+    const rope = v.turn.rope;
+    const u = v.units.find((x) => x.id === v.turn.activeUnitId);
+    if (!rope || !u) return;
+    const [x, y] = this.pos(`u${u.id}`, alpha, u.x, u.y);
+    // Tied at the top: the target's row going up, the unit's start going down.
+    const top = Math.min(rope.y, y);
+    const edge = x + (rope.x - x) * 0.5;
+    g.lineStyle(3, COLORS.terreOmbre, 1);
+    g.lineBetween(edge, top, x, y - UNIT_HEIGHT * 0.6);
   }
 
   /** Burning wooden towers: flames dancing along their top, higher as the fire goes on. */

@@ -101,6 +101,8 @@
   "ui.settings": "Réglages",
   "ui.help": "Aide",
   "ui.close": "Fermer",
+  "ui.rope": "Grimper",
+  "tip.rope": "Lancer une corde et grimper au mur devant soi (ou redescendre d'un mur) : c'est l'action du tour, qui finit le tour (G)",
   "ui.walkLeft": "◀",
   "ui.walkRight": "▶",
   "ui.jumpLeft": "↶",

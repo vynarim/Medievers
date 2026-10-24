@@ -69,6 +69,12 @@ export interface UnitRules {
    * before the shot, never after it. Absent from older logs: after the shot too.
    */
   readonly ladderIsAction?: boolean;
+  /**
+   * px: a unit facing a wall (or standing at its top) may climb it, or down it, with a rope, as
+   * on a ladder and under the same rules (the turn's action, ending the turn), up to this height
+   * (2026-10-25). Absent from older logs: walls are not climbed.
+   */
+  readonly wallClimb?: number;
 }
 
 export const UNIT_RULES: UnitRules = {
@@ -91,4 +97,5 @@ export const UNIT_RULES: UnitRules = {
   ladderReach: 28,
   ladderEndsTurn: true,
   ladderIsAction: true,
+  wallClimb: 220,
 };

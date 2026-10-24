@@ -24,6 +24,8 @@ export class UiIntents {
   selectUnit: number | null = null;
   /** px: map column clicked during the placement */
   place: number | null = null;
+  /** « Grimper » pressed: a rope up or down the wall at hand */
+  rope = false;
 
   /** Returns and clears the one-shot intents. */
   take(): {
@@ -36,6 +38,7 @@ export class UiIntents {
     place: number | null;
     firePressed: boolean;
     target: UiIntents['target'];
+    rope: boolean;
   } {
     const out = {
       jump: this.jump,
@@ -47,7 +50,9 @@ export class UiIntents {
       place: this.place,
       firePressed: this.firePressed,
       target: this.target,
+      rope: this.rope,
     };
+    this.rope = false;
     this.firePressed = false;
     this.target = null;
     this.jump = null;
