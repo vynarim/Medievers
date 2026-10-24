@@ -335,6 +335,8 @@ function applyCommand(s: SimState, c: GameCommand, events: SimEvent[]): void {
   }
   const u = unitById(s, t.activeUnitId);
   if (!u?.alive || !canMove) return;
+  // On its way up or down a ladder that ends the turn, the unit only climbs (GDD §4.4).
+  if (s.rules.unit.ladderEndsTurn && t.climbDir !== 0) return;
   // In its shell (snail trick): no walking nor jumping this turn, shooting is fine.
   const shelled = s.rules.beasts !== undefined && hasAffliction(s, u.id, Trick.Shell);
   if (shelled && (c.t === 'move' || c.t === 'jump' || c.t === 'climb')) return;
@@ -343,6 +345,10 @@ function applyCommand(s: SimState, c: GameCommand, events: SimEvent[]): void {
   switch (c.t) {
     case 'climb':
       if (s.rules.unit.climbSpeed === undefined) return;
+      // A press that cannot climb a pixel (no ladder, or already at its end) spends nothing.
+      if (s.rules.unit.ladderEndsTurn && c.dir !== 0) {
+        if (climb({ ...u }, s.terrain, c.dir, s.rules.unit) === 0) return;
+      }
       t.climbDir = c.dir;
       if (c.dir !== 0) t.walkDir = 0;
       break;
@@ -452,6 +458,20 @@ function advanceTick(s: SimState, phaseJustSet: boolean, events: SimEvent[]): vo
     const slimed = s.rules.beasts !== undefined && hasAffliction(s, active.id, Trick.Slime);
     const spent = Math.abs(active.x - x0) * (slimed ? 2 : 1);
     if (budgeted) t.moveLeft = Math.max(0, t.moveLeft - spent);
+  } else if (
+    active?.alive &&
+    t.climbDir !== 0 &&
+    (t.phase === 'action' || t.phase === 'retreat') &&
+    s.rules.unit.ladderEndsTurn
+  ) {
+    // The whole ladder, for free, and the turn ends at its end (rules.unit.ladderEndsTurn).
+    const wasClimbing = active.climbing === true;
+    const px = climb(active, s.terrain, t.climbDir, s.rules.unit);
+    if (!wasClimbing && active.climbing !== true && px === 0) t.climbDir = 0;
+    else if (active.climbing !== true || px === 0) {
+      t.climbDir = 0;
+      setPhase(s, 'resolution', 0, events);
+    }
   } else if (
     active?.alive &&
     t.climbDir !== 0 &&
@@ -639,6 +659,7 @@ function nothingLeftToDo(s: SimState): boolean {
     s.rules.turn.moveAfterShot === true &&
     s.rules.unit.moveBudget !== undefined &&
     t.moveLeft === 0 &&
+    !(s.rules.unit.ladderEndsTurn && t.climbDir !== 0) &&
     settled(s)
   );
 }

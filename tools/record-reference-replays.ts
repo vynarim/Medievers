@@ -414,6 +414,24 @@ const SCRIPTS: readonly Script[] = [
     },
   },
   {
+    name: 'ladder-whole',
+    description:
+      'A ladder that ends the turn (GDD §4.4, rules.unit.ladderEndsTurn): one press of ↑ takes ' +
+      'the unit all the way up, other orders ignored on the way, and the turn ends at the top.',
+    mapId: 'hills',
+    seed: 1191,
+    config: { rules: NO_PLACEMENT, teams: [{ spawns: [1166] }, { spawns: [300] }] },
+    play: (r) => {
+      r.until('action');
+      r.step([{ t: 'climb', dir: -1 }]);
+      r.step([{ t: 'climb', dir: 0 }]);
+      r.step([{ t: 'move', dir: -1 }]);
+      r.steps(20);
+      r.step([{ t: 'move', dir: 0 }]);
+      r.until('transition');
+    },
+  },
+  {
     name: 'greek-flames',
     description:
       'Greek fire flames (GDD §4.1, §4.6): pots set for this turn leave burning patches that ' +

@@ -22,7 +22,7 @@ import {
 import { weaponLines } from './weapon-info.ts';
 import { weaponArt } from './weapon-art.ts';
 
-const STORAGE_KEY = 'medievers.tuning.v1';
+const STORAGE_KEY = 'medieverse.tuning.v1';
 
 export function loadOverrides(): TuningOverrides {
   try {
@@ -117,7 +117,7 @@ export class GameUi {
      */
     const act = (
       b: HTMLButtonElement,
-      when: 'walk' | 'jump' | 'up' | 'action' | 'end' | 'switch' = 'action',
+      when: 'walk' | 'jump' | 'up' | 'down' | 'action' | 'end' | 'switch' = 'action',
       tip = '',
     ): HTMLButtonElement => {
       b.dataset.when = when;
@@ -157,7 +157,7 @@ export class GameUi {
       ),
       (this.down = act(
         holdButton(t('ui.climbDown'), (h) => (i.climb = h ? 1 : 0), 'icon hidden'),
-        'walk',
+        'down',
         'tip.climbDown',
       )),
       act(
@@ -455,6 +455,8 @@ export class GameUi {
     const jumpLeft = budget === 0 || view.turn.moveLeft === budget;
     const canSwitch = canSwitchUnit(view) && nextTeammate(view) !== null;
     const ladder = this.onLadder();
+    // A ladder that ends the turn is taken whatever the walk left (rules.unit.ladderEndsTurn).
+    const climbLeft = view.rules.unit.ladderEndsTurn === true || moveLeft;
     this.down.classList.toggle('hidden', !ladder);
     // Who plays is never in doubt: Fire wears the colours of the house whose turn it is.
     const colour = FACTIONS[view.turn.activeTeam]?.primary ?? COLORS.vermillon;
@@ -473,10 +475,12 @@ export class GameUi {
             : when === 'jump'
               ? !canMove || !jumpLeft
               : when === 'up'
-                ? !canMove || (ladder ? !moveLeft : !jumpLeft)
-                : when === 'end'
-                  ? !canMove
-                  : phase !== 'action';
+                ? !canMove || (ladder ? !climbLeft : !jumpLeft)
+                : when === 'down'
+                  ? !canMove || !climbLeft
+                  : when === 'end'
+                    ? !canMove
+                    : phase !== 'action';
     }
     // Before the shot it passes the turn; after it, it ends the turn.
     const skipLabel = phase === 'retreat' ? t('ui.endTurn') : t('ui.skip');

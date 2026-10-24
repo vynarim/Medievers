@@ -45,6 +45,13 @@ export interface UnitRules {
    * go down it from the top (2026-10-25: a unit's width). Absent from older logs: 6 px.
    */
   readonly ladderReach?: number;
+  /**
+   * Taking a ladder is the unit's whole move and ends its turn (2026-10-24): one press of ↑ or ↓
+   * climbs it all the way up (or down), without spending the walk, and the turn ends at the end
+   * of the ladder. Absent from older logs: the unit climbs while ↑ or ↓ is held, at the cost of
+   * the walk (climbCostPct).
+   */
+  readonly ladderEndsTurn?: boolean;
 }
 
 export const UNIT_RULES: UnitRules = {
@@ -62,4 +69,5 @@ export const UNIT_RULES: UnitRules = {
   climbSpeed: 256,
   climbCostPct: 50,
   ladderReach: 28,
+  ladderEndsTurn: true,
 };

@@ -20,7 +20,11 @@ function towerMask(): Mask {
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const { kitchen, burn, crates, beasts, barrels, deluge, ...BASE } = CLASSIC_RULES;
-const RULES: MatchRules = { ...BASE, unit: { ...BASE.unit, moveBudget: 2000 } };
+// Held climbing, as in older logs: the whole-ladder rule has its own tests below.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const { ladderEndsTurn, ...HELD } = BASE.unit;
+const RULES: MatchRules = { ...BASE, unit: { ...HELD, moveBudget: 2000 } };
+const WHOLE: MatchRules = BASE;
 
 function start(x: number, rules: MatchRules = RULES): Sim {
   const sim = new Sim({ rules, teams: [{ spawns: [x] }, { spawns: [1100] }] }, 1, towerMask());
@@ -82,7 +86,7 @@ describe('ladders (GDD §4.4)', () => {
   });
 
   it('cost the walk of the turn, and forbid the jump after', () => {
-    const rules: MatchRules = { ...BASE, unit: { ...BASE.unit, moveBudget: 50 } };
+    const rules: MatchRules = { ...BASE, unit: { ...HELD, moveBudget: 50 } };
     const sim = start(578, rules);
     hold(sim, { t: 'climb', dir: -1 }, 200);
     // 50 px of walk buy 100 px of ladder (climbCostPct 50).
@@ -153,5 +157,91 @@ describe('ladders (GDD §4.4)', () => {
     expect(edge.grounded).toBe(true);
     hold(sim, { t: 'climb', dir: 1 }, 250);
     expect(unit(sim).y).toBe(500);
+  });
+});
+
+describe('ladders that end the turn (rules.unit.ladderEndsTurn)', () => {
+  /** One press of ↑ or ↓, let go at once. */
+  const press = (sim: Sim, dir: -1 | 1): void => {
+    sim.step([{ t: 'climb', dir }]);
+    sim.step([{ t: 'climb', dir: 0 }]);
+  };
+  const runUntilNot = (sim: Sim, phase: string, max = 600): void => {
+    for (let i = 0; i < max && sim.view().turn.phase === phase; i++) sim.step();
+  };
+
+  it('take the unit all the way up with one press, without spending the walk, and end the turn', () => {
+    const sim = start(578, WHOLE);
+    const walk = sim.view().turn.moveLeft;
+    press(sim, -1);
+    runUntilNot(sim, 'action');
+    const u = unit(sim);
+    expect(u.y).toBe(380);
+    expect(u.climbing).toBe(false);
+    expect(u.hp).toBe(100);
+    expect(sim.view().turn.moveLeft).toBe(walk);
+    expect(sim.view().turn.phase).toBe('resolution');
+    runUntilNot(sim, 'resolution');
+    expect(sim.view().turn.activeTeam).toBe(1);
+  });
+
+  it('take the unit all the way down from the top, and end the turn', () => {
+    const sim = start(578, WHOLE);
+    press(sim, -1);
+    runUntilNot(sim, 'action');
+    // Back to house 0 for its next turn.
+    for (
+      let i = 0;
+      i < 20000 && !(sim.view().turn.phase === 'action' && sim.view().turn.activeTeam === 0);
+      i++
+    ) {
+      sim.step(sim.view().turn.phase === 'action' ? [{ t: 'skip' }] : []);
+    }
+    expect(unit(sim).y).toBe(380);
+    // Walk to the edge above the ladder, then one press of ↓.
+    hold(sim, { t: 'move', dir: -1 }, 120);
+    sim.step([{ t: 'move', dir: 0 }]);
+    for (let i = 0; i < 30; i++) sim.step();
+    press(sim, 1);
+    runUntilNot(sim, 'action');
+    expect(unit(sim).y).toBe(500);
+    expect(sim.view().turn.phase).toBe('resolution');
+  });
+
+  it('ignore every other order on the way', () => {
+    const sim = start(578, WHOLE);
+    press(sim, -1);
+    hold(sim, { t: 'move', dir: 1 }, 20);
+    hold(sim, { t: 'climb', dir: 1 }, 20);
+    expect(unit(sim).climbing).toBe(true);
+    expect(unit(sim).y).toBeLessThan(470);
+    runUntilNot(sim, 'action');
+    expect(unit(sim).y).toBe(380);
+  });
+
+  it('leave the turn running when no ladder is in reach', () => {
+    const sim = start(400, WHOLE);
+    press(sim, -1);
+    for (let i = 0; i < 30; i++) sim.step();
+    expect(unit(sim).y).toBe(500);
+    expect(sim.view().turn.phase).toBe('action');
+    expect(sim.view().turn.climbDir).toBe(0);
+  });
+
+  it('leave the turn running when the unit is already at the end of the ladder', () => {
+    const sim = start(578, WHOLE);
+    press(sim, -1);
+    runUntilNot(sim, 'action');
+    for (
+      let i = 0;
+      i < 20000 && !(sim.view().turn.phase === 'action' && sim.view().turn.activeTeam === 0);
+      i++
+    ) {
+      sim.step(sim.view().turn.phase === 'action' ? [{ t: 'skip' }] : []);
+    }
+    press(sim, -1);
+    for (let i = 0; i < 30; i++) sim.step();
+    expect(unit(sim).y).toBe(380);
+    expect(sim.view().turn.phase).toBe('action');
   });
 });
