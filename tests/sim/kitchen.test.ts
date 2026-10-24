@@ -61,7 +61,8 @@ describe('field kitchen (GDD §4.9)', () => {
     }
     expect(worst).toBeLessThanOrEqual(1);
     expect(total).toBeGreaterThan(1000); // it does appear
-  });
+    // A thousand matches set up: about 2 s alone, more beside the other test files.
+  }, 20_000);
 
   it('appears between the two sides, heals the shooter and goes', () => {
     const sim = new Sim(
