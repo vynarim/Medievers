@@ -1579,9 +1579,9 @@ export class BattleScene extends Phaser.Scene {
     g.lineStyle(3, color, 0.5 + 0.3 * Math.sin(time / 200));
     for (let yy = Math.max(0, y - 400); yy < y - 10; yy += 24) g.lineBetween(x, yy, x, yy + 12);
     // The unit about to be placed, in its class.
+    // Not on the map yet: its class comes from its house's line-up, by its id.
     const next = v.placing[0];
-    const unit = next ? v.units.find((u) => u.id === next.unitId) : undefined;
-    const cls = unit ? classOf(v, unit) : null;
+    const cls = next ? classOf(v, { id: next.unitId, team: next.team }) : null;
     drawFigure(g, x, y, 1, color, faction?.secondary ?? COLORS.or, cls, false, time);
     drawClassMark(g, cls, x, y, 1);
   }
