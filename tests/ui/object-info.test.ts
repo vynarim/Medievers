@@ -68,5 +68,8 @@ describe('object bubbles', () => {
     const info = ref ? objectInfo(v, ref) : null;
     expect(info?.title).toBe('Aubri');
     expect(info?.text).toContain('Maison des Trois Tours');
+    // Its epitaph names it, and stays the same from one look to the next.
+    expect(info?.text).toContain('Aubri');
+    expect(objectInfo(v, { kind: 'grave', id: 2 })?.text).toBe(info?.text);
   });
 });

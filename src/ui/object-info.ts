@@ -7,7 +7,7 @@ import { CRATE_HEIGHT, CRATE_WIDTH } from '../content/crates.ts';
 import { KITCHEN_HEIGHT, KITCHEN_WIDTH } from '../content/kitchen.ts';
 import { SUBPX } from '../sim/math/fixed.ts';
 import type { SimView } from '../sim/sim.ts';
-import { t } from './i18n.ts';
+import { t, variantCount } from './i18n.ts';
 import { StructureState } from '../content/structures.ts';
 import { classOf, maxHpOf } from '../sim/classes.ts';
 import { FACTIONS, unitName } from '../content/factions.ts';
@@ -115,9 +115,12 @@ export function objectInfo(v: SimView, ref: ObjectRef): ObjectInfo | null {
       const u = v.units.find((x) => x.id === ref.id);
       if (!u || u.alive) return null;
       const f = FACTIONS[u.team];
+      // Its own epitaph, the same each time one looks: chosen by its id, not at random.
+      const n = variantCount('epitaph');
+      const epitaph = n > 0 ? t(`epitaph.${1 + (u.id % n)}`, { name: unitName(u.id) }) : '';
       return {
         title: unitName(u.id),
-        text: t('object.grave.text', { house: f ? t(f.nameKey) : '' }),
+        text: t('object.grave.text', { epitaph, house: f ? t(f.nameKey) : '' }),
         x: u.x / SUBPX,
         y: u.y / SUBPX - GRAVE_HEIGHT,
       };
