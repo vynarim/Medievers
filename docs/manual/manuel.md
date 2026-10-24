@@ -215,7 +215,7 @@ Pour que les parties ne s'éternisent pas, **le Déluge** arrive après 20 tours
 | **Hotseat** | 2 à 4 humains sur le même appareil, qui se passent la main | {{st:jeu}} |
 | **Mixte** | Humains et IA dans la même partie | {{st:prevu}} |
 | **LAN** | 2 PC du même réseau, un joueur par machine, sans serveur | {{st:prevu}} |
-| **Replays** | Revoir la dernière partie, l'exporter ou l'importer | {{st:prevu}} |
+| **Replays** | « Revoir la partie » sur la tapisserie de fin (ou à tout moment, depuis le début) ; « Revoir la dernière partie » et « Importer un replay… » sur l'écran de préparation ; pendant le replay : pause, vitesse ×1, ×2, ×4, depuis le début, **Exporter** (fichier JSON) et Quitter. Tous les pièges y sont visibles | {{st:jeu}} |
 
 **Régicide** (option) {{st:jeu}} : chaque maison a un Roi, et sa mort élimine toute la maison : ses autres combattants quittent aussitôt le champ.
 

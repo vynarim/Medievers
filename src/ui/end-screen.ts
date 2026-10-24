@@ -15,7 +15,7 @@ export interface EndScreenOptions {
     readonly secondary: number;
   } | null;
   readonly quip: string;
-  /** « Revoir la partie »; absent: no such button (no replay viewer yet) */
+  /** « Revoir la partie »; absent: no such button */
   readonly onReplay?: () => void;
   /** « Nouvelle partie » */
   readonly onRestart: () => void;

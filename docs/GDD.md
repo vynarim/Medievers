@@ -225,7 +225,7 @@ Les lièvres et les escargots des marges du manuscrit entrent dans la bataille. 
 | Mixte | ✅ | Humains + IA |
 | LAN 2 PC | Jalon M9 | 1 humain par machine, cf. TECH_SPEC §8 |
 | Défis | P2 | Puzzles à munitions imposées, du type « tuer 3 unités en 1 tour » |
-| Replays | ✅ | Revoir la dernière partie, exporter et importer en JSON |
+| Replays | ✅ | Revoir la dernière partie, exporter et importer en JSON. Programmé le 2026-10-25 : « Revoir la partie » sur la tapisserie de fin rejoue le log depuis le premier instant (`ReplayInput`, une `InputSource` comme les autres) ; barre de lecture : pause, ×1 ×2 ×4, depuis le début, exporter (JSON), quitter ; la dernière partie terminée est gardée par le navigateur et l'écran de préparation propose de la revoir ou d'importer un fichier |
 
 ### Schémas de règles (presets)
 - **Classique** : valeurs par défaut.

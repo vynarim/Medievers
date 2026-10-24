@@ -4,6 +4,8 @@ import { CLASS_IDS, type ClassId } from '../content/classes.ts';
 import { FACTIONS } from '../content/factions.ts';
 import { MAX_HOUSES, MAX_UNITS, MIN_HOUSES, SCHEME_IDS } from '../content/schemes.ts';
 import { fixSetup, type MatchSetup } from '../app/match-setup.ts';
+import { loadLastReplay, parseLog } from '../app/autosave.ts';
+import type { GameLog } from '../sim/log.ts';
 import { t } from './i18n.ts';
 import { button, el, shield, uiRoot } from './overlay.ts';
 import { css } from './tokens.ts';
@@ -33,6 +35,8 @@ export function showSetupScreen(
   initial: MatchSetup,
   onStart: (setup: MatchSetup) => void,
   onCancel?: () => void,
+  /** « Revoir la dernière partie » and « Importer un replay »: watch that log */
+  onWatch?: (log: GameLog) => void,
 ): () => void {
   const root = uiRoot();
   if (!styled) {
@@ -130,6 +134,38 @@ export function showSetupScreen(
     panel.append(houses, el('p', 'note', t('setup.note')));
 
     const start = el('div', 'start');
+    if (onWatch) {
+      // The replays (GDD §6): the last match played to its end, or one saved as a JSON file.
+      const last = loadLastReplay();
+      if (last) {
+        const watch = button(t('setup.watchLast'));
+        watch.addEventListener('click', () => {
+          close();
+          onWatch(last);
+        });
+        start.append(watch);
+      }
+      const file = el('input');
+      file.type = 'file';
+      file.accept = 'application/json,.json';
+      file.classList.add('hidden');
+      file.addEventListener('change', () => {
+        const f = file.files?.[0];
+        if (!f) return;
+        void f.text().then((text) => {
+          const log = parseLog(text);
+          if (!log) {
+            window.alert(t('setup.importBad'));
+            return;
+          }
+          close();
+          onWatch(log);
+        });
+      });
+      const load = button(t('setup.import'));
+      load.addEventListener('click', () => file.click());
+      start.append(file, load);
+    }
     const go = button(t('setup.start'), 'fire');
     go.addEventListener('click', () => {
       close();

@@ -40,6 +40,10 @@ const STYLE = `
   color: var(--vermillon); margin-bottom: 2px; }
 #ui .bubble::after { content: ''; position: absolute; left: 50%; bottom: -16px; margin-left: -10px;
   border: 10px solid transparent; border-top: 16px solid var(--encre); border-bottom: 0; }
+/* Replay viewer: its own bar replaces the action bar. */
+#ui.replaying .bar:not(.replay-bar), #ui.replaying .hud-weapon { display: none; }
+#ui .replay-bar .replay-title { font-family: var(--caps); font-size: 18px; color: var(--vermillon);
+  padding: 0 8px; }
 /* Tiny help bubble over a unit that cannot take the turn (selected but resting). */
 #ui .tip { position: absolute; transform: translate(-50%, calc(-100% - 10px)); width: max-content;
   max-width: min(220px, calc(100vw - 24px)); padding: 3px 9px 4px; font-size: 13px; line-height: 1.25;

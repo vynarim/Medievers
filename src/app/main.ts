@@ -33,7 +33,7 @@ async function boot(): Promise<void> {
   });
   const overrides = loadOverrides();
   const setup = loadSetup(Object.keys(overrides).length > 0);
-  const start = (chosen: MatchSetup, resume?: GameLog): void => {
+  const start = (chosen: MatchSetup, resume?: GameLog, replay?: GameLog): void => {
     const data: BattleData = {
       map,
       mask,
@@ -41,6 +41,7 @@ async function boot(): Promise<void> {
       rules: rulesFor(chosen, overrides),
       setup: chosen,
       ...(resume ? { resume } : {}),
+      ...(replay ? { replay } : {}),
     };
     game.scene.add('battle', BattleScene, true, data);
   };
@@ -49,10 +50,15 @@ async function boot(): Promise<void> {
   const save = loadSave();
   if (save && save.mapId === map.id) start(setup, save);
   else {
-    showSetupScreen(setup, (chosen) => {
-      saveSetup(chosen);
-      start(chosen);
-    });
+    showSetupScreen(
+      setup,
+      (chosen) => {
+        saveSetup(chosen);
+        start(chosen);
+      },
+      undefined,
+      (log) => start(setup, undefined, log),
+    );
   }
   // Dev builds expose the game for browser-driven checks (Playwright); stripped from production.
   if (import.meta.env.DEV) (window as unknown as { medievers: Phaser.Game }).medievers = game;

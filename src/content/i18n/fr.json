@@ -1368,5 +1368,19 @@
   "quip.toolRefused": "Pas là : trop loin, sur un combattant, ou en pleine terre.",
   "quip.burnMet.1": "Les deux feux se rejoignent : il ne reste plus de parchemin. On compte les survivants.",
   "quip.burnMet.2": "Plus une ligne de libre sur la page ! Le copiste arrête la bataille et fait les comptes.",
-  "quip.burnMet.3": "Le manuscrit est en cendres. Victoire aux points, comme au tournoi."
+  "quip.burnMet.3": "Le manuscrit est en cendres. Victoire aux points, comme au tournoi.",
+  "replay.title": "Revoir la partie",
+  "replay.sub": "La bataille rejouée depuis le premier tour, coup pour coup",
+  "replay.quip": "Le chroniqueur relit ses notes. Il a tout vu, y compris ce que vous préféreriez oublier.",
+  "replay.badge": "Replay",
+  "replay.pause": "⏸ Pause",
+  "replay.play": "▶ Lecture",
+  "replay.speed": "Vitesse ×{s}",
+  "replay.again": "⟲ Depuis le début",
+  "replay.export": "⤓ Exporter",
+  "replay.exportTip": "Enregistrer cette partie dans un fichier JSON, pour la revoir plus tard ou l'envoyer",
+  "replay.quit": "✕ Quitter",
+  "setup.watchLast": "Revoir la dernière partie",
+  "setup.import": "Importer un replay…",
+  "setup.importBad": "Ce fichier n'est pas un replay que ce jeu sait lire."
 }

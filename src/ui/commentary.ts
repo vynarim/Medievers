@@ -25,6 +25,8 @@ const MISS_DELAY_TICKS = 20;
 export class Commentary {
   private readonly hud: Hud;
   private readonly replay: () => void;
+  /** « Revoir la partie » */
+  private readonly watch: () => void;
   /** state of the turn being played */
   private fired = false;
   private damage = 0;
@@ -42,9 +44,10 @@ export class Commentary {
   /** a shot ended without damage so far: tick, impact point and shooter, to call the miss */
   private pendingMiss: { tick: number; x: number; y: number; unitId: number } | null = null;
 
-  constructor(hud: Hud, replay: () => void) {
+  constructor(hud: Hud, replay: () => void, watch: () => void) {
     this.hud = hud;
     this.replay = replay;
+    this.watch = watch;
   }
 
   /** Centre banner for a turn that starts; also called for the first turn of a match. */
@@ -310,6 +313,7 @@ export class Commentary {
             winner: f ? { nameKey: f.nameKey, primary: f.primary, secondary: f.secondary } : null,
             quip: f ? pick('quip.win', { house: t(f.nameKey) }) : pick('quip.draw'),
             onRestart: this.replay,
+            onReplay: this.watch,
           });
           break;
         }

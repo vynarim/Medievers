@@ -26,7 +26,8 @@ import { t } from '../ui/i18n.ts';
 import type { TuningOverrides } from '../ui/tuning-model.ts';
 import { COLORS, css, cssAlpha } from '../ui/tokens.ts';
 import { uiScale } from '../ui/ui-scale.ts';
-import { AutoSaver, clearSave } from '../app/autosave.ts';
+import { AutoSaver, clearSave, downloadLog, saveLastReplay } from '../app/autosave.ts';
+import { ReplayInput } from '../input/replay-input.ts';
 import { spawnColumns } from '../app/spawns.ts';
 import { replay, type GameLog } from '../sim/log.ts';
 import { frame, type Point } from './framing.ts';
@@ -53,7 +54,12 @@ export interface BattleData {
   readonly setup: MatchSetup;
   /** a saved match to resume: its log replaces seed and rules */
   readonly resume?: GameLog;
+  /** a match to watch from its start (the replay viewer): its log replaces seed and rules */
+  readonly replay?: GameLog;
 }
+
+/** Playback speeds of the replay viewer. */
+const REPLAY_SPEEDS = [1, 2, 4] as const;
 
 const TICK_MS = 1000 / TICKS_PER_SECOND;
 /** Catch-up limit: at most 5 sim steps per frame (TECH_SPEC §3). */
@@ -143,6 +149,11 @@ export class BattleScene extends Phaser.Scene {
   private manualCamera = false;
   /** watching the replay of a match (the replay viewer): every chausse-trape is shown */
   private replaying = false;
+  /** the commands of the match being watched, and its log */
+  private watch: ReplayInput | null = null;
+  private watchLog: GameLog | null = null;
+  /** sim ticks per clock tick while watching (×1, ×2, ×4) */
+  private speed = 1;
   private fps = 60;
   /** scene keys pressed since the last frame, latched from key events */
   private pressed = new Set<string>();
@@ -162,6 +173,9 @@ export class BattleScene extends Phaser.Scene {
     this.selectedUnit = null;
     this.infoRef = null;
     this.tip = null;
+    // The scene object outlives a restart: a match chosen from the paused one starts running.
+    this.paused = false;
+    this.stepOnce = false;
   }
 
   create(): void {
@@ -181,11 +195,22 @@ export class BattleScene extends Phaser.Scene {
       }),
     };
     const resume = this.data_.resume;
-    // A saved match replays to where it was left: same seed, same commands, same state.
-    this.sim = resume ? replay(resume, mask) : new Sim(config, seed, mask);
-    this.saver = resume
-      ? new AutoSaver(resume.config, resume.seed, resume.mapId, [...resume.commands])
+    const watch = this.data_.replay;
+    // A saved match replays to where it was left: same seed, same commands, same state. A
+    // match being watched starts from its first tick, its commands fed by a ReplayInput.
+    this.sim = watch
+      ? new Sim(watch.config, watch.seed, mask)
+      : resume
+        ? replay(resume, mask)
+        : new Sim(config, seed, mask);
+    const from = watch ?? resume;
+    this.saver = from
+      ? new AutoSaver(from.config, from.seed, from.mapId, [...from.commands])
       : new AutoSaver(config, seed, map.id);
+    this.replaying = watch !== undefined;
+    this.watch = watch ? new ReplayInput(watch) : null;
+    this.watchLog = watch ?? null;
+    this.speed = 1;
 
     const cam = this.cameras.main;
     cam.setBackgroundColor(css(COLORS.velin));
@@ -259,9 +284,34 @@ export class BattleScene extends Phaser.Scene {
     };
     this.scale.on('resize', onResize);
     this.events.once('shutdown', () => this.scale.off('resize', onResize));
-    this.commentary = new Commentary(this.ui.hud, () => this.newMatch());
+    this.commentary = new Commentary(
+      this.ui.hud,
+      () => this.newMatch(),
+      () => this.watchReplay(),
+    );
+    if (this.watchLog) {
+      this.ui.showReplayBar({
+        togglePause: () => (this.paused = !this.paused),
+        paused: () => this.paused,
+        speed: (s) => (this.speed = s),
+        speeds: REPLAY_SPEEDS,
+        restart: () => this.watchReplay(),
+        exportLog: () => {
+          if (this.watchLog) downloadLog(this.watchLog);
+        },
+        quit: () => this.newMatch(),
+      });
+    }
     const turn = this.sim.view().turn;
-    if (resume) {
+    if (watch) {
+      this.ui.hud.announce(
+        t('replay.title'),
+        t('replay.sub'),
+        t('replay.quip'),
+        COLORS.lapis,
+        this.time.now,
+      );
+    } else if (resume) {
       this.ui.hud.announce(
         t('hud.resumed'),
         t('hud.turn', { n: turn.number }),
@@ -281,7 +331,9 @@ export class BattleScene extends Phaser.Scene {
       this.commentary.announceTurn(turn.number, turn.activeTeam, turn.activeUnitId, this.time.now);
     }
     // Leaving or refreshing the page saves the exact tick, not the last second.
-    const onHide = (): void => this.saver.flush(this.sim.view().tick, Infinity);
+    const onHide = (): void => {
+      if (!this.watch) this.saver.flush(this.sim.view().tick, Infinity);
+    };
     window.addEventListener('pagehide', onHide);
     this.events.once('shutdown', () => {
       window.removeEventListener('pagehide', onHide);
@@ -372,6 +424,12 @@ export class BattleScene extends Phaser.Scene {
     this.scene.restart(data);
   }
 
+  /** « Revoir la partie »: the match played so far (or the one being watched), from its start. */
+  private watchReplay(): void {
+    const log = this.watchLog ?? this.saver.logAt(this.sim.view().tick);
+    this.scene.restart({ ...this.data_, replay: log } satisfies BattleData);
+  }
+
   /** The setup screen, over the paused match: a new match as chosen, or back to this one. */
   private newMatch(): void {
     this.paused = true;
@@ -382,6 +440,10 @@ export class BattleScene extends Phaser.Scene {
         this.startMatch(setup, loadOverrides());
       },
       () => (this.paused = false),
+      (log) => {
+        clearSave();
+        this.scene.restart({ ...this.data_, replay: log } satisfies BattleData);
+      },
     );
   }
 
@@ -509,7 +571,7 @@ export class BattleScene extends Phaser.Scene {
       this.stepOnce = false;
       this.clock.reset();
     } else {
-      for (let n = this.clock.advance(delta); n > 0; n--) this.tick();
+      for (let n = this.clock.advance(delta) * this.speed; n > 0; n--) this.tick();
     }
     const alpha = this.paused || this.ui.blocking ? 1 : this.clock.alpha;
 
@@ -527,7 +589,7 @@ export class BattleScene extends Phaser.Scene {
     }
 
     const v = this.sim.view();
-    if (v.turn.phase !== 'gameOver') this.saver.flush(v.tick, time);
+    if (v.turn.phase !== 'gameOver' && !this.watch) this.saver.flush(v.tick, time);
     this.scenery.update(delta, v.turn.wind, v.terrain);
     this.terrain.flush();
     this.updateCamera(alpha, delta);
@@ -642,10 +704,19 @@ export class BattleScene extends Phaser.Scene {
   private tick(): void {
     this.snapshotPositions();
     const view = this.sim.view();
+    if (this.watch) {
+      // Watching: the recorded commands, and nothing past the end of the log.
+      if (this.watch.done(view.tick)) return;
+      this.handleEvents(this.sim.step(this.watch.poll(view.tick + 1)));
+      return;
+    }
     const cmds = this.input_.poll(view.tick + 1, view);
     this.saver.record(view.tick + 1, cmds, this.time.now);
     const events = this.sim.step(cmds);
-    if (events.some((e) => e.e === 'gameOver')) clearSave();
+    if (events.some((e) => e.e === 'gameOver')) {
+      clearSave();
+      saveLastReplay(this.saver.logAt(this.sim.view().tick));
+    }
     this.handleEvents(events);
   }
 

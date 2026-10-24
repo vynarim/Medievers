@@ -51,6 +51,19 @@ export interface GameUiOptions {
   readonly resetView: () => void;
 }
 
+/** What the replay viewer's bar drives (the battle scene). */
+export interface ReplayControls {
+  readonly togglePause: () => void;
+  readonly paused: () => boolean;
+  readonly speed: (s: number) => void;
+  readonly speeds: readonly number[];
+  /** watch again from the start */
+  readonly restart: () => void;
+  readonly exportLog: () => void;
+  /** back to the setup screen */
+  readonly quit: () => void;
+}
+
 export class GameUi {
   private readonly opts: GameUiOptions;
   private readonly root: HTMLElement;
@@ -88,6 +101,7 @@ export class GameUi {
     this.opts = opts;
     this.root = uiRoot();
     this.root.replaceChildren();
+    this.root.classList.remove('replaying');
     const i = opts.intents;
     this.hud = new Hud(this.root);
 
@@ -254,6 +268,45 @@ export class GameUi {
     sync();
     document.addEventListener('fullscreenchange', sync);
     return b;
+  }
+
+  /**
+   * Replay viewer: the action bar gives way to playback controls (pause, speed, from the start,
+   * export, leave); the match plays itself from its log.
+   */
+  showReplayBar(c: ReplayControls): void {
+    this.root.classList.add('replaying');
+    const bar = el('div', 'bar replay-bar panel');
+    const pause = button(t('replay.pause'));
+    pause.addEventListener('click', () => {
+      c.togglePause();
+      pause.textContent = t(c.paused() ? 'replay.play' : 'replay.pause');
+    });
+    const speeds = el('div', 'group');
+    const speedButtons = c.speeds.map((s) => {
+      const b = button(`×${s}`, s === 1 ? 'on' : '');
+      b.title = t('replay.speed', { s });
+      b.addEventListener('click', () => {
+        c.speed(s);
+        for (const o of speedButtons) o.classList.toggle('on', o === b);
+      });
+      return b;
+    });
+    speeds.append(...speedButtons);
+    const again = this.click(button(t('replay.again')), () => c.restart());
+    const save = this.click(button(t('replay.export')), () => c.exportLog());
+    save.title = t('replay.exportTip');
+    const quit = this.click(button(t('replay.quit')), () => c.quit());
+    bar.append(
+      el('span', 'replay-title', t('replay.badge')),
+      pause,
+      speeds,
+      el('div', 'sep'),
+      again,
+      save,
+      quit,
+    );
+    this.root.append(bar);
   }
 
   /** The ◎ button appears once the camera has left the default view (zoom or pan). */
