@@ -143,6 +143,22 @@ export interface Affliction {
   turns: number;
 }
 
+/** A burning patch left by the Greek fire (GDD §4.1). */
+export interface Flame {
+  readonly id: number;
+  /** sub-px: on the ground */
+  readonly x: number;
+  y: number;
+  /** turn ends left before it goes out */
+  turns: number;
+}
+
+/** HP a unit has lost to flames this turn, for the cap (rules.flames.maxPerTurn). */
+export interface Scorch {
+  readonly unitId: number;
+  hp: number;
+}
+
 /** A unit still to be put on the map, in placement order (rules.turn.placementTicks). */
 export interface PendingUnit {
   readonly unitId: number;
@@ -178,6 +194,10 @@ export interface SimState {
   readonly afflictions: Affliction[];
   /** px burnt away at each end of the map (rules.burn); 0 without it */
   burnPx: number;
+  /** sorted by id */
+  flames: Flame[];
+  /** sorted by unit id; emptied at every turn start */
+  scorched: Scorch[];
   /** px: top of the water; the map height (or more) when there is none */
   waterY: number;
   /** the Déluge has begun: the water rises at every turn end (rules.deluge) */

@@ -55,6 +55,8 @@ export interface WeaponDef {
   readonly fuseTurns?: number;
   /** thrown by hand (sling, pots): the slinger's passive applies (GDD §3.2) */
   readonly thrown?: boolean;
+  /** its blast leaves burning flames on the ground (rules.flames, GDD §4.1) */
+  readonly flames?: boolean;
 }
 
 export const WEAPONS: readonly WeaponDef[] = [
@@ -90,6 +92,7 @@ export const WEAPONS: readonly WeaponDef[] = [
   {
     id: 'greekFire',
     thrown: true,
+    flames: true,
     behavior: 'fusedBouncer',
     projectileRadius: 5,
     windPct: 0,

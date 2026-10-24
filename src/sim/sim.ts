@@ -13,6 +13,7 @@ import type { Phase, MatchConfig, SimState, TeamState } from './state.ts';
 import type { Mask } from './terrain/mask.ts';
 import { createTerrain, terrainHash } from './terrain/terrain.ts';
 import { climb, ladderAt } from './units/climb.ts';
+import { drownFlames, flamesTurnEnd, flamesTurnStart, spawnFlames, stepFlames } from './flames.ts';
 import {
   atRest,
   createUnit,
@@ -172,6 +173,8 @@ function createState(config: MatchConfig, seed: number, mask: Mask): SimState {
       .map(({ unitId, team, x }) => ({ unitId, team, x })),
     afflictions: [],
     burnPx: 0,
+    flames: [],
+    scorched: [],
     waterY: config.waterLevel ?? terrain.height,
     deluge: false,
     kitchenCounts: teams.map(() => 0),
@@ -241,6 +244,7 @@ function startTurn(s: SimState, events: SimEvent[]): void {
   t.fired = false;
   t.turnHold = 0;
   t.moveLeft = (s.rules.unit.moveBudget ?? 0) * SUBPX;
+  flamesTurnStart(s);
   kitchenTurn(s, events);
   potsTurn(s, events);
   setPhase(s, 'transition', s.rules.turn.transitionTicks, events);
@@ -454,6 +458,7 @@ function advanceTick(s: SimState, phaseJustSet: boolean, events: SimEvent[]): vo
     blastReachesCrates(s, e, events);
     blastReachesBeast(s, e, events);
     blastMovesPots(s, e);
+    spawnFlames(s, e);
     // A blast that reaches the kitchen counts as a touch (GDD §4.9).
     if (inKitchen(s, e.x, e.y, e.radius * SUBPX)) useKitchen(s, events);
   }
@@ -461,7 +466,9 @@ function advanceTick(s: SimState, phaseJustSet: boolean, events: SimEvent[]): vo
   stepBarrels(s, events);
   stepCrates(s, events);
   stepPots(s);
+  stepFlames(s, events);
   drownThings(s, events);
+  drownFlames(s);
 
   const hurt = active !== undefined && (active.hp < hpBefore || !active.alive);
   advancePhase(s, hurt, phaseJustSet, events);
@@ -640,6 +647,8 @@ function endTurn(s: SimState, events: SimEvent[]): void {
   blessAtTurnEnd(s, events);
   burnTurn(s, events);
   delugeTurnEnd(s, events);
+  flamesTurnEnd(s);
+  drownFlames(s);
   beastsTurnEnd(s, events);
   maybeDropCrate(s, events);
   callDeaths(s, events);
@@ -688,6 +697,7 @@ function hashState(s: SimState): number {
     const e = q.explosion;
     for (const v of [q.tick, q.seq, e.x, e.y, e.radius, e.carveRadius, e.maxDamage, e.sourceId])
       int(v);
+    if (e.flames) int(1);
   }
   for (const team of s.teams) {
     int(team.lastPlayed);
@@ -719,6 +729,12 @@ function hashState(s: SimState): number {
     for (const p of s.placing) for (const v of [p.unitId, p.team, p.x]) int(v);
   }
   if (s.rules.burn) int(s.burnPx);
+  if (s.rules.flames) {
+    int(s.flames.length);
+    for (const f of s.flames) for (const v of [f.id, f.x, f.y, f.turns]) int(v);
+    int(s.scorched.length);
+    for (const c of s.scorched) for (const v of [c.unitId, c.hp]) int(v);
+  }
   if (s.rules.deluge || hasWater(s)) {
     int(s.waterY);
     int(s.deluge ? 1 : 0);

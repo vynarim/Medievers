@@ -5,6 +5,7 @@ import { BEAST_RULES, type BeastRules } from './beasts.ts';
 import { BURN_RULES, type BurnRules } from './burn.ts';
 import { CLASS_RULES, type ClassRules } from './classes.ts';
 import { DELUGE_RULES, type DelugeRules } from './deluge.ts';
+import { FLAME_RULES, type FlameRules } from './flames.ts';
 import { CRATE_RULES, type CrateRules } from './crates.ts';
 import { KITCHEN_RULES, type KitchenRules } from './kitchen.ts';
 import { UNIT_RULES, type UnitRules } from './units.ts';
@@ -95,6 +96,8 @@ export interface MatchRules {
   readonly regicide?: boolean;
   /** le Déluge, the rising water of sudden death (GDD §2.4); absent from older logs: none */
   readonly deluge?: DelugeRules;
+  /** flames left by the weapons marked `flames` (GDD §4.1); absent from older logs: none */
+  readonly flames?: FlameRules;
 }
 
 /** « Classique » rules scheme (GDD §6). */
@@ -125,6 +128,7 @@ export const CLASSIC_RULES: MatchRules = {
   beasts: BEAST_RULES,
   classes: CLASS_RULES,
   deluge: DELUGE_RULES,
+  flames: FLAME_RULES,
 };
 
 /** Index of a weapon in the match arsenal; throws for a weapon the match does not have. */

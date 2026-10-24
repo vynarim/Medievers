@@ -724,6 +724,7 @@ export class BattleScene extends Phaser.Scene {
     this.drawCrates(g, alpha, time);
     this.drawBeast(g, delta, time);
     this.drawPots(g, time);
+    this.drawFlames(g, time);
     this.drawPlacementGhost(g, time);
     for (const u of v.units) {
       const label = this.labelFor(u.id);
@@ -986,6 +987,24 @@ export class BattleScene extends Phaser.Scene {
         g.fillStyle(COLORS.or, 0.95);
         g.fillTriangle(x, y - 6, x, y + 6, x + inward * h * 0.55 - flick, y);
       }
+    }
+  }
+
+  /** Greek fire burning on the ground: tongues of vermilion and gold, flickering. */
+  private drawFlames(g: Phaser.GameObjects.Graphics, time: number): void {
+    for (const f of this.sim.view().flames) {
+      const x = f.x / SUBPX;
+      const y = f.y / SUBPX;
+      const k = Math.sin(time / 90 + f.id * 1.7);
+      const h = 22 + 6 * k;
+      g.fillStyle(COLORS.vermillon, 0.95);
+      g.lineStyle(2, COLORS.encre, 0.9);
+      g.fillTriangle(x - 9, y, x + 9, y, x + 3 * k, y - h);
+      g.strokeTriangle(x - 9, y, x + 9, y, x + 3 * k, y - h);
+      g.fillStyle(COLORS.or, 1);
+      g.fillTriangle(x - 5, y, x + 5, y, x - 2 * k, y - h * 0.6);
+      g.fillStyle(COLORS.vermillon, 0.9);
+      g.fillTriangle(x + 6, y, x + 13, y, x + 11 - 2 * k, y - h * 0.5);
     }
   }
 

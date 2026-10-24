@@ -411,6 +411,30 @@ const SCRIPTS: readonly Script[] = [
       r.until('transition');
     },
   },
+  {
+    name: 'greek-flames',
+    description:
+      'Greek fire flames (GDD §4.1, §4.6): pots set for this turn leave burning patches that ' +
+      'scorch whoever stands in them, 10 HP a turn at most, and go out after three turns.',
+    mapId: 'flat',
+    seed: 1453,
+    config: { rules: NO_PLACEMENT, teams: [{ spawns: [300, 450] }, { spawns: [750, 900] }] },
+    play: (r) => {
+      for (let turn = 0; turn < 8; turn++) {
+        r.until('action');
+        const team = r.sim.view().turn.activeTeam;
+        if (turn < 4) {
+          r.step([
+            { t: 'selectWeapon', id: 'greekFire' },
+            { t: 'setFuse', seconds: 1 },
+            { t: 'aim', angle: team === 0 ? 3700 : 2444 },
+            { t: 'fire', power: 640 + turn * 20 },
+          ]);
+        } else r.step([{ t: 'skip' }]);
+        r.until('transition');
+      }
+    },
+  },
 ];
 
 const force = process.argv.includes('--force');

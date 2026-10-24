@@ -277,6 +277,7 @@ export function stepShots(state: SimState, events: SimEvent[]): void {
               carveRadius: def.explosionRadius,
               maxDamage: scaled(def.damage, shot.damagePct),
               sourceId: p.id,
+              ...(def.flames && state.rules.flames ? { flames: true } : {}),
             });
           }
           ended = true;

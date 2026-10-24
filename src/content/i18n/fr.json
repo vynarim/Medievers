@@ -398,5 +398,11 @@
   "tuning.delugeDamage": "PV perdus par tour",
   "units.minutes": "min",
   "ui.climbDown": "↓",
-  "tip.climbDown": "Descendre l'échelle (maintenir, ou touche ↓)"
+  "tip.climbDown": "Descendre l'échelle (maintenir, ou touche ↓)",
+  "tuning.group.flames": "Flammes",
+  "tuning.flameCount": "Flammes laissées par le feu grégeois",
+  "tuning.flameTurns": "Durée des flammes",
+  "tuning.flameDamage": "PV par instant de contact",
+  "tuning.flameMax": "PV au plus par tour",
+  "units.flames": "flammes"
 }

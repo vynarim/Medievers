@@ -146,6 +146,19 @@ export function tuningGroups(rules: MatchRules): TuningGroup[] {
           },
         ]
       : []),
+    ...(rules.flames
+      ? [
+          {
+            titleKey: 'tuning.group.flames',
+            fields: [
+              field('flames.count', 'tuning.flameCount', 'units.flames', 1, 1, 0, 20),
+              field('flames.turns', 'tuning.flameTurns', 'units.turns', 1, 1, 1, 10),
+              field('flames.damagePerTick', 'tuning.flameDamage', 'units.hp', 1, 1, 0, 20),
+              field('flames.maxPerTurn', 'tuning.flameMax', 'units.hp', 1, 1, 0, 100),
+            ],
+          },
+        ]
+      : []),
     ...(rules.deluge
       ? [
           {

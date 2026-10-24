@@ -81,6 +81,7 @@ export function potsTurn(s: SimState, events: SimEvent[]): void {
       carveRadius: def?.explosionRadius ?? 0,
       maxDamage: idiv((def?.damage ?? 0) * (pot.damagePct ?? 100) + 50, 100),
       sourceId: pot.id,
+      ...(def?.flames && s.rules.flames ? { flames: true } : {}),
     });
     events.push({ e: 'potLit', id: pot.id });
   }

@@ -91,7 +91,7 @@ Les valeurs ci-dessous sont celles du schéma de règles *Classique*. « Vent »
 
 ### 4.1 Armes de tir et de lancer
 
-Déjà jouables {{st:jeu}} : **arc**, **arbalète**, **fronde**, **pot de feu grégeois** (il n'allume pas encore de flammes) et **pot de poix**. Les autres armes sont {{st:prevu}}. Les munitions limitées se regagnent dans les reliquaires.
+Déjà jouables {{st:jeu}} : **arc**, **arbalète**, **fronde**, **pot de feu grégeois** (il laisse des flammes au sol) et **pot de poix**. Les autres armes sont {{st:prevu}}. Les munitions limitées se regagnent dans les reliquaires.
 
 | Arme | Dégâts max | Rayon d'explosion | Vent | Munitions | À savoir |
 |---|---|---|---|---|---|
@@ -155,14 +155,13 @@ Quand une explosion creuse la terre, le décor peint disparaît et laisse voir *
 
 Le vent change à chaque tour, de −10 (fort vers la gauche) à +10 (fort vers la droite). Il dévie les flèches, les pierres de fronde, la ruche, le faucon et la bannière, mais pas les pots. Une bannière en haut de l'écran montre sa force et son sens. Au-delà de 7, un petit ange souffle dans la marge. Une option permet de supprimer le vent.
 
-### 5.3 Reliquaires, barils et flammes {{st:prevu}}
+### 5.3 Reliquaires, barils et flammes {{st:jeu}}
 
 - **Reliquaires** : à chaque fin de tour, il y a 30 % de chances qu'un ange descende en planant (porté par le vent) et dépose un coffret. On le ramasse en le touchant.
   - *Reliquaire d'armes* : une arme au hasard, les plus puissantes étant les plus rares.
   - *Fiole de baume* : +25 PV.
   - *Coffret piégé* (10 % des cas) : il explose quand on le touche ou qu'on tire dessus.
-- **Barils de poix** : touchés, ils explosent (30 dégâts dans un rayon de 60 px), puis enflamment le sol. Une explosion peut en déclencher d'autres en chaîne.
-- **Flammes** : 3 PV par instant de contact, 10 PV au plus par tour. L'eau les éteint.
+- **Flammes** : le pot de feu grégeois laisse six flammes sur le sol, dans son rayon, pendant trois tours. Qui s'y tient perd 3 PV par instant, 10 PV au plus par tour ; y marcher pendant son tour, c'est être touché, donc finir son tour. Elles font sauter les barils de poudre, tombent si le sol se dérobe, et l'eau les éteint. Réglages : onglet **Flammes**.
 
 ### Les reliquaires {{st:jeu}}
 

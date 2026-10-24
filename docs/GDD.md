@@ -157,7 +157,7 @@ Toutes les valeurs sont des défauts dans `src/content/weapons.ts`, ajustables p
 
 ### 4.6 Éléments de carte
 - **Barils de poudre** (décidé le 2026-10-24, remplacent les barils de poix) : 5 barils posés au hasard (PRNG du sim) au début de la partie, sur un sol plat, à plus de 70 px des combattants et les uns des autres, hors des 10 % de chaque bout de carte. Un tir qui les touche (une flèche s'y arrête), une explosion qui les atteint ou le feu du parchemin les fait sauter : 40 dégâts dans un rayon de 70 px, avec cratère. Un baril qui saute peut en déclencher d'autres, avec un court délai (réaction en chaîne). Si le sol se dérobe, ils tombent. Valeurs dans `src/content/barrels.ts` (`MatchRules.barrels`, absent des vieux logs), réglables dans ⚙ Réglages.
-- **Flammes** : 3 PV par tick de contact (plafonné à 10 par tour). Elles s'éteignent dans l'eau.
+- **Flammes** : 3 PV par tick de contact (plafonné à 10 par tour). Elles s'éteignent dans l'eau. Programmées le 2026-10-25 (`src/content/flames.ts`, `MatchRules.flames`, absent des vieux logs ; armes marquées `flames` : le feu grégeois) : une explosion de feu grégeois pose 6 flammes réparties sur 80 % de son rayon, sur le sol sous elle ; elles durent 3 tours (fins de tour), brûlent tout combattant qui les touche (le plafond se remet à zéro à chaque début de tour), font sauter les barils, tombent si le sol se dérobe, s'éteignent sous l'eau. Réglables dans ⚙ Réglages. Replay de référence `greek-flames`.
 - **Terrain indestructible** : roche peinte et piliers de cadre.
 
 ### 4.7 Décors destructibles (décidé le 2026-10-24)

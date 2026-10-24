@@ -19,6 +19,8 @@ export interface Explosion {
   readonly maxDamage: number;
   /** entity that caused it, for ordering and credit */
   readonly sourceId: number;
+  /** it leaves burning flames on the ground (rules.flames) */
+  readonly flames?: boolean;
 }
 
 export interface UnitHit {
