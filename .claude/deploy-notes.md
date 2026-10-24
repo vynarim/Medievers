@@ -27,9 +27,9 @@ stricte touche aussi les autres jeux.
   page de titre.
 - **Bumpé par** : personne — un commit poussé et un arbre propre tiennent lieu de bump.
 - **Contrôle « la version est dans le bundle »** :
-  `h=$(git rev-parse --short HEAD); echo "$h"; grep -l "\"$h\"" dist/assets/*.js` — doit afficher
-  le hash puis au moins un fichier. Un hash suivi de `+` dans le bundle signale un arbre sale : ne
-  pas déployer.
+  `h=$(git rev-parse --short HEAD); echo "$h"; grep -o "$h.\{0,1\}" dist/assets/*.js | sort -u` —
+  doit afficher le hash, puis le hash suivi d'un délimiteur (le minifieur met des accents graves,
+  pas des guillemets). Un hash suivi de `+` signale un arbre sale : ne pas déployer.
 
 ## Vérifications avant déploiement
 
@@ -59,8 +59,8 @@ depuis un fichier qui garde les chemins des autres jeux.
 
 ## Sonde en ligne
 
-Lire le hash servi : `curl -s https://medieverse-06.web.app/ | grep -o 'assets/index-[^"]*\.js'`,
-puis chercher `git rev-parse --short HEAD` dans ce fichier publié. Le hash doit y être, sans `+`.
+Lire le hash servi : `js=$(curl -s https://medieverse-06.web.app/ | grep -o 'assets/index-[^"]*\.js')`,
+puis `curl -s "https://medieverse-06.web.app/$js" | grep -o "<hash>.\{0,1\}" | sort -u`. Le hash doit y être, sans `+`.
 Visuellement : la ligne de version en bas à gauche de la page de titre.
 
 ## Rollback
