@@ -72,6 +72,27 @@ describe('unicorn (GDD §4.12)', () => {
     expect(sim.view().unicorn).toBeNull();
   });
 
+  it('gallops in front of a tower, on the ground it stands on, not over its battlement', () => {
+    const sim = new Sim(
+      {
+        rules: RULES,
+        teams: [{ spawns: [300] }, { spawns: [1300] }],
+        structures: [{ id: 1, type: 'tower', build: { x: 600, width: 100, ladder: -1 } }],
+      },
+      5,
+      mask(),
+    );
+    for (let i = 0; i < 1000 && sim.view().turn.phase !== 'action'; i++) sim.step();
+    const ys: number[] = [];
+    for (let i = 0; i < 2000 && sim.view().unicorn; i++) {
+      sim.step();
+      const u = sim.view().unicorn;
+      if (u && Math.abs((u.x >> 8) - 650) < 40) ys.push(u.y >> 8);
+    }
+    expect(ys.length).toBeGreaterThan(0);
+    expect(new Set(ys)).toEqual(new Set([500]));
+  });
+
   it('never comes in a match without the rule', () => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { unicorn, ...old } = RULES;

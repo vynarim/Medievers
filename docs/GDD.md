@@ -222,7 +222,7 @@ Le dragon de la « vie du ciel » n'est plus un décor : il est dans la simulati
 - Précisions de programmation : valeurs dans `src/content/dragon.ts` (`MatchRules.dragon`, absent des vieux logs), corps de 240 × 90 px autour de son centre, piqué à 12 px/tick. Test `tests/sim/dragon.test.ts`, replay de référence `dragon`.
 
 ### 4.12 La licorne des marges (décidé le 2026-10-25)
-- **Passage** : très rare, 2,5 % de chances au début de l'action de chaque tour (PRNG du sim), une seule à la fois. Elle traverse la carte au galop d'un bord à l'autre, **sur le sol** (elle suit le relief, pentes et tours comprises), à 240 px/s.
+- **Passage** : très rare, 2,5 % de chances au début de l'action de chaque tour (PRNG du sim), une seule à la fois. Elle traverse la carte au galop d'un bord à l'autre, **sur le sol** (elle suit le relief et ses pentes, et passe devant les tours et les murailles sans y monter), à 240 px/s.
 - **Bienfait** : le combattant dont le tir (ou le coup de masse) la touche **retrouve tous ses PV** ; la flèche s'y arrête et la licorne disparaît. Une explosion qui l'atteint compte comme touchée par le combattant qui joue.
 - Précisions de programmation : valeurs dans `src/content/unicorn.ts` (`MatchRules.unicorn`, absent des vieux logs), corps de 64 × 56 px debout sur ses sabots. Test `tests/sim/unicorn.test.ts`.
 

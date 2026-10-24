@@ -11,11 +11,17 @@ import { nextRange } from './math/prng.ts';
 import type { SimState } from './state.ts';
 import { isSolid } from './terrain/terrain.ts';
 
-/** px: the top of the ground in column x, or the map height when there is none. */
+/**
+ * px: the top of the ground in column x, or the map height when there is none. Towers and walls
+ * are not ground: the unicorn gallops in front of them, on the ground they stand on.
+ */
 function groundAt(s: SimState, x: number): number {
   const t = s.terrain;
+  const o = s.owners;
   const cx = Math.max(0, Math.min(t.width - 1, x));
-  for (let y = 0; y < t.height; y++) if (isSolid(t, cx, y)) return y;
+  for (let y = 0; y < t.height; y++) {
+    if (isSolid(t, cx, y) && (!o || (o[y * t.width + cx] ?? 0) === 0)) return y;
+  }
   return t.height;
 }
 
