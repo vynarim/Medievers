@@ -3,6 +3,8 @@
 //  - fusedBouncer: pot that bounces until its fuse runs out, then explodes.
 //  - cluster: a fusedBouncer that bursts into fragments, each exploding where it lands.
 //  - melee: no projectile; strikes what stands within reach along the aim.
+//  - dig, mine, build, strike: the pick and sap, the chausse-trape, the stone wall and the
+//    trebuchet volley (src/sim/tools.ts).
 import { weaponDefIn } from '../../content/rules.ts';
 import type { WeaponDef } from '../../content/weapons.ts';
 import type { ExplosionRules } from '../../content/world.ts';
@@ -28,6 +30,7 @@ import { UNIT_HEIGHT, launch, type Unit } from '../units/unit.ts';
 import { MAX_POWER } from '../commands.ts';
 import { damageDealtPct, throwPct, type ClassView } from '../classes.ts';
 import { shotHitsStructure } from '../structures.ts';
+import { buildWall, launchStrike, placeMine, startDig, targetFor } from '../tools.ts';
 
 /** px from the hitbox centre to the muzzle */
 const MUZZLE_DISTANCE = 20;
@@ -36,10 +39,28 @@ const STRIKE_RADIUS = 14;
 /** BAM: fragments fly out over this fan, centred straight up */
 const FRAGMENT_FAN = 1536;
 
-/** Launches the selected weapon from unit u at the given power (0..1024). */
-export function fire(state: SimState, u: Unit, power: number, events: SimEvent[]): void {
+/**
+ * Launches the selected weapon from unit u at the given power (0..1024); a targeted weapon goes
+ * to `at` (px) when given, else as far as the power says. Returns false, having done nothing,
+ * when the weapon cannot be used there (a stone wall too far, on a unit, in the ground).
+ */
+export function fire(
+  state: SimState,
+  u: Unit,
+  power: number,
+  events: SimEvent[],
+  at: { readonly x: number; readonly y: number } | null = null,
+): boolean {
   const def = weaponDefIn(state.rules, state.turn.weapon);
   const angle = state.turn.aim;
+  if (def.behavior === 'build') {
+    const p = at ?? targetFor(state, u, def, power);
+    if (!buildWall(state, u, def, p.x, p.y, events)) return false;
+    const id = state.nextEntityId++;
+    events.push({ e: 'shotFired', shotId: id, weapon: def.id });
+    events.push({ e: 'shotEnded', shotId: id });
+    return true;
+  }
   const id = state.nextEntityId++;
   // Majesté: the king's aura raises the damage of the shot (GDD §3.2); stored only when it does.
   const pct = damageDealtPct(state, u);
@@ -48,7 +69,24 @@ export function fire(state: SimState, u: Unit, power: number, events: SimEvent[]
     events.push({ e: 'shotFired', shotId: id, weapon: def.id });
     strike(state, u, def, angle, pct, events);
     events.push({ e: 'shotEnded', shotId: id });
-    return;
+    return true;
+  }
+  if (def.behavior === 'dig') {
+    startDig(state, u, def, id);
+    events.push({ e: 'shotFired', shotId: id, weapon: def.id });
+    return true;
+  }
+  if (def.behavior === 'mine') {
+    events.push({ e: 'shotFired', shotId: id, weapon: def.id });
+    placeMine(state, u, def, id, events);
+    events.push({ e: 'shotEnded', shotId: id });
+    return true;
+  }
+  if (def.behavior === 'strike') {
+    const x = at?.x ?? targetFor(state, u, def, power).x;
+    launchStrike(state, u, def, x, id, pct);
+    events.push({ e: 'shotFired', shotId: id, weapon: def.id });
+    return true;
   }
   const speed = shotSpeed(state, u, def, power);
   const cx = u.x;
@@ -82,6 +120,7 @@ export function fire(state: SimState, u: Unit, power: number, events: SimEvent[]
     });
   }
   events.push({ e: 'shotFired', shotId: id, weapon: def.id });
+  return true;
 }
 
 /**
@@ -221,7 +260,8 @@ export function stepShots(state: SimState, events: SimEvent[]): void {
     );
     let ended = false;
     // Things that stop an arrow, a bolt, a stone or a fragment: they count as an impact.
-    const stops = def.behavior === 'directHit' || shot.fragment === true;
+    const stops =
+      def.behavior === 'directHit' || def.behavior === 'strike' || shot.fragment === true;
     // Any shot touching the field kitchen heals the shooter (GDD §4.9).
     if (segmentTouchesKitchen(state, fromX, fromY, p.x, p.y)) {
       useKitchen(state, events);
@@ -245,7 +285,21 @@ export function stepShots(state: SimState, events: SimEvent[]): void {
       if (stops) impact = { kind: 'outOfMap', x: p.x, y: p.y };
     }
 
-    if (shot.fragment) {
+    if (def.behavior === 'strike') {
+      // A trebuchet stone bursts wherever it lands, on the ground or on a unit (GDD §4.2).
+      if (impact && impact.kind !== 'outOfMap') {
+        queueExplosion(state.explosions, state.tick, {
+          x: p.x,
+          y: p.y,
+          radius: def.explosionRadius,
+          carveRadius: def.explosionRadius,
+          maxDamage: scaled(def.damage, shot.damagePct),
+          sourceId: p.id,
+          ...tagged(state, def),
+        });
+      }
+      ended = impact !== null;
+    } else if (shot.fragment) {
       // A fragment explodes wherever it lands, on the ground or on a unit.
       if (impact && impact.kind !== 'outOfMap') {
         const f = def.fragments;

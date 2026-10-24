@@ -10,19 +10,29 @@ export const SCHEME_OVERRIDES: Readonly<
   Record<Exclude<SchemeId, 'custom'>, Readonly<Record<string, number>>>
 > = {
   classic: {},
-  // Siège: high, sturdy towers and walls, and the fire to bring them down.
+  // Siège: high, sturdy towers and walls, many stone walls to build forts, trebuchet ×3 and the
+  // fire, pick and sap to bring the walls down.
   siege: {
     'structures.towerHeight': 440,
     'structures.defs.tower.hp': 360,
     'structures.defs.wall.hp': 240,
     'weapons.greekFire.ammo': 5,
     'weapons.pitchPot.ammo': 2,
+    'weapons.stoneWall.ammo': 8,
+    'weapons.trebuchet.ammo': 3,
+    'weapons.pick.ammo': 3,
+    'weapons.sap.ammo': 3,
   },
   // Fortune: no limited weapon at the start; everything comes down with the reliquaries.
   fortune: {
     'weapons.greekFire.ammo': 0,
     'weapons.crossbow.ammo': 0,
     'weapons.pitchPot.ammo': 0,
+    'weapons.pick.ammo': 0,
+    'weapons.sap.ammo': 0,
+    'weapons.caltrop.ammo': 0,
+    'weapons.stoneWall.ammo': 0,
+    'weapons.trebuchet.ammo': 0,
     'crates.chancePermille': 700,
     'crates.maxOnMap': 5,
   },

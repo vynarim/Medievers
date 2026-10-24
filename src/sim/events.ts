@@ -88,4 +88,11 @@ export type SimEvent =
   | { readonly e: 'delugeStarted' }
   /** px: new top of the water */
   | { readonly e: 'waterRose'; readonly y: number }
+  /** a chausse-trape left on the ground (GDD §4.4) */
+  | { readonly e: 'minePlaced'; readonly id: number; readonly team: number }
+  | { readonly e: 'mineSprung'; readonly id: number; readonly team: number }
+  /** px: middle of a stone wall just set */
+  | { readonly e: 'wallBuilt'; readonly x: number; readonly y: number }
+  /** a tool could not be used there (a wall too far, on a unit, in the ground) */
+  | { readonly e: 'toolRefused'; readonly weapon: WeaponId }
   | { readonly e: 'gameOver'; readonly winner: number };

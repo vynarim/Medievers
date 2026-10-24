@@ -128,7 +128,7 @@ export class Hud {
     const seconds = timed ? Math.ceil(turn.phaseTicks / TICKS_PER_SECOND) : null;
     const def = v.rules.weapons.find((w) => w.id === turn.weapon);
     const fuse =
-      def?.behavior === 'fusedBouncer' || def?.behavior === 'cluster'
+      def?.behavior === 'fusedBouncer' || def?.behavior === 'cluster' || def?.behavior === 'build'
         ? Math.round((turn.fuse || def.defaultFuse) / TICKS_PER_SECOND)
         : null;
     const hp = v.teams.map((team) =>
@@ -197,11 +197,18 @@ export class Hud {
     this.timer.classList.toggle('hurry', seconds !== null && seconds <= 5);
     this.timer.classList.toggle('idle', seconds === null);
 
-    const fuseText =
-      fuse === null
-        ? ''
-        : ` · ${t(def?.fuseTurns !== undefined ? 'hud.fuseTurns' : 'hud.fuse', { s: fuse })}`;
+    const fuseKey =
+      def?.behavior === 'build'
+        ? `hud.wallLength.${Math.max(1, Math.min(3, fuse ?? 2))}`
+        : def?.fuseTurns !== undefined
+          ? 'hud.fuseTurns'
+          : 'hud.fuse';
+    const fuseText = fuse === null ? '' : ` · ${t(fuseKey, { s: fuse ?? 0 })}`;
     this.weaponName.textContent = `${t(`weapons.${turn.weapon}`)}${fuseText}`;
+    // How to use the weapon in hand: aim and charge, click the map, or just press.
+    const hintKey = `hud.hint.${def?.behavior ?? 'directHit'}`;
+    const hint = t(hintKey).startsWith('[') ? t('hud.hint') : t(hintKey);
+    if (this.hint.textContent !== hint) this.hint.textContent = hint;
     this.hint.classList.toggle('hidden', turn.phase !== 'action');
   }
 }

@@ -39,6 +39,42 @@ const field = (
 
 function weaponFields(w: WeaponDef): TuningField[] {
   const p = `weapons.${w.id}`;
+  const ammo = field(`${p}.ammo`, 'tuning.ammo', 'units.ammo', 1, 1, -1, 99);
+  if (w.dig) {
+    return [
+      ammo,
+      field(`${p}.dig.ticks`, 'tuning.digTime', 'units.seconds', TPS, 0.5, 0.5, 15),
+      field(`${p}.dig.speed`, 'tuning.digSpeed', 'units.pxPerTick', SUB, 0.05, 0.05, 5),
+      field(`${p}.dig.radius`, 'tuning.digRadius', 'units.px', 1, 1, 15, 40),
+    ];
+  }
+  if (w.wall) {
+    return [
+      ammo,
+      field(`${p}.wall.short`, 'tuning.wallShort', 'units.px', 1, 4, 8, 400),
+      field(`${p}.wall.medium`, 'tuning.wallMedium', 'units.px', 1, 4, 8, 400),
+      field(`${p}.wall.long`, 'tuning.wallLong', 'units.px', 1, 4, 8, 400),
+      field(`${p}.wall.thickness`, 'tuning.wallThickness', 'units.px', 1, 1, 4, 60),
+      field(`${p}.wall.reach`, 'tuning.wallReach', 'units.px', 1, 10, 40, 2000),
+    ];
+  }
+  if (w.mine) {
+    return [
+      ammo,
+      field(`${p}.damage`, 'tuning.damage', 'units.hp', 1, 1, 0, 200),
+      field(`${p}.explosionRadius`, 'tuning.explosionRadius', 'units.px', 1, 1, 1, 300),
+      field(`${p}.mine.armTicks`, 'tuning.mineArm', 'units.seconds', TPS, 0.5, 0, 10),
+    ];
+  }
+  if (w.strike) {
+    return [
+      ammo,
+      field(`${p}.damage`, 'tuning.damage', 'units.hp', 1, 1, 0, 200),
+      field(`${p}.explosionRadius`, 'tuning.explosionRadius', 'units.px', 1, 1, 1, 300),
+      field(`${p}.strike.count`, 'tuning.strikeCount', 'units.stones', 1, 1, 1, 20),
+      field(`${p}.windPct`, 'tuning.windPct', 'units.percent', 1, 5, 0, 300),
+    ];
+  }
   const fields = [
     field(`${p}.damage`, 'tuning.damage', 'units.hp', 1, 1, 0, 200),
     field(`${p}.maxSpeed`, 'tuning.maxSpeed', 'units.pxPerTick', SUB, 0.5, 1, 60),

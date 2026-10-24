@@ -3,6 +3,34 @@ import type { WeaponDef } from '../content/weapons.ts';
 import { t } from './i18n.ts';
 
 export function weaponLines(w: WeaponDef): string[] {
+  const ammo = `${t('weapon.ammo')} : ${w.ammo < 0 ? t('weapon.unlimited') : w.ammo}`;
+  // Tools: what they do, then their own figures.
+  if (w.dig) {
+    const px = Math.round((w.dig.speed * w.dig.ticks) / 256);
+    return [
+      t(`weapons.${w.id}.desc`),
+      t('weapon.dig', { s: w.dig.ticks / 60, px }),
+      t('weapon.digSapper'),
+      ammo,
+    ];
+  }
+  if (w.wall) {
+    return [
+      t(`weapons.${w.id}.desc`),
+      t('weapon.wall', { a: w.wall.short, b: w.wall.medium, c: w.wall.long }),
+      t('weapon.wallReach', { px: w.wall.reach }),
+      ammo,
+    ];
+  }
+  if (w.mine) {
+    return [
+      t(`weapons.${w.id}.desc`),
+      `${t('weapon.damage')} : ${w.damage}`,
+      `${t('weapon.radius')} : ${w.explosionRadius} px`,
+      t('weapon.mineArm', { s: w.mine.armTicks / 60 }),
+      ammo,
+    ];
+  }
   const wind =
     w.windPct === 0
       ? t('weapon.wind.none')
@@ -21,5 +49,6 @@ export function weaponLines(w: WeaponDef): string[] {
     lines.push(t('weapon.fragments', { n: w.fragments.count, damage: w.fragments.damage }));
   }
   if (w.reach) lines.push(t('weapon.reach', { px: w.reach }));
+  if (w.strike) lines.push(t('weapon.strike', { n: w.strike.count }));
   return lines;
 }

@@ -19,6 +19,8 @@ export type GameCommand =
   | { readonly t: 'setFuse'; readonly seconds: 1 | 2 | 3 | 4 | 5 }
   /** power 0..1024 */
   | { readonly t: 'fire'; readonly power: number }
+  /** px: the point a targeted weapon (stone wall, trebuchet volley) is aimed at, clicked */
+  | { readonly t: 'fireAt'; readonly x: number; readonly y: number }
   | { readonly t: 'skip' }
   /** free choice of the unit that plays this turn (rules.turn.freeSelect), before it acts */
   | { readonly t: 'selectUnit'; readonly unitId: number }

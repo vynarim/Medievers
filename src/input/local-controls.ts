@@ -1,6 +1,6 @@
 // Turns raw player input (keys held, presses, drags) into GameCommands, one tick at a time
 // (GDD §8). Pure logic, so it is tested in Node; the Phaser adapter only fills RawInput.
-import type { WeaponDef, WeaponId } from '../content/weapons.ts';
+import { isTargeted, usesPower, type WeaponDef, type WeaponId } from '../content/weapons.ts';
 import { MAX_POWER, type GameCommand } from '../sim/commands.ts';
 import { atan2Bam } from '../sim/math/angle.ts';
 import type { SimView } from '../sim/sim.ts';
@@ -28,6 +28,10 @@ export interface RawInput {
   climb: -1 | 0 | 1;
   /** charge key held (gauge aiming) */
   charge: boolean;
+  /** fire pressed this tick (an edge, kept even if released before the tick) */
+  firePressed: boolean;
+  /** px: map point clicked to aim a targeted weapon (stone wall, trebuchet volley) */
+  target: { readonly x: number; readonly y: number } | null;
   nextWeaponPressed: boolean;
   /** turn around on the spot, keeping the elevation */
   flipPressed: boolean;
@@ -55,6 +59,8 @@ export const emptyInput = (): RawInput => ({
   place: null,
   climb: 0,
   charge: false,
+  firePressed: false,
+  target: null,
   nextWeaponPressed: false,
   flipPressed: false,
   spin: false,
@@ -171,6 +177,20 @@ export class LocalControls {
       out.push({ t: 'setFuse', seconds: input.fusePressed as 1 | 2 | 3 | 4 | 5 });
     }
 
+    const def = view.rules.weapons.find((w) => w.id === (input.selectWeapon ?? turn.weapon));
+    // A targeted weapon goes where the map was clicked.
+    if (input.target && def && isTargeted(def)) {
+      out.push({ t: 'fireAt', x: Math.trunc(input.target.x), y: Math.trunc(input.target.y) });
+      this.charging = false;
+      this.power = 0;
+      return out;
+    }
+    // Weapons without power (mace, pick, sap, chausse-trape) act as soon as fire is pressed.
+    if (def && !usesPower(def) && input.firePressed) {
+      this.fire(out);
+      return out;
+    }
+
     // Drag-to-aim: the shot goes opposite to the pull, power grows with its length.
     if (input.drag) {
       const { pullX, pullY, released } = input.drag;
@@ -202,7 +222,9 @@ export class LocalControls {
 
     // Gauge: hold to charge, release to fire. A full gauge starts again from empty, so the
     // shot only leaves when the button is let go at the right moment.
-    if (input.charge) {
+    if (input.charge && def && !usesPower(def)) {
+      // Held on from the press that already struck: nothing more.
+    } else if (input.charge) {
       this.charging = true;
       this.power = this.power >= MAX_POWER ? 0 : Math.min(MAX_POWER, this.power + CHARGE_SPEED);
     } else if (this.charging) {

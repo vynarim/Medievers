@@ -103,19 +103,41 @@ export class Commentary {
           this.announceTurn(e.turn, e.team, e.unitId, now);
           break;
         }
-        case 'shotFired':
+        case 'shotFired': {
           this.fired = true;
+          const b = v.rules.weapons.find((w) => w.id === e.weapon)?.behavior;
+          const tool =
+            b === 'dig'
+              ? 'quip.dig'
+              : b === 'mine'
+                ? 'quip.mine'
+                : b === 'build'
+                  ? 'quip.wall'
+                  : b === 'strike'
+                    ? 'quip.strike'
+                    : 'quip.fire';
+          // A tool is not a shot that can miss.
+          if (tool !== 'quip.fire' && tool !== 'quip.strike') this.pendingMiss = null;
           this.hud.say(
-            pick('quip.fire', {
+            pick(tool, {
               name: unitName(v.turn.activeUnitId),
               house: house(v.turn.activeTeam),
             }),
             now,
           );
           break;
+        }
+        case 'mineSprung':
+          this.hud.say(pick('quip.mineSprung'), now);
+          break;
+        case 'toolRefused':
+          this.hud.say(t('quip.toolRefused'), now);
+          break;
         case 'shotEnded': {
           const at = shotAt(e.shotId);
-          if (this.damage === 0 && at) {
+          const b = v.rules.weapons.find((w) => w.id === v.turn.weapon)?.behavior;
+          const tool = b === 'dig' || b === 'mine' || b === 'build';
+          if (this.damage === 0 && at && !tool) {
             this.pendingMiss = { tick: v.tick, ...at, unitId: v.turn.activeUnitId };
           }
           break;

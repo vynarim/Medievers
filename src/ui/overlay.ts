@@ -82,15 +82,17 @@ const STYLE = `
 #ui .team .hp i { display: block; height: 100%; background: var(--p); }
 #ui .team.out { opacity: 0.45; text-decoration: line-through; }
 /* Title cartouche: the game's name, with a compact wind gauge under it. */
+/* The game's title, large, with the wind on its right in the same frame. */
 #ui .hud-wind { position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
-  padding: 4px 16px 6px; text-align: center; width: 210px; }
-#ui .hud-wind .game-title { font-family: var(--title); font-size: 30px; line-height: 1.05;
-  color: var(--vermillon); }
+  padding: 4px 18px 6px; display: flex; align-items: center; gap: 18px; }
+#ui .hud-wind .game-title { font-family: var(--title); font-size: 46px; line-height: 1;
+  color: var(--vermillon); white-space: nowrap; }
 #ui .hud-wind .game-title::first-letter { color: var(--lapis); }
-#ui .hud-wind .wind-row { display: flex; align-items: center; gap: 8px; margin-top: 2px; }
-#ui .hud-wind .label { font-family: var(--caps); font-size: 14px; white-space: nowrap; min-width: 58px;
+#ui .hud-wind .wind-row { display: flex; flex-direction: column; align-items: stretch; gap: 4px;
+  width: 132px; padding-left: 16px; border-left: 2px solid var(--gilt); }
+#ui .hud-wind .label { font-family: var(--caps); font-size: 15px; white-space: nowrap;
   text-align: left; }
-#ui .hud-wind .track { flex: 1; position: relative; height: 9px; border: 2px solid var(--encre);
+#ui .hud-wind .track { position: relative; height: 9px; border: 2px solid var(--encre);
   background: var(--velin); }
 #ui .hud-wind .track::after { content: ''; position: absolute; left: 50%; top: -4px; bottom: -4px;
   width: 2px; background: var(--encre); }

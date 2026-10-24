@@ -119,7 +119,14 @@ function markDirty(t: Terrain, x0: number, y0: number, x1: number, y1: number): 
  * Carves a disc of radius r px centred on pixel (cx, cy): destructible pixels become air.
  * A material with resistance R% is only carved within r × 100 / R. Returns the pixels carved.
  */
-export function carveCircle(t: Terrain, cx: number, cy: number, r: number): number {
+export function carveCircle(
+  t: Terrain,
+  cx: number,
+  cy: number,
+  r: number,
+  /** digging tools cut every destructible pixel of the disc, slower in hard materials */
+  ignoreResistance = false,
+): number {
   if (r <= 0) return 0;
   const x0 = Math.max(0, cx - r);
   const y0 = Math.max(0, cy - r);
@@ -137,7 +144,7 @@ export function carveCircle(t: Terrain, cx: number, cy: number, r: number): numb
       const i = y * t.width + x;
       const m = t.data[i] ?? Material.Air;
       if (m === Material.Air || !t.rules.destructible[m]) continue;
-      const res = t.rules.resistancePct[m] ?? 100;
+      const res = ignoreResistance ? 100 : (t.rules.resistancePct[m] ?? 100);
       // d ≤ r × 100 / res  ⇔  d² × res² ≤ r² × 100²
       if (d2 * res * res > r2x10k) continue;
       t.data[i] = Material.Air;

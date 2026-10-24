@@ -473,6 +473,135 @@ const SCRIPTS: readonly Script[] = [
       r.until('transition');
     },
   },
+  {
+    name: 'pick-sap',
+    description:
+      'Digging tools (GDD §4.4): a sapper picks a shaft down, then saps a level tunnel from its ' +
+      'bottom; the knight across picks his own shaft, half as deep.',
+    mapId: 'flat',
+    seed: 404,
+    config: {
+      rules: { ...NO_PLACEMENT, wind: { ...NO_PLACEMENT.wind, max: 0 } },
+      teams: [
+        { spawns: [300], classes: ['sapper'] },
+        { spawns: [900], classes: ['knight'] },
+      ],
+    },
+    play: (r) => {
+      const digs: [string, number][] = [
+        ['pick', 0],
+        ['pick', 0],
+        ['sap', 0],
+        ['skip', 0],
+      ];
+      for (const [weapon, angle] of digs) {
+        r.until('action');
+        if (weapon === 'skip') r.step([{ t: 'skip' }]);
+        else {
+          r.step([
+            { t: 'selectWeapon', id: weapon as 'pick' | 'sap' },
+            { t: 'aim', angle },
+            { t: 'fire', power: 0 },
+          ]);
+        }
+        r.until('transition');
+      }
+    },
+  },
+  {
+    name: 'caltrop',
+    description:
+      'Chausse-trape (GDD §4.4): one left ahead of a unit, which steps back; the enemy walks ' +
+      'across the field onto it two turns later.',
+    mapId: 'flat',
+    seed: 512,
+    config: {
+      rules: { ...NO_PLACEMENT, wind: { ...NO_PLACEMENT.wind, max: 0 } },
+      teams: [{ spawns: [300] }, { spawns: [560] }],
+    },
+    play: (r) => {
+      r.until('action');
+      r.step([
+        { t: 'selectWeapon', id: 'caltrop' },
+        { t: 'aim', angle: 0 },
+        { t: 'fire', power: 0 },
+      ]);
+      r.step([{ t: 'move', dir: -1 }]);
+      r.steps(60);
+      r.step([{ t: 'move', dir: 0 }]);
+      r.until('transition');
+      r.until('action');
+      r.step([{ t: 'move', dir: -1 }]);
+      r.steps(240);
+      r.step([{ t: 'move', dir: 0 }]);
+      r.until('transition');
+    },
+  },
+  {
+    name: 'stone-wall',
+    description:
+      'Mur de pierres (GDD §4.4): a long wall set upright between the two houses, then an ' +
+      'arrow that stops in it, and a short slanted one refused on a unit.',
+    mapId: 'flat',
+    seed: 77,
+    config: {
+      rules: { ...NO_PLACEMENT, wind: { ...NO_PLACEMENT.wind, max: 0 } },
+      teams: [{ spawns: [300] }, { spawns: [700] }],
+    },
+    play: (r) => {
+      r.until('action');
+      const ground = (r.sim.view().units[0]?.y ?? 0) >> 8;
+      r.step([
+        { t: 'selectWeapon', id: 'stoneWall' },
+        { t: 'setFuse', seconds: 3 },
+        { t: 'aim', angle: 1024 },
+        { t: 'fireAt', x: 700, y: ground - 60 },
+        { t: 'fireAt', x: 450, y: ground - 60 },
+      ]);
+      r.until('transition');
+      r.until('action');
+      r.step([
+        { t: 'aim', angle: 2048 },
+        { t: 'fire', power: 1024 },
+      ]);
+      r.until('transition');
+    },
+  },
+  {
+    name: 'trebuchet',
+    description:
+      'Volée de trébuchet (GDD §4.2): five stones called down on the enemy, thrown from the ' +
+      'west; then one with the gauge, from the east.',
+    mapId: 'flat',
+    seed: 1250,
+    config: {
+      rules: {
+        ...NO_PLACEMENT,
+        wind: { ...NO_PLACEMENT.wind, max: 0 },
+        weapons: NO_PLACEMENT.weapons.map((w) => (w.id === 'trebuchet' ? { ...w, ammo: 2 } : w)),
+      },
+      teams: [{ spawns: [300] }, { spawns: [900, 1000] }],
+    },
+    play: (r) => {
+      r.until('action');
+      r.step([
+        { t: 'selectWeapon', id: 'trebuchet' },
+        { t: 'aim', angle: 0 },
+        { t: 'fireAt', x: 900, y: 0 },
+      ]);
+      r.until('transition');
+      r.until('action');
+      r.step([{ t: 'skip' }]);
+      r.until('transition');
+      r.until('action');
+      r.step([
+        { t: 'selectWeapon', id: 'trebuchet' },
+        { t: 'aim', angle: 0 },
+        { t: 'fire', power: 460 },
+      ]);
+      r.until('transition');
+    },
+  },
 ];
 
 const force = process.argv.includes('--force');

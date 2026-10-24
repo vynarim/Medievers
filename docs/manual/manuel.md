@@ -76,7 +76,7 @@ Toutes les classes partagent le **même arsenal**. Chacune a en plus un talent, 
 | **Chevalier** | *Haubert* : −25 % de dégâts d'explosion reçus | Lourd : ses sauts portent environ 30 % moins loin et moins haut |
 | **Archer** | *Œil exercé* : la trajectoire prévue (les points dorés qui apparaissent quand on charge le tir) s'affiche deux fois plus loin avec l'arc et l'arbalète | — |
 | **Frondeur** | *Bras souple* : la fronde et les pots partent 15 % plus vite, donc plus loin | −10 PV maximum |
-| **Sapeur** | *Maître d'œuvre* : creuse deux fois plus vite et voit les chausse-trapes ennemies (la pioche, la sape et les chausse-trapes arrivent avec l'arsenal complet) | — |
+| **Sapeur** | *Maître d'œuvre* : creuse deux fois plus vite à la pioche et à la sape (deux fois plus profond, deux fois plus loin), et quand c'est lui qui joue, sa maison voit les chausse-trapes ennemies | — |
 | **Clerc** | *Bénédiction* : à la fin de son tour, soigne de 10 PV les alliés à moins de 120 pixels (pas lui-même) | Pas d'armes de mêlée |
 | **Roi** | *Majesté* : les alliés à moins de 200 pixels infligent +10 % de dégâts (il compte au moment du tir) | −20 PV ; un seul par maison |
 
@@ -109,12 +109,12 @@ Déjà jouables {{st:jeu}} : **arc**, **arbalète**, **fronde**, **pot de feu gr
 
 | Arme | Dégâts | Rayon | Munitions | À savoir |
 |---|---|---|---|---|
-| **Volée de trébuchet** | 5 × 30 | 45 px | 1 | 5 pierres sur la cible choisie, en venant de gauche ou de droite |
+| **Volée de trébuchet** {{st:jeu}} | 5 × 30 | 45 px | 1 | Cliquez sur la carte : 5 pierres tombent autour du point, lancées du côté opposé à la visée (la flèche de visée montre où elles vont). Sans clic, la jauge choisit la distance devant vous. Chaque pierre explose là où elle tombe |
 | **Pluie de flèches** | 12 × 10 | — | 1 | Couvre une large zone, faibles dégâts par flèche |
 
 ### 4.3 Mêlée
 
-La **masse d'armes** est jouable {{st:jeu}} : elle frappe à 34 pixels devant vous, dans la direction visée, et envoie l'ennemi très loin. Les autres armes de mêlée sont {{st:prevu}}.
+La **masse d'armes** est jouable {{st:jeu}} : le bouton devient « Frapper » ; un appui (ou Espace) frappe aussitôt, à 34 pixels devant vous dans la direction visée, et envoie l'ennemi très loin. Les autres armes de mêlée sont {{st:prevu}}.
 
 | Arme | Dégâts | Recul | À savoir |
 |---|---|---|---|
@@ -127,12 +127,12 @@ La **masse d'armes** est jouable {{st:jeu}} : elle frappe à 34 pixels devant vo
 | Outil | Effet | Munitions |
 |---|---|---|
 | **Grappin** | Une corde pour se balancer, la lâcher et la relancer en l'air | 5 |
-| **Mur de pierres** | Pose un bloc de pierre taillée (3 longueurs, rotation par pas de 22,5°) | 2 |
+| **Mur de pierres** {{st:jeu}} | Cliquez sur la carte pour poser un bloc de pierre taillée, jusqu'à 320 px de vous. La visée le tourne (par pas de 22,5°), les boutons 1 à 3 choisissent sa longueur (48, 80 ou 120 px). Son contour s'affiche sous la souris, en rouge là où il ne peut pas aller (trop loin, sur un combattant, en pleine terre) : le mur n'est alors pas posé et vous le gardez | 2 |
 | **Bannière** | Parachute : on descend lentement, porté par le vent | 3 |
-| **Pioche** | Creuse droit vers le bas pendant 3 s | 2 |
-| **Sape** | Creuse un tunnel horizontal ou en biais pendant 4 s | 2 |
+| **Pioche** {{st:jeu}} | « Creuser » : creuse droit vers le bas pendant 3 s, environ 90 px dans la terre (180 pour un Sapeur), plus lentement dans la pierre, pas du tout dans la roche. Le temps du tour s'arrête pendant qu'on creuse | 2 |
+| **Sape** {{st:jeu}} | « Creuser » : un tunnel à plat, ou en biais à 45° vers le haut ou le bas selon la visée, pendant 4 s (environ 180 px, 360 pour un Sapeur) ; le combattant le suit | 2 |
 | **Échelle** | Pose une échelle de 200 px que tout le monde peut emprunter | 2 |
-| **Chausse-trape** | Piège invisible pour l'ennemi, armé en 2 s : 40 dégâts dans un rayon de 50 px | 2 |
+| **Chausse-trape** {{st:jeu}} | « Poser » : le piège tombe juste devant vous. Il s'arme en 2 s puis saute sous le premier combattant qui marche dessus, ami ou ennemi : 40 dégâts dans un rayon de 50 px. Une explosion proche le fait sauter aussi. Seule la maison qui joue voit ses propres pièges (et ceux des autres quand c'est un Sapeur qui joue) | 2 |
 | **Miracle** | Vous téléporte sur un point libre ; votre tour s'arrête | 1 |
 | **Passer son tour** | — | ∞ |
 
@@ -225,7 +225,7 @@ Pour que les parties ne s'éternisent pas, **le Déluge** arrive après 20 tours
 
 **Schémas de règles** {{st:jeu}} :
 - *Classique* : les valeurs de ce manuel.
-- *Siège* : des tours plus hautes et plus solides, et de quoi les abattre (5 pots de feu grégeois, 2 de poix) ; plus tard, des murs de pierres et le trébuchet.
+- *Siège* : des tours plus hautes et plus solides, 8 murs de pierres pour bâtir ses forts, 3 volées de trébuchet, 3 pioches et 3 sapes, 5 pots de feu grégeois et 2 de poix.
 - *Fortune* : aucune munition au départ hormis l'arc, la fronde et la masse ; les reliquaires tombent bien plus souvent.
 - *Personnalisé* : vous réglez tout, et le jeu s'en souvient.
 

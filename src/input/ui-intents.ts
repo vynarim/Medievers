@@ -10,6 +10,10 @@ export class UiIntents {
   spin = false;
   /** fire button held (gauge) */
   charge = false;
+  /** fire button pressed since the last tick, even if already let go */
+  firePressed = false;
+  /** px: map point clicked to aim a targeted weapon */
+  target: { x: number; y: number } | null = null;
   jump: 'forward' | 'back' | null = null;
   /** side of the jump (arc buttons); null: the side the unit faces */
   jumpDir: -1 | 1 | null = null;
@@ -30,6 +34,8 @@ export class UiIntents {
     skip: boolean;
     selectUnit: number | null;
     place: number | null;
+    firePressed: boolean;
+    target: UiIntents['target'];
   } {
     const out = {
       jump: this.jump,
@@ -39,7 +45,11 @@ export class UiIntents {
       skip: this.skip,
       selectUnit: this.selectUnit,
       place: this.place,
+      firePressed: this.firePressed,
+      target: this.target,
     };
+    this.firePressed = false;
+    this.target = null;
     this.jump = null;
     this.jumpDir = null;
     this.selectWeapon = null;

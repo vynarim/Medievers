@@ -1,7 +1,18 @@
 // Weapon definitions (GDD §4). Speeds in sub-px/tick (256 = 1 px), radii in px, times in ticks.
-// Only the weapons implemented in src/sim/weapons are listed; the rest arrive with M2 and M4.
+// Only the weapons implemented in src/sim/weapons are listed; the rest arrive with M4.
 
-export type WeaponId = 'bow' | 'sling' | 'greekFire' | 'crossbow' | 'pitchPot' | 'mace';
+export type WeaponId =
+  | 'bow'
+  | 'sling'
+  | 'greekFire'
+  | 'crossbow'
+  | 'pitchPot'
+  | 'mace'
+  | 'pick'
+  | 'sap'
+  | 'caltrop'
+  | 'stoneWall'
+  | 'trebuchet';
 
 /** Fragments a cluster weapon throws when it bursts (pot de poix, GDD §4.1). */
 export interface FragmentDef {
@@ -14,10 +25,58 @@ export interface FragmentDef {
   readonly speed: number;
 }
 
+/** Digging tools (pioche, sape, GDD §4.4): the unit cuts its way through the ground. */
+export interface DigDef {
+  /** ticks the digging lasts */
+  readonly ticks: number;
+  /** sub-px/tick the cut advances in earth (the sapper's passive multiplies it) */
+  readonly speed: number;
+  /** px: radius of the cut; a column of such discs as tall as a unit for the sap */
+  readonly radius: number;
+  /** down: straight down (pick); aim: level or 45° up or down, on the aimed side (sap) */
+  readonly along: 'down' | 'aim';
+}
+
+/** Chausse-trape (GDD §4.4): a mine left on the ground, seen only by its own house. */
+export interface MineDef {
+  /** ticks before it is armed */
+  readonly armTicks: number;
+  /** px: a unit this close to it sets it off */
+  readonly triggerRadius: number;
+  /** ticks between a blast reaching it and its own blast */
+  readonly chainDelay: number;
+}
+
+/** Mur de pierres (GDD §4.4): a block of dressed stone set where the unit points. */
+export interface WallDef {
+  /** px: the three lengths, chosen with the fuse buttons 1 to 3 */
+  readonly short: number;
+  readonly medium: number;
+  readonly long: number;
+  /** px */
+  readonly thickness: number;
+  /** px: farthest from the unit's body centre the wall's centre may be */
+  readonly reach: number;
+}
+
+/** Volée de trébuchet (GDD §4.2): stones falling from off the map on a chosen point. */
+export interface StrikeDef {
+  readonly count: number;
+  /** px between two stones as they land */
+  readonly spacing: number;
+  /** sub-px/tick: sideways speed of the stones, from the chosen side */
+  readonly speed: number;
+  /** px: farthest from the unit the target may be, with the gauge (a click goes anywhere) */
+  readonly range: number;
+  /** px above the top of the map the stones start from */
+  readonly height: number;
+}
+
 export interface WeaponDef {
   readonly id: WeaponId;
   /** behaviour implemented in src/sim/weapons */
-  readonly behavior: 'directHit' | 'fusedBouncer' | 'cluster' | 'melee';
+  readonly behavior:
+    'directHit' | 'fusedBouncer' | 'cluster' | 'melee' | 'dig' | 'mine' | 'build' | 'strike';
   /** px; 0 = point projectile */
   readonly projectileRadius: number;
   /** percent of wind acceleration applied (GDD §4.1 « Vent ») */
@@ -57,7 +116,34 @@ export interface WeaponDef {
   readonly thrown?: boolean;
   /** its blast leaves burning flames on the ground (rules.flames, GDD §4.1) */
   readonly flames?: boolean;
+  readonly dig?: DigDef;
+  readonly mine?: MineDef;
+  readonly wall?: WallDef;
+  readonly strike?: StrikeDef;
 }
+
+/** Weapons aimed at a point of the map rather than fired along the aim (click or gauge). */
+export const isTargeted = (w: WeaponDef): boolean =>
+  w.behavior === 'build' || w.behavior === 'strike';
+
+/** The gauge sets something (speed or distance); the others act at once on fire. */
+export const usesPower = (w: WeaponDef): boolean => isProjectile(w) || isTargeted(w);
+
+/** Weapons that throw something through the air along the aim (they have a flight preview). */
+export const isProjectile = (w: WeaponDef): boolean =>
+  w.behavior === 'directHit' || w.behavior === 'fusedBouncer' || w.behavior === 'cluster';
+
+/** Tools without a projectile or explosion of their own: placed, dug or set. */
+const TOOL = {
+  projectileRadius: 0,
+  windPct: 0,
+  maxSpeed: 0,
+  damage: 0,
+  explosionRadius: 0,
+  knockbackPct: 0,
+  bouncePct: 0,
+  defaultFuse: 0,
+} as const;
 
 export const WEAPONS: readonly WeaponDef[] = [
   {
@@ -149,5 +235,50 @@ export const WEAPONS: readonly WeaponDef[] = [
     defaultFuse: 0,
     ammo: -1,
     reach: 34,
+  },
+  {
+    // Pioche: 3 s straight down; about 90 px in earth, twice that for a sapper.
+    id: 'pick',
+    behavior: 'dig',
+    ...TOOL,
+    ammo: 2,
+    dig: { ticks: 3 * 60, speed: 128, radius: 17, along: 'down' },
+  },
+  {
+    // Sape: 4 s of tunnel, level or diagonal; about 180 px in earth, twice that for a sapper.
+    id: 'sap',
+    behavior: 'dig',
+    ...TOOL,
+    ammo: 2,
+    dig: { ticks: 4 * 60, speed: 192, radius: 17, along: 'aim' },
+  },
+  {
+    id: 'caltrop',
+    behavior: 'mine',
+    ...TOOL,
+    damage: 40,
+    explosionRadius: 50,
+    knockbackPct: 100,
+    ammo: 2,
+    mine: { armTicks: 2 * 60, triggerRadius: 8, chainDelay: 8 },
+  },
+  {
+    id: 'stoneWall',
+    behavior: 'build',
+    ...TOOL,
+    ammo: 2,
+    defaultFuse: 2 * 60,
+    wall: { short: 48, medium: 80, long: 120, thickness: 14, reach: 320 },
+  },
+  {
+    id: 'trebuchet',
+    behavior: 'strike',
+    ...TOOL,
+    projectileRadius: 6,
+    damage: 30,
+    explosionRadius: 45,
+    knockbackPct: 100,
+    ammo: 1,
+    strike: { count: 5, spacing: 28, speed: 3 * 256, range: 1600, height: 300 },
   },
 ];

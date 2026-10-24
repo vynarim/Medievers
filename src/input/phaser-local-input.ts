@@ -56,7 +56,13 @@ export class PhaserLocalInput implements InputSource {
   private dragReleased = false;
   private weaponClick = false;
   /** presses latched from key events, so a tap shorter than a frame is never lost */
-  private pressed = { jump: false, weapon: false, flip: false, fuse: null as number | null };
+  private pressed = {
+    jump: false,
+    weapon: false,
+    flip: false,
+    fire: false,
+    fuse: null as number | null,
+  };
   /** camera pan requested by a drag on empty ground, consumed by the scene */
   pan = { dx: 0, dy: 0 };
   /** camera scroll direction while the mouse rests at a border of the canvas (-1, 0, 1) */
@@ -93,6 +99,7 @@ export class PhaserLocalInput implements InputSource {
     this.keys.enter.on('down', () => (this.pressed.jump = true));
     this.keys.tab.on('down', () => (this.pressed.weapon = true));
     this.keys.t.on('down', () => (this.pressed.flip = true));
+    this.keys.space.on('down', () => (this.pressed.fire = true));
     this.fuseKeys.forEach((key, i) => key.on('down', () => (this.pressed.fuse = i + 1)));
     scene.input.mouse?.disableContextMenu();
     scene.input.on('pointerdown', this.onDown, this);
@@ -254,9 +261,11 @@ export class PhaserLocalInput implements InputSource {
     input.jumpPressed = this.pressed.jump;
     input.nextWeaponPressed = this.pressed.weapon || this.weaponClick;
     input.flipPressed = this.pressed.flip;
+    input.firePressed = this.pressed.fire || ui.firePressed;
+    input.target = ui.target;
     input.fusePressed = this.pressed.fuse ?? ui.fuse;
     input.aimAt = this.aimAt;
-    this.pressed = { jump: false, weapon: false, flip: false, fuse: null };
+    this.pressed = { jump: false, weapon: false, flip: false, fire: false, fuse: null };
     this.weaponClick = false;
     if (this.drag && this.dragArmed) {
       input.drag = { ...this.drag, released: this.dragReleased };

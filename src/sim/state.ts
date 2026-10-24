@@ -85,6 +85,35 @@ export interface FlyingShot {
   readonly damagePct?: number;
 }
 
+/** A unit cutting its way with the pick or the sap (GDD §4.4). */
+export interface Dig {
+  /** id of the « shot », for the shotFired and shotEnded events */
+  readonly id: number;
+  readonly unitId: number;
+  readonly weapon: WeaponId;
+  /** Q14 direction of the cut */
+  readonly dx: number;
+  readonly dy: number;
+  /** sub-px: floor of the cut's head, under its middle */
+  x: number;
+  y: number;
+  /** sub-px/tick in earth, with the sapper's passive */
+  readonly speed: number;
+  ticksLeft: number;
+}
+
+/** A chausse-trape on the ground (GDD §4.4), seen only by its own house. */
+export interface Mine {
+  readonly id: number;
+  readonly team: number;
+  /** sub-px: on the ground */
+  readonly x: number;
+  y: number;
+  /** ticks left before it is armed */
+  arm: number;
+  readonly weapon: WeaponId;
+}
+
 /** A pot with a fuse in turns, resting on the map (GDD §4.1). */
 export interface PlacedPot {
   readonly id: number;
@@ -223,6 +252,10 @@ export interface SimState {
   beast: Beast | null;
   /** sorted by id */
   readonly pots: PlacedPot[];
+  /** the pick or the sap at work; null otherwise */
+  dig: Dig | null;
+  /** sorted by id */
+  mines: Mine[];
   /** units still to be placed, the next one first; empty once the battle has begun */
   readonly placing: PendingUnit[];
   /** sorted by unit id, then trick */

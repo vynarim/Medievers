@@ -33,6 +33,9 @@ import { Trick } from '../content/beasts.ts';
 import { blastMovesPots, potsTurn, stepPots } from './pots.ts';
 import { kitchenTurn, inKitchen, stepKitchen, useKitchen } from './kitchen.ts';
 import { fire, stepShots } from './weapons/weapons.ts';
+import { blastReachesMines, stepDig, stepMines } from './tools.ts';
+import { isTargeted } from '../content/weapons.ts';
+import { MAX_POWER } from './commands.ts';
 import { delugeTurnEnd, drownThings, drownUnits, hasWater, underWater } from './deluge.ts';
 import {
   blastTakenPct,
@@ -170,6 +173,8 @@ function createState(config: MatchConfig, seed: number, mask: Mask): SimState {
     crates: [],
     beast: null,
     pots: [],
+    dig: null,
+    mines: [],
     // One unit per house in turn: first units of every house, then the second ones…
     placing: placing
       .sort((a, b) => a.rank - b.rank || a.team - b.team)
@@ -331,6 +336,8 @@ function applyCommand(s: SimState, c: GameCommand, events: SimEvent[]): void {
   // In its shell (snail trick): no walking nor jumping this turn, shooting is fine.
   const shelled = s.rules.beasts !== undefined && hasAffliction(s, u.id, Trick.Shell);
   if (shelled && (c.t === 'move' || c.t === 'jump' || c.t === 'climb')) return;
+  // Digging with the pick or the sap: the tool moves the unit, nothing else does.
+  if (s.dig && (c.t === 'move' || c.t === 'jump' || c.t === 'climb')) return;
   switch (c.t) {
     case 'climb':
       if (s.rules.unit.climbSpeed === undefined) return;
@@ -377,15 +384,23 @@ function applyCommand(s: SimState, c: GameCommand, events: SimEvent[]): void {
     case 'setFuse':
       if (canAct) t.fuse = c.seconds * 60;
       break;
-    case 'fire': {
+    case 'fire':
+    case 'fireAt': {
       if (!canAct) return;
       const team = s.teams[t.activeTeam];
       const wi = weaponIndexIn(s.rules, t.weapon);
       const ammo = team?.ammo[wi] ?? 0;
-      if (!team || ammo === 0 || !mayUse(s, u, weaponDefIn(s.rules, t.weapon))) return;
+      const def = weaponDefIn(s.rules, t.weapon);
+      if (!team || ammo === 0 || !mayUse(s, u, def)) return;
+      // A clicked point only means something to a weapon aimed at a point.
+      if (c.t === 'fireAt' && !isTargeted(def)) return;
+      if (t.fuse === 0) t.fuse = def.defaultFuse;
+      const at = c.t === 'fireAt' ? { x: Math.trunc(c.x), y: Math.trunc(c.y) } : null;
+      if (!fire(s, u, c.t === 'fire' ? c.power : MAX_POWER, events, at)) {
+        events.push({ e: 'toolRefused', weapon: def.id });
+        return;
+      }
       if (ammo > 0) team.ammo[wi] = ammo - 1;
-      if (t.fuse === 0) t.fuse = s.rules.weapons[wi]?.defaultFuse ?? 0;
-      fire(s, u, c.power, events);
       t.fired = true;
       const rt = s.rules.turn;
       const left = Math.min(t.phaseTicks, rt.retreatMaxTicks ?? t.phaseTicks);
@@ -452,6 +467,7 @@ function advanceTick(s: SimState, phaseJustSet: boolean, events: SimEvent[]): vo
     if (u.climbing && !ladderAt(s.terrain, subToPx(u.x), subToPx(u.y), s.rules.unit)) release(u);
   }
 
+  stepDig(s, events);
   for (const u of s.units) {
     if (!u.alive) continue;
     const r = stepUnitPhysics(u, s.terrain, s.rules.unit);
@@ -468,6 +484,7 @@ function advanceTick(s: SimState, phaseJustSet: boolean, events: SimEvent[]): vo
 
   drownUnits(s, events);
   stepShots(s, events);
+  stepMines(s, events);
 
   for (const e of takeDueExplosions(s.explosions, s.tick)) {
     const res = explode(e, s.terrain, s.units, s.rules.explosion, (u) => blastTakenPct(s, u));
@@ -480,6 +497,7 @@ function advanceTick(s: SimState, phaseJustSet: boolean, events: SimEvent[]): vo
     blastReachesCrates(s, e, events);
     blastReachesBeast(s, e, events);
     blastMovesPots(s, e);
+    blastReachesMines(s, e, events);
     spawnFlames(s, e);
     blastHitsStructures(s, e, events);
     // A blast that reaches the kitchen counts as a touch (GDD §4.9).
@@ -519,7 +537,8 @@ function advancePhase(
     case 'action':
     case 'retreat':
       // Hit during its own turn, the active unit stops at once (GDD §2.2).
-      if (activeHurt || --t.phaseTicks <= 0 || nothingLeftToDo(s)) {
+      // The clock stops while the pick or the sap is at work.
+      if (activeHurt || (!s.dig && (--t.phaseTicks <= 0 || nothingLeftToDo(s)))) {
         setPhase(s, 'resolution', 0, events);
       }
       break;
@@ -628,6 +647,7 @@ function settled(s: SimState): boolean {
     s.shots.length === 0 &&
     s.explosions.items.length === 0 &&
     s.blocks.length === 0 &&
+    s.dig === null &&
     s.units.every(atRest)
   );
 }
@@ -799,6 +819,14 @@ function hashState(s: SimState): number {
       for (const v of [p.id, p.x, p.y, p.turns]) int(v);
       if (p.damagePct !== undefined) int(p.damagePct);
     }
+  }
+  if (s.rules.weapons.some((w) => w.dig)) {
+    const g = s.dig;
+    for (const v of g ? [g.id, g.unitId, g.dx, g.dy, g.x, g.y, g.speed, g.ticksLeft] : [-1]) int(v);
+  }
+  if (s.rules.weapons.some((w) => w.mine)) {
+    int(s.mines.length);
+    for (const m of s.mines) for (const v of [m.id, m.team, m.x, m.y, m.arm]) int(v);
   }
   if (s.rules.beasts) {
     const b = s.beast;

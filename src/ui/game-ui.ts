@@ -170,7 +170,16 @@ export class GameUi {
         'action',
         'tip.spin',
       ),
-      (this.fire = act(holdButton(t('ui.fire'), (h) => (i.charge = h), 'fire'))),
+      (this.fire = act(
+        holdButton(
+          t('ui.fire'),
+          (h) => {
+            i.charge = h;
+            if (h) i.firePressed = true;
+          },
+          'fire',
+        ),
+      )),
     );
     // Worms' « worm select »: hands the turn to the next unit of the team (GDD §2.2).
     const switchUnit = act(
@@ -368,18 +377,22 @@ export class GameUi {
     const skipLabel = phase === 'retreat' ? t('ui.endTurn') : t('ui.skip');
     if (this.skip.textContent !== skipLabel) this.skip.textContent = skipLabel;
     const def = view.rules.weapons.find((w) => w.id === view.turn.weapon);
-    const fused = def?.behavior === 'fusedBouncer' || def?.behavior === 'cluster';
+    const build = def?.behavior === 'build';
+    const fused = def?.behavior === 'fusedBouncer' || def?.behavior === 'cluster' || build;
     this.fuses.classList.toggle('hidden', !fused);
     const fuseSeconds = Math.round((view.turn.fuse || (def?.defaultFuse ?? 0)) / 60);
-    // A fuse in turns (Greek fire) offers 1 to 3 turns; in seconds, 1 to 5.
-    const inTurns = def?.fuseTurns !== undefined;
-    const fuseLabel = t(inTurns ? 'ui.fuseTurns' : 'ui.fuse');
+    // A fuse in turns (Greek fire) offers 1 to 3 turns; in seconds, 1 to 5; a wall, 3 lengths.
+    const inTurns = def?.fuseTurns !== undefined || build;
+    const fuseLabel = t(build ? 'ui.wallLength' : inTurns ? 'ui.fuseTurns' : 'ui.fuse');
     const fuseTitle = this.fuses.firstElementChild;
     if (fuseTitle && fuseTitle.textContent !== fuseLabel) fuseTitle.textContent = fuseLabel;
     for (const b of this.fuses.querySelectorAll('button')) {
       b.classList.toggle('on', b.dataset.fuse === String(fuseSeconds));
       b.classList.toggle('hidden', inTurns && Number(b.dataset.fuse) > 3);
     }
+    // Fire says what the weapon does: strike, dig, set, build…
+    const fireLabel = t(`ui.fire.${def?.behavior ?? 'directHit'}`);
+    if (this.fire.textContent !== fireLabel) this.fire.textContent = fireLabel;
     if (this.open === this.arsenal) this.renderArsenal(false);
     this.renderCard(view);
   }

@@ -37,6 +37,8 @@ import { TerrainLayer } from './terrain-layer.ts';
 import { drawClassMark } from './class-marks.ts';
 import { aimPreviewTicks, classOf, maxHpOf } from '../sim/classes.ts';
 import { shotSpeed } from '../sim/weapons/weapons.ts';
+import { targetFor, wallAngle, wallLength, wallRefusal, wallSize } from '../sim/tools.ts';
+import { isProjectile, isTargeted, type WeaponDef } from '../content/weapons.ts';
 import { rulesFor, saveSetup, type MatchSetup } from '../app/match-setup.ts';
 import { showSetupScreen } from '../ui/setup-screen.ts';
 import { StructureState } from '../content/structures.ts';
@@ -139,6 +141,8 @@ export class BattleScene extends Phaser.Scene {
   private paused = false;
   private stepOnce = false;
   private manualCamera = false;
+  /** watching the replay of a match (the replay viewer): every chausse-trape is shown */
+  private replaying = false;
   private fps = 60;
   /** scene keys pressed since the last frame, latched from key events */
   private pressed = new Set<string>();
@@ -570,6 +574,11 @@ export class BattleScene extends Phaser.Scene {
       this.input_.ui.place = x;
       return;
     }
+    // A stone wall or a trebuchet volley in hand: the click says where it goes.
+    if (this.targeting()) {
+      this.input_.ui.target = { x, y };
+      return;
+    }
     const hit = this.unitAt(x, y);
     this.selectedUnit = hit?.id ?? null;
     this.ui.selectUnit(this.selectedUnit);
@@ -606,6 +615,15 @@ export class BattleScene extends Phaser.Scene {
     const sx = (x - cam.worldView.x) * cam.zoom;
     const sy = (y - UNIT_HEIGHT - LABEL_REACH - cam.worldView.y) * cam.zoom;
     this.ui.showTip(t(tip.key), sx, sy);
+  }
+
+  /** The weapon in hand is aimed at a point of the map, and the turn can still use it. */
+  private targeting(): WeaponDef | null {
+    const v = this.sim.view();
+    if (v.turn.phase !== 'action') return null;
+    const def = v.rules.weapons.find((w) => w.id === v.turn.weapon);
+    const ammo = v.teams[v.turn.activeTeam]?.ammo[v.rules.weapons.findIndex((w) => w === def)];
+    return def && isTargeted(def) && ammo !== 0 ? def : null;
   }
 
   /** The living unit under world point (x, y): its figure or its name label. */
@@ -794,6 +812,7 @@ export class BattleScene extends Phaser.Scene {
     this.drawCrates(g, alpha, time);
     this.drawBeast(g, delta, time);
     this.drawPots(g, time);
+    this.drawMines(g, time);
     this.drawFlames(g, time);
     this.drawStructures(g);
     this.drawPlacementGhost(g, time);
@@ -1554,7 +1573,11 @@ export class BattleScene extends Phaser.Scene {
   private drawPreview(g: Phaser.GameObjects.Graphics, u: Readonly<Unit>): void {
     const v = this.sim.view();
     const def = v.rules.weapons.find((w) => w.id === v.turn.weapon);
-    if (!def || def.behavior === 'melee') return;
+    if (def && isTargeted(def)) {
+      this.drawTarget(g, u, def);
+      return;
+    }
+    if (!def || !isProjectile(def)) return;
     const power = def.fixedPower ? MAX_POWER : this.input_.controls.power;
     if (power <= 0) return;
     const speed = shotSpeed(v, u, def, power);
@@ -1584,6 +1607,95 @@ export class BattleScene extends Phaser.Scene {
         g.fillCircle(p.x / SUBPX, p.y / SUBPX, 3.5);
         g.strokeCircle(p.x / SUBPX, p.y / SUBPX, 3.5);
       }
+    }
+  }
+
+  /**
+   * Where a targeted weapon would go: under the mouse, or as far as the charged power says. The
+   * stone wall shows its outline (vermilion where it cannot go), the volley a target with the
+   * side its stones come from.
+   */
+  private drawTarget(g: Phaser.GameObjects.Graphics, u: Readonly<Unit>, def: WeaponDef): void {
+    const v = this.sim.view();
+    const p = this.input.activePointer;
+    const power = this.input_.controls.power;
+    let at: { x: number; y: number } | null = null;
+    if (power > 0) at = targetFor(v, u, def, power);
+    else if (!p.wasTouch && p.x > 0 && p.y > 0) {
+      const w = this.cameras.main.getWorldPoint(p.x, p.y);
+      at = { x: Math.round(w.x), y: Math.round(w.y) };
+    }
+    if (!at) return;
+    const wall = def.wall;
+    if (wall) {
+      const ok = wallRefusal(v, u, def, at.x, at.y) === null;
+      const length = wallLength(wall, wallSize(v.turn.fuse || def.defaultFuse));
+      const a = (wallAngle(v.turn.aim) * Math.PI * 2) / 4096;
+      const hl = length / 2;
+      const ht = wall.thickness / 2;
+      const c = Math.cos(a);
+      const s = Math.sin(a);
+      const corners = [
+        [-hl, -ht],
+        [hl, -ht],
+        [hl, ht],
+        [-hl, ht],
+      ].map(([dx = 0, dy = 0]) => ({ x: at.x + dx * c - dy * s, y: at.y + dx * s + dy * c }));
+      g.fillStyle(ok ? COLORS.ceruse : COLORS.vermillon, 0.55);
+      g.fillPoints(poly(corners), true);
+      g.lineStyle(3, ok ? COLORS.encre : COLORS.vermillon, 0.9);
+      g.strokePoints(poly(corners), true);
+      return;
+    }
+    // Trebuchet volley: the target on the ground, and an arrow for the side of the throw.
+    const t = v.terrain;
+    let y = 0;
+    const x = Math.max(0, Math.min(t.width - 1, at.x));
+    while (y < t.height && (t.rules.solid[t.data[y * t.width + x] ?? 0] ?? false) === false) y++;
+    const dir = Math.cos((v.turn.aim * Math.PI * 2) / 4096) >= 0 ? 1 : -1;
+    g.lineStyle(4, COLORS.vermillon, 0.9);
+    g.strokeCircle(x, y - 6, 26);
+    g.strokeCircle(x, y - 6, 12);
+    g.lineBetween(x - 34, y - 6, x + 34, y - 6);
+    g.lineBetween(x, y - 40, x, y + 28);
+    g.lineStyle(5, COLORS.encre, 0.8);
+    g.lineBetween(x - dir * 150, y - 170, x - dir * 50, y - 60);
+    g.fillStyle(COLORS.encre, 0.8);
+    g.fillTriangle(x - dir * 40, y - 50, x - dir * 66, y - 62, x - dir * 52, y - 76);
+  }
+
+  /**
+   * Chausse-trapes: iron caltrops, seen only by the house that laid them, and by every house
+   * while a sapper plays (GDD §3.2); all of them once the match is over. A ring while not armed.
+   */
+  private drawMines(g: Phaser.GameObjects.Graphics, time: number): void {
+    const v = this.sim.view();
+    const active = v.units.find((u) => u.id === v.turn.activeUnitId);
+    const sapper = active !== undefined && classOf(v, active) === 'sapper';
+    const all = v.turn.phase === 'gameOver' || this.replaying || sapper;
+    for (const m of v.mines) {
+      if (!all && m.team !== v.turn.activeTeam) continue;
+      const x = m.x / SUBPX;
+      const y = m.y / SUBPX;
+      const f = FACTIONS[m.team];
+      if (m.arm > 0) {
+        g.lineStyle(2, f?.primary ?? COLORS.encre, 0.5 + 0.4 * Math.sin(time / 120));
+        g.strokeCircle(x, y - 4, 12);
+      }
+      g.lineStyle(3, COLORS.encre, 1);
+      for (const [dx, dy] of [
+        [-8, 0],
+        [8, 0],
+        [-5, -7],
+        [5, -7],
+      ] as const) {
+        g.lineBetween(x, y - 3, x + dx, y + dy - 1);
+      }
+      g.fillStyle(COLORS.roche, 1);
+      g.fillCircle(x, y - 3, 3.5);
+      g.strokeCircle(x, y - 3, 3.5);
+      g.fillStyle(f?.primary ?? COLORS.encre, 1);
+      g.fillCircle(x, y - 10, 2.5);
     }
   }
 
