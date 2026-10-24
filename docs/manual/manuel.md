@@ -17,8 +17,8 @@ Ce manuel décrit le jeu tel qu'on le joue. Il grandit avec le jeu : chaque règ
 | Étape | Contenu | État |
 |---|---|---|
 | Fondations | Outils, structure, garde-fous | terminée |
-| Moteur de simulation | Calcul exact et identique sur tous les appareils, terrain, combattants, projectiles, explosions, tours | en cours |
-| Première version jouable | Formes simples à l'écran, clavier, souris et tactile, arc, fronde et pot | à venir |
+| Moteur de simulation | Calcul exact et identique sur tous les appareils, terrain, combattants, projectiles, explosions, tours | terminée |
+| Première version jouable | Formes simples à l'écran, clavier, souris et tactile, arc, fronde et pot | jouable (sauf le pad tactile) |
 | Règles complètes, réseau local, IA, arsenal complet | — | à venir |
 | Graphismes et musique | Le style enluminé et la musique | à venir |
 
@@ -32,7 +32,7 @@ Deux à quatre **maisons** s'affrontent sur une carte peinte, chacune avec trois
 
 Le ton est **burlesque**. Les personnages gardent la gravité figée des enluminures, mais subissent des catastrophes absurdes. Il n'y a pas de sang : les coups font voler des étoiles, des plumes et des éclats de vélin.
 
-## 2. Le déroulement d'un tour {{st:moteur}}
+## 2. Le déroulement d'un tour {{st:jeu}}
 
 | Phase | Durée | Ce qui se passe |
 |---|---|---|
@@ -49,7 +49,7 @@ Le ton est **burlesque**. Les personnages gardent la gravité figée des enlumin
 
 ## 3. Vos combattants
 
-### 3.1 Ce que tous savent faire {{st:moteur}}
+### 3.1 Ce que tous savent faire {{st:jeu}}
 
 - **Points de vie** : {{unit:startHp}} par défaut (50, 150 ou 200 en option).
 - **Marcher** : un combattant avance de {{unit:walkSpeedPx}} pixel par instant de jeu, franchit une marche de {{unit:maxStep}} pixels au plus et grimpe des pentes jusqu'à environ 60°. Au bord d'un précipice, il tombe.
@@ -79,6 +79,8 @@ Chaque équipe est une **maison héraldique** : un nom, un blason et deux couleu
 Les valeurs ci-dessous sont celles du schéma de règles *Classique*. « Vent » indique si le vent dévie le projectile.
 
 ### 4.1 Armes de tir et de lancer
+
+Déjà jouables : **arc**, **fronde** et **pot de feu grégeois** {{st:jeu}} (le pot n'allume pas encore de flammes). Les autres armes sont {{st:prevu}}.
 
 | Arme | Dégâts max | Rayon d'explosion | Vent | Munitions | À savoir |
 |---|---|---|---|---|---|
@@ -120,13 +122,13 @@ Les valeurs ci-dessous sont celles du schéma de règles *Classique*. « Vent »
 | **Miracle** | Vous téléporte sur un point libre ; votre tour s'arrête | 1 |
 | **Passer son tour** | — | ∞ |
 
-### 4.5 Comment se calculent les dégâts {{st:moteur}}
+### 4.5 Comment se calculent les dégâts {{st:jeu}}
 
 Une explosion fait ses dégâts maximum en son centre, puis de moins en moins jusqu'au bord de son rayon. Au bord, elle ne fait plus rien. Un combattant à mi-rayon reçoit la moitié des dégâts. La distance se mesure jusqu'au milieu du corps du combattant. L'explosion **projette** aussi les combattants, d'autant plus fort qu'ils sont touchés durement. Ils rebondissent puis glissent jusqu'à s'arrêter. Les talents (Haubert, Majesté) s'appliquent ensuite.
 
 ## 5. Le champ de bataille
 
-### 5.1 Le terrain {{st:moteur}}
+### 5.1 Le terrain {{st:jeu}}
 
 Chaque carte est une peinture, doublée d'une carte invisible des matières. Ce que vous voyez creusé est exactement ce qui est creusé : le jeu ne triche jamais sur la forme du terrain.
 
@@ -134,7 +136,7 @@ Chaque carte est une peinture, doublée d'une carte invisible des matières. Ce 
 
 Quand une explosion creuse la terre, le décor peint disparaît et laisse voir **le vélin** de la page, avec un bord déchiré.
 
-### 5.2 Le vent {{st:moteur}}
+### 5.2 Le vent {{st:jeu}}
 
 Le vent change à chaque tour, de −10 (fort vers la gauche) à +10 (fort vers la droite). Il dévie les flèches, les pierres de fronde, la ruche, le faucon et la bannière, mais pas les pots. Une bannière en haut de l'écran montre sa force et son sens. Au-delà de 7, un petit ange souffle dans la marge. Une option permet de supprimer le vent.
 
@@ -156,7 +158,7 @@ Pour que les parties ne s'éternisent pas, **le Déluge** arrive après 20 tours
 | Mode | Joueurs | État |
 |---|---|---|
 | **Escarmouche contre l'IA** | 1 humain contre 1 à 3 maisons de l'IA | {{st:prevu}} |
-| **Hotseat** | 2 à 4 humains sur le même appareil, qui se passent la main | {{st:prevu}} |
+| **Hotseat** | 2 à 4 humains sur le même appareil, qui se passent la main | {{st:jeu}} (2 maisons de 3 combattants) |
 | **Mixte** | Humains et IA dans la même partie | {{st:prevu}} |
 | **LAN** | 2 PC du même réseau, un joueur par machine, sans serveur | {{st:prevu}} |
 | **Replays** | Revoir la dernière partie, l'exporter ou l'importer | {{st:prevu}} |
@@ -179,9 +181,9 @@ L'IA joue avec les mêmes règles et les mêmes commandes que vous. Elle ne voit
 | **Chevalier** | Précis, utilise presque tout l'arsenal |
 | **Connétable** | Redoutable : grappin, combinaisons, tirs au millimètre |
 
-## 7. Les commandes {{st:prevu}}
+## 7. Les commandes
 
-### Au clavier et à la souris
+### Au clavier et à la souris {{st:jeu}}
 
 | Action | Commande |
 |---|---|
@@ -194,9 +196,13 @@ L'IA joue avec les mêmes règles et les mêmes commandes que vous. Elle ne voit
 | Régler la mèche d'un pot | Touches 1 à 5 |
 | Déplacer la caméra / zoomer | Bords de l'écran ou clic molette / molette |
 | Recentrer | C |
-| Pause | Échap |
+| Afficher les informations de debug | F1 (puis P : pause, N : avancer d'un instant) |
+| Pause | Échap {{st:prevu}} |
 
-### Sur tablette
+### Sur tablette {{st:prevu}}
+
+Déjà possible au doigt : viser et tirer en glissant depuis le combattant, déplacer la caméra en glissant ailleurs.
+
 
 - Un **pad** en bas à gauche pour marcher et sauter ; les boutons **Arsenal** et **Tir** en bas à droite.
 - **Viser à la fronde** : glissez depuis votre combattant. Une ligne de points dorés montre le début de la trajectoire.

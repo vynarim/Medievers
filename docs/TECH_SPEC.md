@@ -109,7 +109,8 @@ export interface Sim {
   2. `render` applique la même forme en `destination-out` sur les tuiles concernées.
   3. Il peint un liseré « vélin déchiré » (texture de bord brûlé ou ocre) en contour, via un pass `source-atop` avec un anneau de r à r+6 px.
 - Pierres posées : sprite de pierre taillée tamponné sur la tuile, avec écriture du masque à 3.
-- Le rendu ne relit jamais le masque pour décider de la physique.
+- Le rendu ne relit jamais le masque pour décider de la physique. Il le lit en revanche pour l'affichage : après un creusement, il efface des tuiles exactement les pixels que le masque a passés à l'air, ce qui garantit l'alignement au pixel près.
+- Tuiles en `CLAMP_TO_EDGE` et filtrage `NEAREST`, contexte WebGL créé sans antialiasing (`antialiasGL: false`) : sans cela, les bords des tuiles se mélangent et dessinent des lignes fines aux jointures (constaté au greybox, M2).
 
 ### 4.4 Couches de scène (du fond vers l'avant)
 1. Fond or ou fond diapré (motif losangé), statique.

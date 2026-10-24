@@ -4,3 +4,5 @@ export * from './units.ts';
 export * from './world.ts';
 export * from './rules.ts';
 export * from './weapons.ts';
+export * from './maps.ts';
+export * from './factions.ts';

@@ -1,24 +1,32 @@
+// Bootstrap: loads the greybox map mask, then starts the battle scene (hotseat, 2 houses).
 import Phaser from 'phaser';
+import { GREYBOX_MAPS } from '../content/maps.ts';
+import { BattleScene } from '../render/battle-scene.ts';
+import { decodeMaskPng } from './loaders/mask-png.ts';
 
-class BootScene extends Phaser.Scene {
-  constructor() {
-    super('boot');
-  }
+async function boot(): Promise<void> {
+  const map = GREYBOX_MAPS[0];
+  if (!map) throw new Error('no greybox map');
+  const res = await fetch(map.maskUrl);
+  if (!res.ok) throw new Error(`cannot load ${map.maskUrl}: ${res.status}`);
+  const mask = decodeMaskPng(new Uint8Array(await res.arrayBuffer()));
+  // The match seed is the only non-deterministic input; everything after it replays exactly.
+  const seed = crypto.getRandomValues(new Uint32Array(1))[0] ?? 1;
 
-  create(): void {
-    this.add
-      .text(960, 540, 'Medievers', { fontFamily: 'serif', fontSize: '96px', color: '#e8d9b0' })
-      .setOrigin(0.5);
-  }
+  const game = new Phaser.Game({
+    type: Phaser.WEBGL,
+    parent: 'game',
+    width: 1920,
+    height: 1080,
+    backgroundColor: '#cfd8d0',
+    scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
+    input: { activePointers: 3 },
+    render: { antialiasGL: false },
+    scene: [],
+  });
+  game.scene.add('battle', BattleScene, true, { map, mask, seed });
+  // Dev builds expose the game for browser-driven checks (Playwright); stripped from production.
+  if (import.meta.env.DEV) (window as unknown as { medievers: Phaser.Game }).medievers = game;
 }
 
-new Phaser.Game({
-  type: Phaser.WEBGL,
-  parent: 'game',
-  width: 1920,
-  height: 1080,
-  backgroundColor: '#2b2118',
-  scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
-  input: { activePointers: 3 },
-  scene: [BootScene],
-});
+void boot();
