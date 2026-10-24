@@ -16,6 +16,7 @@ import type { MatchConfig } from '../sim/state.ts';
 import type { Mask } from '../sim/terrain/mask.ts';
 import type { Terrain } from '../sim/terrain/terrain.ts';
 import { UNIT_HALF_WIDTH, UNIT_HEIGHT, type Unit } from '../sim/units/unit.ts';
+import { BARREL_HEIGHT, BARREL_WIDTH } from '../content/barrels.ts';
 import { Commentary, type Pop } from '../ui/commentary.ts';
 import { FONT_CAPS, FONT_TEXT, FONT_TITLE } from '../ui/fonts.ts';
 import { GameUi, loadOverrides } from '../ui/game-ui.ts';
@@ -614,6 +615,7 @@ export class BattleScene extends Phaser.Scene {
     const turn = v.turn;
 
     this.drawKitchen(g, time);
+    this.drawBarrels(g);
     for (const u of v.units) {
       const label = this.labels.get(u.id);
       const [x, y] = this.pos(`u${u.id}`, alpha, u.x, u.y);
@@ -805,6 +807,27 @@ export class BattleScene extends Phaser.Scene {
         g.fillStyle(COLORS.or, 0.95);
         g.fillTriangle(x, y - 6, x, y + 6, x + inward * h * 0.55 - flick, y);
       }
+    }
+  }
+
+  /** Powder barrels: oak staves, iron hoops, a vermilion powder mark. */
+  private drawBarrels(g: Phaser.GameObjects.Graphics): void {
+    for (const b of this.sim.view().barrels) {
+      const x = b.x / SUBPX;
+      const y = b.y / SUBPX;
+      const w = BARREL_WIDTH;
+      const h = BARREL_HEIGHT;
+      g.fillStyle(COLORS.terreOmbre, 1);
+      g.lineStyle(3, COLORS.encre, 1);
+      g.fillRoundedRect(x - w / 2, y - h, w, h, 5);
+      g.strokeRoundedRect(x - w / 2, y - h, w, h, 5);
+      g.lineStyle(2, COLORS.encre, 1);
+      for (const k of [0.22, 0.78]) g.lineBetween(x - w / 2, y - h * k, x + w / 2, y - h * k);
+      g.lineStyle(1, COLORS.ocre, 0.8);
+      g.lineBetween(x - 4, y - h + 3, x - 4, y - 3);
+      g.lineBetween(x + 4, y - h + 3, x + 4, y - 3);
+      g.fillStyle(COLORS.vermillon, 1);
+      g.fillCircle(x, y - h / 2, 4);
     }
   }
 

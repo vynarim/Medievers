@@ -32,6 +32,7 @@ export type SimEvent =
   | { readonly e: 'kitchenAppeared'; readonly x: number; readonly y: number }
   | { readonly e: 'kitchenUsed'; readonly unitId: number; readonly heal: number }
   | { readonly e: 'kitchenGone' }
+  | { readonly e: 'barrelLost'; readonly id: number }
   /** px burnt away at each end of the map, after the fire spread */
   | { readonly e: 'burnSpread'; readonly px: number }
   | { readonly e: 'gameOver'; readonly winner: number };

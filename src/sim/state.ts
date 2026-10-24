@@ -75,6 +75,15 @@ export interface KitchenState {
   readonly expiresTurn: number;
 }
 
+/** Powder barrel (GDD §4.6). */
+export interface Barrel {
+  readonly id: number;
+  /** sub-px: centre of its base */
+  readonly x: number;
+  /** sub-px: ground level under it */
+  y: number;
+}
+
 export interface SimState {
   tick: number;
   readonly prng: PrngState;
@@ -89,6 +98,8 @@ export interface SimState {
   nextEntityId: number;
   /** null when there is none; always null without rules.kitchen */
   kitchen: KitchenState | null;
+  /** sorted by id */
+  barrels: Barrel[];
   /** px burnt away at each end of the map (rules.burn); 0 without it */
   burnPx: number;
   /** kitchens that appeared on each team's turn, for fairness (GDD §4.9) */

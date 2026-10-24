@@ -21,6 +21,7 @@ import {
   walk,
   type Unit,
 } from './units/unit.ts';
+import { blastReachesBarrels, burnBarrels, placeBarrels, stepBarrels } from './barrels.ts';
 import { kitchenTurn, inKitchen, stepKitchen, useKitchen } from './kitchen.ts';
 import { fire, stepShots } from './weapons/weapons.ts';
 
@@ -99,7 +100,7 @@ function createState(config: MatchConfig, seed: number, mask: Mask): SimState {
       ammo: config.rules.weapons.map((w) => w.ammo),
     });
   });
-  return {
+  const s: SimState = {
     tick: 0,
     prng: createPrng(seed),
     terrain,
@@ -126,11 +127,14 @@ function createState(config: MatchConfig, seed: number, mask: Mask): SimState {
     },
     nextEntityId: nextId,
     kitchen: null,
+    barrels: [],
     burnPx: 0,
     kitchenCounts: teams.map(() => 0),
     winner: null,
     rules: config.rules,
   };
+  placeBarrels(s);
+  return s;
 }
 
 function unitById(s: SimState, id: number): Unit | undefined {
@@ -306,10 +310,12 @@ function advanceTick(s: SimState, phaseJustSet: boolean, events: SimEvent[]): vo
       events.push({ e: 'terrainCarved', x: subToPx(e.x), y: subToPx(e.y), radius: e.carveRadius });
     }
     for (const h of res.hits) events.push({ e: 'unitDamaged', unitId: h.unitId, damage: h.damage });
+    blastReachesBarrels(s, e);
     // A blast that reaches the kitchen counts as a touch (GDD §4.9).
     if (inKitchen(s, e.x, e.y, e.radius * SUBPX)) useKitchen(s, events);
   }
   stepKitchen(s, events);
+  stepBarrels(s, events);
 
   const hurt = active !== undefined && (active.hp < hpBefore || !active.alive);
   advancePhase(s, hurt, phaseJustSet, events);
@@ -441,6 +447,7 @@ function burnTurn(s: SimState, events: SimEvent[]): void {
   }
   const n = s.turn.number;
   const rounds = idiv(n, s.teams.length);
+  burnBarrels(s);
   if (n % s.teams.length === 0 && rounds >= r.startRound && s.burnPx < width >> 1) {
     s.burnPx = Math.min(width >> 1, s.burnPx + r.advancePx);
     events.push({ e: 'burnSpread', px: s.burnPx });
@@ -523,6 +530,10 @@ function hashState(s: SimState): number {
   if (s.rules.unit.turnTicks !== undefined) int(t.turnHold);
   if (s.rules.turn.noRepeat) int(t.restingUnitId);
   if (s.rules.burn) int(s.burnPx);
+  if (s.rules.barrels) {
+    int(s.barrels.length);
+    for (const b of s.barrels) for (const v of [b.id, b.x, b.y]) int(v);
+  }
   if (s.rules.kitchen) {
     const k = s.kitchen;
     for (const v of k ? [k.x, k.y, k.expiresTurn] : [-1]) int(v);

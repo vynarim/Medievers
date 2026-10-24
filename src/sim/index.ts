@@ -10,5 +10,6 @@ export * from './events.ts';
 export * from './state.ts';
 export * from './sim.ts';
 export * from './kitchen.ts';
+export * from './barrels.ts';
 export * from './log.ts';
 export * from './replay-file.ts';

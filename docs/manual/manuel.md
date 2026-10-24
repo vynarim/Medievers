@@ -155,6 +155,10 @@ Le vent change à chaque tour, de −10 (fort vers la gauche) à +10 (fort vers 
 - **Barils de poix** : touchés, ils explosent (30 dégâts dans un rayon de 60 px), puis enflamment le sol. Une explosion peut en déclencher d'autres en chaîne.
 - **Flammes** : 3 PV par instant de contact, 10 PV au plus par tour. L'eau les éteint.
 
+### Les barils de poudre {{st:jeu}}
+
+Cinq **barils de poudre** sont posés au hasard sur la carte au début de la partie. Une flèche, une pierre, un pot, une explosion ou le feu du parchemin qui les touche les fait sauter : **40 dégâts** dans un rayon de 70 pixels, et un beau cratère. Un baril qui saute fait sauter ses voisins une fraction de seconde plus tard : visez le baril plutôt que l'ennemi qui s'est caché à côté. Réglages : onglet **Barils de poudre**.
+
 ### La cuisine de campagne {{st:jeu}}
 
 De temps en temps, au début d'un tour, **un foyer avec un chaudron** s'installe entre les deux camps, à mi-chemin entre la maison qui joue et l'ennemi le plus proche, sur un sol plat. Le combattant dont le tir la touche (flèche, pierre, ou l'explosion d'un pot qui l'atteint) **regagne 30 PV**, sans dépasser ses PV de départ ; la cuisine disparaît alors, et une flèche s'arrête dans la marmite. Tirer sur la soupe plutôt que sur l'ennemi est donc un choix.

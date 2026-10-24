@@ -8,6 +8,7 @@ import { cosQ14, sinQ14 } from '../math/angle.ts';
 import { SUBPX, idiv, mulQ14, subToPx } from '../math/fixed.ts';
 import { isqrt } from '../math/isqrt.ts';
 import { queueExplosion } from '../explosions/explosion.ts';
+import { barrelOnSegment, igniteBarrel } from '../barrels.ts';
 import { segmentTouchesKitchen, useKitchen } from '../kitchen.ts';
 import { carveCircle } from '../terrain/terrain.ts';
 import { bounce, createProjectile, stepProjectile } from '../projectiles/projectile.ts';
@@ -84,6 +85,12 @@ export function stepShots(state: SimState, events: SimEvent[]): void {
     // Any shot touching the field kitchen heals the shooter (GDD §4.9); an arrow stops there.
     if (segmentTouchesKitchen(state, fromX, fromY, p.x, p.y)) {
       useKitchen(state, events);
+      if (def.behavior === 'directHit') impact = { kind: 'outOfMap', x: p.x, y: p.y };
+    }
+    // A shot that touches a powder barrel sets it off (GDD §4.6); an arrow stops in it.
+    const barrel = barrelOnSegment(state, fromX, fromY, p.x, p.y);
+    if (barrel !== null) {
+      igniteBarrel(state, barrel, 1);
       if (def.behavior === 'directHit') impact = { kind: 'outOfMap', x: p.x, y: p.y };
     }
 

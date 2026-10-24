@@ -118,6 +118,18 @@ export function tuningGroups(rules: MatchRules): TuningGroup[] {
           },
         ]
       : []),
+    ...(rules.barrels
+      ? [
+          {
+            titleKey: 'tuning.group.barrels',
+            fields: [
+              field('barrels.count', 'tuning.barrelCount', 'units.barrels', 1, 1, 0, 20),
+              field('barrels.damage', 'tuning.damage', 'units.hp', 1, 5, 0, 200),
+              field('barrels.radius', 'tuning.explosionRadius', 'units.px', 1, 5, 10, 300),
+            ],
+          },
+        ]
+      : []),
     ...(rules.kitchen
       ? [
           {

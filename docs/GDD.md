@@ -136,7 +136,7 @@ Toutes les valeurs sont des défauts dans `src/content/weapons.ts`, ajustables p
 - Ramassage au contact.
 
 ### 4.6 Éléments de carte
-- **Barils de poix** : explosent quand ils sont touchés (30 dégâts / 60 px), puis enflamment le sol.
+- **Barils de poudre** (décidé le 2026-10-24, remplacent les barils de poix) : 5 barils posés au hasard (PRNG du sim) au début de la partie, sur un sol plat, à plus de 70 px des combattants et les uns des autres, hors des 10 % de chaque bout de carte. Un tir qui les touche (une flèche s'y arrête), une explosion qui les atteint ou le feu du parchemin les fait sauter : 40 dégâts dans un rayon de 70 px, avec cratère. Un baril qui saute peut en déclencher d'autres, avec un court délai (réaction en chaîne). Si le sol se dérobe, ils tombent. Valeurs dans `src/content/barrels.ts` (`MatchRules.barrels`, absent des vieux logs), réglables dans ⚙ Réglages.
 - **Flammes** : 3 PV par tick de contact (plafonné à 10 par tour). Elles s'éteignent dans l'eau.
 - **Terrain indestructible** : roche peinte et piliers de cadre.
 

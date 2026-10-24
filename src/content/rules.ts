@@ -1,5 +1,6 @@
 // Match rules (GDD §2, §6): every tunable value of a match. They travel in the match config,
 // so a game log replays with the values it was played with. Times in ticks (60 per second).
+import { BARREL_RULES, type BarrelRules } from './barrels.ts';
 import { BURN_RULES, type BurnRules } from './burn.ts';
 import { KITCHEN_RULES, type KitchenRules } from './kitchen.ts';
 import { UNIT_RULES, type UnitRules } from './units.ts';
@@ -64,6 +65,8 @@ export interface MatchRules {
   readonly kitchen?: KitchenRules;
   /** the parchment burning from both ends (GDD §2.5); absent from older logs: no fire */
   readonly burn?: BurnRules;
+  /** powder barrels on the map (GDD §4.6); absent from older logs: none */
+  readonly barrels?: BarrelRules;
 }
 
 /** « Classique » rules scheme (GDD §6). */
@@ -87,6 +90,7 @@ export const CLASSIC_RULES: MatchRules = {
   weapons: WEAPONS,
   kitchen: KITCHEN_RULES,
   burn: BURN_RULES,
+  barrels: BARREL_RULES,
 };
 
 /** Index of a weapon in the match arsenal; throws for a weapon the match does not have. */

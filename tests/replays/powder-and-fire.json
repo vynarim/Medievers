@@ -1,0 +1,384 @@
+{
+ "version": 1,
+ "config": {
+  "rules": {
+   "turn": {
+    "transitionTicks": 120,
+    "actionTicks": 2700,
+    "retreatTicks": 180,
+    "maxResolutionTicks": 1800,
+    "settleTicks": 120,
+    "moveAfterShot": true,
+    "retreatMaxTicks": 300,
+    "freeSelect": true,
+    "noRepeat": true
+   },
+   "unitsPerTeam": 4,
+   "startHp": 100,
+   "unit": {
+    "walkSpeed": 384,
+    "maxStep": 12,
+    "slopeWindow": 7,
+    "jumpForward": {
+     "vx": 2100,
+     "vy": -2304
+    },
+    "jumpBack": {
+     "vx": 256,
+     "vy": -2688
+    },
+    "fallSafeHeight": 160,
+    "fallPxPerHp": 8,
+    "fallMaxDamage": 30,
+    "moveBudget": 280,
+    "slopeTakeoff": true,
+    "turnTicks": 12
+   },
+   "wind": {
+    "max": 10,
+    "accelPerUnit": 2
+   },
+   "explosion": {
+    "knockbackPerHp": 40,
+    "liftPct": 35
+   },
+   "weapons": [
+    {
+     "id": "bow",
+     "behavior": "directHit",
+     "projectileRadius": 0,
+     "windPct": 100,
+     "maxSpeed": 6144,
+     "damage": 35,
+     "explosionRadius": 0,
+     "chipRadius": 3,
+     "knockbackPct": 60,
+     "bouncePct": 0,
+     "defaultFuse": 0,
+     "ammo": -1
+    },
+    {
+     "id": "sling",
+     "behavior": "directHit",
+     "projectileRadius": 2,
+     "windPct": 100,
+     "maxSpeed": 5120,
+     "damage": 25,
+     "explosionRadius": 0,
+     "chipRadius": 5,
+     "knockbackPct": 250,
+     "bouncePct": 0,
+     "defaultFuse": 0,
+     "ammo": -1
+    },
+    {
+     "id": "greekFire",
+     "behavior": "fusedBouncer",
+     "projectileRadius": 5,
+     "windPct": 0,
+     "maxSpeed": 4608,
+     "damage": 45,
+     "explosionRadius": 60,
+     "knockbackPct": 100,
+     "bouncePct": 45,
+     "defaultFuse": 180,
+     "ammo": -1
+    }
+   ],
+   "kitchen": {
+    "healHp": 30,
+    "chanceStartPermille": 250,
+    "chanceDecayPct": 80,
+    "chanceFloorPermille": 20,
+    "lifeRounds": 2,
+    "placeTolerancePct": 10
+   },
+   "burn": {
+    "startRound": 1,
+    "advancePx": 160,
+    "damage": 20
+   },
+   "barrels": {
+    "count": 5,
+    "damage": 40,
+    "radius": 70,
+    "chainDelay": 8
+   }
+  },
+  "teams": [
+   {
+    "spawns": [
+     150,
+     420,
+     640
+    ]
+   },
+   {
+    "spawns": [
+     1450,
+     1150,
+     960
+    ]
+   }
+  ]
+ },
+ "seed": 1066,
+ "mapId": "hills",
+ "commands": [
+  [
+   121,
+   {
+    "t": "selectWeapon",
+    "id": "sling"
+   }
+  ],
+  [
+   121,
+   {
+    "t": "aim",
+    "angle": 3700
+   }
+  ],
+  [
+   121,
+   {
+    "t": "fire",
+    "power": 700
+   }
+  ],
+  [
+   663,
+   {
+    "t": "selectWeapon",
+    "id": "sling"
+   }
+  ],
+  [
+   663,
+   {
+    "t": "aim",
+    "angle": 2501
+   }
+  ],
+  [
+   663,
+   {
+    "t": "fire",
+    "power": 719
+   }
+  ],
+  [
+   1205,
+   {
+    "t": "selectWeapon",
+    "id": "greekFire"
+   }
+  ],
+  [
+   1205,
+   {
+    "t": "aim",
+    "angle": 3678
+   }
+  ],
+  [
+   1205,
+   {
+    "t": "fire",
+    "power": 738
+   }
+  ],
+  [
+   1747,
+   {
+    "t": "selectWeapon",
+    "id": "sling"
+   }
+  ],
+  [
+   1747,
+   {
+    "t": "aim",
+    "angle": 2523
+   }
+  ],
+  [
+   1747,
+   {
+    "t": "fire",
+    "power": 757
+   }
+  ],
+  [
+   2289,
+   {
+    "t": "selectWeapon",
+    "id": "sling"
+   }
+  ],
+  [
+   2289,
+   {
+    "t": "aim",
+    "angle": 3656
+   }
+  ],
+  [
+   2289,
+   {
+    "t": "fire",
+    "power": 776
+   }
+  ],
+  [
+   2831,
+   {
+    "t": "selectWeapon",
+    "id": "greekFire"
+   }
+  ],
+  [
+   2831,
+   {
+    "t": "aim",
+    "angle": 2545
+   }
+  ],
+  [
+   2831,
+   {
+    "t": "fire",
+    "power": 795
+   }
+  ],
+  [
+   3373,
+   {
+    "t": "selectWeapon",
+    "id": "sling"
+   }
+  ],
+  [
+   3373,
+   {
+    "t": "aim",
+    "angle": 3634
+   }
+  ],
+  [
+   3373,
+   {
+    "t": "fire",
+    "power": 814
+   }
+  ],
+  [
+   3915,
+   {
+    "t": "selectWeapon",
+    "id": "sling"
+   }
+  ],
+  [
+   3915,
+   {
+    "t": "aim",
+    "angle": 2567
+   }
+  ],
+  [
+   3915,
+   {
+    "t": "fire",
+    "power": 833
+   }
+  ],
+  [
+   4457,
+   {
+    "t": "selectWeapon",
+    "id": "greekFire"
+   }
+  ],
+  [
+   4457,
+   {
+    "t": "aim",
+    "angle": 3612
+   }
+  ],
+  [
+   4457,
+   {
+    "t": "fire",
+    "power": 852
+   }
+  ],
+  [
+   4931,
+   {
+    "t": "selectWeapon",
+    "id": "sling"
+   }
+  ],
+  [
+   4931,
+   {
+    "t": "aim",
+    "angle": 2589
+   }
+  ],
+  [
+   4931,
+   {
+    "t": "fire",
+    "power": 871
+   }
+  ],
+  [
+   5473,
+   {
+    "t": "selectWeapon",
+    "id": "sling"
+   }
+  ],
+  [
+   5473,
+   {
+    "t": "aim",
+    "angle": 3590
+   }
+  ],
+  [
+   5473,
+   {
+    "t": "fire",
+    "power": 890
+   }
+  ],
+  [
+   6015,
+   {
+    "t": "selectWeapon",
+    "id": "greekFire"
+   }
+  ],
+  [
+   6015,
+   {
+    "t": "aim",
+    "angle": 2611
+   }
+  ],
+  [
+   6015,
+   {
+    "t": "fire",
+    "power": 909
+   }
+  ]
+ ],
+ "endTick": 6366,
+ "description": "Every 2026-10-24 rule at once on the hills map: powder barrels, the burning parchment (from round 1), the field kitchen, no unit twice in a row; slings and pots for 12 turns.",
+ "expectedHash": "c09896d3"
+}

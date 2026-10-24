@@ -143,6 +143,31 @@ const SCRIPTS: readonly Script[] = [
       }
     },
   },
+  {
+    name: 'powder-and-fire',
+    description:
+      'Every 2026-10-24 rule at once on the hills map: powder barrels, the burning parchment ' +
+      '(from round 1), the field kitchen, no unit twice in a row; slings and pots for 12 turns.',
+    mapId: 'hills',
+    seed: 1066,
+    config: {
+      rules: { ...CLASSIC_RULES, burn: { startRound: 1, advancePx: 160, damage: 20 } },
+      teams: [{ spawns: [150, 420, 640] }, { spawns: [1450, 1150, 960] }],
+    },
+    play: (r) => {
+      for (let turn = 0; turn < 12; turn++) {
+        r.until('action');
+        const team = r.sim.view().turn.activeTeam;
+        const pot = turn % 3 === 2;
+        r.step([
+          { t: 'selectWeapon', id: pot ? 'greekFire' : 'sling' },
+          { t: 'aim', angle: team === 0 ? 3700 - turn * 11 : 2490 + turn * 11 },
+          { t: 'fire', power: 700 + turn * 19 },
+        ]);
+        r.until('transition');
+      }
+    },
+  },
 ];
 
 const force = process.argv.includes('--force');
