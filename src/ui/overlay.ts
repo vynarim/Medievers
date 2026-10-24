@@ -75,7 +75,7 @@ const STYLE = `
 #ui .shield.small { width: 22px; height: 27px; border-width: 2px; }
 #ui .hud-teams { position: absolute; top: 12px; left: 12px; display: flex; flex-direction: column; gap: 6px; }
 #ui .team { display: flex; align-items: center; gap: 8px; padding: 4px 12px 4px 6px;
-  font-family: var(--caps); font-size: 14px; width: var(--col); }
+  font-family: var(--caps); font-size: 16px; width: calc(var(--col) + 40px); }
 #ui .team .name { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 #ui .team .hp { flex: none; width: 64px; height: 10px; border: 2px solid var(--encre); background: var(--velin); }
 #ui .team .hp i { display: block; height: 100%; background: var(--p); }
