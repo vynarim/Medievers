@@ -36,7 +36,7 @@ import { Scenery } from './scenery.ts';
 import { FixedStep } from './fixed-step.ts';
 import { TerrainLayer } from './terrain-layer.ts';
 import { drawClassMark } from './class-marks.ts';
-import { aimPreviewTicks, classOf, maxHpOf } from '../sim/classes.ts';
+import { aimPreviewTicks, classOf, maxHpOf, visibleMines } from '../sim/classes.ts';
 import { shotSpeed } from '../sim/weapons/weapons.ts';
 import { targetFor, wallAngle, wallLength, wallRefusal, wallSize } from '../sim/tools.ts';
 import { isProjectile, isTargeted, type WeaponDef } from '../content/weapons.ts';
@@ -1852,11 +1852,8 @@ export class BattleScene extends Phaser.Scene {
   private drawMines(g: Phaser.GameObjects.Graphics, time: number): void {
     if (this.ui.handingOver) return;
     const v = this.sim.view();
-    const active = v.units.find((u) => u.id === v.turn.activeUnitId);
-    const sapper = active !== undefined && classOf(v, active) === 'sapper';
-    const all = !this.data_.setup.fog || v.turn.phase === 'gameOver' || this.replaying || sapper;
-    for (const m of v.mines) {
-      if (!all && m.team !== v.turn.activeTeam) continue;
+    const all = !this.data_.setup.fog || v.turn.phase === 'gameOver' || this.replaying;
+    for (const m of all ? v.mines : visibleMines(v, v.turn.activeTeam)) {
       const x = m.x / SUBPX;
       const y = m.y / SUBPX;
       const f = FACTIONS[m.team];

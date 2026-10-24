@@ -7,6 +7,7 @@ import {
   aimPreviewTicks,
   digPctOf,
   shotSpeed,
+  visibleMines,
   type Mask,
   type SimEvent,
 } from '../../src/sim/index.ts';
@@ -134,6 +135,36 @@ describe('class passives (GDD §3.2)', () => {
     // The bow is not thrown by hand.
     const bow = weaponDefIn(v.rules, 'bow');
     expect(shotSpeed(v, slinger, bow, 1024)).toBe(bow.maxSpeed);
+  });
+
+  it('sapper: its house sees the enemy caltrops while it plays, and only then', () => {
+    const sim = match({ x: [300, 500], c: ['sapper', 'knight'] }, { x: [900], c: ['knight'] });
+    toAction(sim);
+    const view = sim.view();
+    const [sapper, knight, enemy] = view.units;
+    if (!sapper || !knight || !enemy) throw new Error('units');
+    const mines = [
+      { id: 1, team: 0 },
+      { id: 2, team: 1 },
+    ];
+    /** The view with these caltrops, on the turn of unitId. */
+    const at = (unitId: number, activeTeam: number, rules = view.rules) => ({
+      ...view,
+      rules,
+      mines,
+      turn: { ...view.turn, activeUnitId: unitId, activeTeam },
+    });
+    const seen = (v: ReturnType<typeof at>, team: number): number[] =>
+      visibleMines(v, team).map((m) => m.id);
+    expect(seen(at(sapper.id, 0), 0)).toEqual([1, 2]);
+    expect(seen(at(knight.id, 0), 0)).toEqual([1]);
+    // The other house's turn: each sees its own.
+    expect(seen(at(enemy.id, 1), 0)).toEqual([1]);
+    expect(seen(at(enemy.id, 1), 1)).toEqual([2]);
+    // Without classes there is no sapper.
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { classes, ...noClasses } = view.rules;
+    expect(seen(at(sapper.id, 0, noClasses), 0)).toEqual([1]);
   });
 
   it('sapper: digs twice as fast (for the pick and the sap)', () => {

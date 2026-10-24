@@ -27,6 +27,27 @@ export function classOf(s: ClassView, u: Pick<Unit, 'id' | 'team'>): ClassId | n
   return team?.classes?.[i] ?? null;
 }
 
+/** What visibleMines reads: a SimView fits. */
+export interface MineView extends ClassView {
+  readonly units: readonly Pick<Unit, 'id' | 'team'>[];
+  readonly turn: { readonly activeUnitId: number; readonly activeTeam: number };
+  readonly mines: readonly { readonly team: number }[];
+}
+
+/**
+ * The caltrops house `team` sees (GDD §3.2, §4.6): its own, and every one while a sapper of
+ * that house plays (Maître d'œuvre). The render and the AI both ask here.
+ */
+export function visibleMines<V extends MineView>(s: V, team: number): V['mines'][number][] {
+  const active = s.units.find((u) => u.id === s.turn.activeUnitId);
+  const sapper =
+    active !== undefined &&
+    active.team === team &&
+    s.turn.activeTeam === team &&
+    classOf(s, active) === 'sapper';
+  return s.mines.filter((m) => sapper || m.team === team);
+}
+
 /** Starting HP of a unit of class cls (GDD §3.2: slinger −10, king −20). */
 export function hpForClass(rules: MatchRules, cls: ClassId | null): number {
   const c = rules.classes;
