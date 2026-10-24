@@ -226,6 +226,7 @@ Les lièvres et les escargots des marges du manuscrit entrent dans la bataille. 
 - **Siège** : forts de départ, beaucoup de murs de pierres, trébuchet ×3.
 - **Fortune** : tout passe par les reliquaires (aucune munition de départ, hors arc et fronde).
 - **Personnalisé** : tous les paramètres sont éditables et sauvegardés localement.
+- Programmé le 2026-10-25 (`src/content/schemes.ts`, écran de préparation `src/ui/setup-screen.ts`) : avant la première partie (et par « Nouvelle partie… » du menu pause ou de la tapisserie de fin), on choisit le schéma, le Régicide, 2 à 4 maisons et la classe de chacun de leurs 1 à 6 combattants ; le choix est gardé. **Siège** en attendant les murs de pierres et le trébuchet (M4) : tours de 440 px, tours 360 PV, murailles 240 PV, 5 feux grégeois et 2 pots de poix. **Fortune** : feu grégeois, arbalète et poix à 0 au départ (arc, fronde et masse illimités), reliquaires à 70 % par tour, 5 au plus sur la carte. **Personnalisé** = les valeurs de ⚙ Réglages ; appliquer des réglages passe la partie en Personnalisé. « R » ou « Recommencer » rejoue la même préparation.
 
 ## 7. IA adverse
 

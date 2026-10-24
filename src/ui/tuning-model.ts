@@ -72,7 +72,6 @@ export function tuningGroups(rules: MatchRules): TuningGroup[] {
         field('turn.retreatMaxTicks', 'tuning.retreatMax', 'units.seconds', TPS, 0.5, 0, 60),
         field('turn.settleTicks', 'tuning.settleTime', 'units.seconds', TPS, 0.5, 0, 10),
         field('startHp', 'tuning.startHp', 'units.hp', 1, 10, 10, 500),
-        field('unitsPerTeam', 'tuning.unitsPerTeam', 'units.units', 1, 1, 1, 6),
       ],
     },
     {

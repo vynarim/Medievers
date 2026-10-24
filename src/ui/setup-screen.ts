@@ -1,0 +1,153 @@
+// Match setup screen (BACKLOG 3.6, greybox): rules scheme, Régicide, the houses and the class of
+// each of their units (GDD §2.1, §3.2, §6). DOM over the canvas, like the rest of the UI.
+import { CLASS_IDS, type ClassId } from '../content/classes.ts';
+import { FACTIONS } from '../content/factions.ts';
+import { MAX_HOUSES, MAX_UNITS, MIN_HOUSES, SCHEME_IDS } from '../content/schemes.ts';
+import { fixSetup, type MatchSetup } from '../app/match-setup.ts';
+import { t } from './i18n.ts';
+import { button, el, shield, uiRoot } from './overlay.ts';
+import { css } from './tokens.ts';
+
+const STYLE = `
+#ui .setup { width: min(880px, calc(100vw - 32px)); }
+#ui .setup .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 4px 0 8px; }
+#ui .setup .scheme { text-align: left; flex: 1 1 180px; font-family: var(--text); font-size: 15px; }
+#ui .setup .scheme b { display: block; font-family: var(--caps); font-weight: normal; font-size: 19px;
+  color: var(--lapis); }
+#ui .setup .house { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 8px 0;
+  border-bottom: 1px solid var(--gilt); }
+#ui .setup .house .name { font-family: var(--caps); font-size: 19px; min-width: 210px; display: flex;
+  gap: 8px; align-items: center; }
+#ui .setup select { font: inherit; font-size: 16px; min-height: 48px; padding: 4px; pointer-events: auto;
+  border: 2px solid var(--encre); border-radius: 4px; background: var(--ceruse); color: var(--encre); }
+#ui .setup .start { margin-top: 16px; display: flex; justify-content: flex-end; gap: 8px; }
+`;
+
+let styled = false;
+
+/**
+ * Shows the setup screen, starting from `initial`; `onStart` receives the chosen setup and the
+ * screen closes. Returns a function that closes it without starting.
+ */
+export function showSetupScreen(
+  initial: MatchSetup,
+  onStart: (setup: MatchSetup) => void,
+  onCancel?: () => void,
+): () => void {
+  const root = uiRoot();
+  if (!styled) {
+    const style = document.createElement('style');
+    style.textContent = STYLE;
+    document.head.appendChild(style);
+    styled = true;
+  }
+  let setup = fixSetup(initial);
+  const veil = el('div', 'veil');
+  const panel = el('div', 'modal panel setup');
+  const close = (): void => {
+    veil.remove();
+    panel.remove();
+  };
+  const update = (next: MatchSetup): void => {
+    setup = fixSetup(next);
+    render();
+  };
+
+  const render = (): void => {
+    panel.replaceChildren(el('h2', '', t('setup.title')));
+
+    panel.append(el('h3', '', t('setup.scheme')));
+    const schemes = el('div', 'row');
+    for (const id of SCHEME_IDS) {
+      const b = button('', `scheme${setup.scheme === id ? ' on' : ''}`);
+      b.append(el('b', '', t(`setup.scheme.${id}`)), el('span', '', t(`setup.scheme.${id}.text`)));
+      b.addEventListener('click', () => update({ ...setup, scheme: id }));
+      schemes.append(b);
+    }
+    panel.append(schemes);
+
+    const regicide = button(
+      t(setup.regicide ? 'setup.regicide.on' : 'setup.regicide.off'),
+      setup.regicide ? 'on' : '',
+    );
+    regicide.title = t('setup.regicide.tip');
+    regicide.addEventListener('click', () => update({ ...setup, regicide: !setup.regicide }));
+    panel.append(el('h3', '', t('setup.mode')), regicide);
+
+    panel.append(el('h3', '', t('setup.houses')));
+    setup.lineups.forEach((lineup, h) => {
+      const f = FACTIONS[h];
+      const row = el('div', 'house');
+      const name = el('div', 'name');
+      if (f) name.append(shield(f.primary, f.secondary, true));
+      name.append(el('span', '', f ? t(f.nameKey) : ''));
+      name.style.color = css(f?.primary ?? 0);
+      row.append(name);
+      const setLineup = (next: ClassId[]): void => {
+        const lineups = setup.lineups.map((l, k) => (k === h ? next : [...l]));
+        update({ ...setup, lineups });
+      };
+      lineup.forEach((cls, u) => {
+        const select = el('select');
+        select.title = t('setup.unit', { n: u + 1 });
+        for (const id of CLASS_IDS) {
+          const o = el('option', '', t(`classes.${id}`));
+          o.value = id;
+          o.selected = id === cls;
+          select.append(o);
+        }
+        select.addEventListener('keydown', (e) => e.stopPropagation());
+        select.addEventListener('change', () => {
+          const next = [...lineup];
+          next[u] = select.value as ClassId;
+          setLineup(next);
+        });
+        row.append(select);
+      });
+      const less = button('−', 'icon');
+      less.title = t('setup.unitLess');
+      less.disabled = lineup.length <= 1;
+      less.addEventListener('click', () => setLineup(lineup.slice(0, -1)));
+      const more = button('+', 'icon');
+      more.title = t('setup.unitMore');
+      more.disabled = lineup.length >= MAX_UNITS;
+      more.addEventListener('click', () => setLineup([...lineup, 'knight']));
+      row.append(less, more);
+      panel.append(row);
+    });
+    const houses = el('div', 'row');
+    const addHouse = button(t('setup.houseMore'));
+    addHouse.disabled = setup.lineups.length >= MAX_HOUSES;
+    addHouse.addEventListener('click', () =>
+      update({ ...setup, lineups: [...setup.lineups, setup.lineups[0] ?? ['knight']] }),
+    );
+    const removeHouse = button(t('setup.houseLess'));
+    removeHouse.disabled = setup.lineups.length <= MIN_HOUSES;
+    removeHouse.addEventListener('click', () =>
+      update({ ...setup, lineups: setup.lineups.slice(0, -1) }),
+    );
+    houses.append(addHouse, removeHouse);
+    panel.append(houses, el('p', 'note', t('setup.note')));
+
+    const start = el('div', 'start');
+    const go = button(t('setup.start'), 'fire');
+    go.addEventListener('click', () => {
+      close();
+      onStart(setup);
+    });
+    if (onCancel) {
+      const back = button(t('setup.cancel'));
+      back.addEventListener('click', () => {
+        close();
+        onCancel();
+      });
+      start.append(back);
+    }
+    start.append(go);
+    panel.append(start);
+  };
+
+  render();
+  root.append(veil, panel);
+  return close;
+}

@@ -45,6 +45,8 @@ export interface GameUiOptions {
   readonly intents: UiIntents;
   /** restart the match with these overrides applied to the Classique rules */
   readonly restart: (overrides: TuningOverrides) => void;
+  /** the setup screen, to choose a new match */
+  readonly newMatch: () => void;
   /** default zoom and camera back on the action */
   readonly resetView: () => void;
 }
@@ -205,6 +207,10 @@ export class GameUi {
       this.click(button(t('pause.restart')), () => {
         this.show(null);
         this.opts.restart(loadOverrides());
+      }),
+      this.click(button(t('pause.newMatch')), () => {
+        this.show(null);
+        this.opts.newMatch();
       }),
       this.click(button(`? ${t('ui.help')}`), () => this.show(this.help)),
       this.click(button(`⚙ ${t('ui.settings')}`), () => this.openSettings()),

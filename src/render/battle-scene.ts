@@ -4,7 +4,7 @@
 import Phaser from 'phaser';
 import { FACTIONS, unitName } from '../content/factions.ts';
 import type { MapDef } from '../content/maps.ts';
-import { CLASSIC_RULES, TICKS_PER_SECOND, type MatchRules } from '../content/rules.ts';
+import { TICKS_PER_SECOND, type MatchRules } from '../content/rules.ts';
 import { PhaserLocalInput } from '../input/phaser-local-input.ts';
 import { MAX_POWER } from '../sim/commands.ts';
 import type { SimEvent } from '../sim/events.ts';
@@ -23,7 +23,7 @@ import { Commentary, type Pop } from '../ui/commentary.ts';
 import { FONT_CAPS, FONT_TEXT, FONT_TITLE } from '../ui/fonts.ts';
 import { GameUi, loadOverrides } from '../ui/game-ui.ts';
 import { t } from '../ui/i18n.ts';
-import { applyOverrides, type TuningOverrides } from '../ui/tuning-model.ts';
+import type { TuningOverrides } from '../ui/tuning-model.ts';
 import { COLORS, css, cssAlpha } from '../ui/tokens.ts';
 import { uiScale } from '../ui/ui-scale.ts';
 import { AutoSaver, clearSave } from '../app/autosave.ts';
@@ -37,15 +37,18 @@ import { TerrainLayer } from './terrain-layer.ts';
 import { drawClassMark } from './class-marks.ts';
 import { aimPreviewTicks, classOf, maxHpOf } from '../sim/classes.ts';
 import { shotSpeed } from '../sim/weapons/weapons.ts';
-import { defaultLineup } from '../content/classes.ts';
+import { rulesFor, saveSetup, type MatchSetup } from '../app/match-setup.ts';
+import { showSetupScreen } from '../ui/setup-screen.ts';
 import { StructureState } from '../content/structures.ts';
 
 export interface BattleData {
   readonly map: MapDef;
   readonly mask: Mask;
   readonly seed: number;
-  /** match rules, the Classique scheme with the playtest overrides applied */
+  /** match rules, from the setup's scheme (and the player's settings for « Personnalisé ») */
   readonly rules: MatchRules;
+  /** the match chosen on the setup screen: houses, line-ups, scheme, Régicide */
+  readonly setup: MatchSetup;
   /** a saved match to resume: its log replaces seed and rules */
   readonly resume?: GameLog;
 }
@@ -153,17 +156,20 @@ export class BattleScene extends Phaser.Scene {
   }
 
   create(): void {
-    const { map, mask, seed, rules } = this.data_;
-    const perTeam = rules.unitsPerTeam ?? map.spawns[0]?.length ?? 3;
+    const { map, mask, seed, rules, setup } = this.data_;
+    const lineups = setup.lineups;
+    const perTeam = Math.max(...lineups.map((l) => l.length));
     const config: MatchConfig = {
       rules,
       ...(map.structures ? { structures: map.structures } : {}),
-      teams: spawnColumns(mask, map.spawns.length, perTeam).map((spawns) => ({
-        spawns,
-        ...(rules.classes
-          ? { classes: defaultLineup(spawns.length, rules.regicide === true) }
-          : {}),
-      })),
+      // Each house takes as many of its spawn columns as it has units.
+      teams: spawnColumns(mask, lineups.length, perTeam).map((columns, h) => {
+        const lineup = lineups[h] ?? [];
+        return {
+          spawns: columns.slice(0, lineup.length),
+          ...(rules.classes ? { classes: [...lineup] } : {}),
+        };
+      }),
     };
     const resume = this.data_.resume;
     // A saved match replays to where it was left: same seed, same commands, same state.
@@ -233,7 +239,9 @@ export class BattleScene extends Phaser.Scene {
     });
     this.ui = new GameUi({
       intents: this.input_.ui,
-      restart: (overrides) => this.restart(overrides),
+      // Applying ⚙ Réglages plays the player's own scheme, « Personnalisé ».
+      restart: (overrides) => this.restart(overrides, true),
+      newMatch: () => this.newMatch(),
       resetView: () => this.resetView(),
     });
     // A resized window keeps the map filling the screen (the default view reframes itself).
@@ -242,7 +250,7 @@ export class BattleScene extends Phaser.Scene {
     };
     this.scale.on('resize', onResize);
     this.events.once('shutdown', () => this.scale.off('resize', onResize));
-    this.commentary = new Commentary(this.ui.hud, () => this.restart(loadOverrides()));
+    this.commentary = new Commentary(this.ui.hud, () => this.newMatch());
     const turn = this.sim.view().turn;
     if (resume) {
       this.ui.hud.announce(
@@ -333,15 +341,39 @@ export class BattleScene extends Phaser.Scene {
     this.manualCamera = false;
   }
 
-  /** New match on the same map, with the next seed. */
-  private restart(overrides: TuningOverrides): void {
+  /**
+   * New match on the same map with the same setup and the next seed; `custom`: the player's
+   * settings were just applied, so the scheme becomes « Personnalisé ».
+   */
+  private restart(overrides: TuningOverrides, custom = false): void {
+    const setup: MatchSetup = custom ? { ...this.data_.setup, scheme: 'custom' } : this.data_.setup;
+    if (custom) saveSetup(setup);
+    this.startMatch(setup, overrides);
+  }
+
+  private startMatch(setup: MatchSetup, overrides: TuningOverrides): void {
     clearSave();
-    this.scene.restart({
+    const data: BattleData = {
       map: this.data_.map,
       mask: this.data_.mask,
-      rules: applyOverrides(CLASSIC_RULES, overrides),
+      rules: rulesFor(setup, overrides),
+      setup,
       seed: (this.data_.seed + 0x9e3779b9) >>> 0,
-    });
+    };
+    this.scene.restart(data);
+  }
+
+  /** The setup screen, over the paused match: a new match as chosen, or back to this one. */
+  private newMatch(): void {
+    this.paused = true;
+    showSetupScreen(
+      this.data_.setup,
+      (setup) => {
+        saveSetup(setup);
+        this.startMatch(setup, loadOverrides());
+      },
+      () => (this.paused = false),
+    );
   }
 
   /** Fond diapré (ASSETS §1.1): lozenges on vellum, faint enough to keep the play readable. */

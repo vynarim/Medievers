@@ -19,14 +19,15 @@ Ce manuel décrit le jeu tel qu'on le joue. Il grandit avec le jeu : chaque règ
 | Fondations | Outils, structure, garde-fous | terminée |
 | Moteur de simulation | Calcul exact et identique sur tous les appareils, terrain, combattants, projectiles, explosions, tours | terminée |
 | Première version jouable | Formes simples à l'écran, clavier, souris et tactile, arc, fronde et pot | jouable (reste à essayer sur une vraie tablette) |
-| Règles complètes, réseau local, IA, arsenal complet | — | à venir |
+| Règles complètes | Classes, Régicide, Déluge, flammes, tours qui s'effondrent, schémas de règles, écran de préparation | jouable |
+| Réseau local, IA, arsenal complet | — | à venir |
 | Graphismes et musique | Le style enluminé et la musique | à venir |
 
 <div class="page-break"></div>
 
 ## 1. Le principe
 
-Deux à quatre **maisons** s'affrontent sur une carte peinte, chacune avec un à six combattants (quatre par défaut, à régler dans ⚙ Réglages, onglet Tour). On joue **chacun son tour** : pendant votre tour, un seul de vos combattants agit. Il se déplace, choisit une arme, vise et tire. Le terrain se creuse sous les explosions, les combattants sont projetés, tombent, se noient.
+Deux à quatre **maisons** s'affrontent sur une carte peinte, chacune avec un à six combattants (quatre par défaut, à choisir sur l'écran de préparation). On joue **chacun son tour** : pendant votre tour, un seul de vos combattants agit. Il se déplace, choisit une arme, vise et tire. Le terrain se creuse sous les explosions, les combattants sont projetés, tombent, se noient.
 
 **La victoire** revient à la dernière maison qui a encore au moins un combattant debout. Si toutes les maisons tombent dans la même explosion, c'est une égalité.
 
@@ -211,17 +212,21 @@ Pour que les parties ne s'éternisent pas, **le Déluge** arrive après 20 tours
 | Mode | Joueurs | État |
 |---|---|---|
 | **Escarmouche contre l'IA** | 1 humain contre 1 à 3 maisons de l'IA | {{st:prevu}} |
-| **Hotseat** | 2 à 4 humains sur le même appareil, qui se passent la main | {{st:jeu}} (2 maisons de 3 combattants) |
+| **Hotseat** | 2 à 4 humains sur le même appareil, qui se passent la main | {{st:jeu}} |
 | **Mixte** | Humains et IA dans la même partie | {{st:prevu}} |
 | **LAN** | 2 PC du même réseau, un joueur par machine, sans serveur | {{st:prevu}} |
 | **Replays** | Revoir la dernière partie, l'exporter ou l'importer | {{st:prevu}} |
 
 **Régicide** (option) {{st:jeu}} : chaque maison a un Roi, et sa mort élimine toute la maison : ses autres combattants quittent aussitôt le champ.
 
-**Schémas de règles** :
+**Préparer la bataille** {{st:jeu}} : avant la première partie, et ensuite par **Nouvelle partie…** (menu ☰ Pause, ou la tapisserie de fin), un écran permet de choisir les règles, le Régicide, le nombre de maisons (2 à 4) et, pour chacune, ses combattants (1 à 6) et leur classe. Le jeu s'en souvient ; **Recommencer** rejoue la même préparation.
+
+**La fin de la partie** {{st:jeu}} : une tapisserie brodée, à la manière de celle de Bayeux, défile : la maison victorieuse y parade, festoie et chante faux, avec des légendes en latin. Si tout le monde tombe en même temps (le feu, l'eau…), la tapisserie montre un champ vide, un mouton et des moines perplexes. On peut fermer la tapisserie pour contempler le champ de bataille.
+
+**Schémas de règles** {{st:jeu}} :
 - *Classique* : les valeurs de ce manuel.
-- *Siège* : forts de départ, beaucoup de murs de pierres, trois volées de trébuchet.
-- *Fortune* : aucune munition au départ (hormis l'arc et la fronde) ; tout vient des reliquaires.
+- *Siège* : des tours plus hautes et plus solides, et de quoi les abattre (5 pots de feu grégeois, 2 de poix) ; plus tard, des murs de pierres et le trébuchet.
+- *Fortune* : aucune munition au départ hormis l'arc, la fronde et la masse ; les reliquaires tombent bien plus souvent.
 - *Personnalisé* : vous réglez tout, et le jeu s'en souvient.
 
 ### Les adversaires de l'IA {{st:prevu}}

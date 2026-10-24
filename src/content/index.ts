@@ -15,3 +15,4 @@ export * from './classes.ts';
 export * from './deluge.ts';
 export * from './flames.ts';
 export * from './structures.ts';
+export * from './schemes.ts';

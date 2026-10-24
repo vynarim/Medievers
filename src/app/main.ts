@@ -1,12 +1,13 @@
 // Bootstrap: loads the greybox map mask, then starts the battle scene (hotseat, 2 houses).
 import Phaser from 'phaser';
 import { GREYBOX_MAPS } from '../content/maps.ts';
-import { CLASSIC_RULES } from '../content/rules.ts';
-import { BattleScene } from '../render/battle-scene.ts';
+import { BattleScene, type BattleData } from '../render/battle-scene.ts';
+import type { GameLog } from '../sim/log.ts';
+import { showSetupScreen } from '../ui/setup-screen.ts';
+import { loadSetup, rulesFor, saveSetup, type MatchSetup } from './match-setup.ts';
 import { loadSave } from './autosave.ts';
 import { loadFonts } from '../ui/fonts.ts';
 import { loadOverrides } from '../ui/game-ui.ts';
-import { applyOverrides } from '../ui/tuning-model.ts';
 import { decodeMaskPng } from './loaders/mask-png.ts';
 
 async function boot(): Promise<void> {
@@ -30,17 +31,29 @@ async function boot(): Promise<void> {
     render: { antialiasGL: false },
     scene: [],
   });
-  const rules = applyOverrides(CLASSIC_RULES, loadOverrides());
-  // A match left in progress (refresh, crash, reboot) resumes where it was.
+  const overrides = loadOverrides();
+  const setup = loadSetup(Object.keys(overrides).length > 0);
+  const start = (chosen: MatchSetup, resume?: GameLog): void => {
+    const data: BattleData = {
+      map,
+      mask,
+      seed,
+      rules: rulesFor(chosen, overrides),
+      setup: chosen,
+      ...(resume ? { resume } : {}),
+    };
+    game.scene.add('battle', BattleScene, true, data);
+  };
+  // A match left in progress (refresh, crash, reboot) resumes where it was; otherwise the houses
+  // are chosen first, on the setup screen.
   const save = loadSave();
-  const resume = save && save.mapId === map.id ? save : undefined;
-  game.scene.add('battle', BattleScene, true, {
-    map,
-    mask,
-    seed,
-    rules,
-    ...(resume ? { resume } : {}),
-  });
+  if (save && save.mapId === map.id) start(setup, save);
+  else {
+    showSetupScreen(setup, (chosen) => {
+      saveSetup(chosen);
+      start(chosen);
+    });
+  }
   // Dev builds expose the game for browser-driven checks (Playwright); stripped from production.
   if (import.meta.env.DEV) (window as unknown as { medievers: Phaser.Game }).medievers = game;
 }
