@@ -198,7 +198,15 @@ function applyCommand(s: SimState, c: GameCommand, events: SimEvent[]): void {
       // With a move budget, a turn has either a walk or a single jump (GDD §3.1).
       const budget = s.rules.unit.moveBudget;
       if (budget !== undefined && t.moveLeft !== budget * SUBPX) return;
-      if (jump(u, c.kind, s.rules.unit) && budget !== undefined) t.moveLeft = 0;
+      const facing = u.facing;
+      if (c.dir !== undefined) u.facing = c.dir;
+      if (!jump(u, c.kind, s.rules.unit)) {
+        u.facing = facing;
+        break;
+      }
+      // Turned round to jump: the aim is mirrored so its elevation stays the same.
+      if (u.facing !== facing) t.aim = (2048 - t.aim) & ANGLE_MASK;
+      if (budget !== undefined) t.moveLeft = 0;
       break;
     }
     case 'aim':
@@ -326,15 +334,34 @@ function advancePhase(
 }
 
 /**
- * Hands the turn to another unit of the active team (rules.turn.freeSelect), as long as the
- * current one has not moved, jumped or fired yet.
+ * True while the playing team may still hand the turn to another of its units
+ * (rules.turn.freeSelect): the current one has not moved, jumped or fired yet.
  */
+export function canSwitchUnit(s: SimView): boolean {
+  const t = s.turn;
+  if (!s.rules.turn.freeSelect || t.fired || t.walkDir !== 0) return false;
+  if (t.phase !== 'transition' && t.phase !== 'action') return false;
+  const budget = s.rules.unit.moveBudget;
+  return budget === undefined || t.moveLeft === budget * SUBPX;
+}
+
+/** The next living unit of the playing team after the active one, in team order. */
+export function nextTeammate(s: SimView): number | null {
+  const team = s.teams[s.turn.activeTeam];
+  if (!team) return null;
+  const ids = team.unitIds;
+  const from = ids.indexOf(s.turn.activeUnitId);
+  for (let i = 1; i < ids.length; i++) {
+    const id = ids[(from + i) % ids.length];
+    if (s.units.some((u) => u.id === id && u.alive)) return id ?? null;
+  }
+  return null;
+}
+
+/** Hands the turn to another unit of the active team, when canSwitchUnit allows it. */
 function selectUnit(s: SimState, unitId: number): void {
   const t = s.turn;
-  if (!s.rules.turn.freeSelect || t.fired || t.walkDir !== 0) return;
-  if (t.phase !== 'transition' && t.phase !== 'action') return;
-  const budget = s.rules.unit.moveBudget;
-  if (budget !== undefined && t.moveLeft !== budget * SUBPX) return;
+  if (!canSwitchUnit(s)) return;
   const team = s.teams[t.activeTeam];
   const idx = team?.unitIds.indexOf(unitId) ?? -1;
   const unit = unitById(s, unitId);

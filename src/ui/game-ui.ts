@@ -4,7 +4,7 @@
 import { CLASSIC_RULES, type MatchRules } from '../content/rules.ts';
 import { FACTIONS, unitName } from '../content/factions.ts';
 import type { UiIntents } from '../input/ui-intents.ts';
-import type { SimView } from '../sim/sim.ts';
+import { canSwitchUnit, nextTeammate, type SimView } from '../sim/sim.ts';
 import { Hud } from './hud.ts';
 import { renderTutorial } from './tutorial.ts';
 import { t } from './i18n.ts';
@@ -53,6 +53,7 @@ export class GameUi {
   readonly hud: Hud;
   private readonly fuses: HTMLElement;
   private readonly skip: HTMLButtonElement;
+  private readonly resetView: HTMLButtonElement;
   private readonly actionButtons: HTMLButtonElement[] = [];
   private readonly veil: HTMLElement;
   private readonly arsenal: HTMLElement;
@@ -74,14 +75,13 @@ export class GameUi {
     const i = opts.intents;
     this.hud = new Hud(this.root);
 
-    /** 'move': usable in action and retreat; 'action': only before the shot. */
     /**
      * 'walk' and 'jump' follow the moves left (a walk or one jump per turn), 'action' is before
-     * the shot only, 'end' is the whole turn.
+     * the shot only, 'end' is the whole turn, 'switch' while the turn can change hands.
      */
     const act = (
       b: HTMLButtonElement,
-      when: 'walk' | 'jump' | 'action' | 'end' = 'action',
+      when: 'walk' | 'jump' | 'action' | 'end' | 'switch' = 'action',
       tip = '',
     ): HTMLButtonElement => {
       b.dataset.when = when;
@@ -92,27 +92,30 @@ export class GameUi {
     // One action bar, centred at the bottom (GDD §8.2): moves, then aim and weapons.
     const bar = el('div', 'bar panel');
     const pad = el('div', 'group');
+    const longJump = (dir: -1 | 1): HTMLButtonElement =>
+      this.click(button(t(dir < 0 ? 'ui.jumpLeft' : 'ui.jumpRight'), 'icon'), () => {
+        i.jump = 'forward';
+        i.jumpDir = dir;
+      });
+    // Long jumps on the outside, the high jump between the walking arrows.
     pad.append(
+      act(longJump(-1), 'jump', 'tip.jumpLeft'),
       act(
-        holdButton(t('ui.walkLeft'), (h) => (i.walk = h ? -1 : 0)),
+        holdButton(t('ui.walkLeft'), (h) => (i.walk = h ? -1 : 0), 'icon'),
         'walk',
         'tip.walkLeft',
       ),
       act(
-        holdButton(t('ui.walkRight'), (h) => (i.walk = h ? 1 : 0)),
+        this.click(button(t('ui.jumpUp'), 'icon'), () => (i.jump = 'back')),
+        'jump',
+        'tip.jumpUp',
+      ),
+      act(
+        holdButton(t('ui.walkRight'), (h) => (i.walk = h ? 1 : 0), 'icon'),
         'walk',
         'tip.walkRight',
       ),
-      act(
-        this.click(button(t('ui.jumpForward')), () => (i.jump = 'forward')),
-        'jump',
-        'tip.jumpForward',
-      ),
-      act(
-        this.click(button(t('ui.jumpBack')), () => (i.jump = 'back')),
-        'jump',
-        'tip.jumpBack',
-      ),
+      act(longJump(1), 'jump', 'tip.jumpRight'),
     );
     // Weapons and fire, bottom right.
     this.fuses = el('div', 'fuses');
@@ -139,12 +142,23 @@ export class GameUi {
       ),
       act(holdButton(t('ui.fire'), (h) => (i.charge = h), 'fire')),
     );
-    bar.append(pad, el('div', 'sep'), arms, el('div', 'sep'), this.skip);
+    // Worms' « worm select »: hands the turn to the next unit of the team (GDD §2.2).
+    const switchUnit = act(
+      this.click(button(t('ui.switchUnit')), () => {
+        const next = this.view ? nextTeammate(this.view) : null;
+        if (next !== null) i.selectUnit = next;
+      }),
+      'switch',
+      'tip.switchUnit',
+    );
+    bar.append(pad, el('div', 'sep'), arms, el('div', 'sep'), switchUnit, this.skip);
     const sys = el('div', 'sys');
-    const view = this.click(button(`◎ ${t('ui.resetView')}`), () => opts.resetView());
-    view.title = t('tip.resetView');
+    // Shown only away from the default view (showResetView).
+    this.resetView = this.click(button(t('ui.resetView'), 'icon hidden'), () => opts.resetView());
+    this.resetView.title = t('tip.resetView');
+    if (document.fullscreenEnabled) sys.append(this.fullscreenButton());
     sys.append(
-      view,
+      this.resetView,
       this.click(button(`? ${t('ui.help')}`), () => this.toggle(this.help)),
       this.click(button(`⚙ ${t('ui.settings')}`), () => this.openSettings()),
       this.click(button(`☰ ${t('ui.pause')}`), () => this.toggle(this.pause)),
@@ -178,6 +192,25 @@ export class GameUi {
       this.settings,
       this.pause,
     );
+  }
+
+  /** Toggles the browser's full screen, like F11; the tooltip follows the state. */
+  private fullscreenButton(): HTMLButtonElement {
+    const b = this.click(button(t('ui.fullscreen'), 'icon'), () => {
+      if (document.fullscreenElement) void document.exitFullscreen();
+      else void document.documentElement.requestFullscreen().catch(() => undefined);
+    });
+    const sync = (): void => {
+      b.title = t(document.fullscreenElement ? 'tip.fullscreenExit' : 'tip.fullscreen');
+    };
+    sync();
+    document.addEventListener('fullscreenchange', sync);
+    return b;
+  }
+
+  /** The ◎ button appears once the camera has left the default view (zoom or pan). */
+  showResetView(away: boolean): void {
+    this.resetView.classList.toggle('hidden', !away);
   }
 
   /** True while a menu that stops the clock is open (pause, help, settings). */
@@ -239,10 +272,13 @@ export class GameUi {
     const budget = (view.rules.unit.moveBudget ?? 0) * 256;
     const moveLeft = budget === 0 || view.turn.moveLeft > 0;
     const jumpLeft = budget === 0 || view.turn.moveLeft === budget;
+    const canSwitch = canSwitchUnit(view) && nextTeammate(view) !== null;
     for (const b of this.actionButtons) {
       const when = b.dataset.when;
       b.disabled =
-        when === 'walk'
+        when === 'switch'
+          ? !canSwitch
+          : when === 'walk'
           ? !canMove || !moveLeft
           : when === 'jump'
             ? !canMove || !jumpLeft
@@ -292,7 +328,10 @@ export class GameUi {
     const u = v.units.find((x) => x.id === this.selectedUnit);
     if (!u) return;
     const active = u.id === v.turn.activeUnitId && v.turn.phase !== 'gameOver';
-    const signature = `${u.hp}|${u.alive}|${u.grounded}|${active}|${v.turn.weapon}|${v.turn.phase}`;
+    // A teammate of the playing unit: says whether a click can still hand it the turn.
+    const mate = !active && u.team === v.turn.activeTeam && v.turn.phase !== 'gameOver';
+    const switchable = mate && canSwitchUnit(v);
+    const signature = `${u.hp}|${u.alive}|${u.grounded}|${active}|${switchable}|${v.turn.weapon}|${v.turn.phase}`;
     if (signature === this.cardSignature) return;
     this.cardSignature = signature;
 
@@ -304,7 +343,9 @@ export class GameUi {
         ? t('card.state.air')
         : active
           ? t('card.state.active')
-          : t('card.state.waiting');
+          : mate
+            ? t(switchable ? 'card.state.mate' : 'card.state.tooLate')
+            : t('card.state.waiting');
     const house = el('div', 'house');
     house.append(
       shield(faction?.primary ?? COLORS.encre, faction?.secondary ?? COLORS.or, true),

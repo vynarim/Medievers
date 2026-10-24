@@ -5,7 +5,11 @@ import type { WeaponId } from '../content/weapons.ts';
 export type GameCommand =
   /** walking state: -1 left, 1 right, 0 stop; persists until changed */
   | { readonly t: 'move'; readonly dir: -1 | 0 | 1 }
-  | { readonly t: 'jump'; readonly kind: 'forward' | 'back' }
+  /**
+   * dir: side to jump towards, the unit turning first if needed (on-screen arc buttons);
+   * absent: the side the unit faces
+   */
+  | { readonly t: 'jump'; readonly kind: 'forward' | 'back'; readonly dir?: -1 | 1 }
   /** BAM 0..4095, 0 = right, 1024 = down, 3072 = up */
   | { readonly t: 'aim'; readonly angle: number }
   | { readonly t: 'selectWeapon'; readonly id: WeaponId }

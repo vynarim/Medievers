@@ -14,6 +14,8 @@ export interface RawInput {
   jumpPressed: boolean;
   /** direct jump from a button, no double-press detection */
   jumpKind: 'forward' | 'back' | null;
+  /** side of a button jump (arc buttons); null: the side the unit faces */
+  jumpDir: -1 | 1 | null;
   /** weapon chosen in the arsenal */
   selectWeapon: WeaponId | null;
   skipPressed: boolean;
@@ -41,6 +43,7 @@ export const emptyInput = (): RawInput => ({
   down: false,
   jumpPressed: false,
   jumpKind: null,
+  jumpDir: null,
   selectWeapon: null,
   skipPressed: false,
   selectUnit: null,
@@ -110,7 +113,8 @@ export class LocalControls {
 
     // Jump: one press = forward after a short wait, two presses = backward.
     if (input.jumpKind) {
-      out.push({ t: 'jump', kind: input.jumpKind });
+      const dir = input.jumpDir;
+      out.push({ t: 'jump', kind: input.jumpKind, ...(dir !== null ? { dir } : {}) });
       this.pendingJumpTick = -1;
     } else if (input.jumpPressed) {
       if (this.pendingJumpTick >= 0) {

@@ -30,7 +30,7 @@
 | Résolution | variable + 2 s | Attente fin des projectiles, explosions et chutes ; les morts sont alors constatées, puis une pause de 2 s (réglable) laisse voir l'impact et le commentaire avant le tour suivant |
 | Fin de tour | — | Passifs de fin de tour, apparition éventuelle d'un reliquaire |
 
-- **Choix du combattant** (décidé le 2026-10-24) : à chaque tour, la maison qui joue **choisit** lequel de ses combattants agit, avant qu'il ne bouge ou ne tire (clic sur le combattant). Elle peut rejouer le même tour après tour : c'est un choix stratégique. Par défaut, le jeu propose le suivant dans l'ordre de l'équipe. Les règles « rotation imposée » restent disponibles pour les vieux logs (`turn.freeSelect`).
+- **Choix du combattant** (décidé le 2026-10-24) : à chaque tour, la maison qui joue **choisit** lequel de ses combattants agit, avant qu'il ne bouge ou ne tire (clic sur le combattant ou sur son nom, ou bouton **⇄ Combattant** qui passe au suivant ; viser ne compte pas comme agir). Elle peut rejouer le même tour après tour : c'est un choix stratégique. Par défaut, le jeu propose le suivant dans l'ordre de l'équipe. Les règles « rotation imposée » restent disponibles pour les vieux logs (`turn.freeSelect`).
 - Le timer se met en pause pendant la visée de précision ? **Non** (le temps est une pression voulue). Il se met en pause pendant la résolution.
 - Garde-fou : une résolution est coupée au bout de 30 s, pour qu'une entité bloquée ne fige jamais la partie (`src/content/rules.ts`).
 
@@ -51,7 +51,7 @@
 - PV : 100 (option 50 / 150 / 200).
 - Déplacement : marche (vitesse 1,5 px/tick), franchit une marche ≤ 12 px, pente max ~60°.
 - **Déplacement par tour** (décidé le 2026-10-24) : **soit on marche, soit on saute**, pas les deux. La marche est limitée à environ 10 largeurs de combattant (**280 px**, action et repli confondus) ; un seul saut avant porte à environ 15 largeurs (≈ 420 px sur sol plat, portée fixe). Dès qu'on a marché, on ne peut plus sauter ; après un saut, on ne peut plus marcher. Valeur réglable (`unit.moveBudget`). La barre de souffle s'affiche dans le cartouche du tour.
-- **Saut long** (Entrée, bouton ↗) : bond loin vers l'avant. **Saut haut** (double appui, bouton ↑) : bond très haut en reculant un peu, pour sortir d'un trou ou monter sur un rebord. Un saut décolle aussi depuis une pente montante. Valeurs de départ, à régler en playtest : avant (+8,2 ; −9) px/tick, soit environ 420 px sur sol plat et 115 px de hauteur, arrière (−1 ; −10,5) px/tick, plus haut (environ 150 px) et court (`src/content/units.ts`).
+- **Saut long** (Entrée : devant soi ; boutons ↶ et ↷ : vers la gauche ou vers la droite, le combattant se retourne au besoin) : bond loin. **Saut haut** (double appui, bouton ↑, placé entre ◀ et ▶) : bond très haut en reculant un peu, pour sortir d'un trou ou monter sur un rebord. Un saut décolle aussi depuis une pente montante. Valeurs de départ, à régler en playtest : avant (+8,2 ; −9) px/tick, soit environ 420 px sur sol plat et 115 px de hauteur, arrière (−1 ; −10,5) px/tick, plus haut (environ 150 px) et court (`src/content/units.ts`).
 - Dégâts de chute : au-delà de 160 px de hauteur de chute, 1 PV par 8 px supplémentaires, plafonné à 30.
 - Hors carte (bords latéraux) ou eau : mort.
 - Une unité touchée pendant son tour termine son tour immédiatement.
@@ -226,7 +226,9 @@ L'IA joue via `InputSource` et produit les mêmes commandes qu'un humain. Elle �
 | Action | Clavier / souris |
 |---|---|
 | Marcher | ← → ou A/D |
-| Saut long / saut haut | Entrée / Entrée ×2 (boutons **↗ Saut long** et **↑ Saut haut**) |
+| Saut long / saut haut | Entrée / Entrée ×2 (pad : **↶ ◀ ↑ ▶ ↷**, sauts longs vers la gauche et la droite aux deux bouts) |
+| Changer de combattant | Clic sur un combattant de sa maison ou sur son nom, ou bouton **⇄ Combattant**, tant qu'on n'a ni bougé ni tiré |
+| Plein écran | Bouton **⤢** en haut à droite (comme F11) |
 | Viser (angle) | ↑ ↓, ou glisser la pointe de la flèche de visée (n'importe quel côté, l'unité se retourne) |
 | Se retourner sur place | T (garde l'élévation de la visée) |
 | Tirer (jauge de puissance) | Espace maintenu puis relâché |
@@ -234,7 +236,7 @@ L'IA joue via `InputSource` et produit les mêmes commandes qu'un humain. Elle �
 | Arsenal | Clic droit ou Tab |
 | Mèche (pot) | Touches 1–5 |
 | Caméra | Bords d'écran, glisser clic molette, molette = zoom |
-| Recentrer | C ou bouton **Vue** (zoom par défaut et recentrage), double clic (recentrage seul) |
+| Recentrer | C ou bouton **◎** (zoom par défaut et recentrage ; affiché seulement hors de la vue par défaut), double clic (recentrage seul) |
 | Pause / menu | Échap : menu Reprendre, Recommencer, Aide, Réglages. Le temps s'arrête aussi pendant l'aide et les réglages, pas pendant l'arsenal |
 
 ### 8.2 Tablette

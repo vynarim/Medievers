@@ -182,6 +182,11 @@ describe('LocalControls', () => {
   it('takes direct jumps, weapon choices and skips from the action bar', () => {
     const a = setup();
     expect(a.tick({ jumpKind: 'back' })).toContainEqual({ t: 'jump', kind: 'back' });
+    expect(a.tick({ jumpKind: 'forward', jumpDir: -1 })).toContainEqual({
+      t: 'jump',
+      kind: 'forward',
+      dir: -1,
+    });
     const b = setup();
     b.tick({ selectWeapon: 'greekFire' });
     expect(b.sim.view().turn.weapon).toBe('greekFire');

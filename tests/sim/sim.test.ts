@@ -4,6 +4,8 @@ import {
   LOG_VERSION,
   Material,
   Sim,
+  canSwitchUnit,
+  nextTeammate,
   replay,
   type GameCommand,
   type GameLog,
@@ -207,6 +209,36 @@ describe('turn loop', () => {
     d.until('action'); // team 0 again: unit 1 is proposed, unit 2 plays again
     d.step([{ t: 'selectUnit', unitId: 2 }]);
     expect(d.sim.view().turn.activeUnitId).toBe(2);
+  });
+
+  it('tells when the turn can still change hands, and to whom', () => {
+    const config: MatchConfig = {
+      rules: CLASSIC_RULES,
+      teams: [{ spawns: [100, 200, 300] }, { spawns: [900] }],
+    };
+    const d = new Driver(config, 3);
+    d.until('action');
+    expect(canSwitchUnit(d.sim.view())).toBe(true);
+    expect(nextTeammate(d.sim.view())).toBe(2);
+    d.step([{ t: 'selectUnit', unitId: 3 }]);
+    expect(nextTeammate(d.sim.view())).toBe(1); // wraps round the team
+    d.step([{ t: 'aim', angle: 3500 }]);
+    expect(canSwitchUnit(d.sim.view())).toBe(true); // aiming is not acting
+    d.step([{ t: 'move', dir: 1 }]);
+    expect(canSwitchUnit(d.sim.view())).toBe(false);
+  });
+
+  it('jumps towards the side asked, turning round and mirroring the aim', () => {
+    const d = new Driver(DUEL, 1);
+    d.until('action');
+    const before = unit(d, 1);
+    expect(before.facing).toBe(1);
+    const aim = d.sim.view().turn.aim;
+    d.step([{ t: 'jump', kind: 'forward', dir: -1 }]);
+    const u = unit(d, 1);
+    expect(u.facing).toBe(-1);
+    expect(u.vx).toBeLessThan(0);
+    expect(d.sim.view().turn.aim).toBe((2048 - aim) & 4095);
   });
 
   it('rotates through the units of each team', () => {

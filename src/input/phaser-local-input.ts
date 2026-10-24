@@ -245,6 +245,7 @@ export class PhaserLocalInput implements InputSource {
     input.spin = this.ui.spin;
     input.charge = k.space.isDown || this.ui.charge;
     input.jumpKind = ui.jump;
+    input.jumpDir = ui.jumpDir;
     input.selectWeapon = ui.selectWeapon;
     input.selectUnit = ui.selectUnit;
     input.skipPressed = ui.skip;

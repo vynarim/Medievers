@@ -9,6 +9,8 @@ export class UiIntents {
   /** fire button held (gauge) */
   charge = false;
   jump: 'forward' | 'back' | null = null;
+  /** side of the jump (arc buttons); null: the side the unit faces */
+  jumpDir: -1 | 1 | null = null;
   selectWeapon: WeaponId | null = null;
   fuse: number | null = null;
   skip = false;
@@ -18,6 +20,7 @@ export class UiIntents {
   /** Returns and clears the one-shot intents. */
   take(): {
     jump: UiIntents['jump'];
+    jumpDir: UiIntents['jumpDir'];
     selectWeapon: WeaponId | null;
     fuse: number | null;
     skip: boolean;
@@ -25,12 +28,14 @@ export class UiIntents {
   } {
     const out = {
       jump: this.jump,
+      jumpDir: this.jumpDir,
       selectWeapon: this.selectWeapon,
       fuse: this.fuse,
       skip: this.skip,
       selectUnit: this.selectUnit,
     };
     this.jump = null;
+    this.jumpDir = null;
     this.selectWeapon = null;
     this.fuse = null;
     this.skip = false;

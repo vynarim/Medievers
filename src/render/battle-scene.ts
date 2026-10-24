@@ -57,6 +57,9 @@ const BURST_MS = 520;
 const AIM_TIP = 172;
 /** size of the diaper pattern tile, px */
 const DIAPER = 160;
+/** px above the feet and either side of a unit where a click still picks it: its name label */
+const LABEL_REACH = 80;
+const LABEL_HALF_WIDTH = 34;
 
 /** Phaser's polygon calls want Vector2 instances. */
 const poly = (points: readonly { x: number; y: number }[]): Phaser.Math.Vector2[] =>
@@ -360,6 +363,8 @@ export class BattleScene extends Phaser.Scene {
     const click = this.input_.takeClick();
     if (click) this.selectAt(click.x, click.y);
     this.ui.update(this.sim.view(), this.input_.controls.power, time);
+    const zoomed = Math.abs(this.cameras.main.zoom - this.defaultZoom()) > 0.01;
+    this.ui.showResetView(this.manualCamera || zoomed);
     if (this.selectedUnit !== null) {
       // The card goes to the half of the screen the unit is not in.
       const u = this.sim.view().units.find((x) => x.id === this.selectedUnit);
@@ -380,16 +385,16 @@ export class BattleScene extends Phaser.Scene {
     }
   }
 
-  /** Shows the card of the unit under a click, or hides it on empty ground. */
+  /** Shows the card of the unit under a click (figure or name label), or hides it. */
   private selectAt(x: number, y: number): void {
     const hit = this.sim
       .view()
       .units.find(
         (u) =>
           u.alive &&
-          Math.abs(x - u.x / SUBPX) <= UNIT_HALF_WIDTH + 8 &&
+          Math.abs(x - u.x / SUBPX) <= Math.max(UNIT_HALF_WIDTH + 8, LABEL_HALF_WIDTH) &&
           y <= u.y / SUBPX + 8 &&
-          y >= u.y / SUBPX - UNIT_HEIGHT - 8,
+          y >= u.y / SUBPX - UNIT_HEIGHT - LABEL_REACH,
       );
     this.selectedUnit = hit?.id ?? null;
     this.ui.selectUnit(this.selectedUnit);

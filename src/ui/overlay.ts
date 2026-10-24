@@ -32,6 +32,7 @@ const STYLE = `
 #ui button:hover { background: var(--or); }
 #ui button:active, #ui button.on { background: var(--or); transform: translateY(1px); }
 #ui button:disabled { opacity: 0.4; cursor: default; background: var(--velin); transform: none; }
+#ui button.icon { font-family: var(--text); font-size: 26px; min-width: 52px; padding: 2px 8px; }
 #ui button.fire { background: var(--vermillon); color: var(--ceruse); min-width: 96px; font-size: 20px; }
 #ui button.fire:hover, #ui button.fire.on { background: var(--vermillon); filter: brightness(1.15); }
 #ui .bar { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); display: flex;
