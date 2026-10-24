@@ -34,6 +34,7 @@ import { blastMovesPots, potsTurn, stepPots } from './pots.ts';
 import { kitchenTurn, inKitchen, stepKitchen, useKitchen } from './kitchen.ts';
 import { fire, stepShots } from './weapons/weapons.ts';
 import { blastReachesMines, stepDig, stepMines } from './tools.ts';
+import { weatherTurnEnd } from './weather.ts';
 import { isTargeted } from '../content/weapons.ts';
 import { MAX_POWER } from './commands.ts';
 import { delugeTurnEnd, drownThings, drownUnits, hasWater, underWater } from './deluge.ts';
@@ -188,6 +189,7 @@ function createState(config: MatchConfig, seed: number, mask: Mask): SimState {
     scorched: [],
     waterY: config.waterLevel ?? terrain.height,
     deluge: false,
+    rain: 0,
     kitchenCounts: teams.map(() => 0),
     winner: null,
     rules: config.rules,
@@ -709,6 +711,7 @@ function endTurn(s: SimState, events: SimEvent[]): void {
   blessAtTurnEnd(s, events);
   burnTurn(s, events);
   delugeTurnEnd(s, events);
+  weatherTurnEnd(s, events);
   flamesTurnEnd(s);
   drownFlames(s);
   beastsTurnEnd(s, events);
@@ -836,6 +839,7 @@ function hashState(s: SimState): number {
       if (p.damagePct !== undefined) int(p.damagePct);
     }
   }
+  if (s.rules.weather) int(s.rain);
   if (s.rules.weapons.some((w) => w.dig)) {
     const g = s.dig;
     for (const v of g ? [g.id, g.unitId, g.dx, g.dy, g.x, g.y, g.speed, g.ticksLeft] : [-1]) int(v);

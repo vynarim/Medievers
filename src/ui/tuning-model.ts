@@ -209,6 +209,29 @@ export function tuningGroups(rules: MatchRules): TuningGroup[] {
           },
         ]
       : []),
+    ...(rules.weather
+      ? [
+          {
+            titleKey: 'tuning.group.weather',
+            fields: [
+              field('weather.rainPermille', 'tuning.rainChance', 'units.percent', 10, 1, 0, 100),
+              field('weather.rainTurnsMin', 'tuning.rainMin', 'units.turns', 1, 1, 1, 20),
+              field('weather.rainTurnsMax', 'tuning.rainMax', 'units.turns', 1, 1, 1, 20),
+              field(
+                'weather.lightningPermille',
+                'tuning.lightningChance',
+                'units.percent',
+                10,
+                1,
+                0,
+                100,
+              ),
+              field('weather.damage', 'tuning.damage', 'units.hp', 1, 1, 0, 200),
+              field('weather.radius', 'tuning.explosionRadius', 'units.px', 1, 1, 0, 200),
+            ],
+          },
+        ]
+      : []),
     ...(rules.deluge
       ? [
           {

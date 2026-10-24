@@ -217,6 +217,11 @@ Les lièvres et les escargots des marges du manuscrit entrent dans la bataille. 
 - Il affecte les projectiles marqués « Vent » (accélération horizontale proportionnelle : 2 sub-px/tick² par point de vent, multipliée par le facteur de vent de l'arme, `src/content/world.ts`), la bannière, les anges des reliquaires et la fumée (visuel).
 - Indicateur : une bannière en haut d'écran dont la longueur et le sens suivent la valeur du vent. Un petit ange soufflant en marge apparaît au-delà de ±7.
 
+### 5 bis. Pluie et foudre (décidé et programmé le 2026-10-25, sur demande)
+- À chaque fin de tour par beau temps, 12 % de chances qu'il se mette à pleuvoir, pour 2 à 5 tours : les nuages virent au gris et la pluie tombe en biais, penchée par le vent (visuel seulement).
+- À chaque fin de tour de pluie, 30 % de chances qu'**un éclair** frappe une colonne tirée au hasard (hors des 5 % de chaque bout), sur le sol ou l'eau : explosion de 35 PV dans un rayon de 45 px, avec cratère ; elle fait sauter les barils, éclater les reliquaires, etc. Elle part au premier instant du tour suivant.
+- Valeurs dans `src/content/weather.ts` (`MatchRules.weather`, absent des vieux logs : beau temps), tirages au PRNG du sim, réglables dans ⚙ Réglages (onglet Météo).
+
 ## 6. Modes de jeu
 | Mode | V1 | Description |
 |---|---|---|

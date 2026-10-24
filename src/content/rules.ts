@@ -5,6 +5,7 @@ import { BEAST_RULES, type BeastRules } from './beasts.ts';
 import { BURN_RULES, type BurnRules } from './burn.ts';
 import { CLASS_RULES, type ClassRules } from './classes.ts';
 import { DELUGE_RULES, type DelugeRules } from './deluge.ts';
+import { WEATHER_RULES, type WeatherRules } from './weather.ts';
 import { FLAME_RULES, type FlameRules } from './flames.ts';
 import { STRUCTURE_RULES, type StructureRules } from './structures.ts';
 import { CRATE_RULES, type CrateRules } from './crates.ts';
@@ -97,6 +98,8 @@ export interface MatchRules {
   readonly regicide?: boolean;
   /** le Déluge, the rising water of sudden death (GDD §2.4); absent from older logs: none */
   readonly deluge?: DelugeRules;
+  /** rain and lightning (GDD §5 bis); absent from logs recorded before 2026-10-25: fair weather */
+  readonly weather?: WeatherRules;
   /** flames left by the weapons marked `flames` (GDD §4.1); absent from older logs: none */
   readonly flames?: FlameRules;
   /** structures with HP declared by the map (GDD §4.7); absent from older logs: none */
@@ -131,6 +134,7 @@ export const CLASSIC_RULES: MatchRules = {
   beasts: BEAST_RULES,
   classes: CLASS_RULES,
   deluge: DELUGE_RULES,
+  weather: WEATHER_RULES,
   flames: FLAME_RULES,
   structures: STRUCTURE_RULES,
 };

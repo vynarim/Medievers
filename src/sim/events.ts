@@ -86,6 +86,10 @@ export type SimEvent =
   | { readonly e: 'structureFell'; readonly id: number }
   /** a falling block struck a unit */
   | { readonly e: 'crushed'; readonly unitId: number }
+  /** the weather (GDD §5 bis): rain begins or stops; px of a lightning strike */
+  | { readonly e: 'rainStarted' }
+  | { readonly e: 'rainStopped' }
+  | { readonly e: 'lightning'; readonly x: number; readonly y: number }
   /** « Et les eaux montèrent… » (GDD §2.4) */
   | { readonly e: 'delugeStarted' }
   /** px: new top of the water */

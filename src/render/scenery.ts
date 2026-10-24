@@ -27,6 +27,8 @@ const CLOUD_DRIFT = 4;
 /** distinct cloud shapes, shared by all the clouds in the sky */
 const CLOUD_SHAPES = 4;
 const CLOUD_H = 120;
+/** tint of the clouds while it rains: slate grey */
+const STORM_TINT = COLORS.roche;
 
 export type Ctx = CanvasRenderingContext2D;
 
@@ -1061,6 +1063,7 @@ export class Scenery {
   private props: Prop[] = [];
   private readonly width: number;
   private readonly sky: SkyLife;
+  private storm = false;
 
   constructor(scene: Phaser.Scene, mask: MaskView, theme: MapTheme = 'valley') {
     this.width = mask.width;
@@ -1161,6 +1164,16 @@ export class Scenery {
 
     this.sky = new SkyLife(scene, mask.height * 0.4, () => this.props.filter((p) => p.tree));
     this.objects.push(...this.sky.objects);
+  }
+
+  /** Rain clouds go grey while it rains (GDD §5 bis). */
+  setStorm(on: boolean): void {
+    if (on === this.storm) return;
+    this.storm = on;
+    for (const c of this.clouds) {
+      if (on) c.setTint(STORM_TINT);
+      else c.clearTint();
+    }
   }
 
   /** Drifts the clouds and the sky life; drops props whose ground was blown away. */

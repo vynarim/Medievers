@@ -164,6 +164,8 @@ Quand une explosion creuse la terre, le décor peint disparaît et laisse voir *
 
 Le vent change à chaque tour, de −10 (fort vers la gauche) à +10 (fort vers la droite). Il dévie les flèches, les pierres de fronde, la ruche, le faucon et la bannière, mais pas les pots. Une bannière en haut de l'écran montre sa force et son sens. Au-delà de 7, un petit ange souffle dans la marge. Une option permet de supprimer le vent.
 
+**Pluie et foudre** {{st:jeu}} : de temps en temps, les nuages grisent et il pleut pendant quelques tours. Tant qu'il pleut, à la fin de chaque tour, un **éclair** peut frapper n'importe où sur le champ de bataille : 35 dégâts dans un rayon de 45 pixels, un cratère, et les barils voisins sautent. Réglages : onglet **Météo**.
+
 ### 5.3 Reliquaires, barils et flammes {{st:jeu}}
 
 - **Reliquaires** : à chaque fin de tour, il y a 30 % de chances qu'un ange descende en planant (porté par le vent) et dépose un coffret. On le ramasse en le touchant.

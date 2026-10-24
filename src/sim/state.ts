@@ -276,6 +276,8 @@ export interface SimState {
   waterY: number;
   /** the Déluge has begun: the water rises at every turn end (rules.deluge) */
   deluge: boolean;
+  /** turns of rain left (rules.weather); 0: fair weather */
+  rain: number;
   /** kitchens that appeared on each team's turn, for fairness (GDD §4.9) */
   readonly kitchenCounts: number[];
   /** team id of the winner, -1 for a draw, null while playing */

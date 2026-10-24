@@ -1390,5 +1390,21 @@
   "maps.coast.text": "Dunes et prés salés face à la mer : une falaise d'un côté, une plage qui s'enfonce dans les flots de l'autre.",
   "maps.holyLand": "La Terre sainte",
   "maps.holyLand.text": "Dunes, rochers et une forteresse sarrasine sous le soleil de Jérusalem ; des chameaux, pas une vache.",
-  "setup.importMap": "Ce replay a été joué sur une carte que ce jeu ne sait plus dessiner."
+  "setup.importMap": "Ce replay a été joué sur une carte que ce jeu ne sait plus dessiner.",
+  "quip.rain.1": "Il se met à pleuvoir. Les chevaliers rouillent, les archers boudent.",
+  "quip.rain.2": "Averse ! Le copiste peste : l'encre coule sur toute la page.",
+  "quip.rain.3": "La pluie tombe. Personne n'a pensé à prendre de chaperon.",
+  "quip.rainStop.1": "La pluie cesse. On essore les hauberts.",
+  "quip.rainStop.2": "Fin de l'averse. Les escargots sont ravis, les autres beaucoup moins.",
+  "quip.lightning.1": "La foudre tombe ! Le ciel a choisi son camp, mais il vise mal.",
+  "quip.lightning.2": "Un éclair ! Le chapelain jure que ce n'est pas lui.",
+  "quip.lightning.3": "Coup de tonnerre : quelqu'un a dû offenser un saint.",
+  "thunder.1": "Kraboum !",
+  "thunder.2": "Fracas !",
+  "thunder.3": "Tonnerre !",
+  "tuning.group.weather": "Météo",
+  "tuning.rainChance": "Chance qu'il se mette à pleuvoir, par tour",
+  "tuning.rainMin": "Durée de la pluie, au moins",
+  "tuning.rainMax": "Durée de la pluie, au plus",
+  "tuning.lightningChance": "Chance d'un éclair par tour de pluie"
 }

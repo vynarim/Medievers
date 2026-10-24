@@ -237,6 +237,16 @@ export class Commentary {
         case 'crateBurst':
           if (e.trap) this.hud.say(pick('quip.crateTrap'), now);
           break;
+        case 'rainStarted':
+          this.hud.say(pick('quip.rain'), now);
+          break;
+        case 'rainStopped':
+          this.hud.say(pick('quip.rainStop'), now);
+          break;
+        case 'lightning':
+          pops.push({ x: e.x, y: e.y - 60, text: pick('thunder'), kind: 'boom' });
+          this.hud.say(pick('quip.lightning'), now);
+          break;
         case 'burnMet':
           this.hud.say(pick('quip.burnMet'), now);
           break;

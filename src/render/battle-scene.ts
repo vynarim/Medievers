@@ -150,6 +150,10 @@ export class BattleScene extends Phaser.Scene {
   private burnGfx!: Phaser.GameObjects.Graphics;
   /** the water (le Déluge), over the units it has drowned */
   private waterGfx!: Phaser.GameObjects.Graphics;
+  /** rain and lightning (GDD §5 bis), over everything in the world */
+  private weatherGfx!: Phaser.GameObjects.Graphics;
+  /** lightning bolts being drawn: px of the strike, ms it struck */
+  private bolts: { x: number; y: number; born: number }[] = [];
   /** px: top of the water as drawn, easing up after the sim's */
   private waterShown = Infinity;
   private debugGfx!: Phaser.GameObjects.Graphics;
@@ -246,6 +250,8 @@ export class BattleScene extends Phaser.Scene {
     this.world = this.add.graphics().setDepth(6);
     this.burnGfx = this.add.graphics().setDepth(5.5);
     this.waterGfx = this.add.graphics().setDepth(6.5);
+    this.weatherGfx = this.add.graphics().setDepth(11);
+    this.bolts = [];
     this.waterShown = this.sim.view().waterY;
     this.debugGfx = this.add.graphics().setDepth(20);
 
@@ -267,6 +273,7 @@ export class BattleScene extends Phaser.Scene {
       this.world,
       this.burnGfx,
       this.waterGfx,
+      this.weatherGfx,
       this.debugGfx,
     ];
     cam.ignore(this.debugText);
@@ -626,6 +633,8 @@ export class BattleScene extends Phaser.Scene {
     this.drawWorld(alpha, time, delta);
     this.drawBurn(time);
     this.drawWater(time, delta);
+    this.drawWeather(time);
+    this.scenery.setStorm(v.rain > 0);
     if (this.debug) this.drawDebug();
     else {
       this.debugGfx.clear();
@@ -758,6 +767,11 @@ export class BattleScene extends Phaser.Scene {
         this.terrain.invalidate(e.x + Math.floor(e.w / 2), e.y + Math.floor(e.h / 2), half);
       }
       if (e.e === 'structureFell') this.cameras.main.shake(400, 0.01);
+      if (e.e === 'lightning') {
+        this.bolts.push({ x: e.x, y: e.y, born: this.time.now });
+        this.cameras.main.flash(180, 255, 250, 235);
+        this.cameras.main.shake(260, 0.008);
+      }
       if (e.e === 'turnStarted' || e.e === 'shotFired') this.manualCamera = false;
       if (e.e === 'explosion') {
         this.cameras.main.shake(180, 0.006);
@@ -1277,6 +1291,53 @@ export class BattleScene extends Phaser.Scene {
       g.beginPath();
       g.arc(cx + 2, cy + 1, 6, Math.PI * 1.1, Math.PI * 2.2);
       g.strokePath();
+    }
+  }
+
+  /**
+   * Rain while it rains: slanted strokes of azure across the view, leaning with the wind; and the
+   * lightning bolts, a jagged gold and white stroke from the sky to where they struck. Cosmetic:
+   * the drops move with the clock, the bolts' zigzags come from their position.
+   */
+  private drawWeather(time: number): void {
+    const g = this.weatherGfx;
+    g.clear();
+    const v = this.sim.view();
+    const view = this.cameras.main.worldView;
+    if (v.rain > 0) {
+      const lean = v.turn.wind * 1.6;
+      g.lineStyle(2, COLORS.azur, 0.55);
+      const cell = 90;
+      const fall = (time * 0.9) % cell;
+      for (let gx = Math.floor(view.x / cell) - 1; gx * cell < view.right + cell; gx++) {
+        for (let gy = Math.floor(view.y / cell) - 1; gy * cell < view.bottom + cell; gy++) {
+          // Two drops per cell, offset by a fixed hash of the cell.
+          for (let k = 0; k < 2; k++) {
+            const h = ((gx * 73856093) ^ (gy * 19349663) ^ (k * 83492791)) >>> 0;
+            const x = gx * cell + (h % cell) + (fall * lean) / 20;
+            const y = gy * cell + ((h >> 8) % cell) + fall;
+            g.lineBetween(x, y, x + lean, y + 22);
+          }
+        }
+      }
+    }
+    this.bolts = this.bolts.filter((b) => time - b.born < 420);
+    for (const b of this.bolts) {
+      const k = 1 - (time - b.born) / 420;
+      const pts: Phaser.Math.Vector2[] = [];
+      const top = view.y - 40;
+      const steps = 9;
+      for (let i = 0; i <= steps; i++) {
+        const t = i / steps;
+        const jitter = i === 0 || i === steps ? 0 : Math.sin(b.x * 0.37 + i * 2.1) * 34;
+        pts.push(new Phaser.Math.Vector2(b.x + jitter, top + (b.y - top) * t));
+      }
+      g.lineStyle(12, COLORS.encre, k);
+      g.strokePoints(pts);
+      g.lineStyle(7, COLORS.or, k);
+      g.strokePoints(pts);
+      g.lineStyle(3, COLORS.ceruse, k);
+      g.strokePoints(pts);
     }
   }
 
