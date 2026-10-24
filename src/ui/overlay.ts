@@ -68,8 +68,6 @@ const STYLE = `
 #ui .pause-code b { font-family: var(--caps); font-size: 26px; letter-spacing: 2px; }
 
 /* HUD */
-#ui .breath { height: 9px; border: 2px solid var(--encre); background: var(--velin); }
-#ui .breath i { display: block; height: 100%; background: var(--vert); }
 #ui .shield { flex: none; width: 40px; height: 48px; border: 3px solid var(--encre);
   border-radius: 0 0 50% 50% / 0 0 62% 62%; position: relative; overflow: hidden; background: var(--p); }
 #ui .shield::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 32%;
@@ -101,7 +99,8 @@ const STYLE = `
 #ui .hud-wind .game-title::first-letter, #ui .hud-wind .game-title .last { color: var(--lapis); }
 #ui .hud-wind .wind-row, #ui .hud-wind .turn-row { display: flex; flex-direction: column;
   align-items: stretch; gap: 4px; width: 132px; padding-left: 16px; border-left: 2px solid var(--gilt); }
-#ui .hud-wind .turn-row { width: 110px; }
+#ui .hud-wind .turn-row { width: auto; min-width: 110px; justify-content: center; }
+#ui .hud-wind .turn { font-family: var(--title); font-size: 34px; line-height: 1; white-space: nowrap; }
 #ui .hud-wind .label { font-family: var(--caps); font-size: 15px; white-space: nowrap;
   text-align: left; }
 #ui .hud-wind .track { position: relative; height: 9px; border: 2px solid var(--encre);

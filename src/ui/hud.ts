@@ -21,8 +21,6 @@ const GLOW_MS = 1600;
 
 export class Hud {
   private readonly turnTitle: HTMLElement;
-  private readonly breath: HTMLElement;
-  private readonly breathFill: HTMLElement;
   private readonly teams: HTMLElement;
   private readonly windLabel: HTMLElement;
   private readonly windFill: HTMLElement;
@@ -42,12 +40,8 @@ export class Hud {
     // The turn, right of the wind in the title cartouche; the house that plays is told by its
     // glowing row, so neither its arms nor its name are repeated here.
     const turn = el('div', 'turn-row');
-    this.turnTitle = el('div', 'label');
-    this.breath = el('div', 'breath');
-    this.breathFill = el('i');
-    this.breath.append(this.breathFill);
-    this.breath.title = t('hud.breath');
-    turn.append(this.turnTitle, this.breath);
+    this.turnTitle = el('div', 'turn');
+    turn.append(this.turnTitle);
 
     this.teams = el('div', 'hud-teams');
 
@@ -152,10 +146,7 @@ export class Hud {
         return sum + (u?.alive ? u.hp : 0);
       }, 0),
     );
-    const budget = (v.rules.unit.moveBudget ?? 0) * 256;
-    const breath = budget > 0 ? Math.round((turn.moveLeft * 100) / budget) : -1;
     const signature = [
-      breath,
       turn.number,
       turn.phase,
       turn.activeTeam,
@@ -172,8 +163,6 @@ export class Hud {
 
     this.turnTitle.textContent =
       turn.phase === 'placement' ? t('hud.placement') : t('hud.turn', { n: turn.number });
-    this.breath.classList.toggle('hidden', breath < 0 || turn.phase === 'placement');
-    this.breathFill.style.width = `${Math.max(0, breath)}%`;
 
     const max = v.rules.startHp * Math.max(1, ...v.teams.map((x) => x.unitIds.length));
     this.teams.replaceChildren(
