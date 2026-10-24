@@ -36,3 +36,10 @@ export const MATERIALS: readonly MaterialDef[] = [
   { id: Material.Wood, solid: true, climbable: false, destructible: true, resistancePct: 100 },
   { id: Material.Ladder, solid: false, climbable: true, destructible: true, resistancePct: 100 },
 ];
+
+/** MATERIALS reshaped for the terrain, indexed by material id. */
+export const MATERIAL_RULES = {
+  solid: MATERIALS.map((m) => m.solid),
+  destructible: MATERIALS.map((m) => m.destructible),
+  resistancePct: MATERIALS.map((m) => m.resistancePct),
+};
