@@ -102,7 +102,7 @@ async function boot(): Promise<void> {
     showTitleScreen({
       ...(resume ? { resume } : {}),
       enter: choose,
-      join: () => joinFlow(play, choose),
+      join: () => joinFlow(play, title),
     });
   }
   title();
