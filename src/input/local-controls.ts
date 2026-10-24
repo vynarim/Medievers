@@ -12,6 +12,11 @@ export interface RawInput {
   up: boolean;
   down: boolean;
   jumpPressed: boolean;
+  /** direct jump from a button, no double-press detection */
+  jumpKind: 'forward' | 'back' | null;
+  /** weapon chosen in the arsenal */
+  selectWeapon: WeaponId | null;
+  skipPressed: boolean;
   /** charge key held (gauge aiming) */
   charge: boolean;
   nextWeaponPressed: boolean;
@@ -27,6 +32,9 @@ export const emptyInput = (): RawInput => ({
   up: false,
   down: false,
   jumpPressed: false,
+  jumpKind: null,
+  selectWeapon: null,
+  skipPressed: false,
   charge: false,
   nextWeaponPressed: false,
   fusePressed: null,
@@ -84,7 +92,10 @@ export class LocalControls {
     let elevation = elevationOf(turn.aim, unit.facing);
 
     // Jump: one press = forward after a short wait, two presses = backward.
-    if (input.jumpPressed) {
+    if (input.jumpKind) {
+      out.push({ t: 'jump', kind: input.jumpKind });
+      this.pendingJumpTick = -1;
+    } else if (input.jumpPressed) {
       if (this.pendingJumpTick >= 0) {
         out.push({ t: 'jump', kind: 'back' });
         this.pendingJumpTick = -1;
@@ -102,7 +113,12 @@ export class LocalControls {
       return out;
     }
 
-    if (input.nextWeaponPressed) {
+    if (input.skipPressed) {
+      out.push({ t: 'skip' });
+      return out;
+    }
+    if (input.selectWeapon) out.push({ t: 'selectWeapon', id: input.selectWeapon });
+    else if (input.nextWeaponPressed) {
       out.push({ t: 'selectWeapon', id: nextWeapon(view.rules.weapons, turn.weapon) });
     }
     if (input.fusePressed !== null && input.fusePressed >= 1 && input.fusePressed <= 5) {

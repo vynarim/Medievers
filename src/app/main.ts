@@ -1,7 +1,10 @@
 // Bootstrap: loads the greybox map mask, then starts the battle scene (hotseat, 2 houses).
 import Phaser from 'phaser';
 import { GREYBOX_MAPS } from '../content/maps.ts';
+import { CLASSIC_RULES } from '../content/rules.ts';
 import { BattleScene } from '../render/battle-scene.ts';
+import { loadOverrides } from '../ui/game-ui.ts';
+import { applyOverrides } from '../ui/tuning-model.ts';
 import { decodeMaskPng } from './loaders/mask-png.ts';
 
 async function boot(): Promise<void> {
@@ -24,7 +27,8 @@ async function boot(): Promise<void> {
     render: { antialiasGL: false },
     scene: [],
   });
-  game.scene.add('battle', BattleScene, true, { map, mask, seed });
+  const rules = applyOverrides(CLASSIC_RULES, loadOverrides());
+  game.scene.add('battle', BattleScene, true, { map, mask, seed, rules });
   // Dev builds expose the game for browser-driven checks (Playwright); stripped from production.
   if (import.meta.env.DEV) (window as unknown as { medievers: Phaser.Game }).medievers = game;
 }

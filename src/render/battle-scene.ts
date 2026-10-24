@@ -3,7 +3,7 @@
 import Phaser from 'phaser';
 import { FACTIONS, UNIT_NAMES } from '../content/factions.ts';
 import type { MapDef } from '../content/maps.ts';
-import { CLASSIC_RULES, TICKS_PER_SECOND } from '../content/rules.ts';
+import { CLASSIC_RULES, TICKS_PER_SECOND, type MatchRules } from '../content/rules.ts';
 import { PhaserLocalInput } from '../input/phaser-local-input.ts';
 import { MAX_POWER } from '../sim/commands.ts';
 import type { SimEvent } from '../sim/events.ts';
@@ -15,7 +15,9 @@ import type { MatchConfig } from '../sim/state.ts';
 import type { Mask } from '../sim/terrain/mask.ts';
 import type { Terrain } from '../sim/terrain/terrain.ts';
 import { UNIT_HALF_WIDTH, UNIT_HEIGHT, type Unit } from '../sim/units/unit.ts';
+import { GameUi } from '../ui/game-ui.ts';
 import { t } from '../ui/i18n.ts';
+import { applyOverrides } from '../ui/tuning-model.ts';
 import { COLORS, css } from '../ui/tokens.ts';
 import { TerrainLayer } from './terrain-layer.ts';
 
@@ -23,6 +25,8 @@ export interface BattleData {
   readonly map: MapDef;
   readonly mask: Mask;
   readonly seed: number;
+  /** match rules, the Classique scheme with the playtest overrides applied */
+  readonly rules: MatchRules;
 }
 
 const TICK_MS = 1000 / TICKS_PER_SECOND;
@@ -51,10 +55,12 @@ export class BattleScene extends Phaser.Scene {
   private debugGfx!: Phaser.GameObjects.Graphics;
   private labels = new Map<number, Phaser.GameObjects.Text>();
   private hud!: Record<
-    'turn' | 'timer' | 'wind' | 'weapon' | 'teams' | 'help' | 'banner' | 'debug',
+    'turn' | 'timer' | 'wind' | 'weapon' | 'teams' | 'banner' | 'debug',
     Phaser.GameObjects.Text
   >;
   private hudGfx!: Phaser.GameObjects.Graphics;
+  private ui!: GameUi;
+  private selectedUnit: number | null = null;
   private acc = 0;
   private interp = new Map<string, Interp>();
   private debug = false;
@@ -75,12 +81,13 @@ export class BattleScene extends Phaser.Scene {
     this.interp.clear();
     this.labels.clear();
     this.manualCamera = false;
+    this.selectedUnit = null;
   }
 
   create(): void {
-    const { map, mask, seed } = this.data_;
+    const { map, mask, seed, rules } = this.data_;
     const config: MatchConfig = {
-      rules: CLASSIC_RULES,
+      rules,
       teams: map.spawns.map((spawns) => ({ spawns })),
     };
     this.sim = new Sim(config, seed, mask);
@@ -126,11 +133,9 @@ export class BattleScene extends Phaser.Scene {
       wind: text(VIEW_W / 2, 24, 30, 0.5),
       weapon: text(32, VIEW_H - 150, 30),
       teams: text(VIEW_W - 32, VIEW_H - 150, 28, 1),
-      help: text(VIEW_W / 2, VIEW_H - 40, 20, 0.5),
       banner: text(VIEW_W / 2, VIEW_H / 2 - 80, 64, 0.5),
       debug: text(32, 90, 22),
     };
-    this.hud.help.setText(t('hud.help'));
     this.hud.banner.setAlign('center');
 
     // HUD on its own unzoomed camera; the main camera only sees the world.
@@ -161,7 +166,19 @@ export class BattleScene extends Phaser.Scene {
     this.input.on('wheel', (_p: Phaser.Input.Pointer, _o: unknown, _dx: number, dy: number) => {
       cam.setZoom(Phaser.Math.Clamp(cam.zoom * (dy > 0 ? 0.9 : 1.1), ZOOM_MIN, ZOOM_MAX));
     });
-    this.events.once('shutdown', () => this.input_.dispose());
+    this.ui = new GameUi({
+      intents: this.input_.ui,
+      restart: (overrides) =>
+        this.scene.restart({
+          ...this.data_,
+          rules: applyOverrides(CLASSIC_RULES, overrides),
+          seed: (this.data_.seed + 0x9e3779b9) >>> 0,
+        }),
+    });
+    this.events.once('shutdown', () => {
+      this.input_.dispose();
+      this.ui.destroy();
+    });
 
     this.snapshotPositions();
     this.snapshotPositions();
@@ -204,6 +221,10 @@ export class BattleScene extends Phaser.Scene {
     }
     const alpha = this.paused ? 1 : this.acc / TICK_MS;
 
+    const click = this.input_.takeClick();
+    if (click) this.selectAt(click.x, click.y);
+    this.ui.update(this.sim.view());
+
     this.terrain.flush();
     this.updateCamera(alpha);
     this.drawWorld(alpha);
@@ -213,6 +234,21 @@ export class BattleScene extends Phaser.Scene {
       this.debugGfx.clear();
       this.hud.debug.setText('');
     }
+  }
+
+  /** Shows the card of the unit under a click, or hides it on empty ground. */
+  private selectAt(x: number, y: number): void {
+    const hit = this.sim
+      .view()
+      .units.find(
+        (u) =>
+          u.alive &&
+          Math.abs(x - u.x / SUBPX) <= UNIT_HALF_WIDTH + 8 &&
+          y <= u.y / SUBPX + 8 &&
+          y >= u.y / SUBPX - UNIT_HEIGHT - 8,
+      );
+    this.selectedUnit = hit?.id ?? null;
+    this.ui.selectUnit(this.selectedUnit);
   }
 
   private tick(): void {
@@ -326,6 +362,10 @@ export class BattleScene extends Phaser.Scene {
         UNIT_HEIGHT,
         UNIT_HALF_WIDTH,
       );
+      if (u.id === this.selectedUnit) {
+        g.lineStyle(2, COLORS.lapis, 1);
+        g.strokeEllipse(x, y + 2, UNIT_HALF_WIDTH * 4, 14);
+      }
       // Eye on the facing side.
       g.fillStyle(COLORS.encre, 1);
       g.fillCircle(x + u.facing * 7, y - 64, 3.5);

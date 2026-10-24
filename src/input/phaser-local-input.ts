@@ -4,6 +4,7 @@ import type { GameCommand } from '../sim/commands.ts';
 import type { SimView } from '../sim/sim.ts';
 import type { InputSource } from './InputSource.ts';
 import { LocalControls, emptyInput, type RawInput } from './local-controls.ts';
+import { UiIntents } from './ui-intents.ts';
 
 /** px around the active unit's body centre where a press starts drag-to-aim */
 const DRAG_GRAB_RADIUS = 70;
@@ -18,6 +19,11 @@ type Keys = Record<
 export class PhaserLocalInput implements InputSource {
   readonly kind = 'local' as const;
   readonly controls = new LocalControls();
+  /** on-screen action bar */
+  readonly ui = new UiIntents();
+  /** world point of the last click (press and release without moving), for unit selection */
+  private clickAt: { x: number; y: number } | null = null;
+  private downAt: { x: number; y: number } | null = null;
   private readonly keys: Keys;
   private readonly fuseKeys: Phaser.Input.Keyboard.Key[];
   private readonly scene: Phaser.Scene;
@@ -66,6 +72,7 @@ export class PhaserLocalInput implements InputSource {
   }
 
   private onDown(p: Phaser.Input.Pointer): void {
+    this.downAt = { x: p.x, y: p.y };
     if (p.rightButtonDown()) {
       this.weaponClick = true;
       return;
@@ -90,7 +97,11 @@ export class PhaserLocalInput implements InputSource {
     }
   }
 
-  private onUp(): void {
+  private onUp(p: Phaser.Input.Pointer): void {
+    if (this.downAt && Math.hypot(p.x - this.downAt.x, p.y - this.downAt.y) <= CLICK_SLOP) {
+      this.clickAt = this.world(p);
+    }
+    this.downAt = null;
     if (this.drag) {
       const len = Math.hypot(this.drag.pullX, this.drag.pullY);
       if (len > CLICK_SLOP) this.dragReleased = true;
@@ -99,17 +110,28 @@ export class PhaserLocalInput implements InputSource {
     this.panFrom = null;
   }
 
+  /** Returns and clears the last click, in world px. */
+  takeClick(): { x: number; y: number } | null {
+    const c = this.clickAt;
+    this.clickAt = null;
+    return c;
+  }
+
   poll(tick: number, view: SimView): GameCommand[] {
     const k = this.keys;
     const input: RawInput = emptyInput();
-    input.left = k.left.isDown || k.a.isDown;
-    input.right = k.right.isDown || k.d.isDown;
+    const ui = this.ui.take();
+    input.left = k.left.isDown || k.a.isDown || this.ui.walk < 0;
+    input.right = k.right.isDown || k.d.isDown || this.ui.walk > 0;
     input.up = k.up.isDown;
     input.down = k.down.isDown;
-    input.charge = k.space.isDown;
+    input.charge = k.space.isDown || this.ui.charge;
+    input.jumpKind = ui.jump;
+    input.selectWeapon = ui.selectWeapon;
+    input.skipPressed = ui.skip;
     input.jumpPressed = this.pressed.jump;
     input.nextWeaponPressed = this.pressed.weapon || this.weaponClick;
-    input.fusePressed = this.pressed.fuse;
+    input.fusePressed = this.pressed.fuse ?? ui.fuse;
     this.pressed = { jump: false, weapon: false, fuse: null };
     this.weaponClick = false;
     if (this.drag) {

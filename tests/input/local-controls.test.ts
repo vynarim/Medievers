@@ -134,4 +134,13 @@ describe('LocalControls', () => {
     const v = sim.view();
     expect(controls.update(1, { ...emptyInput(), right: true, charge: true }, v)).toEqual([]);
   });
+  it('takes direct jumps, weapon choices and skips from the action bar', () => {
+    const a = setup();
+    expect(a.tick({ jumpKind: 'back' })).toContainEqual({ t: 'jump', kind: 'back' });
+    const b = setup();
+    b.tick({ selectWeapon: 'greekFire' });
+    expect(b.sim.view().turn.weapon).toBe('greekFire');
+    expect(b.tick({ skipPressed: true })).toEqual([{ t: 'skip' }]);
+    expect(b.sim.view().turn.number).toBe(2); // everything at rest: the next turn starts at once
+  });
 });

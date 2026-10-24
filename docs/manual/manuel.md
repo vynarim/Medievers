@@ -199,6 +199,27 @@ L'IA joue avec les mêmes règles et les mêmes commandes que vous. Elle ne voit
 | Afficher les informations de debug | F1 (puis P : pause, N : avancer d'un instant) |
 | Pause | Échap {{st:prevu}} |
 
+### À la souris {{st:jeu}}
+
+Tout se fait aussi à la souris, avec la **barre d'actions** en bas de l'écran :
+
+- **◀ Marcher** et **Marcher ▶** : maintenir le bouton pour avancer ;
+- **Sauter** et **Saut arrière** ;
+- **Arsenal** : la liste des armes avec leurs dégâts, leur rayon, leur sensibilité au vent et les munitions restantes ; un clic choisit l'arme ;
+- **Mèche 1 à 5** : visible avec le pot de feu grégeois ;
+- **Tirer** : maintenir pour charger la puissance, relâcher pour tirer ;
+- **Passer** : finir son tour sans tirer.
+
+On peut aussi viser « à la fronde » : appuyer sur son combattant, tirer en arrière, relâcher.
+
+### La fiche du combattant {{st:jeu}}
+
+Un clic sur n'importe quel combattant ouvre sa fiche : nom, maison, points de vie, état (joue ce tour, attend, en l'air, tombé), classe et talent (à venir), un rappel des règles de marche, de chute et de mort, et, pour le combattant qui joue, l'arme en main avec ses caractéristiques.
+
+### Réglages de test {{st:jeu}}
+
+Le bouton **⚙ Réglages** ouvre toutes les valeurs du jeu en cours de réglage : durées du tour, points de vie, vitesse de marche, sauts, chutes, vent, projections, et pour chaque arme ses dégâts, sa vitesse, son rayon, sa mèche, ses munitions. Elles s'appliquent à la partie suivante (**Appliquer et relancer**), le navigateur s'en souvient, et **Valeurs par défaut** remet tout comme avant. Les valeurs d'une partie sont enregistrées avec son replay.
+
 ### Sur tablette {{st:prevu}}
 
 Déjà possible au doigt : viser et tirer en glissant depuis le combattant, déplacer la caméra en glissant ailleurs.
