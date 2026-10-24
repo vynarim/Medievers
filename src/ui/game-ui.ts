@@ -64,6 +64,8 @@ export class GameUi {
   /** the modal on screen, if any */
   private open: HTMLElement | null = null;
   private selectedUnit: number | null = null;
+  /** settings tab last shown, kept while the page lives */
+  private settingsTab = 0;
   private cardSignature = '';
   private arsenalSignature = '';
   private view: SimView | null = null;
@@ -400,9 +402,20 @@ export class GameUi {
       el('h2', '', t('tuning.title')),
       el('p', 'note', t('tuning.note')),
     );
+    // One tab per group, so the panel never needs a long scroll.
+    const tabs = el('div', 'tabs');
+    const pages: HTMLElement[] = [];
+    const showTab = (n: number): void => {
+      this.settingsTab = n;
+      pages.forEach((p, k) => p.classList.toggle('hidden', k !== n));
+      tabs.querySelectorAll('button').forEach((b, k) => b.classList.toggle('on', k === n));
+    };
+    this.settings.append(tabs);
     for (const group of tuningGroups(base)) {
-      this.settings.append(el('h3', '', t(group.titleKey)));
+      const n = pages.length;
+      tabs.append(this.click(button(t(group.titleKey)), () => showTab(n)));
       const table = el('table');
+      pages.push(table);
       for (const f of group.fields) {
         const def = readValue(base, f.path) ?? 0;
         const input = el('input');
@@ -432,6 +445,7 @@ export class GameUi {
       }
       this.settings.append(table);
     }
+    showTab(Math.min(this.settingsTab, pages.length - 1));
     const actions = el('div', 'actions');
     actions.append(
       this.click(button(t('tuning.apply')), () => {

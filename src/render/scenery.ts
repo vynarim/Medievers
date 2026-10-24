@@ -4,6 +4,7 @@
 // Cosmetic randomness only (Math.random), never the sim PRNG.
 import Phaser from 'phaser';
 import { COLORS, css } from '../ui/tokens.ts';
+import { SkyLife } from './sky-life.ts';
 import type { MaskView } from './terrain-layer.ts';
 
 const FAR_W = 3200;
@@ -306,6 +307,7 @@ interface Prop {
   readonly image: Phaser.GameObjects.Image;
   readonly x: number;
   readonly y: number;
+  readonly tree: boolean;
 }
 
 export class Scenery {
@@ -314,6 +316,7 @@ export class Scenery {
   private readonly clouds: Phaser.GameObjects.Image[] = [];
   private props: Prop[] = [];
   private readonly width: number;
+  private readonly sky: SkyLife;
 
   constructor(scene: Phaser.Scene, mask: MaskView) {
     this.width = mask.width;
@@ -388,13 +391,17 @@ export class Scenery {
         .image(x, y + 3, isTree ? treeKey : flowerKey)
         .setOrigin(0.5, 1)
         .setDepth(isTree ? 3 : 5);
-      this.props.push({ image, x, y });
+      this.props.push({ image, x, y, tree: isTree });
       this.objects.push(image);
     }
+
+    this.sky = new SkyLife(scene, mask.height * 0.4, () => this.props.filter((p) => p.tree));
+    this.objects.push(...this.sky.objects);
   }
 
-  /** Drifts the clouds; drops props whose ground was blown away. */
+  /** Drifts the clouds and the sky life; drops props whose ground was blown away. */
   update(delta: number, wind: number, mask: MaskView): void {
+    this.sky.update(delta, wind);
     for (const c of this.clouds) {
       c.x += ((wind * CLOUD_DRIFT + 6) * delta) / 1000;
       if (c.x > this.width + 200) c.x = -200;

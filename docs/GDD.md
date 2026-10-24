@@ -264,6 +264,8 @@ L'IA joue via `InputSource` et produit les mêmes commandes qu'un humain. Elle �
 ## 10. Cartes (V1 : 6, P1 : +4)
 Chaque carte a un thème, une palette, un niveau d'eau initial et des éléments spécifiques.
 
+**Vie du ciel** (décidé le 2026-10-24, purement décoratif) : de temps en temps, une volée d'oiseaux traverse le ciel ou s'envole d'un arbre ; plus rarement, un dragon des marges passe en battant des ailes, ou un arc-en-ciel apparaît derrière les collines puis s'efface.
+
 **Grandes batailles de l'histoire** (décidé le 2026-10-24) : en plus des épisodes du manuscrit, les cartes évoquent de grandes batailles médiévales, avec une touche historique (lieu, date, armées en présence, une phrase de contexte dans l'écran de choix) et des décors fun. La liste ci-dessous sera revue en conséquence au lot de contenu (M7).
 
 | Bataille | Date | Décor et particularités |

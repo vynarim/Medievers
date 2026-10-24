@@ -32,6 +32,8 @@ const STYLE = `
 #ui button:hover { background: var(--or); }
 #ui button:active, #ui button.on { background: var(--or); transform: translateY(1px); }
 #ui button:disabled { opacity: 0.4; cursor: default; background: var(--velin); transform: none; }
+#ui .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 12px; }
+#ui .tabs button { min-height: 40px; font-size: 16px; }
 #ui button.icon { font-family: var(--text); font-size: 26px; min-width: 52px; padding: 2px 8px; }
 #ui button.fire { background: var(--vermillon); color: var(--ceruse); min-width: 96px; font-size: 20px; }
 #ui button.fire:hover, #ui button.fire.on { background: var(--vermillon); filter: brightness(1.15); }
