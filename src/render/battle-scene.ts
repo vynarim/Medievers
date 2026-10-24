@@ -22,8 +22,10 @@ import { GameUi, loadOverrides } from '../ui/game-ui.ts';
 import { t } from '../ui/i18n.ts';
 import { applyOverrides, type TuningOverrides } from '../ui/tuning-model.ts';
 import { COLORS, css } from '../ui/tokens.ts';
+import { uiScale } from '../ui/ui-scale.ts';
 import { AutoSaver, clearSave } from '../app/autosave.ts';
 import { replay, type GameLog } from '../sim/log.ts';
+import { frame, type Point } from './framing.ts';
 import { Scenery } from './scenery.ts';
 import { FixedStep } from './fixed-step.ts';
 import { TerrainLayer } from './terrain-layer.ts';
@@ -57,6 +59,13 @@ const BURST_MS = 520;
 const AIM_TIP = 172;
 /** size of the diaper pattern tile, px */
 const DIAPER = 160;
+/**
+ * px of sky the camera may show above the map, so a wide map still fits a narrow screen whole
+ * (the default view frames every unit).
+ */
+const SKY_EXTRA = 2000;
+/** Screen px kept clear of units by the default view, before the overlay scale: HUD and bar. */
+const FRAME_MARGINS = { top: 130, bottom: 110, side: 30 } as const;
 /** px above the feet and either side of a unit where a click still picks it: its name label */
 const LABEL_REACH = 80;
 const LABEL_HALF_WIDTH = 34;
@@ -134,11 +143,10 @@ export class BattleScene extends Phaser.Scene {
 
     const cam = this.cameras.main;
     cam.setBackgroundColor(css(COLORS.velin));
-    cam.setBounds(0, 0, map.width, map.height);
-    cam.setZoom(this.defaultZoom());
+    cam.setBounds(0, -SKY_EXTRA, map.width, map.height + SKY_EXTRA);
 
     const page = this.add
-      .tileSprite(0, 0, map.width, map.height, this.diaperTexture())
+      .tileSprite(0, -SKY_EXTRA, map.width, map.height + SKY_EXTRA, this.diaperTexture())
       .setOrigin(0, 0)
       .setDepth(0);
     this.scenery = new Scenery(this, this.sim.view().terrain);
@@ -201,14 +209,17 @@ export class BattleScene extends Phaser.Scene {
     }
     this.input.on('wheel', (_p: Phaser.Input.Pointer, _o: unknown, _dx: number, dy: number) => {
       this.zoomTo(cam.zoom * (dy > 0 ? 0.9 : 1.1));
+      this.manualCamera = true;
     });
     this.ui = new GameUi({
       intents: this.input_.ui,
       restart: (overrides) => this.restart(overrides),
       resetView: () => this.resetView(),
     });
-    // A resized window keeps the map filling the screen.
-    const onResize = (): void => this.zoomTo(cam.zoom);
+    // A resized window keeps the map filling the screen (the default view reframes itself).
+    const onResize = (): void => {
+      if (this.manualCamera) this.zoomTo(cam.zoom);
+    };
     this.scale.on('resize', onResize);
     this.events.once('shutdown', () => this.scale.off('resize', onResize));
     this.commentary = new Commentary(this.ui.hud, () => this.restart(loadOverrides()));
@@ -235,18 +246,43 @@ export class BattleScene extends Phaser.Scene {
 
     this.snapshotPositions();
     this.snapshotPositions();
-    const active = this.activeUnit();
-    if (active) cam.centerOn(active.x / SUBPX, active.y / SUBPX - 200);
+    const f = this.defaultFraming(0);
+    if (f) {
+      cam.setZoom(f.zoom);
+      cam.centerOn(f.x, f.y);
+    }
   }
 
-  /** Zoom that never shows past the map edges, on this screen. */
+  /** Zoom that never shows past the map edges (the sky above excepted), on this screen. */
   private minZoom(): number {
     const { map } = this.data_;
-    return Math.max(this.scale.width / map.width, this.scale.height / map.height);
+    return Math.max(this.scale.width / map.width, this.scale.height / (map.height + SKY_EXTRA));
   }
 
-  private defaultZoom(): number {
-    return Math.max(this.minZoom(), (ZOOM_DEFAULT * this.scale.height) / REF_HEIGHT);
+  /** « Vue par défaut »: every living unit and the flying shot on screen, clear of the HUD. */
+  private defaultFraming(alpha: number): ReturnType<typeof frame> {
+    const v = this.sim.view();
+    const points: Point[] = [];
+    for (const u of v.units) {
+      if (!u.alive) continue;
+      const [x, y] = this.pos(`u${u.id}`, alpha, u.x, u.y);
+      points.push({ x, y });
+    }
+    const shot = v.shots[0];
+    if (shot) {
+      const [x, y] = this.pos(`s${shot.projectile.id}`, alpha, shot.projectile.x, shot.projectile.y);
+      // A point counts with a unit's label above it: lower it so the shot itself is framed.
+      points.push({ x, y: y + 150 });
+    }
+    const { width, height } = this.scale;
+    const u = uiScale(width, height);
+    const margins = {
+      top: FRAME_MARGINS.top * u,
+      bottom: FRAME_MARGINS.bottom * u,
+      side: FRAME_MARGINS.side * u,
+    };
+    const closest = Math.max(this.minZoom(), (ZOOM_DEFAULT * height) / REF_HEIGHT);
+    return frame(points, width, height, margins, this.minZoom(), closest);
   }
 
   private zoomTo(zoom: number): void {
@@ -254,9 +290,8 @@ export class BattleScene extends Phaser.Scene {
     this.cameras.main.setZoom(Phaser.Math.Clamp(zoom, this.minZoom(), max));
   }
 
-  /** « Vue par défaut »: default zoom, camera back on the action. */
+  /** « Vue par défaut »: the camera goes back to framing every unit. */
   private resetView(): void {
-    this.cameras.main.setZoom(this.defaultZoom());
     this.manualCamera = false;
   }
 
@@ -363,8 +398,7 @@ export class BattleScene extends Phaser.Scene {
     const click = this.input_.takeClick();
     if (click) this.selectAt(click.x, click.y);
     this.ui.update(this.sim.view(), this.input_.controls.power, time);
-    const zoomed = Math.abs(this.cameras.main.zoom - this.defaultZoom()) > 0.01;
-    this.ui.showResetView(this.manualCamera || zoomed);
+    this.ui.showResetView(this.manualCamera);
     if (this.selectedUnit !== null) {
       // The card goes to the half of the screen the unit is not in.
       const u = this.sim.view().units.find((x) => x.id === this.selectedUnit);
@@ -536,29 +570,22 @@ export class BattleScene extends Phaser.Scene {
     if (this.input_.zoom !== 1) {
       this.zoomTo(cam.zoom * this.input_.zoom);
       this.input_.zoom = 1;
+      this.manualCamera = true;
     }
     if (this.input_.recenter) {
       this.input_.recenter = false;
       this.manualCamera = false;
     }
     if (this.manualCamera) return;
-    const v = this.sim.view();
-    const shot = v.shots[0];
-    let target: [number, number] | null = null;
-    if (shot) {
-      target = this.pos(`s${shot.projectile.id}`, alpha, shot.projectile.x, shot.projectile.y);
-    } else {
-      const u = this.activeUnit();
-      if (u) {
-        const [x, y] = this.pos(`u${u.id}`, alpha, u.x, u.y);
-        target = [x, y - 150];
-      }
-    }
-    if (!target) return;
+    const f = this.defaultFraming(alpha);
+    if (!f) return;
+    // Eased: faster while following a shot, gentle otherwise.
+    const k = this.sim.view().shots.length > 0 ? 0.2 : 0.06;
+    const zoom = cam.zoom + (f.zoom - cam.zoom) * k;
+    if (Math.abs(zoom - cam.zoom) > 1e-4) cam.setZoom(zoom);
     const cx = cam.scrollX + cam.width / 2;
     const cy = cam.scrollY + cam.height / 2;
-    const k = shot ? 0.25 : 0.08;
-    cam.centerOn(cx + (target[0] - cx) * k, cy + (target[1] - cy) * k);
+    cam.centerOn(cx + (f.x - cx) * k, cy + (f.y - cy) * k);
   }
 
   private drawWorld(alpha: number, time: number): void {

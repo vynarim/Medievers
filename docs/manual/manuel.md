@@ -202,7 +202,7 @@ L'IA joue avec les mêmes règles et les mêmes commandes que vous. Elle ne voit
 | Ouvrir l'arsenal | Clic droit ou Tab |
 | Régler la mèche d'un pot | Touches 1 à 5 |
 | Déplacer la caméra / zoomer | Bords de l'écran ou clic molette / molette |
-| Revenir à la vue par défaut | C ou le bouton **◎**, visible seulement hors de la vue par défaut (double clic : recentrer seulement) |
+| Revenir à la vue par défaut | C ou le bouton **◎**, visible seulement quand vous avez zoomé ou déplacé la vue (ou double clic). La vue par défaut montre toujours tous les combattants, et suit le projectile pendant un tir |
 | Afficher les informations de debug | F1 (puis P : pause, N : avancer d'un instant) |
 | Pause | Échap |
 

@@ -236,7 +236,8 @@ L'IA joue via `InputSource` et produit les mêmes commandes qu'un humain. Elle �
 | Arsenal | Clic droit ou Tab |
 | Mèche (pot) | Touches 1–5 |
 | Caméra | Bords d'écran, glisser clic molette, molette = zoom |
-| Recentrer | C ou bouton **◎** (zoom par défaut et recentrage ; affiché seulement hors de la vue par défaut), double clic (recentrage seul) |
+| Recentrer | C ou bouton **◎** (retour à la vue par défaut ; affiché seulement quand on a zoomé ou déplacé la vue), double clic |
+| Vue par défaut (décidé le 2026-10-24) | La caméra cadre **tous les combattants vivants**, quelle que soit la taille de l'écran, en laissant libres le HUD et la barre d'action ; pendant un tir, elle garde aussi le projectile dans le cadre. Elle reprend la main à chaque tour et à chaque tir |
 | Pause / menu | Échap : menu Reprendre, Recommencer, Aide, Réglages. Le temps s'arrête aussi pendant l'aide et les réglages, pas pendant l'arsenal |
 
 ### 8.2 Tablette
