@@ -14,6 +14,7 @@ import { barrelOnSegment, igniteBarrel } from '../barrels.ts';
 import { beastOnSegment, killBeast } from '../beasts.ts';
 import { crateOnSegment, burstCrate } from '../crates.ts';
 import { segmentTouchesKitchen, useKitchen } from '../kitchen.ts';
+import { fuseTurnsOf, maybeRest } from '../pots.ts';
 import { carveCircle } from '../terrain/terrain.ts';
 import {
   bounce,
@@ -58,7 +59,16 @@ export function fire(state: SimState, u: Unit, power: number, events: SimEvent[]
     { radius: def.projectileRadius, windPct: def.windPct, gravityPct: 100 },
   );
   const fused = def.behavior === 'fusedBouncer' || def.behavior === 'cluster';
-  state.shots.push({ projectile, weapon: def.id, fuse: fused ? state.turn.fuse : 0 });
+  if (def.fuseTurns !== undefined) {
+    // Fuse in turns: 1 goes off during this throw, 2 and 3 rest on the map and wait.
+    const turns = fuseTurnsOf(def, state.turn.fuse);
+    state.shots.push({
+      projectile,
+      weapon: def.id,
+      fuse: turns === 0 ? def.fuseTurns : 0,
+      ...(turns > 0 ? { turns } : {}),
+    });
+  } else state.shots.push({ projectile, weapon: def.id, fuse: fused ? state.turn.fuse : 0 });
   events.push({ e: 'shotFired', shotId: id, weapon: def.id });
 }
 
@@ -210,6 +220,10 @@ export function stepShots(state: SimState, events: SimEvent[]): void {
     } else {
       if (impact?.kind === 'outOfMap') ended = true;
       else if (impact) bounce(p, state.terrain, def.bouncePct);
+      // A pot set for a later turn comes to rest on the map (GDD §4.1).
+      if (!ended && shot.turns !== undefined && maybeRest(state, shot, impact !== null, events)) {
+        ended = true;
+      }
       if (!ended && shot.fuse > 0) {
         shot.fuse--;
         if (shot.fuse === 0) {

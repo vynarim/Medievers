@@ -25,6 +25,7 @@ import { blastReachesBarrels, burnBarrels, placeBarrels, stepBarrels } from './b
 import { blastReachesCrates, burnCrates, maybeDropCrate, stepCrates } from './crates.ts';
 import { beastsTurnEnd, blastReachesBeast, hasAffliction, panicAtAction } from './beasts.ts';
 import { Trick } from '../content/beasts.ts';
+import { blastMovesPots, potsTurn, stepPots } from './pots.ts';
 import { kitchenTurn, inKitchen, stepKitchen, useKitchen } from './kitchen.ts';
 import { fire, stepShots } from './weapons/weapons.ts';
 
@@ -133,6 +134,7 @@ function createState(config: MatchConfig, seed: number, mask: Mask): SimState {
     barrels: [],
     crates: [],
     beast: null,
+    pots: [],
     afflictions: [],
     burnPx: 0,
     kitchenCounts: teams.map(() => 0),
@@ -198,6 +200,7 @@ function startTurn(s: SimState, events: SimEvent[]): void {
   t.turnHold = 0;
   t.moveLeft = (s.rules.unit.moveBudget ?? 0) * SUBPX;
   kitchenTurn(s, events);
+  potsTurn(s, events);
   setPhase(s, 'transition', s.rules.turn.transitionTicks, events);
   events.push({ e: 'turnStarted', turn: t.number, team: team.id, unitId: unit.id, wind: t.wind });
 }
@@ -325,12 +328,14 @@ function advanceTick(s: SimState, phaseJustSet: boolean, events: SimEvent[]): vo
     blastReachesBarrels(s, e);
     blastReachesCrates(s, e, events);
     blastReachesBeast(s, e, events);
+    blastMovesPots(s, e);
     // A blast that reaches the kitchen counts as a touch (GDD §4.9).
     if (inKitchen(s, e.x, e.y, e.radius * SUBPX)) useKitchen(s, events);
   }
   stepKitchen(s, events);
   stepBarrels(s, events);
   stepCrates(s, events);
+  stepPots(s);
 
   const hurt = active !== undefined && (active.hp < hpBefore || !active.alive);
   advancePhase(s, hurt, phaseJustSet, events);
@@ -520,6 +525,7 @@ function hashState(s: SimState): number {
     int(shot.fuse);
     // Only fragments carry the flag, so logs without cluster weapons keep their hashes.
     if (shot.fragment) int(1);
+    if (shot.turns !== undefined) int(shot.turns);
   }
   int(s.explosions.items.length);
   int(s.explosions.nextSeq);
@@ -553,6 +559,10 @@ function hashState(s: SimState): number {
   if (s.rules.unit.turnTicks !== undefined) int(t.turnHold);
   if (s.rules.turn.noRepeat) int(t.restingUnitId);
   if (s.rules.burn) int(s.burnPx);
+  if (s.rules.weapons.some((w) => w.fuseTurns !== undefined)) {
+    int(s.pots.length);
+    for (const p of s.pots) for (const v of [p.id, p.x, p.y, p.turns]) int(v);
+  }
   if (s.rules.beasts) {
     const b = s.beast;
     for (const v of b ? [b.id, b.kind, b.x, b.y] : [-1]) int(v);

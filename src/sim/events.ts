@@ -57,6 +57,8 @@ export type SimEvent =
   | { readonly e: 'beastKilled' }
   | { readonly e: 'beastGone' }
   | { readonly e: 'panicked'; readonly unitId: number }
+  | { readonly e: 'potPlaced'; readonly id: number; readonly turns: number }
+  | { readonly e: 'potLit'; readonly id: number }
   /** px burnt away at each end of the map, after the fire spread */
   | { readonly e: 'burnSpread'; readonly px: number }
   | { readonly e: 'gameOver'; readonly winner: number };

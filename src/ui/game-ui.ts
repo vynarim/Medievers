@@ -295,8 +295,14 @@ export class GameUi {
     const fused = def?.behavior === 'fusedBouncer' || def?.behavior === 'cluster';
     this.fuses.classList.toggle('hidden', !fused);
     const fuseSeconds = Math.round((view.turn.fuse || (def?.defaultFuse ?? 0)) / 60);
+    // A fuse in turns (Greek fire) offers 1 to 3 turns; in seconds, 1 to 5.
+    const inTurns = def?.fuseTurns !== undefined;
+    const fuseLabel = t(inTurns ? 'ui.fuseTurns' : 'ui.fuse');
+    const fuseTitle = this.fuses.firstElementChild;
+    if (fuseTitle && fuseTitle.textContent !== fuseLabel) fuseTitle.textContent = fuseLabel;
     for (const b of this.fuses.querySelectorAll('button')) {
       b.classList.toggle('on', b.dataset.fuse === String(fuseSeconds));
+      b.classList.toggle('hidden', inTurns && Number(b.dataset.fuse) > 3);
     }
     if (this.open === this.arsenal) this.renderArsenal(false);
     this.renderCard(view);

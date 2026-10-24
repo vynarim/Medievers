@@ -13,5 +13,6 @@ export * from './kitchen.ts';
 export * from './barrels.ts';
 export * from './crates.ts';
 export * from './beasts.ts';
+export * from './pots.ts';
 export * from './log.ts';
 export * from './replay-file.ts';

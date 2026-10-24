@@ -145,6 +145,14 @@ export class Commentary {
           }
           break;
         }
+        case 'potPlaced':
+          // A pot laid for a later turn is not a miss.
+          this.pendingMiss = null;
+          this.hud.say(pick('quip.potPlaced'), now);
+          break;
+        case 'potLit':
+          this.hud.say(pick('quip.potLit'), now);
+          break;
         case 'beastAppeared':
           this.hud.say(pick(e.kind === 0 ? 'quip.hare' : 'quip.snail'), now);
           break;

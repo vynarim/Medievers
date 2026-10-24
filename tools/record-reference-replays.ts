@@ -279,6 +279,28 @@ const SCRIPTS: readonly Script[] = [
       }
     },
   },
+  {
+    name: 'pot-fuse-turns',
+    description:
+      'Greek fire with a fuse in turns (BACKLOG 4.10): pots of 1, 2 and 3 turns, the resting ' +
+      'ones counting down and going off at turn starts, one thrown about by a blast.',
+    mapId: 'hills',
+    seed: 451,
+    config: { rules: CLASSIC_RULES, teams: [{ spawns: [300, 600] }, { spawns: [1000, 1300] }] },
+    play: (r) => {
+      for (let turn = 0; turn < 6; turn++) {
+        r.until('action');
+        const team = r.sim.view().turn.activeTeam;
+        r.step([
+          { t: 'selectWeapon', id: 'greekFire' },
+          { t: 'setFuse', seconds: ((turn % 3) + 1) as 1 | 2 | 3 },
+          { t: 'aim', angle: team === 0 ? 3650 : 2490 },
+          { t: 'fire', power: 520 + turn * 15 },
+        ]);
+        r.until('transition');
+      }
+    },
+  },
 ];
 
 const force = process.argv.includes('--force');

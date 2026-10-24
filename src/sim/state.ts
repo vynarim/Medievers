@@ -37,6 +37,19 @@ export interface FlyingShot {
   fuse: number;
   /** a fragment of a cluster weapon: explodes where it lands */
   readonly fragment?: boolean;
+  /** turn-fused pot: turns before it goes off, once it rests (weapon fuseTurns) */
+  readonly turns?: number;
+}
+
+/** A pot with a fuse in turns, resting on the map (GDD §4.1). */
+export interface PlacedPot {
+  readonly id: number;
+  /** sub-px: centre of the pot */
+  readonly x: number;
+  readonly y: number;
+  /** turn starts left before it goes off */
+  turns: number;
+  readonly weapon: WeaponId;
 }
 
 export interface TurnState {
@@ -136,6 +149,8 @@ export interface SimState {
   /** sorted by id */
   readonly crates: Crate[];
   beast: Beast | null;
+  /** sorted by id */
+  readonly pots: PlacedPot[];
   /** sorted by unit id, then trick */
   readonly afflictions: Affliction[];
   /** px burnt away at each end of the map (rules.burn); 0 without it */

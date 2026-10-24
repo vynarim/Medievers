@@ -91,7 +91,7 @@ Déjà jouables {{st:jeu}} : **arc**, **arbalète**, **fronde**, **pot de feu gr
 | **Arc** | 35 | — | oui | ∞ | La flèche reste fichée dans le décor |
 | **Arbalète** | 45 | — | faible | 2 | Puissance fixe : on ne règle que l'angle |
 | **Fronde** | 25 | — | oui | ∞ | Fort recul : idéale pour éjecter un ennemi |
-| **Pot de feu grégeois** | 45 | 60 px | non | 3 | Rebondit ; mèche de 1 à 5 s ; laisse des flammes 3 tours |
+| **Pot de feu grégeois** | 45 | 60 px | non | 3 | Rebondit. **Mèche en tours** : 1 = il explose pendant ce tour (après 3 s) ; 2 = il se pose et explose au début du tour suivant ; 3 = dans deux tours. Un pot posé affiche son compte (I, II) et peut être projeté par une explosion |
 | **Pot de poix** | 30 + 5 × 15 | 50 / 30 px | non | 1 | Rebondit, puis éclate en 5 gouttes enflammées qui explosent là où elles tombent |
 | **Cochon enflammé** | 70 | 90 px | non | 1 | Avance seul, saute les obstacles, explose sur ordre ou au bout de 8 s |
 | **Ruche** | 5 par contact | — | oui | 1 | L'essaim poursuit le combattant le plus proche pendant 4 s |

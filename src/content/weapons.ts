@@ -47,6 +47,12 @@ export interface WeaponDef {
   readonly fragments?: FragmentDef;
   /** px: melee reach, from the body centre along the aim */
   readonly reach?: number;
+  /**
+   * The fuse is set in turns (GDD §4.1, 2026-10-24): 1 = this turn, after this many ticks;
+   * 2 = at the start of the next turn; 3 = in two turns, the pot resting on the map meanwhile.
+   * Absent from older logs: a fuse in seconds.
+   */
+  readonly fuseTurns?: number;
 }
 
 export const WEAPONS: readonly WeaponDef[] = [
@@ -88,8 +94,10 @@ export const WEAPONS: readonly WeaponDef[] = [
     explosionRadius: 60,
     knockbackPct: 100,
     bouncePct: 45,
-    defaultFuse: 3 * 60,
+    // One turn: the fuse buttons read 1 to 3 turns for this pot.
+    defaultFuse: 60,
     ammo: 3,
+    fuseTurns: 3 * 60,
   },
   {
     id: 'crossbow',

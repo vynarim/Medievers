@@ -196,7 +196,11 @@ export class Hud {
     this.timer.classList.toggle('hurry', seconds !== null && seconds <= 5);
     this.timer.classList.toggle('idle', seconds === null);
 
-    this.weaponName.textContent = `${t(`weapons.${turn.weapon}`)}${fuse === null ? '' : ` · ${t('hud.fuse', { s: fuse })}`}`;
+    const fuseText =
+      fuse === null
+        ? ''
+        : ` · ${t(def?.fuseTurns !== undefined ? 'hud.fuseTurns' : 'hud.fuse', { s: fuse })}`;
+    this.weaponName.textContent = `${t(`weapons.${turn.weapon}`)}${fuseText}`;
     this.hint.classList.toggle('hidden', turn.phase !== 'action');
   }
 }

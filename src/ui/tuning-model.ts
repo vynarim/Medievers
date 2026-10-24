@@ -53,7 +53,9 @@ function weaponFields(w: WeaponDef): TuningField[] {
     fields.push(
       field(`${p}.explosionRadius`, 'tuning.explosionRadius', 'units.px', 1, 1, 1, 300),
       field(`${p}.bouncePct`, 'tuning.bouncePct', 'units.percent', 1, 5, 0, 100),
-      field(`${p}.defaultFuse`, 'tuning.defaultFuse', 'units.seconds', TPS, 1, 1, 5),
+      w.fuseTurns === undefined
+        ? field(`${p}.defaultFuse`, 'tuning.defaultFuse', 'units.seconds', TPS, 1, 1, 5)
+        : field(`${p}.defaultFuse`, 'tuning.defaultFuse', 'units.turns', TPS, 1, 1, 3),
     );
   }
   return fields;

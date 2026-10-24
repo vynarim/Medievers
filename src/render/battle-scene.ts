@@ -100,6 +100,8 @@ export class BattleScene extends Phaser.Scene {
   private scenery!: Scenery;
   private saver!: AutoSaver;
   private world!: Phaser.GameObjects.Graphics;
+  /** turns-left figures over the pots resting on the map, by pot id */
+  private readonly potLabels = new Map<number, Phaser.GameObjects.Text>();
   /** drawn position of the beast, easing after the sim's */
   private beastShown: { x: number; y: number } | null = null;
   /** the burnt ends of the parchment, over the terrain, under the units */
@@ -131,6 +133,7 @@ export class BattleScene extends Phaser.Scene {
     this.clock.reset();
     this.interp.clear();
     this.labels.clear();
+    this.potLabels.clear();
     this.bursts = [];
     this.manualCamera = false;
     this.selectedUnit = null;
@@ -623,6 +626,7 @@ export class BattleScene extends Phaser.Scene {
     this.drawBarrels(g);
     this.drawCrates(g, alpha, time);
     this.drawBeast(g, delta, time);
+    this.drawPots(g, time);
     for (const u of v.units) {
       const label = this.labels.get(u.id);
       const [x, y] = this.pos(`u${u.id}`, alpha, u.x, u.y);
@@ -880,6 +884,45 @@ export class BattleScene extends Phaser.Scene {
       g.beginPath();
       g.arc(x - facing * 2, y - 14, 2.5, 0, Math.PI * 1.5);
       g.strokePath();
+    }
+  }
+
+  /** Pots resting on the map, smoking, with the turns left written above in roman figures. */
+  private drawPots(g: Phaser.GameObjects.Graphics, time: number): void {
+    const pots = this.sim.view().pots;
+    const live = new Set<number>();
+    for (const p of pots) {
+      const x = p.x / SUBPX;
+      const y = p.y / SUBPX;
+      g.fillStyle(COLORS.terreOmbre, 1);
+      g.lineStyle(3, COLORS.encre, 1);
+      g.fillCircle(x, y, 6);
+      g.strokeCircle(x, y, 6);
+      const flick = Math.sin(time / 70 + p.id) * 2;
+      g.fillStyle(COLORS.or, 1);
+      g.fillTriangle(x - 2, y - 6, x + 2, y - 6, x + flick, y - 13);
+      live.add(p.id);
+      let label = this.potLabels.get(p.id);
+      if (!label) {
+        label = this.add
+          .text(x, y - 18, '', {
+            fontFamily: FONT_TITLE,
+            fontSize: '30px',
+            color: css(COLORS.vermillon),
+            stroke: css(COLORS.ceruse),
+            strokeThickness: 6,
+          })
+          .setOrigin(0.5, 1)
+          .setDepth(7);
+        this.hudCam.ignore(label);
+        this.potLabels.set(p.id, label);
+      }
+      label.setPosition(x, y - 16).setText(['', 'I', 'II', 'III'][p.turns] ?? String(p.turns));
+    }
+    for (const [id, label] of this.potLabels) {
+      if (live.has(id)) continue;
+      label.destroy();
+      this.potLabels.delete(id);
     }
   }
 
