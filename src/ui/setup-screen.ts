@@ -12,20 +12,27 @@ import { button, el, shield, uiRoot } from './overlay.ts';
 import { css } from './tokens.ts';
 
 const STYLE = `
-#ui .setup { width: min(880px, calc(100vw - 32px)); }
-#ui .setup .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 4px 0 8px; }
-#ui .setup .scheme { text-align: left; flex: 1 1 180px; font-family: var(--text); font-size: 15px; }
-#ui .setup .scheme b { display: block; font-family: var(--caps); font-weight: normal; font-size: 19px;
+#ui .setup { width: min(1240px, calc(100vw - 32px)); max-width: calc(100vw - 32px); padding-top: 14px;
+  padding-bottom: 16px; }
+#ui .setup h2 { margin-bottom: 6px; }
+#ui .setup h3 { margin: 10px 0 4px; }
+#ui .setup .row { display: flex; gap: 8px; align-items: stretch; margin: 2px 0 4px; }
+#ui .setup .scheme { text-align: left; flex: 1 1 0; min-width: 0; font-family: var(--text); font-size: 14px;
+  line-height: 1.25; }
+#ui .setup .scheme b { display: block; font-family: var(--caps); font-weight: normal; font-size: 18px;
   color: var(--lapis); }
-#ui .setup .house { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 8px 0;
+#ui .setup .house { display: flex; gap: 6px; align-items: center; padding: 5px 0;
   border-bottom: 1px solid var(--gilt); }
-#ui .setup .house .name { font-family: var(--caps); font-size: 19px; min-width: 210px; display: flex;
-  gap: 8px; align-items: center; }
+#ui .setup .house .name { font-family: var(--caps); font-size: 18px; flex: 0 0 270px; display: flex;
+  gap: 8px; align-items: center; white-space: nowrap; overflow: hidden; }
 #ui .setup select { font: inherit; font-size: 16px; min-height: 48px; padding: 4px; pointer-events: auto;
-  border: 2px solid var(--encre); border-radius: 4px; background: var(--ceruse); color: var(--encre); }
-#ui .setup .start { margin-top: 16px; display: flex; justify-content: flex-end; gap: 8px; }
+  width: 118px; border: 2px solid var(--encre); border-radius: 4px; background: var(--ceruse);
+  color: var(--encre); }
+#ui .setup .tools { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
+#ui .setup .tools button, #ui .setup .start button { white-space: nowrap; }
+#ui .setup .tools .note { flex: 1 1 auto; margin: 0 0 0 8px; font-size: 15px; }
+#ui .setup .start { margin-top: 12px; display: flex; justify-content: flex-end; gap: 8px; }
 `;
-
 let styled = false;
 
 /**
@@ -84,14 +91,6 @@ export function showSetupScreen(
     }
     panel.append(schemes);
 
-    const regicide = button(
-      t(setup.regicide ? 'setup.regicide.on' : 'setup.regicide.off'),
-      setup.regicide ? 'on' : '',
-    );
-    regicide.title = t('setup.regicide.tip');
-    regicide.addEventListener('click', () => update({ ...setup, regicide: !setup.regicide }));
-    panel.append(el('h3', '', t('setup.mode')), regicide);
-
     panel.append(el('h3', '', t('setup.houses')));
     setup.lineups.forEach((lineup, h) => {
       const f = FACTIONS[h];
@@ -133,7 +132,13 @@ export function showSetupScreen(
       row.append(less, more);
       panel.append(row);
     });
-    const houses = el('div', 'row');
+    const regicide = button(
+      t(setup.regicide ? 'setup.regicide.on' : 'setup.regicide.off'),
+      setup.regicide ? 'on' : '',
+    );
+    regicide.title = t('setup.regicide.tip');
+    regicide.addEventListener('click', () => update({ ...setup, regicide: !setup.regicide }));
+    const houses = el('div', 'tools');
     const addHouse = button(t('setup.houseMore'));
     addHouse.disabled = setup.lineups.length >= MAX_HOUSES;
     addHouse.addEventListener('click', () =>
@@ -144,8 +149,8 @@ export function showSetupScreen(
     removeHouse.addEventListener('click', () =>
       update({ ...setup, lineups: setup.lineups.slice(0, -1) }),
     );
-    houses.append(addHouse, removeHouse);
-    panel.append(houses, el('p', 'note', t('setup.note')));
+    houses.append(addHouse, removeHouse, regicide, el('p', 'note', t('setup.note')));
+    panel.append(houses);
 
     const start = el('div', 'start');
     if (onWatch) {

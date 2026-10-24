@@ -91,9 +91,17 @@ async function boot(): Promise<void> {
   const code = loadOnlineCode();
   const save = loadSave();
   const saved = save ? await mapOfLog(save) : null;
-  if (code) rejoinFlow(code, play, choose);
-  else if (save && saved) start(setup, saved, { resume: save });
-  else showTitleScreen(choose, () => joinFlow(play, choose));
+  // The title opens every launch; a match in progress is taken up again from it.
+  const resume = code
+    ? () => rejoinFlow(code, play, choose)
+    : save && saved
+      ? () => start(setup, saved, { resume: save })
+      : undefined;
+  showTitleScreen({
+    ...(resume ? { resume } : {}),
+    enter: choose,
+    join: () => joinFlow(play, choose),
+  });
   // Dev builds expose the game for browser-driven checks (Playwright); stripped from production.
   if (import.meta.env.DEV) (window as unknown as { medieverse: Phaser.Game }).medieverse = game;
 }

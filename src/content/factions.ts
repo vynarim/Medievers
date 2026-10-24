@@ -14,7 +14,7 @@ export const FACTIONS: readonly FactionDef[] = [
   { id: 'lion', nameKey: 'factions.lion', primary: 0xb8322a, secondary: 0xd4a93c },
   { id: 'towers', nameKey: 'factions.towers', primary: 0x2c4a8c, secondary: 0xf3ecd9 },
   { id: 'key', nameKey: 'factions.key', primary: 0x4d7a4a, secondary: 0xd4a93c },
-  { id: 'crescent', nameKey: 'factions.crescent', primary: 0x6f93c9, secondary: 0xf3ecd9 },
+  { id: 'crescent', nameKey: 'factions.crescent', primary: 0xc99a3e, secondary: 0xf3ecd9 },
 ];
 
 /** First names drawn for units (GDD §3.3). */

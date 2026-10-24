@@ -42,6 +42,7 @@ import { targetFor, wallAngle, wallLength, wallRefusal, wallSize } from '../sim/
 import { isProjectile, isTargeted, type WeaponDef } from '../content/weapons.ts';
 import { rulesFor, saveSetup, type MatchSetup } from '../app/match-setup.ts';
 import { showSetupScreen } from '../ui/setup-screen.ts';
+import { showTitleScreen } from '../ui/title-screen.ts';
 import { StructureState, type StructurePlacement } from '../content/structures.ts';
 import { buildMap, mapForLog, type BuiltMap } from '../app/map-build.ts';
 import { leaveMatch, type OnlineMatch } from '../app/online.ts';
@@ -340,6 +341,7 @@ export class BattleScene extends Phaser.Scene {
       restart: (overrides) => this.restart(overrides, true),
       newMatch: () => this.newMatch(),
       resetView: () => this.resetView(),
+      title: () => this.showTitle(),
     });
     // A resized window keeps the map filling the screen (the default view reframes itself).
     const onResize = (): void => {
@@ -509,6 +511,26 @@ export class BattleScene extends Phaser.Scene {
   private watchReplay(): void {
     const log = this.watchLog ?? this.saver.logAt(this.sim.view().tick);
     this.scene.restart({ ...this.data_, replay: log } satisfies BattleData);
+  }
+
+  /** The title screen, over the paused match: back to it, a new match, or one to join. */
+  private showTitle(): void {
+    this.paused = true;
+    showTitleScreen({
+      resume: () => (this.paused = false),
+      enter: () => this.newMatch(),
+      join: () => {
+        if (this.online) leaveMatch(this.online, true);
+        this.online = null;
+        this.remote = null;
+        joinFlow(
+          (m) => {
+            this.scene.restart(onlineBattle(m));
+          },
+          () => this.showTitle(),
+        );
+      },
+    });
   }
 
   /** The setup screen, over the paused match: a new match as chosen, or back to this one. */

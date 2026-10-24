@@ -50,6 +50,8 @@ export interface GameUiOptions {
   readonly newMatch: () => void;
   /** default zoom and camera back on the action */
   readonly resetView: () => void;
+  /** the title screen, over the paused match */
+  readonly title: () => void;
 }
 
 /** What the replay viewer's bar drives (the battle scene). */
@@ -257,6 +259,10 @@ export class GameUi {
       }),
       this.click(button(`? ${t('ui.help')}`), () => this.show(this.help)),
       this.click(button(`⚙ ${t('ui.settings')}`), () => this.openSettings()),
+      this.click(button(t('pause.title.screen')), () => {
+        this.show(null);
+        this.opts.title();
+      }),
     );
     this.pause.append(el('h2', '', t('pause.title')), el('p', '', t('pause.body')), pauseActions);
     this.netVeil = el('div', 'veil hidden');

@@ -29,8 +29,17 @@ const STYLE = `
 
 let styled = false;
 
-/** Shows the title; `onEnter` (the button or Enter) and `onJoin` close it first. */
-export function showTitleScreen(onEnter: () => void, onJoin: () => void): void {
+export interface TitleChoices {
+  /** a match in progress (saved, online, or the one paused behind): take it up again */
+  readonly resume?: () => void;
+  /** to the setup screen, for a new match */
+  readonly enter: () => void;
+  /** to the code of a match created by someone else */
+  readonly join: () => void;
+}
+
+/** Shows the title; each choice closes it first. Enter picks the first button. */
+export function showTitleScreen(choices: TitleChoices): void {
   if (!styled) {
     const style = document.createElement('style');
     style.textContent = STYLE;
@@ -45,19 +54,28 @@ export function showTitleScreen(onEnter: () => void, onJoin: () => void): void {
   title.append(el('span', 'initial', name.slice(0, 1)), el('span', '', name.slice(1, -1)));
   title.append(el('span', 'last', name.slice(-1)));
   const close = (then: () => void): void => {
-    window.removeEventListener('keydown', onKey);
+    window.removeEventListener('keydown', onKey, true);
     screen.remove();
     then();
   };
+  const first = choices.resume ?? choices.enter;
   const onKey = (e: KeyboardEvent): void => {
-    if (e.key === 'Enter') close(onEnter);
+    if (e.key !== 'Enter') return;
+    e.stopPropagation();
+    close(first);
   };
-  window.addEventListener('keydown', onKey);
-  const enter = button(t('title.enter'), 'fire');
-  enter.addEventListener('click', () => close(onEnter));
-  const join = button(t('setup.onlineJoin'));
-  join.addEventListener('click', () => close(onJoin));
+  window.addEventListener('keydown', onKey, true);
   const actions = el('div', 'actions');
+  const resume = choices.resume;
+  if (resume) {
+    const again = button(t('title.resume'), 'fire');
+    again.addEventListener('click', () => close(resume));
+    actions.append(again);
+  }
+  const enter = button(t('title.enter'), resume ? '' : 'fire');
+  enter.addEventListener('click', () => close(choices.enter));
+  const join = button(t('setup.onlineJoin'));
+  join.addEventListener('click', () => close(choices.join));
   actions.append(enter, join);
   folio.append(
     title,
