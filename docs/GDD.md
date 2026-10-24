@@ -303,6 +303,12 @@ L'IA joue via `InputSource` et produit les mêmes commandes qu'un humain. Elle �
 ## 10. Cartes (V1 : 6, P1 : +4)
 Chaque carte a un thème, une palette, un niveau d'eau initial et des éléments spécifiques.
 
+**Cartes générées** (décidé et programmé le 2026-10-25, sur demande) : chaque carte est **redessinée à chaque partie** à partir de son thème et de la graine de la partie (`src/sim/terrain/generate.ts`, paramètres dans `src/content/maps.ts`) : collines ou dunes, tours, murailles, rochers affleurants et poches de roche changent de place à chaque fois (les barils l'étaient déjà). Calcul en entiers avec le PRNG du sim : la même graine donne la même carte partout ; le log de partie garde l'identifiant `thème@graine` et le replay redessine la carte. Trois thèmes, choisis sur l'écran de préparation (« Champ de bataille ») :
+- **La vallée** : collines vertes, deux tours et une muraille ; strates en écailles ; au fond, château, fermes, moulins, vaches, moutons, chevaux.
+- **La côte normande** : falaise à un bout, plage qui descend sous la mer à l'autre (l'eau est là dès le début : on s'y noie), une ou deux tours ; strates en vagues semées de coquillages, oyats sur le dessus ; au fond, la mer, des cogues, une abbaye sur son rocher, des huttes de pêcheurs, des barques tirées sur le sable, des moutons de pré salé.
+- **La Terre sainte** : dunes, rochers et une forteresse sarrasine (deux tours et une courtine) dans le tiers central ; strates en rides de sable, pierre de grès ; au fond, Jérusalem (murailles, dôme d'or, minaret), une forteresse, des palmiers, des tentes et des chameaux ; sur le terrain, des palmiers et des buissons secs.
+- La vallée grise fixe des premières versions n'est plus proposée ; ses vieux logs se rejouent encore.
+
 **Vie du ciel** (décidé le 2026-10-24, purement décoratif) : de temps en temps, une volée d'oiseaux traverse le ciel ou s'envole d'un arbre ; plus rarement, un dragon des marges passe en battant des ailes, ou un arc-en-ciel apparaît derrière les collines puis s'efface.
 
 **Grandes batailles de l'histoire** (décidé le 2026-10-24) : en plus des épisodes du manuscrit, les cartes évoquent de grandes batailles médiévales, avec une touche historique (lieu, date, armées en présence, une phrase de contexte dans l'écran de choix) et des décors fun. La liste ci-dessous sera revue en conséquence au lot de contenu (M7).

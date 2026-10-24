@@ -144,6 +144,12 @@ Une explosion fait ses dégâts maximum en son centre, puis de moins en moins ju
 
 ### 5.1 Le terrain {{st:jeu}}
 
+**Trois champs de bataille** {{st:jeu}}, au choix sur l'écran de préparation, et **redessinés à chaque partie** : les collines, les tours, les murailles et les rochers n'y sont jamais au même endroit.
+
+- **La vallée** : collines vertes, moulins et vaches, deux tours et une muraille.
+- **La côte normande** : une falaise d'un côté, une plage qui s'enfonce dans la mer de l'autre (attention, la mer noie), des cogues et une abbaye sur son rocher au loin.
+- **La Terre sainte** : des dunes, des rochers indestructibles, une forteresse sarrasine au milieu, Jérusalem à l'horizon, des palmiers et des chameaux.
+
 Chaque carte est une peinture, doublée d'une carte invisible des matières. Ce que vous voyez creusé est exactement ce qui est creusé : le jeu ne triche jamais sur la forme du terrain.
 
 {{materials}}
