@@ -85,6 +85,15 @@ const STYLE = `
 #ui .team .hp { flex: none; width: 64px; height: 10px; border: 2px solid var(--encre); background: var(--velin); }
 #ui .team .hp i { display: block; height: 100%; background: var(--p); }
 #ui .team.out { opacity: 0.45; text-decoration: line-through; }
+/* The house whose turn it is: its frame glows in its colour, pulsing. */
+#ui .team.playing { animation: team-glow 1.6s ease-in-out infinite; }
+@keyframes team-glow {
+  0%, 100% { box-shadow: var(--frame), var(--lift), 0 0 4px 1px var(--p); }
+  50% { box-shadow: var(--frame), var(--lift), 0 0 16px 6px var(--p); }
+}
+@media (prefers-reduced-motion: reduce) {
+  #ui .team.playing { animation: none; box-shadow: var(--frame), var(--lift), 0 0 10px 4px var(--p); }
+}
 /* Title cartouche: the game's name, with a compact wind gauge under it. */
 /* The game's title, large, with the wind on its right in the same frame. */
 #ui .hud-wind { position: absolute; top: 12px; left: 50%; transform: translateX(-50%);

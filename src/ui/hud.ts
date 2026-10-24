@@ -12,6 +12,8 @@ import { COLORS, css } from './tokens.ts';
 const CHRONICLE_MS = 5000;
 /** ms a turn announcement stays up */
 const BANNER_MS = 4200;
+/** ms of one pulse of the playing house's glow (team-glow in overlay.ts) */
+const GLOW_MS = 1600;
 
 export class Hud {
   private readonly turnShield: HTMLElement;
@@ -175,7 +177,14 @@ export class Hud {
     this.teams.replaceChildren(
       ...v.teams.map((team, i) => {
         const f = FACTIONS[team.id];
-        const row = el('div', `team panel${(hp[i] ?? 0) === 0 ? ' out' : ''}`);
+        const playing = team.id === turn.activeTeam && turn.phase !== 'gameOver';
+        const row = el(
+          'div',
+          `team panel${(hp[i] ?? 0) === 0 ? ' out' : ''}${playing ? ' playing' : ''}`,
+        );
+        row.style.setProperty('--p', css(f?.primary ?? COLORS.encre));
+        // The rows are rebuilt every second: the pulse keeps to the clock, not to the rebuild.
+        if (playing) row.style.animationDelay = `-${Math.round(now % GLOW_MS)}ms`;
         const bar = el('div', 'hp');
         const fill = el('i');
         fill.style.width = `${Math.min(100, ((hp[i] ?? 0) * 100) / max)}%`;
