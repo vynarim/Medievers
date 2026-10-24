@@ -41,6 +41,8 @@ const CRUSH_PUSH = 3 * SUBPX;
 /** px a unit buried by rubble may be lifted to get free */
 const UNBURY = 48;
 
+/** px: thickness of the wooden walk left on top of a tower as it burns down */
+const BURNT_WALK = 10;
 /** px: thickness of a built tower's solid parapet, the floor of its battlement */
 const PARAPET = 14;
 /** px: merlons on the parapet, high and wide, every MERLON_STEP px */
@@ -199,6 +201,109 @@ function hitStructure(
   if (st.state === StructureState.Fallen) collapse(s, st, r, fromX, events);
 }
 
+/** A wooden tower reached by a fire weapon (`flames`) catches fire (rules.structures.burnTurns). */
+function setAlight(s: SimState, st: Structure, weapon: WeaponId | undefined, events: SimEvent[]) {
+  const turns = s.rules.structures?.burnTurns;
+  if (turns === undefined || st.type !== 'woodTower' || st.fire !== undefined) return;
+  if (st.state === StructureState.Fallen || weapon === undefined) return;
+  if (!s.rules.weapons.find((w) => w.id === weapon)?.flames) return;
+  st.fire = turns;
+  events.push({ e: 'towerAlight', id: st.id });
+}
+
+/**
+ * End of a turn: every burning tower burns down from the top, by an equal share of what is left
+ * for each turn of fire left, its top becoming a new wooden walk; on its last turn it is gone,
+ * and whoever still stands on it dies.
+ */
+export function burnTowersTurnEnd(s: SimState, events: SimEvent[]): void {
+  const owners = s.owners;
+  if (!owners || s.rules.structures?.burnTurns === undefined) return;
+  const t = s.terrain;
+  const w = t.width;
+  for (const st of s.structures) {
+    if (st.fire === undefined || st.state === StructureState.Fallen) continue;
+    st.fire--;
+    const [rx, ry, rw, rh] = st.rect;
+    const x0 = Math.max(0, rx);
+    const x1 = Math.min(w, rx + rw);
+    const y1 = Math.min(t.height, ry + rh);
+    const mine = (x: number, y: number): boolean =>
+      owners[y * w + x] === st.id && materialOf(t, x, y) !== Material.Air;
+    if (st.fire <= 0) {
+      // Burnt away: those still up there go with it.
+      for (const u of s.units) {
+        if (!u.alive) continue;
+        const ux = subToPx(u.x);
+        const uy = subToPx(u.y);
+        if (
+          uy < y1 &&
+          [-UNIT_HALF_WIDTH + 1, 0, UNIT_HALF_WIDTH - 1].some((d) => {
+            const px = ux + d;
+            return px >= x0 && px < x1 && uy >= 0 && mine(px, uy);
+          })
+        ) {
+          u.alive = false;
+          u.hp = 0;
+          events.push({ e: 'unitDied', unitId: u.id, cause: 'burnt' });
+        }
+      }
+      for (let y = Math.max(0, ry); y < y1; y++) {
+        for (let x = x0; x < x1; x++) {
+          if (owners[y * w + x] !== st.id) continue;
+          owners[y * w + x] = 0;
+          t.data[y * w + x] = Material.Air;
+        }
+      }
+      st.hp = 0;
+      st.state = StructureState.Fallen;
+      delete st.fire;
+      markAllDirty(t);
+      events.push({ e: 'terrainChanged', x: rx, y: ry, w: rw, h: rh });
+      events.push({ e: 'towerBurnt', id: st.id });
+      continue;
+    }
+    // Its top and its foot as they stand.
+    let top = y1;
+    for (let y = Math.max(0, ry); y < y1 && top === y1; y++) {
+      for (let x = x0; x < x1; x++) {
+        if (mine(x, y)) {
+          top = y;
+          break;
+        }
+      }
+    }
+    let foot = top;
+    for (let x = x0; x < x1; x++) {
+      for (let y = y1 - 1; y > foot; y--) {
+        if (mine(x, y)) {
+          foot = y;
+          break;
+        }
+      }
+    }
+    const slice = Math.ceil((foot - top) / (st.fire + 1));
+    const newTop = top + slice;
+    for (let y = top; y < newTop; y++) {
+      for (let x = x0; x < x1; x++) {
+        if (!mine(x, y)) continue;
+        owners[y * w + x] = 0;
+        t.data[y * w + x] = Material.Air;
+      }
+    }
+    // The charred top is a walk of solid wood again.
+    for (let y = newTop; y < Math.min(y1, newTop + BURNT_WALK); y++) {
+      for (let x = x0; x < x1; x++) {
+        if (owners[y * w + x] === st.id && materialOf(t, x, y) === Material.Timber) {
+          t.data[y * w + x] = Material.Wood;
+        }
+      }
+    }
+    markAllDirty(t);
+    events.push({ e: 'terrainChanged', x: rx, y: ry, w: rw, h: rh });
+  }
+}
+
 /** A blast reaches every structure whose footprint lies within its radius. */
 export function blastHitsStructures(s: SimState, e: Explosion, events: SimEvent[]): void {
   const owners = s.owners;
@@ -222,7 +327,10 @@ export function blastHitsStructures(s: SimState, e: Explosion, events: SimEvent[
         }
       }
     }
-    if (reached) hitStructure(s, st, e.maxDamage, e.weapon, cx, events);
+    if (reached) {
+      hitStructure(s, st, e.maxDamage, e.weapon, cx, events);
+      setAlight(s, st, e.weapon, events);
+    }
   }
 }
 

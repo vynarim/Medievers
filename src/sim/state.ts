@@ -38,6 +38,8 @@ export interface Structure {
   state: number;
   /** units its falling blocks have struck, sorted: each is struck once per collapse */
   readonly struck: number[];
+  /** a wooden tower on fire: turns left before it is burnt away (rules.structures.burnTurns) */
+  fire?: number;
 }
 
 /** A piece of a collapsed structure, falling (TECH_SPEC §5.4). */

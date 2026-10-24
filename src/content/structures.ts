@@ -54,6 +54,12 @@ export interface StructureRules {
    * above the top of their motte. Absent: towerHeight.
    */
   readonly woodTowerHeight?: number;
+  /**
+   * turns a wooden tower burns once a fire weapon (`flames`, the Greek fire) reaches it: it burns
+   * down from the top a little at each turn's end and is gone after this many; whoever is still
+   * on it then dies (2026-10-25). Absent: wooden towers do not catch fire.
+   */
+  readonly burnTurns?: number;
 }
 
 export const STRUCTURE_RULES: StructureRules = {
@@ -74,6 +80,7 @@ export const STRUCTURE_RULES: StructureRules = {
   towerHeight: 320,
   supportPct: 50,
   woodTowerHeight: 220,
+  burnTurns: 4,
 };
 
 /**

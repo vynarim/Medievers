@@ -18,6 +18,7 @@ import {
   initStructures,
   stepBlocks,
   undermineStructures,
+  burnTowersTurnEnd,
 } from './structures.ts';
 import { drownFlames, flamesTurnEnd, flamesTurnStart, spawnFlames, stepFlames } from './flames.ts';
 import {
@@ -821,6 +822,7 @@ function endTurn(s: SimState, events: SimEvent[]): void {
   flamesTurnEnd(s);
   drownFlames(s);
   beastsTurnEnd(s, events);
+  burnTowersTurnEnd(s, events);
   maybeDropCrate(s, events);
   callDeaths(s, events);
   const alive = s.teams.filter((team) => teamAlive(s, team));
@@ -923,6 +925,7 @@ function hashState(s: SimState): number {
     int(s.structures.length);
     for (const st of s.structures) {
       for (const v of [st.id, st.hp, st.state]) int(v);
+      if (s.rules.structures.burnTurns !== undefined) int(st.fire ?? -1);
       for (const id of st.struck) int(id);
     }
     int(s.blocks.length);

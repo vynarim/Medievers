@@ -1169,6 +1169,7 @@ export class BattleScene extends Phaser.Scene {
     this.drawDragon(alpha, time);
     this.drawUnicorn(alpha, time);
     this.drawBeam(g, alpha, time);
+    this.drawTowerFires(g, time);
     this.drawPots(g, time);
     this.drawMines(g, time);
     this.drawFlames(g, time);
@@ -1493,6 +1494,26 @@ export class BattleScene extends Phaser.Scene {
       .setRotation(
         flying ? 0 : Math.max(-1.2, Math.min(1.2, Math.atan2(vy, Math.abs(vx) || 1) * d.dir)),
       );
+  }
+
+  /** Burning wooden towers: flames dancing along their top, higher as the fire goes on. */
+  private drawTowerFires(g: Phaser.GameObjects.Graphics, time: number): void {
+    const v = this.sim.view();
+    const t = v.terrain;
+    for (const st of v.structures) {
+      if (st.fire === undefined) continue;
+      const [rx, ry, rw, rh] = st.rect;
+      const cx = Math.round(rx + rw / 2);
+      let top = ry;
+      while (top < ry + rh && (t.data[top * t.width + cx] ?? 0) === 0) top++;
+      for (let x = rx + 8; x < rx + rw - 4; x += 14) {
+        const h = 22 + 10 * Math.sin(time / 110 + x * 0.7);
+        g.fillStyle(COLORS.vermillon, 0.9);
+        g.fillTriangle(x - 8, top + 4, x + 8, top + 4, x, top - h);
+        g.fillStyle(COLORS.or, 0.95);
+        g.fillTriangle(x - 4, top + 4, x + 4, top + 4, x, top - h * 0.55);
+      }
+    }
   }
 
   /** The beam of light an angel lifts a unit in (GDD §4.5), shimmering up to the sky. */

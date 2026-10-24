@@ -218,6 +218,12 @@ export class Commentary {
         case 'angelDropped':
           this.hud.say(pick('quip.angelDropped', { name: unitName(e.unitId) }), now);
           break;
+        case 'towerAlight':
+          this.hud.say(pick('quip.towerAlight'), now);
+          break;
+        case 'towerBurnt':
+          this.hud.say(pick('quip.towerBurnt'), now);
+          break;
         case 'washedUp':
           this.hud.say(pick('quip.washedUp', { name: unitName(e.unitId) }), now);
           break;
@@ -331,6 +337,7 @@ export class Commentary {
             drowned: 'quip.drowned',
             kingFell: 'quip.kingFell',
             dragon: 'quip.dragonAte',
+            burnt: 'quip.burnt',
           }[e.cause];
           // The house leaving the field after its king is said once, not per unit.
           if (e.cause === 'kingFell' && this.kingFell) break;

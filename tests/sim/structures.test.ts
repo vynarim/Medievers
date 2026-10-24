@@ -268,4 +268,48 @@ describe('towers built by the match (2026-10-25)', () => {
       }
     }
   });
+
+  it('of wood catch fire from the Greek fire, burn down in four turns and kill who stays on top', () => {
+    const sim = new Sim(
+      {
+        rules: { ...CALM, structures: { ...STRUCTURE_RULES } },
+        teams: [{ spawns: [300] }, { spawns: [1000] }],
+        structures: [{ id: 1, type: 'woodTower', build: { x: 600, width: 100, ladder: -1 } }],
+      },
+      1,
+      loadMask('flat'),
+    );
+    const top = 500 - (STRUCTURE_RULES.woodTowerHeight ?? 0);
+    // Unit 2 waits on top of the tower.
+    const snap = sim.snapshot();
+    const u = snap.units[1];
+    if (u) {
+      u.x = 670 * 256;
+      u.y = top * 256;
+      u.grounded = true;
+    }
+    sim.restore(snap);
+    blast(sim, 690, top + 40, 10, 30);
+    const events = run(sim, 2);
+    expect(events).toContainEqual({ e: 'towerAlight', id: 1 });
+    const heights: number[] = [];
+    const all: SimEvent[] = [];
+    for (let turn = 0; turn < 4; turn++) {
+      for (let i = 0; i < 3000 && sim.view().turn.phase !== 'action'; i++) all.push(...sim.step());
+      all.push(...sim.step([{ t: 'skip' }]));
+      for (let i = 0; i < 3000 && sim.view().turn.phase !== 'transition'; i++) {
+        all.push(...sim.step());
+      }
+      const t = sim.view().terrain;
+      let y = 0;
+      while (y < t.height && t.data[y * t.width + 650] === Material.Air) y++;
+      heights.push(y);
+    }
+    // Lower at each turn's end, then gone, with unit 2.
+    expect(heights[0] ?? 0).toBeGreaterThan(top);
+    expect(heights[1] ?? 0).toBeGreaterThan(heights[0] ?? 0);
+    expect(all).toContainEqual({ e: 'towerBurnt', id: 1 });
+    expect(sim.view().structures[0]?.state).toBe(StructureState.Fallen);
+    expect(all).toContainEqual({ e: 'unitDied', unitId: 2, cause: 'burnt' });
+  });
 });

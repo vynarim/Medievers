@@ -2,7 +2,7 @@
 import type { WeaponId } from '../content/weapons.ts';
 
 /** kingFell: Régicide, the house's king is dead (GDD §2.3) */
-export type DeathCause = 'hp' | 'outOfMap' | 'drowned' | 'kingFell' | 'dragon';
+export type DeathCause = 'hp' | 'outOfMap' | 'drowned' | 'kingFell' | 'dragon' | 'burnt';
 
 export type SimEvent =
   | {
@@ -99,6 +99,10 @@ export type SimEvent =
       readonly state: number;
     }
   | { readonly e: 'structureFell'; readonly id: number }
+  /** a wooden tower catches fire */
+  | { readonly e: 'towerAlight'; readonly id: number }
+  /** a burning tower has burnt away */
+  | { readonly e: 'towerBurnt'; readonly id: number }
   /** its footing dug away, it is about to fall */
   | { readonly e: 'structureUndermined'; readonly id: number }
   /** a falling block struck a unit */
