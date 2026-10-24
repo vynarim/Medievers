@@ -3,7 +3,7 @@ import { DRAGON_HALF_HEIGHT, DRAGON_RULES } from '../../src/content/dragon.ts';
 import { WEAPONS } from '../../src/content/weapons.ts';
 import { CLASSIC_RULES, type MatchRules } from '../rules-fixture.ts';
 import { Material, Sim, type Mask, type SimEvent } from '../../src/sim/index.ts';
-import { GRAVITY } from '../../src/sim/units/unit.ts';
+import { GRAVITY, UNIT_HEIGHT } from '../../src/sim/units/unit.ts';
 
 /** Earth from y = 500 down, a hill rising to y = 400 around x = 1000. */
 function mask(): Mask {
@@ -41,21 +41,32 @@ function run(sim: Sim, ticks: number): SimEvent[] {
 }
 
 describe('dragon (GDD §4.11)', () => {
-  it('crosses the sky as low as it can, within reach of a full-power arrow', () => {
+  it('hugs the relief just over the units, within reach of an arrow, then leaves', () => {
     const sim = match();
     const d = sim.view().dragon;
     expect(d).not.toBeNull();
-    // Its belly `clearance` px over the top of the hill (400).
-    expect((d?.y ?? 0) >> 8).toBe(400 - DRAGON_RULES.clearance - DRAGON_HALF_HEIGHT);
-    // A full-power arrow shot straight up from the plain climbs past it.
-    const bow = WEAPONS.find((w) => w.id === 'bow')?.maxSpeed ?? 0;
-    const apex = Math.trunc((bow * bow) / (2 * GRAVITY) / 256);
-    expect(500 - ((d?.y ?? 0) >> 8)).toBeLessThan(apex);
-    // It flies on, then leaves the sky.
+    const low = 500 - DRAGON_RULES.clearance - DRAGON_HALF_HEIGHT;
+    const high = 400 - DRAGON_RULES.clearance - DRAGON_HALF_HEIGHT;
+    // Over the plain: its belly `clearance` px over the ground, above a standing unit's head.
+    expect((d?.y ?? 0) >> 8).toBe(low);
+    expect(DRAGON_RULES.clearance).toBeGreaterThan(UNIT_HEIGHT);
+    // An arrow at half power, shot straight up from the ground, climbs past it.
+    const half = (WEAPONS.find((w) => w.id === 'bow')?.maxSpeed ?? 0) >> 1;
+    const apex = Math.trunc((half * half) / (2 * GRAVITY) / 256);
+    expect(500 - low).toBeLessThan(apex);
+    // It flies on at its speed, rises over the hill (x 950 to 1050) and sinks after it.
     const x0 = d?.x ?? 0;
     run(sim, 10);
     expect(Math.abs((sim.view().dragon?.x ?? 0) - x0)).toBe(10 * DRAGON_RULES.speed);
-    const events = run(sim, 4000);
+    const ys: Record<string, number> = {};
+    const events: SimEvent[] = [];
+    for (let i = 0; i < 4000 && sim.view().dragon; i++) {
+      events.push(...sim.step());
+      const v = sim.view().dragon;
+      if (v) ys[String(Math.trunc((v.x >> 8) / 100))] = v.y >> 8;
+    }
+    expect(ys['10']).toBe(high);
+    expect(ys['3']).toBe(low);
     expect(events).toContainEqual({ e: 'dragonGone' });
   });
 

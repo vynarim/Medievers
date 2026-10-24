@@ -212,7 +212,7 @@ Un tir, un coup de masse ou une explosion qui touche la bête la renvoie dans sa
 
 ### Le dragon {{st:jeu}}
 
-De temps en temps (12 % de chances au début d'un tour), un dragon des marges traverse le ciel, aussi bas qu'il le peut sans rien frôler : une flèche tirée à pleine puissance l'atteint sans peine. **Ne lui tirez pas dessus** : touché, même sans dégâts, il pique sur un combattant d'une maison adverse tiré au hasard, l'avale tout rond, puis repart. Le tour attend qu'il ait fini. Une explosion qui l'atteint le fâche de la même façon, comme si la maison qui joue avait tiré.
+De temps en temps (12 % de chances au début d'un tour), un dragon des marges traverse le ciel en rase-mottes : il suit le relief, juste au-dessus de la tête des combattants, et monte par-dessus les collines et les tours. Une flèche l'atteint sans peine. **Ne lui tirez pas dessus** : touché, même sans dégâts, il pique sur un combattant d'une maison adverse tiré au hasard, l'avale tout rond, puis repart. Le tour attend qu'il ait fini. Une explosion qui l'atteint le fâche de la même façon, comme si la maison qui joue avait tiré.
 
 ### Le parchemin brûle {{st:jeu}}
 

@@ -10,8 +10,9 @@ export interface DragonRules {
   /** sub-px/tick: its swoop on its prey, and its flight away once fed */
   readonly diveSpeed: number;
   /**
-   * px between its belly and the highest ground or masonry of the map: it flies as low as it
-   * can without grazing anything, well within a full-power arrow's reach
+   * px between its belly and the highest ground or masonry under it: it hugs the relief, just
+   * over the units' heads (80 px), well within an arrow's reach (2026-10-25: was over the highest
+   * point of the whole map, out of reach)
    */
   readonly clearance: number;
 }
@@ -20,7 +21,7 @@ export const DRAGON_RULES: DragonRules = {
   spawnPermille: 120,
   speed: 2 * 256,
   diveSpeed: 12 * 256,
-  clearance: 60,
+  clearance: 100,
 };
 
 /** px: the dragon's body, around its centre, where a shot or a blast touches it */

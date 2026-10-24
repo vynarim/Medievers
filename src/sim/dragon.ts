@@ -1,11 +1,12 @@
 // Le dragon des marges (GDD §4.11). Only present when the match rules have `dragon` (absent from
-// older logs). It may cross the sky at the start of a turn's action, as low as it can; a shot or
+// older logs). It may cross the sky at the start of a turn's action, hugging the relief as low as
+// it can, over the units' heads; a shot or
 // a blast that touches it sends it swooping on a random unit of the shooter's enemies, which it
 // swallows whole, before it flies away.
 import { DRAGON_BITE, DRAGON_HALF_HEIGHT, DRAGON_HALF_WIDTH } from '../content/dragon.ts';
 import type { SimEvent } from './events.ts';
 import type { Explosion } from './explosions/explosion.ts';
-import { SUBPX, idiv } from './math/fixed.ts';
+import { SUBPX, idiv, subToPx } from './math/fixed.ts';
 import { isqrt } from './math/isqrt.ts';
 import { nextRange } from './math/prng.ts';
 import type { SimState } from './state.ts';
@@ -15,19 +16,27 @@ import { UNIT_HEIGHT } from './units/unit.ts';
 /** px: a unit's middle, above its feet, where the dragon bites */
 const BITE_HEIGHT = UNIT_HEIGHT >> 1;
 
-/** px: the highest solid row of the map (ground or masonry), or its height when there is none. */
-function highestGround(s: SimState): number {
+/** px between two columns sampled to find the ground under the dragon */
+const GROUND_SAMPLE = 8;
+
+/**
+ * px: the dragon's centre row over column x: its belly `clearance` px above the highest ground or
+ * masonry under its body, so it hugs the relief as low as it can.
+ */
+function flightY(s: SimState, x: number, clearance: number): number {
   const t = s.terrain;
+  const x0 = Math.max(0, Math.min(t.width - 1, x - DRAGON_HALF_WIDTH));
+  const x1 = Math.max(0, Math.min(t.width - 1, x + DRAGON_HALF_WIDTH));
   let top = t.height;
-  for (let x = 0; x < t.width; x++) {
+  for (let cx = x0; cx <= x1; cx += GROUND_SAMPLE) {
     for (let y = 0; y < top; y++) {
-      if (isSolid(t, x, y)) {
+      if (isSolid(t, cx, y)) {
         top = y;
         break;
       }
     }
   }
-  return top;
+  return Math.max(DRAGON_HALF_HEIGHT, top - clearance - DRAGON_HALF_HEIGHT);
 }
 
 /** Start of a turn's action: the dragon may come across the sky, from either side. */
@@ -36,9 +45,8 @@ export function dragonAtAction(s: SimState, events: SimEvent[]): void {
   if (!r || s.dragon || nextRange(s.prng, 0, 999) >= r.spawnPermille) return;
   const dir: -1 | 1 = nextRange(s.prng, 0, 1) === 0 ? 1 : -1;
   const w = s.terrain.width;
-  // As low as it can: its belly `clearance` px over the highest point of the map.
-  const y = Math.max(DRAGON_HALF_HEIGHT, highestGround(s) - r.clearance - DRAGON_HALF_HEIGHT);
   const x = dir > 0 ? -DRAGON_HALF_WIDTH : w + DRAGON_HALF_WIDTH;
+  const y = flightY(s, x, r.clearance);
   s.dragon = { id: s.nextEntityId++, x: x * SUBPX, y: y * SUBPX, dir, prey: 0, fed: false };
   events.push({ e: 'dragonAppeared', dir });
 }
@@ -85,7 +93,10 @@ export function stepDragon(s: SimState, events: SimEvent[]): void {
     d.x += d.dir * (r.diveSpeed >> 1);
     d.y -= r.diveSpeed >> 1;
   } else {
+    // Across, rising and sinking with the relief under it, as fast as it flies.
     d.x += d.dir * r.speed;
+    const dy = flightY(s, subToPx(d.x), r.clearance) * SUBPX - d.y;
+    d.y += Math.max(-r.speed, Math.min(r.speed, dy));
   }
   const w = s.terrain.width;
   if (
