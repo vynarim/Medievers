@@ -145,6 +145,18 @@ describe('falling', () => {
     expect(r.fallDamage).toBe(UNIT_RULES.fallMinDamage);
   });
 
+  it('costs nothing for a jump that comes down where it took off', () => {
+    const t = terrainFrom(1600, 400, () => 300);
+    for (const kind of ['forward', 'back'] as const) {
+      const u = standingUnit(t, 800);
+      expect(jump(u, kind, UNIT_RULES)).toBe(true);
+      const r = fallUntilLanded(u, t);
+      expect(r.landed).toBe(true);
+      expect(px(u.y)).toBe(300);
+      expect(r.fallDamage).toBe(0);
+    }
+  });
+
   it('applies fall damage beyond 160 px: 1 HP per 8 px, at most 30, and 5 from 40 px', () => {
     expect([
       fallDamage(30, UNIT_RULES),

@@ -66,6 +66,8 @@ export interface Unit {
   knocked: boolean;
   /** px: highest point (smallest y) since leaving the ground, for fall damage */
   airPeakY: number;
+  /** px: feet row where the unit left the ground (rules.unit.fallMinHeight) */
+  airFromY?: number;
   /** consecutive ticks spent still on the ground */
   stillTicks: number;
   alive: boolean;
@@ -196,6 +198,7 @@ function leaveGround(u: Unit): void {
   if (u.climbing) u.climbing = false;
   u.grounded = false;
   u.airPeakY = subToPx(u.y);
+  u.airFromY = u.airPeakY;
 }
 
 /** Lets go of whatever holds the unit up (a ladder that is gone): it falls from here. */
@@ -222,11 +225,14 @@ export function jump(u: Unit, kind: 'forward' | 'back', rules: UnitRules): boole
   return true;
 }
 
-/** Fall damage for a fall of `height` px (GDD §3.1). */
-export function fallDamage(height: number, rules: UnitRules): number {
+/**
+ * Fall damage for a fall of `height` px (GDD §3.1), landing `drop` px below the point the unit
+ * left the ground: a jump that comes down where it took off is no fall.
+ */
+export function fallDamage(height: number, rules: UnitRules, drop = height): number {
   // Off a wall or a cliff, a fall always hurts a little (rules.unit.fallMinDamage).
   const least =
-    rules.fallMinHeight !== undefined && height >= rules.fallMinHeight
+    rules.fallMinHeight !== undefined && drop >= rules.fallMinHeight
       ? (rules.fallMinDamage ?? 0)
       : 0;
   if (height <= rules.fallSafeHeight) return least;
@@ -348,7 +354,7 @@ function land(u: Unit, rules: UnitRules, res: PhysicsResult): boolean {
   u.grounded = true;
   u.stillTicks = 0;
   res.landed = true;
-  res.fallDamage = fallDamage(height, rules);
+  res.fallDamage = fallDamage(height, rules, subToPx(u.y) - (u.airFromY ?? u.airPeakY));
   return true;
 }
 

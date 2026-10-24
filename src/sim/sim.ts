@@ -919,6 +919,8 @@ function hashState(s: SimState): number {
     int((u.grounded ? 1 : 0) | (u.knocked ? 2 : 0) | (u.alive ? 4 : 0) | (u.climbing ? 8 : 0));
     // Only ever set with rules.turn.rememberWeapon: older hashes stay the same.
     if (u.weapon !== undefined) int(weaponIndexIn(s.rules, u.weapon));
+    // Only read with rules.unit.fallMinHeight: older hashes stay the same.
+    if (s.rules.unit.fallMinHeight !== undefined) int(u.airFromY ?? u.airPeakY);
   }
   int(s.shots.length);
   for (const shot of s.shots) {
