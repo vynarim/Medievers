@@ -551,6 +551,33 @@ export class SkyLife {
     }
   }
 
+  /**
+   * The far hills are washed in, so they would not hide the feet: the bow is redrawn without
+   * what lies below their crest, and its feet go into the hills.
+   */
+  private cutRainbow(x: number, y: number, scale: number): void {
+    const texture = this.scene.textures.get('rainbow');
+    if (!(texture instanceof Phaser.Textures.CanvasTexture)) return;
+    const ctx = texture.getContext();
+    const { width: w, height: h } = texture;
+    ctx.clearRect(0, 0, w, h);
+    drawRainbow(ctx, w, h);
+    ctx.save();
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.beginPath();
+    ctx.moveTo(0, h);
+    for (let tx = 0; tx <= w; tx += 4) {
+      // Texture column tx stands at world x; its crest, in texture rows (origin at the bottom).
+      const crest = h + (this.far.groundAt(x + (tx - w / 2) * scale) - y) / scale;
+      ctx.lineTo(tx, Math.min(h, crest));
+    }
+    ctx.lineTo(w, h);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+    texture.refresh();
+  }
+
   private showRainbow(): void {
     const cam = this.scene.cameras.main;
     const [fx] = this.far.scroll;
@@ -561,6 +588,7 @@ export class SkyLife {
     // into the hill, so neither foot hangs in the air.
     const foot = (RAINBOW_OUTER - RAINBOW_BANDS / 2) * scale;
     const y = Math.max(this.far.groundAt(x - foot), this.far.groundAt(x + foot)) + 6 * scale;
+    this.cutRainbow(x, y, scale);
     this.rainbow.setPosition(x, y).setScale(scale).setAlpha(0).setVisible(true);
     this.rainbowAge = 0;
   }
