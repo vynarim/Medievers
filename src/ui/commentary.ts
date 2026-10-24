@@ -7,7 +7,9 @@ import type { SimView } from '../sim/sim.ts';
 import { UNIT_HEIGHT } from '../sim/units/unit.ts';
 import type { Hud } from './hud.ts';
 import { pick, t } from './i18n.ts';
+import { showEndScreen } from './end-screen.ts';
 import { COLORS } from './tokens.ts';
+import { uiRoot } from './overlay.ts';
 
 /** A word or number popping up in the world, in px. */
 export interface Pop {
@@ -33,6 +35,8 @@ export class Commentary {
   /** said once per tick: a cleric's blessing, a house leaving after its king */
   private blessed = false;
   private kingFell = false;
+  /** closes the end screen, while it is up */
+  private endScreen: (() => void) | null = null;
   /** last state seen of each structure, by id */
   private readonly structureStates = new Map<number, number>();
   /** a shot ended without damage so far: tick, impact point and shooter, to call the miss */
@@ -274,15 +278,14 @@ export class Commentary {
           break;
         }
         case 'gameOver': {
+          // The Bayeux-style tapestry: the winner parades and feasts, or nobody is left at all.
           const f = e.winner >= 0 ? FACTIONS[e.winner] : undefined;
-          this.hud.announce(
-            f ? t('hud.winner', { house: t(f.nameKey) }) : t('hud.draw'),
-            t('hud.restart'),
-            f ? pick('quip.win', { house: t(f.nameKey) }) : '',
-            f?.primary ?? COLORS.encre,
-            now,
-            { label: t('hud.replay'), run: this.replay },
-          );
+          this.endScreen?.();
+          this.endScreen = showEndScreen(uiRoot(), {
+            winner: f ? { nameKey: f.nameKey, primary: f.primary, secondary: f.secondary } : null,
+            quip: f ? pick('quip.win', { house: t(f.nameKey) }) : pick('quip.draw'),
+            onRestart: this.replay,
+          });
           break;
         }
         default:
