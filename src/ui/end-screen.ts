@@ -11,6 +11,8 @@ export interface EndScreenOptions {
   /** winning house, or null for a draw */
   readonly winner: {
     readonly nameKey: string;
+    /** its name in this match (houses get a new one each match) */
+    readonly name: string;
     readonly primary: number;
     readonly secondary: number;
   } | null;
@@ -654,9 +656,9 @@ function wools(winner: EndScreenOptions['winner']): Wools {
   };
 }
 
-/** Latin name of a house for the titulus, falling back on the vernacular one. */
-function latinHouse(nameKey: string): string {
-  return tOpt(`end.latin.${nameKey}`) ?? t(nameKey);
+/** Latin name of a house for the titulus, when it bears its heraldic name; else its name. */
+function latinHouse(w: { readonly nameKey: string; readonly name: string }): string {
+  return w.name === t(w.nameKey) ? (tOpt(`end.latin.${w.nameKey}`) ?? w.name) : w.name;
 }
 
 function tapestry(opts: EndScreenOptions): HTMLElement {
@@ -667,9 +669,7 @@ function tapestry(opts: EndScreenOptions): HTMLElement {
     const i = palette.indexOf(c);
     return i < 0 ? c : `url(#${prefix}-w${i})`;
   };
-  const scene = opts.winner
-    ? victoryScene(fill, w, latinHouse(opts.winner.nameKey))
-    : drawScene(fill, w);
+  const scene = opts.winner ? victoryScene(fill, w, latinHouse(opts.winner)) : drawScene(fill, w);
   const topColours = opts.winner
     ? [w.terracotta, w.ochre, w.sage, w.indigo, w.rose]
     : [w.grey, w.brown, w.sage, w.rose];
@@ -708,7 +708,7 @@ export function showEndScreen(root: HTMLElement, opts: EndScreenOptions): () => 
   card.appendChild(el('div', 'end-kicker', t(winner ? 'end.kicker.win' : 'end.kicker.draw')));
   const head = el('div', 'end-head');
   if (winner) head.appendChild(shield(winner.primary, winner.secondary));
-  const title = el('div', 'end-title', winner ? t(winner.nameKey) : t('end.title.draw'));
+  const title = el('div', 'end-title', winner ? winner.name : t('end.title.draw'));
   screen.setAttribute('aria-label', title.textContent);
   head.appendChild(title);
   if (winner) head.appendChild(shield(winner.primary, winner.secondary));

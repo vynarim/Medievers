@@ -51,6 +51,7 @@ import { targetFor, wallAngle, wallLength, wallRefusal, wallSize } from '../sim/
 import { isProjectile, isTargeted, type WeaponDef } from '../content/weapons.ts';
 import { rulesFor, saveSetup, type MatchSetup } from '../app/match-setup.ts';
 import { showSetupScreen } from '../ui/setup-screen.ts';
+import { nameHouses } from '../ui/house-names.ts';
 import { UNICORN_TEX_SCALE, unicornTextures } from './unicorn-art.ts';
 import { RELIC_TEX_SCALE, reliquaryTextures } from './reliquary-art.ts';
 import { showTitleScreen } from '../ui/title-screen.ts';
@@ -291,6 +292,8 @@ export class BattleScene extends Phaser.Scene {
       ? new AutoSaver(from.config, from.seed, from.mapId, [...from.commands])
       : new AutoSaver(config, seed, this.data_.mapId);
     this.replaying = watch !== undefined;
+    // The houses get their names for this match, from its seed: the same on every screen.
+    nameHouses(this.data_.seed);
     this.online = this.data_.online ?? null;
     this.remote = this.online ? new RemoteInputSource(this.online.lockstep) : null;
     this.stalledSince = null;

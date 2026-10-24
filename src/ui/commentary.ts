@@ -6,6 +6,7 @@ import type { SimEvent } from '../sim/events.ts';
 import type { SimView } from '../sim/sim.ts';
 import { UNIT_HEIGHT } from '../sim/units/unit.ts';
 import type { Hud } from './hud.ts';
+import { houseName } from './house-names.ts';
 import { pick, t } from './i18n.ts';
 import { showEndScreen } from './end-screen.ts';
 import { COLORS } from './tokens.ts';
@@ -60,7 +61,7 @@ export class Commentary {
     this.pendingMiss = null;
     this.lastUnit = unitId;
     const f = FACTIONS[team];
-    const house = f ? t(f.nameKey) : '';
+    const house = houseName(team);
     const name = unitName(unitId);
     this.hud.announce(
       t('hud.turn', { n: turn }),
@@ -93,10 +94,7 @@ export class Commentary {
     this.blessed = false;
     this.kingFell = false;
     const exploded = events.some((e) => e.e === 'explosion');
-    const house = (team: number): string => {
-      const f = FACTIONS[team];
-      return f ? t(f.nameKey) : '';
-    };
+    const house = houseName;
     for (const e of events) {
       switch (e.e) {
         case 'turnStarted': {
@@ -342,8 +340,15 @@ export class Commentary {
           const f = e.winner >= 0 ? FACTIONS[e.winner] : undefined;
           this.endScreen?.();
           this.endScreen = showEndScreen(uiRoot(), {
-            winner: f ? { nameKey: f.nameKey, primary: f.primary, secondary: f.secondary } : null,
-            quip: f ? pick('quip.win', { house: t(f.nameKey) }) : pick('quip.draw'),
+            winner: f
+              ? {
+                  nameKey: f.nameKey,
+                  name: houseName(e.winner),
+                  primary: f.primary,
+                  secondary: f.secondary,
+                }
+              : null,
+            quip: f ? pick('quip.win', { house: houseName(e.winner) }) : pick('quip.draw'),
             onRestart: this.replay,
             onReplay: this.watch,
           });
