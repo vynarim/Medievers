@@ -10,6 +10,12 @@ export interface DelugeRules {
   readonly risePx: number;
   /** HP every unit loses at the end of every turn once it has started; 0 = off */
   readonly damage: number;
+  /**
+   * HP a unit loses when the water reaches its feet; it is then washed up on the nearest dry
+   * ground, and drowns only if there is none left (2026-10-25). Absent from older logs: the
+   * water drowns at once.
+   */
+  readonly wetDamage?: number;
 }
 
 export const DELUGE_RULES: DelugeRules = {
@@ -17,4 +23,5 @@ export const DELUGE_RULES: DelugeRules = {
   startTicks: 15 * 60 * 60,
   risePx: 48,
   damage: 5,
+  wetDamage: 20,
 };

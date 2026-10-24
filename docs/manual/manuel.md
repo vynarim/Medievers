@@ -152,7 +152,7 @@ Une explosion fait ses dégâts maximum en son centre, puis de moins en moins ju
 **Trois champs de bataille** {{st:jeu}}, au choix sur l'écran de préparation, et **redessinés à chaque partie** : les collines, les tours, les murailles et les rochers n'y sont jamais au même endroit.
 
 - **La vallée** : collines vertes, moulins et vaches, deux tours et une muraille.
-- **La côte normande** : une falaise d'un côté, une plage qui s'enfonce dans la mer de l'autre (attention, la mer noie), des cogues et une abbaye sur son rocher au loin.
+- **La côte normande** : une falaise d'un côté, une plage qui s'enfonce dans la mer de l'autre (attention, la mer coûte 20 PV et vous rejette sur la rive), des cogues et une abbaye sur son rocher au loin.
 - **La Terre sainte** : des dunes, des rochers indestructibles, une forteresse sarrasine au milieu, Jérusalem à l'horizon, des palmiers et des chameaux.
 
 Chaque carte est une peinture, doublée d'une carte invisible des matières. Ce que vous voyez creusé est exactement ce qui est creusé : le jeu ne triche jamais sur la forme du terrain.
@@ -226,7 +226,7 @@ Après deux tours de table, un moine maladroit renverse sa chandelle : **la cart
 
 ### 5.4 Le Déluge {{st:jeu}}
 
-Pour que les parties ne s'éternisent pas, **le Déluge** arrive après 20 tours (ou 15 minutes). Une pleine page enluminée l'annonce : « *Et les eaux montèrent…* ». Ensuite, l'eau monte de 48 pixels à chaque fin de tour, et tous les combattants perdent 5 PV (0 pour s'en passer). L'eau noie instantanément : un combattant qui y tombe, ou que l'eau rattrape, est perdu. Ce qui tombe à l'eau disparaît aussi : tirs, reliquaires, barils, pots, cuisine, bêtes. Si l'eau emporte toutes les maisons à la fois, c'est une égalité. Réglages : onglet **Déluge**.
+Pour que les parties ne s'éternisent pas, **le Déluge** arrive après 20 tours (ou 15 minutes). Une pleine page enluminée l'annonce : « *Et les eaux montèrent…* ». Ensuite, l'eau monte de 48 pixels à chaque fin de tour, et tous les combattants perdent 5 PV (0 pour s'en passer). Un combattant qui tombe à l'eau, ou que l'eau rattrape, **perd 20 PV et est rejeté sur la terre sèche la plus proche** ; il ne se noie que si ses PV n'y suffisent pas, ou quand il n'y a plus de terre hors de l'eau. Ce qui tombe à l'eau disparaît aussi : tirs, reliquaires, barils, pots, cuisine, bêtes. Si l'eau emporte toutes les maisons à la fois, c'est une égalité. Réglages : onglet **Déluge**.
 
 ## 6. Les modes de jeu
 

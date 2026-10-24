@@ -2,8 +2,12 @@
 // surface, puts out what falls in, and, once the Déluge has begun, rises at every turn end.
 // Without water above the bottom of the map (older logs) nothing here does anything.
 import type { SimEvent } from './events.ts';
-import { subToPx } from './math/fixed.ts';
+import { SUBPX, subToPx } from './math/fixed.ts';
 import type { SimState } from './state.ts';
+import { bodyFree, supported, type Unit } from './units/unit.ts';
+
+/** px between two columns tried when looking for dry ground */
+const SHORE_STEP = 4;
 
 /** There is water on the map: its top is above the bottom edge. */
 export function hasWater(s: SimState): boolean {
@@ -15,11 +19,50 @@ export function underWater(s: SimState, y: number): boolean {
   return hasWater(s) && y > s.waterY;
 }
 
-/** Units whose feet are under the water drown at once (GDD §3.1). */
+/**
+ * px: the nearest place out of the water where unit u can stand, its feet on the highest ground
+ * of a column, searching outwards from its own column; null when the water covers everything.
+ */
+function dryGround(s: SimState, u: Unit): { x: number; y: number } | null {
+  const t = s.terrain;
+  const x0 = subToPx(u.x);
+  for (let d = 0; d < t.width; d += SHORE_STEP) {
+    for (const x of d === 0 ? [x0] : [x0 - d, x0 + d]) {
+      if (x < 0 || x >= t.width) continue;
+      for (let y = 0; y <= s.waterY && y < t.height; y++) {
+        if (supported(t, x, y) && bodyFree(t, x, y)) return { x, y };
+      }
+    }
+  }
+  return null;
+}
+
+/**
+ * Units whose feet are under the water (GDD §3.1): with rules.deluge.wetDamage they lose that
+ * many HP and are washed up on the nearest dry ground, drowning only if none is left or the HP
+ * run out; without it (older logs), they drown at once.
+ */
 export function drownUnits(s: SimState, events: SimEvent[]): void {
   if (!hasWater(s)) return;
+  const wet = s.rules.deluge?.wetDamage;
   for (const u of s.units) {
     if (!u.alive || !underWater(s, subToPx(u.y))) continue;
+    const shore = wet !== undefined ? dryGround(s, u) : null;
+    if (shore) {
+      const damage = Math.min(u.hp, wet ?? 0);
+      u.hp -= damage;
+      events.push({ e: 'unitDamaged', unitId: u.id, damage });
+      u.x = shore.x * SUBPX + SUBPX / 2;
+      u.y = shore.y * SUBPX;
+      u.vx = 0;
+      u.vy = 0;
+      u.grounded = true;
+      u.knocked = false;
+      u.climbing = false;
+      u.airPeakY = shore.y;
+      events.push({ e: 'washedUp', unitId: u.id, x: shore.x, y: shore.y });
+      if (u.hp > 0) continue;
+    }
     u.alive = false;
     u.hp = 0;
     events.push({ e: 'unitDied', unitId: u.id, cause: 'drowned' });

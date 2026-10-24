@@ -69,12 +69,27 @@ describe('water and the Déluge (GDD §2.4)', () => {
     expect(skipTurns(sim, 1)).toContainEqual({ e: 'delugeStarted' });
   });
 
-  it('drowns the units it reaches when it rises, and the other house wins', () => {
+  it('washes up on the nearest dry ground the units it reaches, which lose 20 HP', () => {
     // The unit in the pit stands at 590; the water rises from 600 to 552 and covers it.
     const rules: MatchRules = {
       ...CALM,
       deluge: { ...DELUGE_RULES, startTurn: 1, damage: 0 },
     };
+    const sim = new Sim({ rules, teams: [{ spawns: [650] }, { spawns: [1000] }] }, 1, pitMask());
+    const events = skipTurns(sim, 1);
+    expect(events).toContainEqual({ e: 'unitDamaged', unitId: 1, damage: DELUGE_RULES.wetDamage });
+    expect(events.some((e) => e.e === 'unitDied')).toBe(false);
+    const u = sim.view().units[0];
+    expect(u?.alive).toBe(true);
+    // On the edge of the pit, out of the water.
+    expect((u?.y ?? 0) >> 8).toBe(500);
+    expect(Math.abs(((u?.x ?? 0) >> 8) - 650)).toBeLessThanOrEqual(80);
+  });
+
+  it('drowns the units it reaches when it rises in logs recorded before it washed them up', () => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { wetDamage, ...old } = DELUGE_RULES;
+    const rules: MatchRules = { ...CALM, deluge: { ...old, startTurn: 1, damage: 0 } };
     const sim = new Sim({ rules, teams: [{ spawns: [650] }, { spawns: [1000] }] }, 1, pitMask());
     const events = skipTurns(sim, 1);
     expect(events).toContainEqual({ e: 'unitDied', unitId: 1, cause: 'drowned' });
