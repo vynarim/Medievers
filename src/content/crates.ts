@@ -34,8 +34,9 @@ export const CRATE_RULES: CrateRules = {
   windDrift: 20,
   blastDamage: 15,
   blastRadius: 40,
-  trapDamage: 35,
-  trapRadius: 60,
+  // A small trap, a nasty surprise rather than a disaster (2026-10-25: was 35 HP over 60 px).
+  trapDamage: 20,
+  trapRadius: 40,
 };
 
 /** px: size of a reliquary's box, standing on its base point */

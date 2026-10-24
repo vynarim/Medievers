@@ -184,7 +184,7 @@ Le vent change à chaque tour, de −10 (fort vers la gauche) à +10 (fort vers 
 À la fin d'un tour sur trois environ, **un ange descend du ciel** avec un reliquaire, qu'il laisse dériver avec le vent avant de le poser. Le premier combattant qui le touche en marchant le prend :
 - **reliquaire d'armes** : une munition de plus pour une arme à munitions limitées ;
 - **fiole de baume** : +25 PV (sans dépasser les PV de départ) ;
-- **coffret piégé** (un sur dix) : il vous explose au nez.
+- **coffret piégé** (un sur dix) : il vous explose au nez, sans trop de gravité (20 PV au plus, dans un petit rayon).
 
 Un tir ou une explosion qui touche un reliquaire le fait éclater, et le feu du parchemin le détruit.
 

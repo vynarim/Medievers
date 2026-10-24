@@ -143,7 +143,7 @@ Toutes les valeurs sont des défauts dans `src/content/weapons.ts`, ajustables p
 ### 4.5 Reliquaires (caisses)
 - Probabilité d'apparition en fin de tour : 30 %, 3 reliquaires au plus sur la carte. Un ange descend en planant (1 px par instant) et dépose un coffret ; il est sensible au vent pendant la descente, plus une fois posé. Il tombe hors des bouts de carte et des parties brûlées (programmé le 2026-10-24, `src/content/crates.ts`).
 - Contenu : 10 % de pièges ; sinon 35 % de fioles de baume (+25 PV, sans dépasser les PV de départ) et 65 % de reliquaires d'armes (+1 munition d'une arme à munitions limitées, tirée au hasard).
-- Un tir ou une explosion qui touche un reliquaire le fait éclater (15 dégâts / 40 px ; piège : 35 / 60). Le feu du parchemin les détruit. Si le sol se dérobe, ils retombent.
+- Un tir ou une explosion qui touche un reliquaire le fait éclater (15 dégâts / 40 px ; piège : 20 / 40, réduit le 2026-10-25 pour rester une mauvaise surprise et non un désastre). Le feu du parchemin les détruit. Si le sol se dérobe, ils retombent.
 - Types :
   - **Reliquaire d'armes** : 1 arme aléatoire, pondérée par rareté.
   - **Fiole de baume** : +25 PV.
