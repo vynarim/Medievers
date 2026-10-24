@@ -1,6 +1,7 @@
 // Unit body and movement (TECH_SPEC §5.1): a 28 × 80 px capsule sampled at 9 points,
 // walking pixel by pixel over steps and slopes, falling under gravity, coming to rest.
 import type { UnitRules } from '../../content/units.ts';
+import type { WeaponId } from '../../content/weapons.ts';
 import { SUBPX, idiv, subToPx } from '../math/fixed.ts';
 import { isSolid, type Terrain } from '../terrain/terrain.ts';
 
@@ -70,6 +71,8 @@ export interface Unit {
   alive: boolean;
   /** clinging to a ladder (rules.unit.climbSpeed): grounded, but held by the ladder */
   climbing?: boolean;
+  /** the weapon this unit last chose (rules.turn.rememberWeapon) */
+  weapon?: WeaponId;
 }
 
 export function createUnit(id: number, team: number, xPx: number, yPx: number, hp: number): Unit {

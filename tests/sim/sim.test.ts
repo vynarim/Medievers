@@ -248,6 +248,59 @@ describe('turn loop', () => {
     expect(d.sim.view().turn.activeUnitId).toBe(1);
   });
 
+  it('gives each unit back, at its next turn, the weapon it last chose', () => {
+    const config: MatchConfig = {
+      rules: CLASSIC_RULES,
+      teams: [{ spawns: [100, 200, 300] }, { spawns: [900, 1000, 1100] }],
+    };
+    const d = new Driver(config, 3);
+    d.until('action');
+    expect(d.sim.view().turn.activeUnitId).toBe(1);
+    expect(d.sim.view().turn.weapon).toBe('bow');
+    d.step([{ t: 'selectWeapon', id: 'sling' }]);
+    // Handing the turn to another unit hands it that unit's own weapon, and back.
+    d.step([{ t: 'selectUnit', unitId: 2 }]);
+    expect(d.sim.view().turn.weapon).toBe('bow');
+    d.step([{ t: 'selectWeapon', id: 'greekFire' }]);
+    d.step([{ t: 'selectUnit', unitId: 1 }]);
+    expect(d.sim.view().turn.weapon).toBe('sling');
+    d.step([{ t: 'skip' }]);
+    d.until('action'); // house 1
+    expect(d.sim.view().turn.weapon).toBe('bow');
+    d.step([{ t: 'skip' }]);
+    d.until('action'); // house 0: unit 1 rests, unit 2 plays with its Greek fire
+    expect(d.sim.view().turn.activeUnitId).toBe(2);
+    expect(d.sim.view().turn.weapon).toBe('greekFire');
+    // Out of Greek fire: the bow again.
+    const snap = d.sim.snapshot();
+    const team = snap.teams[0];
+    const gi = snap.rules.weapons.findIndex((w) => w.id === 'greekFire');
+    if (team) team.ammo[gi] = 0;
+    d.sim.restore(snap);
+    d.step([{ t: 'selectUnit', unitId: 3 }]);
+    d.step([{ t: 'selectUnit', unitId: 2 }]);
+    expect(d.sim.view().turn.weapon).toBe('bow');
+  });
+
+  it('starts every turn with the bow in logs recorded before rememberWeapon', () => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { rememberWeapon, ...turn }: TurnRules = CLASSIC_RULES.turn;
+    const config: MatchConfig = {
+      rules: { ...CLASSIC_RULES, turn },
+      teams: [{ spawns: [100] }, { spawns: [900] }],
+    };
+    const d = new Driver(config, 3);
+    d.until('action');
+    d.step([{ t: 'selectWeapon', id: 'sling' }, { t: 'skip' }]);
+    d.until('transition');
+    d.until('action');
+    d.step([{ t: 'skip' }]);
+    d.until('transition');
+    d.until('action');
+    expect(d.sim.view().turn.weapon).toBe('bow');
+    expect(d.sim.view().units[0]?.weapon).toBeUndefined();
+  });
+
   it('lets the last unit standing play every turn', () => {
     const config: MatchConfig = {
       rules: CLASSIC_RULES,

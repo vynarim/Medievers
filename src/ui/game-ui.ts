@@ -77,6 +77,9 @@ export class GameUi {
   /** Fire, in the colour of the house that plays */
   private readonly fire: HTMLButtonElement;
   private fireColour = -1;
+  private readonly arsenalButton: HTMLButtonElement;
+  private readonly arsenalArt: HTMLElement;
+  private arsenalWeapon = '';
   private readonly actionButtons: HTMLButtonElement[] = [];
   private readonly veil: HTMLElement;
   private readonly arsenal: HTMLElement;
@@ -172,6 +175,12 @@ export class GameUi {
       ),
       act(longJump(1), 'jump', 'tip.jumpRight'),
     );
+    // The arsenal button wears the playing unit's weapon, right of its name.
+    this.arsenalButton = this.click(button(t('ui.arsenal'), 'arsenal'), () =>
+      this.toggle(this.arsenal),
+    );
+    this.arsenalArt = el('span', 'art');
+    this.arsenalButton.append(this.arsenalArt);
     // Weapons and fire, bottom right.
     this.fuses = el('div', 'fuses');
     this.fuses.append(el('span', '', t('ui.fuse')));
@@ -188,7 +197,7 @@ export class GameUi {
     );
     // Weapon, aim and fire together.
     arms.append(
-      act(this.click(button(t('ui.arsenal')), () => this.toggle(this.arsenal))),
+      act(this.arsenalButton),
       this.fuses,
       act(
         holdButton(t('ui.spin'), (h) => (i.spin = h)),
@@ -530,6 +539,11 @@ export class GameUi {
     for (const b of this.fuses.querySelectorAll('button')) {
       b.classList.toggle('on', b.dataset.fuse === String(fuseSeconds));
       b.classList.toggle('hidden', inTurns && Number(b.dataset.fuse) > 3);
+    }
+    if (view.turn.weapon !== this.arsenalWeapon) {
+      this.arsenalWeapon = view.turn.weapon;
+      this.arsenalArt.innerHTML = weaponArt(view.turn.weapon, 30);
+      this.arsenalButton.title = t(`weapons.${view.turn.weapon}`);
     }
     // Fire says what the weapon does: strike, dig, set, build…
     const fireLabel = t(`ui.fire.${def?.behavior ?? 'directHit'}`);

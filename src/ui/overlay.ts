@@ -179,6 +179,8 @@ const STYLE = `
   align-items: center; justify-content: center; margin: 4px 0 12px; }
 #ui .net-status { position: absolute; left: 50%; bottom: 96px; transform: translateX(-50%);
   padding: 6px 16px; font-family: var(--caps); font-size: 18px; color: var(--lapis); pointer-events: none; }
+#ui button.arsenal { display: inline-flex; align-items: center; gap: 6px; padding-right: 6px; }
+#ui button.arsenal .art { line-height: 0; }
 #ui .hidden { display: none !important; }
 `;
 

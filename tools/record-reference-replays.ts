@@ -432,6 +432,33 @@ const SCRIPTS: readonly Script[] = [
     },
   },
   {
+    name: 'weapon-memory',
+    description:
+      'Each unit keeps its weapon (rules.turn.rememberWeapon): two units per house choose the ' +
+      'sling and the crossbow, hand the turn back and forth, and take them up again turns later.',
+    mapId: 'hills',
+    seed: 1192,
+    config: { rules: NO_PLACEMENT, teams: [{ spawns: [300, 520] }, { spawns: [1500, 1700] }] },
+    play: (r) => {
+      for (let turn = 0; turn < 8; turn++) {
+        r.until('action');
+        const v = r.sim.view();
+        const team = v.turn.activeTeam;
+        if (turn < 2) {
+          r.step([{ t: 'selectWeapon', id: 'sling' }]);
+          const mate = v.teams[team]?.unitIds.find((id) => id !== v.turn.activeUnitId);
+          if (mate !== undefined) r.step([{ t: 'selectUnit', unitId: mate }]);
+          r.step([{ t: 'selectWeapon', id: 'crossbow' }]);
+        }
+        r.step([
+          { t: 'aim', angle: team === 0 ? 3800 : 2340 },
+          { t: 'fire', power: 900 },
+        ]);
+        r.until('transition');
+      }
+    },
+  },
+  {
     name: 'greek-flames',
     description:
       'Greek fire flames (GDD §4.1, §4.6): pots set for this turn leave burning patches that ' +

@@ -89,6 +89,8 @@ Chaque équipe est une **maison héraldique** : un nom, un blason et deux couleu
 
 ## 4. L'arsenal {{st:prevu}}
 
+**Chaque combattant garde son arme** {{st:jeu}} : à son tour suivant, il reprend celle qu'il a choisie en dernier (l'arc s'il n'en reste plus). L'enluminure de l'arme en main est dessinée sur le bouton **Arsenal**.
+
 Les valeurs ci-dessous sont celles du schéma de règles *Classique*. « Vent » indique si le vent dévie le projectile.
 
 ### 4.1 Armes de tir et de lancer

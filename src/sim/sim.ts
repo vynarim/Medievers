@@ -35,7 +35,7 @@ import { kitchenTurn, inKitchen, stepKitchen, useKitchen } from './kitchen.ts';
 import { fire, stepShots } from './weapons/weapons.ts';
 import { blastReachesMines, stepDig, stepMines } from './tools.ts';
 import { weatherTurnEnd } from './weather.ts';
-import { isTargeted } from '../content/weapons.ts';
+import { isTargeted, type WeaponId } from '../content/weapons.ts';
 import { MAX_POWER } from './commands.ts';
 import { delugeTurnEnd, drownThings, drownUnits, hasWater, underWater } from './deluge.ts';
 import {
@@ -252,7 +252,7 @@ function startTurn(s: SimState, events: SimEvent[]): void {
   t.wind = nextRange(s.prng, -s.rules.wind.max, s.rules.wind.max);
   faceInward(s, unit);
   t.aim = unit.facing > 0 ? AIM_UP_RIGHT : AIM_UP_LEFT;
-  t.weapon = 'bow';
+  t.weapon = weaponFor(s, unit);
   t.fuse = 0;
   t.fired = false;
   t.turnHold = 0;
@@ -387,6 +387,7 @@ function applyCommand(s: SimState, c: GameCommand, events: SimEvent[]): void {
       if (canAct && mayUse(s, u, weaponDefIn(s.rules, c.id))) {
         t.weapon = c.id;
         t.fuse = weaponDefIn(s.rules, c.id).defaultFuse;
+        if (s.rules.turn.rememberWeapon) u.weapon = c.id;
       }
       break;
     case 'setFuse':
@@ -638,6 +639,21 @@ function selectUnit(s: SimState, unitId: number): void {
   team.lastPlayed = idx;
   faceInward(s, unit);
   t.aim = unit.facing > 0 ? AIM_UP_RIGHT : AIM_UP_LEFT;
+  if (s.rules.turn.rememberWeapon) {
+    t.weapon = weaponFor(s, unit);
+    t.fuse = 0;
+  }
+}
+
+/**
+ * The weapon a unit starts its turn with: the one it last chose, while it has ammunition for it
+ * and may use it (rules.turn.rememberWeapon); otherwise the bow.
+ */
+function weaponFor(s: SimState, u: Unit): WeaponId {
+  const id = u.weapon;
+  if (!s.rules.turn.rememberWeapon || id === undefined) return 'bow';
+  const ammo = s.teams[u.team]?.ammo[weaponIndexIn(s.rules, id)] ?? 0;
+  return ammo !== 0 && mayUse(s, u, weaponDefIn(s.rules, id)) ? id : 'bow';
 }
 
 /** A unit near an end of the map turns to face its inside (rules.turn.faceInwardPct). */
@@ -781,6 +797,8 @@ function hashState(s: SimState): number {
       int(v);
     // The climbing bit is only ever set with rules.unit.climbSpeed: older hashes stay the same.
     int((u.grounded ? 1 : 0) | (u.knocked ? 2 : 0) | (u.alive ? 4 : 0) | (u.climbing ? 8 : 0));
+    // Only ever set with rules.turn.rememberWeapon: older hashes stay the same.
+    if (u.weapon !== undefined) int(weaponIndexIn(s.rules, u.weapon));
   }
   int(s.shots.length);
   for (const shot of s.shots) {

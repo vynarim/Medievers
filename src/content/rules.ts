@@ -53,6 +53,12 @@ export interface TurnRules {
    */
   readonly noRepeat?: boolean;
   /**
+   * Each unit takes up again, at its next turn, the weapon it last chose (2026-10-24), if it
+   * still has ammunition for it and may use it; otherwise the bow. Absent from older logs: every
+   * turn starts with the bow.
+   */
+  readonly rememberWeapon?: boolean;
+  /**
    * ticks: the match opens with the houses placing their units one at a time, in turn, with
    * this long for each; when the time runs out the unit goes to its default column (GDD §2.1,
    * 2026-10-24). Absent from older logs: units start on their spawn columns.
@@ -118,6 +124,7 @@ export const CLASSIC_RULES: MatchRules = {
     retreatMaxTicks: 5 * TICKS_PER_SECOND,
     freeSelect: true,
     noRepeat: true,
+    rememberWeapon: true,
     placementTicks: 20 * TICKS_PER_SECOND,
     faceInwardPct: 25,
   },
