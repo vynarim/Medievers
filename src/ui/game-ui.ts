@@ -497,9 +497,14 @@ export class GameUi {
     this.down.classList.toggle('hidden', !ladder);
     // A wall to climb (or a drop to go down) with a rope, before the shot (rules.unit.wallClimb).
     const active = view.units.find((x) => x.id === view.turn.activeUnitId);
-    const rope =
-      !ladder && active?.alive === true && active.grounded && ropeDir(view, active) !== 0;
-    this.rope.classList.toggle('hidden', !rope);
+    const ropeWay = !ladder && active?.alive === true && active.grounded ? ropeDir(view, active) : 0;
+    this.rope.classList.toggle('hidden', ropeWay === 0);
+    // It says which way the rope goes: up the wall in front, or down the drop in front.
+    const ropeLabel = t(ropeWay > 0 ? 'ui.ropeDown' : 'ui.rope');
+    if (ropeWay !== 0 && this.rope.textContent !== ropeLabel) {
+      this.rope.textContent = ropeLabel;
+      this.rope.title = t(ropeWay > 0 ? 'tip.ropeDown' : 'tip.rope');
+    }
     // Who plays is never in doubt: Fire wears the colours of the house whose turn it is.
     const colour = FACTIONS[view.turn.activeTeam]?.primary ?? COLORS.vermillon;
     if (colour !== this.fireColour) {
