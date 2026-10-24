@@ -1,12 +1,14 @@
-// On-screen controls for mouse and touch: action bar, arsenal, character card, help and the
-// playtest settings panel. Reads the sim view; acts only through UiIntents (CLAUDE.md rule 3).
+// On-screen controls for mouse and touch: virtual pad and weapon cluster, HUD, arsenal, character
+// card, help, pause menu and the playtest settings panel. Reads the sim view; acts only through
+// UiIntents (CLAUDE.md rule 3).
 import { CLASSIC_RULES, type MatchRules } from '../content/rules.ts';
-import { FACTIONS, UNIT_NAMES } from '../content/factions.ts';
+import { FACTIONS, unitName } from '../content/factions.ts';
 import type { UiIntents } from '../input/ui-intents.ts';
 import type { SimView } from '../sim/sim.ts';
+import { Hud } from './hud.ts';
 import { t } from './i18n.ts';
-import { button, el, holdButton, uiRoot } from './overlay.ts';
-import { css } from './tokens.ts';
+import { button, el, holdButton, shield, uiRoot } from './overlay.ts';
+import { COLORS, css } from './tokens.ts';
 import {
   readValue,
   toDisplay,
@@ -45,13 +47,17 @@ export interface GameUiOptions {
 export class GameUi {
   private readonly opts: GameUiOptions;
   private readonly root: HTMLElement;
-  private readonly bar: HTMLElement;
+  readonly hud: Hud;
   private readonly fuses: HTMLElement;
   private readonly actionButtons: HTMLButtonElement[] = [];
+  private readonly veil: HTMLElement;
   private readonly arsenal: HTMLElement;
   private readonly card: HTMLElement;
   private readonly help: HTMLElement;
   private readonly settings: HTMLElement;
+  private readonly pause: HTMLElement;
+  /** the modal on screen, if any */
+  private open: HTMLElement | null = null;
   private selectedUnit: number | null = null;
   private cardSignature = '';
   private arsenalSignature = '';
@@ -62,14 +68,59 @@ export class GameUi {
     this.root = uiRoot();
     this.root.replaceChildren();
     const i = opts.intents;
+    this.hud = new Hud(this.root);
 
-    this.bar = el('div', 'bar panel');
     /** 'move': usable in action and retreat; 'action': only before the shot. */
-    const act = (b: HTMLButtonElement, when: 'move' | 'action' = 'action'): HTMLButtonElement => {
+    const act = (
+      b: HTMLButtonElement,
+      when: 'move' | 'action' = 'action',
+      tip = '',
+    ): HTMLButtonElement => {
       b.dataset.when = when;
+      if (tip) b.title = t(tip);
       this.actionButtons.push(b);
       return b;
     };
+    // Virtual pad, bottom left (GDD §8.2): walk, jump, aim, turn around.
+    const pad = el('div', 'cluster pad panel');
+    pad.append(
+      act(
+        holdButton(t('ui.walkLeft'), (h) => (i.walk = h ? -1 : 0)),
+        'move',
+        'tip.walkLeft',
+      ),
+      act(
+        holdButton(t('ui.walkRight'), (h) => (i.walk = h ? 1 : 0)),
+        'move',
+        'tip.walkRight',
+      ),
+      act(
+        this.click(button(t('ui.jumpForward')), () => (i.jump = 'forward')),
+        'move',
+        'tip.jumpForward',
+      ),
+      act(
+        this.click(button(t('ui.jumpBack')), () => (i.jump = 'back')),
+        'move',
+        'tip.jumpBack',
+      ),
+      act(
+        holdButton(t('ui.aimUp'), (h) => (i.aim = h ? 1 : 0)),
+        'action',
+        'tip.aimUp',
+      ),
+      act(
+        holdButton(t('ui.aimDown'), (h) => (i.aim = h ? -1 : 0)),
+        'action',
+        'tip.aimDown',
+      ),
+      act(
+        this.click(button(t('ui.flip')), () => (i.flip = true)),
+        'action',
+        'tip.flip',
+      ),
+    );
+    // Weapons and fire, bottom right.
     this.fuses = el('div', 'fuses');
     this.fuses.append(el('span', '', t('ui.fuse')));
     for (let s = 1; s <= 5; s++) {
@@ -78,38 +129,61 @@ export class GameUi {
       b.addEventListener('click', () => (i.fuse = s));
       this.fuses.append(b);
     }
-    this.bar.append(
-      act(
-        holdButton(t('ui.walkLeft'), (h) => (i.walk = h ? -1 : 0)),
-        'move',
-      ),
-      act(
-        holdButton(t('ui.walkRight'), (h) => (i.walk = h ? 1 : 0)),
-        'move',
-      ),
-      act(
-        this.click(button(t('ui.jumpForward')), () => (i.jump = 'forward')),
-        'move',
-      ),
-      act(
-        this.click(button(t('ui.jumpBack')), () => (i.jump = 'back')),
-        'move',
-      ),
+    const arms = el('div', 'cluster arms panel');
+    arms.append(
       act(this.click(button(t('ui.arsenal')), () => this.toggle(this.arsenal))),
       this.fuses,
-      act(holdButton(t('ui.fire'), (h) => (i.charge = h), 'fire')),
       act(this.click(button(t('ui.skip')), () => (i.skip = true))),
+      act(holdButton(t('ui.fire'), (h) => (i.charge = h), 'fire')),
+    );
+    const sys = el('div', 'sys');
+    sys.append(
       this.click(button(`? ${t('ui.help')}`), () => this.toggle(this.help)),
       this.click(button(`⚙ ${t('ui.settings')}`), () => this.openSettings()),
+      this.click(button(`☰ ${t('ui.pause')}`), () => this.toggle(this.pause)),
     );
 
+    this.veil = el('div', 'veil hidden');
+    this.veil.addEventListener('pointerdown', () => this.show(null));
     this.arsenal = this.modal();
     this.card = el('div', 'card panel hidden');
-    this.help = this.modal();
-    this.help.classList.add('help');
-    this.help.append(el('h2', '', t('help.title')), el('p', '', t('help.body')));
+    this.help = this.modal('help');
+    this.help.append(this.closeButton(), el('h2', '', t('help.title')));
+    for (const line of t('help.body').split('\n')) this.help.append(el('p', '', line));
     this.settings = this.modal();
-    this.root.append(this.bar, this.card, this.arsenal, this.help, this.settings);
+    this.pause = this.modal('pause');
+    const pauseActions = el('div', 'actions');
+    pauseActions.append(
+      this.click(button(t('pause.resume')), () => this.show(null)),
+      this.click(button(t('pause.restart')), () => {
+        this.show(null);
+        this.opts.restart(loadOverrides());
+      }),
+      this.click(button(`? ${t('ui.help')}`), () => this.show(this.help)),
+      this.click(button(`⚙ ${t('ui.settings')}`), () => this.openSettings()),
+    );
+    this.pause.append(el('h2', '', t('pause.title')), el('p', '', t('pause.body')), pauseActions);
+    this.root.append(
+      pad,
+      arms,
+      sys,
+      this.card,
+      this.veil,
+      this.arsenal,
+      this.help,
+      this.settings,
+      this.pause,
+    );
+  }
+
+  /** True while a menu that stops the clock is open (pause, help, settings). */
+  get blocking(): boolean {
+    return this.open !== null && this.open !== this.arsenal;
+  }
+
+  /** Escape: closes the open menu, or opens the pause menu. */
+  escape(): void {
+    this.show(this.open ? null : this.pause);
   }
 
   private click(b: HTMLButtonElement, fn: () => void): HTMLButtonElement {
@@ -117,23 +191,26 @@ export class GameUi {
     return b;
   }
 
-  private modal(): HTMLElement {
-    const m = el('div', 'modal panel hidden');
-    return m;
+  private modal(extra = ''): HTMLElement {
+    return el('div', `modal panel hidden ${extra}`.trim());
   }
 
-  private closeButton(target: HTMLElement): HTMLButtonElement {
-    return this.click(button('✕', 'close'), () => target.classList.add('hidden'));
+  private closeButton(): HTMLButtonElement {
+    return this.click(button('✕', 'close'), () => this.show(null));
+  }
+
+  /** Shows one modal (or none), with the veil behind it. */
+  private show(panel: HTMLElement | null): void {
+    for (const p of [this.arsenal, this.help, this.settings, this.pause]) {
+      p.classList.toggle('hidden', p !== panel);
+    }
+    this.veil.classList.toggle('hidden', panel === null);
+    this.open = panel;
+    if (panel === this.arsenal) this.renderArsenal(true);
   }
 
   private toggle(panel: HTMLElement): void {
-    const show = panel.classList.contains('hidden');
-    for (const p of [this.arsenal, this.help, this.settings]) p.classList.add('hidden');
-    if (show) panel.classList.remove('hidden');
-    if (show && panel === this.arsenal) this.renderArsenal(true);
-    if (show && panel === this.help && !panel.querySelector('.close')) {
-      panel.prepend(this.closeButton(panel));
-    }
+    this.show(this.open === panel ? null : panel);
   }
 
   /** Selects the unit under a click (or clears the card). */
@@ -143,9 +220,10 @@ export class GameUi {
     this.card.classList.toggle('hidden', unitId === null);
   }
 
-  /** Called every frame with the current view. */
-  update(view: SimView): void {
+  /** Called every frame with the current view, the charged power and the frame time in ms. */
+  update(view: SimView, power: number, now: number): void {
     this.view = view;
+    this.hud.update(view, power, now);
     const phase = view.turn.phase;
     const canMove = phase === 'action' || phase === 'retreat';
     for (const b of this.actionButtons) {
@@ -157,7 +235,7 @@ export class GameUi {
     for (const b of this.fuses.querySelectorAll('button')) {
       b.classList.toggle('on', b.dataset.fuse === String(fuseSeconds));
     }
-    if (!this.arsenal.classList.contains('hidden')) this.renderArsenal(false);
+    if (this.open === this.arsenal) this.renderArsenal(false);
     this.renderCard(view);
   }
 
@@ -168,7 +246,7 @@ export class GameUi {
     const signature = `${v.turn.weapon}|${team?.ammo.join(',')}|${v.turn.phase}`;
     if (!force && signature === this.arsenalSignature) return;
     this.arsenalSignature = signature;
-    this.arsenal.replaceChildren(this.closeButton(this.arsenal), el('h2', '', t('ui.arsenal')));
+    this.arsenal.replaceChildren(this.closeButton(), el('h2', '', t('ui.arsenal')));
     const grid = el('div', 'grid');
     v.rules.weapons.forEach((w, idx) => {
       const ammo = team?.ammo[idx] ?? 0;
@@ -178,7 +256,7 @@ export class GameUi {
       b.disabled = ammo === 0 || v.turn.phase !== 'action';
       b.addEventListener('click', () => {
         this.opts.intents.selectWeapon = w.id;
-        this.arsenal.classList.add('hidden');
+        this.show(null);
       });
       grid.append(b);
     });
@@ -203,8 +281,12 @@ export class GameUi {
         : active
           ? t('card.state.active')
           : t('card.state.waiting');
-    const house = el('div', 'house', faction ? t(faction.nameKey) : '');
-    house.style.color = css(faction?.primary ?? 0);
+    const house = el('div', 'house');
+    house.append(
+      shield(faction?.primary ?? COLORS.encre, faction?.secondary ?? COLORS.or, true),
+      el('span', '', faction ? t(faction.nameKey) : ''),
+    );
+    house.style.color = css(faction?.primary ?? COLORS.encre);
     const hpBar = el('div', 'hpbar');
     const fill = el('i');
     fill.style.width = `${Math.min(100, (u.hp * 100) / Math.max(1, v.rules.startHp))}%`;
@@ -220,7 +302,7 @@ export class GameUi {
     }
     this.card.replaceChildren(
       this.click(button('✕', 'close'), () => this.selectUnit(null)),
-      el('h2', '', UNIT_NAMES[(u.id - 1) % UNIT_NAMES.length] ?? ''),
+      el('h2', '', unitName(u.id)),
       house,
       el('div', '', `${t('card.hp')} : ${u.hp} / ${v.rules.startHp}`),
       hpBar,
@@ -241,15 +323,15 @@ export class GameUi {
   }
 
   private openSettings(): void {
-    if (!this.settings.classList.contains('hidden')) {
-      this.settings.classList.add('hidden');
+    if (this.open === this.settings) {
+      this.show(null);
       return;
     }
     const overrides = new Map<string, number>(Object.entries(loadOverrides()));
     const asObject = (): TuningOverrides => Object.fromEntries(overrides);
     const base: MatchRules = CLASSIC_RULES;
     this.settings.replaceChildren(
-      this.closeButton(this.settings),
+      this.closeButton(),
       el('h2', '', t('tuning.title')),
       el('p', 'note', t('tuning.note')),
     );
@@ -289,12 +371,12 @@ export class GameUi {
     actions.append(
       this.click(button(t('tuning.apply')), () => {
         saveOverrides(asObject());
-        this.settings.classList.add('hidden');
+        this.show(null);
         this.opts.restart(asObject());
       }),
       this.click(button(t('tuning.reset')), () => {
         saveOverrides({});
-        this.settings.classList.add('hidden');
+        this.open = null;
         this.openSettings();
       }),
       this.click(button(t('tuning.copy')), () => {
@@ -303,8 +385,7 @@ export class GameUi {
       }),
     );
     this.settings.append(actions);
-    for (const p of [this.arsenal, this.help]) p.classList.add('hidden');
-    this.settings.classList.remove('hidden');
+    this.show(this.settings);
   }
 
   destroy(): void {

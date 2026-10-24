@@ -213,8 +213,9 @@ Cartes V1 : Jéricho (P0, carte de référence), Ela, Camp, Arche, Tour, Verger 
 | Écran de victoire (scène de triomphe, calques) | 1 | P1 |
 
 ### Polices
-- **Titres** : gothique textura sous licence OFL. Candidates : *UnifrakturMaguntia*, *UnifrakturCook* (Google Fonts, à vérifier). Contrôler la couverture des accents français.
-- **Texte et HUD** : un caractère lisible d'inspiration onciale ou humanistique (ex. *IM Fell* ou *EB Garamond*, OFL, à vérifier), car la gothique est illisible en petit.
+- **Titres** : gothique textura *UnifrakturMaguntia* (OFL, accents français couverts), retenue le 2026-10-24. En casse mixte uniquement : ses capitales sont illisibles.
+- **Texte et HUD** : *IM Fell English* (OFL), et sa version petites capitales *IM Fell English SC* pour les boutons, noms et intertitres. La gothique est illisible en petit.
+- Les trois polices sont embarquées via les paquets `@fontsource/*` (aucun appel réseau) et chargées avant la première scène (`src/ui/fonts.ts`).
 
 ## 9. Pipeline de production (génération IA + retouche)
 

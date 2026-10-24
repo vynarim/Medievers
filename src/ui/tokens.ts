@@ -11,6 +11,9 @@ export const COLORS = {
   ceruse: 0xf3ecd9,
   velin: 0xe9dcc0,
   encre: 0x2a1d14,
+  carnation: 0xf0cfb0,
+  roseGarance: 0xc96a6e,
+  vertTendre: 0x8fae6a,
   ciel: 0xcfd8d0,
   /** greybox rock, until the painted maps exist */
   roche: 0x77737a,

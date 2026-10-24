@@ -10,7 +10,7 @@
 3. **Tour par tour accessible** — une partie se comprend en 2 minutes, se maîtrise en 20 heures.
 4. **Local d'abord** — on joue ensemble dans la même pièce.
 
-**Ton** : burlesque. Les personnages gardent la gravité figée des enluminures (visages impassibles, gestes hiératiques) mais subissent des catastrophes absurdes. Le comique naît de ce contraste. Les décors s'inspirent d'épisodes du manuscrit (Jéricho, Aï, la vallée d'Ela, l'Arche) sans narration religieuse.
+**Ton** : burlesque. Les personnages gardent la gravité figée des enluminures (visages impassibles, gestes hiératiques) mais subissent des catastrophes absurdes. Le comique naît de ce contraste, et d'un humour décalé à la Monty Python : un commentaire tiré au hasard accompagne chaque début de tour, tir, blessure, mort ou tir raté, et les impacts font jaillir des onomatopées de bande dessinée à la mode médiévale (« Badaboum ! », « Palsambleu ! », « Tchac ! »). Ces répliques sont des pastiches et des clins d'œil, jamais des citations de films. Les décors s'inspirent d'épisodes du manuscrit (Jéricho, Aï, la vallée d'Ela, l'Arche) sans narration religieuse.
 
 **Public** : 10 ans et plus, joueurs occasionnels et nostalgiques de Worms. Pas de sang : les dégâts produisent des étoiles, des plumes et des éclats de vélin.
 
@@ -183,16 +183,17 @@ L'IA joue via `InputSource` et produit les mêmes commandes qu'un humain. Elle �
 | Marcher | ← → ou A/D |
 | Saut avant / arrière | Entrée / Entrée ×2 |
 | Viser (angle) | ↑ ↓ ou souris |
+| Se retourner sur place | T (garde l'élévation de la visée) |
 | Tirer (jauge de puissance) | Espace maintenu puis relâché |
 | Drag-to-aim | Clic gauche maintenu sur l'unité, tirer en arrière, relâcher |
 | Arsenal | Clic droit ou Tab |
 | Mèche (pot) | Touches 1–5 |
 | Caméra | Bords d'écran, glisser clic molette, molette = zoom |
-| Recentrer | C |
-| Pause / menu | Échap |
+| Recentrer | C ou double clic |
+| Pause / menu | Échap : menu Reprendre, Recommencer, Aide, Réglages. Le temps s'arrête aussi pendant l'aide et les réglages, pas pendant l'arsenal |
 
 ### 8.2 Tablette
-- **Pad virtuel** en bas à gauche (← → saut), bouton **Arsenal** en bas à droite, bouton **Tir**.
+- **Pad virtuel** en bas à gauche (← → saut, saut arrière, ▲ ▼ visée, ⇄ se retourner), boutons **Arsenal**, **Passer** et **Tir** en bas à droite, **Aide**, **Réglages** et **Pause** en haut à droite.
 - **Drag-to-aim** : glisser depuis l'unité active. Une ligne pointillée enluminée prolonge la trajectoire, avec une longueur limitée (passif Archer ×2).
 - **Mode jauge** : roue d'angle autour de l'unité et bouton Tir maintenu pour la puissance.
 - Caméra : glisser à 1 doigt hors de l'unité, pincer pour zoomer, double-tap pour recentrer.
@@ -200,6 +201,8 @@ L'IA joue via `InputSource` et produit les mêmes commandes qu'un humain. Elle �
 - Toutes les zones tactiles font au moins 48 × 48 px CSS.
 
 ## 9. UI / HUD
+- **Unité active** : auréole dorée et flèche qui oscille au-dessus de son nom ; son cartouche passe à l'or. La visée est une ligne de points vermillon et or terminée par une pointe de flèche.
+- **Commentaire** : un phylactère sous la bannière de vent affiche la dernière réplique ; une annonce centrale ouvre chaque tour (numéro, maison, combattant, réplique).
 - **Haut** : bannière de vent au centre, sablier du timer à droite (un vrai sablier qui s'écoule), tour courant et compte à rebours du Déluge à gauche.
 - **Bas** : barres de vie par équipe sous forme de phylactères avec blason ; fiche de l'unité active (nom, classe, PV).
 - **Au-dessus des unités** : nom et PV dans un petit cartouche aux couleurs de la maison.

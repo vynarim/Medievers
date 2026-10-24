@@ -75,6 +75,22 @@ describe('LocalControls', () => {
     expect(elevationOf(after.turn.aim, -1)).toBe(e);
   });
 
+  it('turns around on the spot with flip, keeping the elevation and the position', () => {
+    const { sim, tick } = setup();
+    for (let i = 0; i < 10; i++) tick({ up: true });
+    const before = sim.view();
+    const unit = before.units.find((u) => u.id === before.turn.activeUnitId);
+    const facing = unit?.facing ?? 1;
+    const e = elevationOf(before.turn.aim, facing);
+    const cmds = tick({ flipPressed: true });
+    expect(cmds.filter((c) => c.t === 'move')).toEqual([]);
+    const after = sim.view();
+    const u2 = after.units.find((u) => u.id === after.turn.activeUnitId);
+    expect(u2?.facing).toBe(-facing);
+    expect(u2?.x).toBe(unit?.x);
+    expect(elevationOf(after.turn.aim, -facing)).toBe(e);
+  });
+
   it('jumps forward after a single press and back after a double press', () => {
     const a = setup();
     expect(a.tick({ jumpPressed: true })).toEqual([]);

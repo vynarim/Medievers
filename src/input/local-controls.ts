@@ -20,6 +20,8 @@ export interface RawInput {
   /** charge key held (gauge aiming) */
   charge: boolean;
   nextWeaponPressed: boolean;
+  /** turn around on the spot, keeping the elevation */
+  flipPressed: boolean;
   /** 1..5 when a fuse key was pressed this tick */
   fusePressed: number | null;
   /** drag-to-aim: pull vector from the unit, in world px (pull back to shoot forward) */
@@ -37,6 +39,7 @@ export const emptyInput = (): RawInput => ({
   skipPressed: false,
   charge: false,
   nextWeaponPressed: false,
+  flipPressed: false,
   fusePressed: null,
   drag: null,
 });
@@ -87,8 +90,9 @@ export class LocalControls {
       out.push({ t: 'move', dir });
       this.walkSent = dir;
     }
-    // Turning around mirrors the aim so the elevation stays the same.
-    const facing = dir !== 0 ? dir : unit.facing;
+    // Turning around (walking or flipping) mirrors the aim so the elevation stays the same.
+    const flip = input.flipPressed && dir === 0 && turn.phase === 'action';
+    const facing = dir !== 0 ? dir : flip ? -unit.facing : unit.facing;
     let elevation = elevationOf(turn.aim, unit.facing);
 
     // Jump: one press = forward after a short wait, two presses = backward.

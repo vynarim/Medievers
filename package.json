@@ -27,6 +27,9 @@
     "check": "pnpm run lint && pnpm run typecheck && pnpm test && pnpm run test:determinism && pnpm run test:browser"
   },
   "dependencies": {
+    "@fontsource/im-fell-english": "5.3.0",
+    "@fontsource/im-fell-english-sc": "5.3.0",
+    "@fontsource/unifrakturmaguntia": "5.3.0",
     "fast-png": "8.0.0",
     "phaser": "4.2.1"
   },

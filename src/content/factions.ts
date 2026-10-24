@@ -32,3 +32,7 @@ export const UNIT_NAMES: readonly string[] = [
   'Perrine',
   'Raoul',
 ];
+
+/** Display name of a unit. */
+export const unitName = (unitId: number): string =>
+  UNIT_NAMES[(unitId - 1) % UNIT_NAMES.length] ?? '';

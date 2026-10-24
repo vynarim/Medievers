@@ -1,5 +1,6 @@
 // DOM layer above the game canvas: shared styles (palette tokens) and small element helpers.
 // Buttons never take keyboard focus, so the keyboard keeps driving the game.
+import { FONT_CAPS, FONT_TEXT, FONT_TITLE } from './fonts.ts';
 import { COLORS, css } from './tokens.ts';
 
 const STYLE = `
@@ -7,48 +8,126 @@ const STYLE = `
   --lapis: ${css(COLORS.lapis)}; --vermillon: ${css(COLORS.vermillon)}; --or: ${css(COLORS.or)};
   --ceruse: ${css(COLORS.ceruse)}; --velin: ${css(COLORS.velin)}; --encre: ${css(COLORS.encre)};
   --ocre: ${css(COLORS.ocre)}; --vert: ${css(COLORS.vertDeGris)}; --brun: ${css(COLORS.terreOmbre)};
+  --azur: ${css(COLORS.azur)};
+  --title: ${FONT_TITLE}; --text: ${FONT_TEXT}; --caps: ${FONT_CAPS};
+  --shade: rgba(42, 29, 20, 0.45); --gilt: rgba(212, 169, 60, 0.7);
+  --frame: inset 0 0 0 3px var(--ceruse), inset 0 0 0 5px var(--or);
+  --lift: 0 6px 18px var(--shade);
 }
-#ui { position: fixed; inset: 0; pointer-events: none; font-family: Georgia, 'Book Antiqua', serif;
+#ui { position: fixed; inset: 0; pointer-events: none; font-family: var(--text);
   color: var(--encre); user-select: none; -webkit-user-select: none; z-index: 10; }
-#ui .panel { pointer-events: auto; background: var(--ceruse); border: 2px solid var(--encre);
-  border-radius: 6px; box-shadow: 0 4px 14px rgba(42, 29, 20, 0.35); }
-#ui button { pointer-events: auto; min-width: 48px; min-height: 48px; padding: 6px 10px;
-  font: inherit; font-size: 16px; color: var(--encre); background: var(--velin);
-  border: 2px solid var(--encre); border-radius: 6px; cursor: pointer; touch-action: none; }
+/* Parchment panel: vellum, ink border, gilt fillet inside (ASSETS §1.1: cernes, gold). */
+#ui .panel { pointer-events: auto;
+  background: radial-gradient(ellipse at 50% 40%, var(--ceruse) 55%, var(--velin) 100%);
+  border: 3px solid var(--encre); border-radius: 3px; box-shadow: var(--frame), var(--lift); }
+#ui button { pointer-events: auto; min-width: 48px; min-height: 48px; padding: 6px 12px;
+  font-family: var(--caps); font-size: 18px; color: var(--encre); background: var(--velin);
+  border: 2px solid var(--encre); border-radius: 4px; cursor: pointer; touch-action: none;
+  box-shadow: inset 0 0 0 2px var(--ceruse), inset 0 0 0 3px var(--gilt); line-height: 1.1; }
 #ui button:hover { background: var(--or); }
-#ui button.on { background: var(--or); }
-#ui button:disabled { opacity: 0.45; cursor: default; background: var(--velin); }
-#ui .bar { position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%);
-  display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; padding: 6px;
-  width: max-content; max-width: calc(100vw - 32px); }
-#ui .bar .fire { background: var(--vermillon); color: var(--ceruse); }
-#ui .bar .fire:hover { background: var(--vermillon); filter: brightness(1.1); }
-#ui .fuses { display: flex; gap: 4px; align-items: center; }
+#ui button:active, #ui button.on { background: var(--or); transform: translateY(1px); }
+#ui button:disabled { opacity: 0.4; cursor: default; background: var(--velin); transform: none; }
+#ui button.fire { background: var(--vermillon); color: var(--ceruse); min-width: 96px; font-size: 20px; }
+#ui button.fire:hover, #ui button.fire.on { background: var(--vermillon); filter: brightness(1.15); }
+#ui .cluster { position: absolute; bottom: 12px; display: flex; gap: 6px; flex-wrap: wrap;
+  align-items: center; padding: 8px; max-width: calc(58vw - 24px); }
+#ui .pad { left: 12px; }
+#ui .arms { right: 12px; justify-content: flex-end; }
+#ui .fuses { display: flex; gap: 4px; align-items: center; font-family: var(--caps); }
+#ui .sys { position: absolute; top: 12px; right: 12px; display: flex; gap: 6px; }
+
+/* HUD */
+#ui .hud-turn { position: absolute; top: 12px; left: 12px; display: flex; gap: 12px;
+  align-items: center; padding: 10px 18px 10px 12px; min-width: 250px; }
+#ui .hud-turn .title { font-family: var(--title); font-size: 30px; line-height: 1; }
+#ui .hud-turn .house { font-family: var(--caps); font-size: 18px; }
+#ui .hud-turn .phase { font-style: italic; font-size: 15px; color: var(--brun); }
+#ui .shield { flex: none; width: 40px; height: 48px; border: 3px solid var(--encre);
+  border-radius: 0 0 50% 50% / 0 0 62% 62%; position: relative; overflow: hidden; background: var(--p); }
+#ui .shield::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 32%;
+  background: var(--s); border-bottom: 2px solid var(--encre); }
+#ui .shield.small { width: 22px; height: 27px; border-width: 2px; }
+#ui .hud-teams { position: absolute; top: 104px; left: 12px; display: flex; flex-direction: column; gap: 6px; }
+#ui .team { display: flex; align-items: center; gap: 8px; padding: 4px 12px 4px 6px;
+  font-family: var(--caps); font-size: 15px; min-width: 250px; }
+#ui .team .name { flex: 1; }
+#ui .team .hp { width: 90px; height: 10px; border: 2px solid var(--encre); background: var(--velin); }
+#ui .team .hp i { display: block; height: 100%; background: var(--p); }
+#ui .team.out { opacity: 0.45; text-decoration: line-through; }
+#ui .hud-wind { position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+  padding: 6px 18px 8px; text-align: center; min-width: 300px; }
+#ui .hud-wind .label { font-family: var(--caps); font-size: 17px; }
+#ui .hud-wind .track { position: relative; height: 14px; margin-top: 4px; border: 2px solid var(--encre);
+  background: var(--velin); }
+#ui .hud-wind .track::after { content: ''; position: absolute; left: 50%; top: -4px; bottom: -4px;
+  width: 2px; background: var(--encre); }
+#ui .hud-wind .fill { position: absolute; top: 0; bottom: 0; background: var(--azur); }
+#ui .hud-timer { position: absolute; top: 76px; right: 12px; width: 92px; height: 92px;
+  border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+#ui .hud-timer .glass { font-size: 18px; line-height: 1; }
+#ui .hud-timer .secs { font-family: var(--title); font-size: 38px; line-height: 1; }
+#ui .hud-timer.hurry .secs { color: var(--vermillon); }
+#ui .hud-timer.idle { opacity: 0.5; }
+#ui .hud-weapon { position: absolute; right: 12px; bottom: 100px; padding: 6px 16px 8px;
+  text-align: center; width: 300px; }
+#ui .hud-weapon .name { font-family: var(--caps); font-size: 19px; }
+#ui .hud-weapon .power { height: 12px; margin: 4px 0 2px; border: 2px solid var(--encre); background: var(--velin); }
+#ui .hud-weapon .power i { display: block; height: 100%; background: var(--vermillon); }
+#ui .hud-weapon .hint { font-style: italic; font-size: 13px; color: var(--brun); }
+/* Phylactery, the speech scroll of the marginal figures: the running commentary. */
+#ui .chronicle { position: absolute; top: 86px; left: 50%; transform: translateX(-50%);
+  width: max-content; max-width: min(620px, calc(100vw - 620px)); min-width: 240px; padding: 6px 26px;
+  text-align: center; font-style: italic; font-size: 18px; line-height: 1.3; background: var(--ceruse);
+  border: 2px solid var(--encre); border-radius: 18px / 50%;
+  box-shadow: inset 0 0 0 3px var(--ceruse), inset 0 0 0 4px var(--or), var(--lift);
+  transition: opacity 0.6s; }
+#ui .faded { opacity: 0; }
+#ui .banner { position: absolute; left: 50%; top: 32%; transform: translate(-50%, -50%);
+  padding: 18px 36px 20px; text-align: center; width: max-content; max-width: min(760px, calc(100vw - 48px));
+  transition: opacity 0.5s; pointer-events: none; }
+#ui .banner .big { font-family: var(--title); font-size: 54px; line-height: 1.1; }
+#ui .banner .sub { font-family: var(--caps); font-size: 22px; margin-top: 4px; }
+#ui .banner .quip { font-style: italic; font-size: 19px; margin-top: 10px; }
+#ui .banner button { margin-top: 14px; pointer-events: auto; }
+
+/* Modals */
+#ui .veil { position: absolute; inset: 0; background: var(--shade); pointer-events: auto; }
 #ui .modal { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
-  max-width: min(760px, calc(100vw - 32px)); max-height: calc(100vh - 140px); overflow: auto;
-  padding: 16px 20px; }
-#ui h2 { margin: 0 0 8px; color: var(--lapis); font-size: 24px; }
-#ui h3 { margin: 14px 0 6px; color: var(--vermillon); font-size: 17px; }
-#ui .close { float: right; }
-#ui .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; }
-#ui .weapon { text-align: left; display: block; width: 100%; }
-#ui .weapon b { display: block; font-size: 17px; margin-bottom: 2px; }
-#ui .weapon small { display: block; font-size: 13px; line-height: 1.35; }
-#ui .card { position: absolute; left: 16px; top: 120px; width: min(330px, calc(100vw - 32px));
-  padding: 12px 14px; font-size: 14px; line-height: 1.4; }
-#ui .card h2 { font-size: 21px; margin-bottom: 2px; }
-#ui .card .house { font-weight: bold; margin-bottom: 8px; }
-#ui .card .hpbar { height: 10px; border: 1px solid var(--encre); background: var(--velin); margin: 2px 0 8px; }
+  max-width: min(780px, calc(100vw - 32px)); max-height: calc(100vh - 48px); overflow: auto;
+  padding: 20px 28px 22px; }
+#ui h2 { margin: 0 0 12px; padding-bottom: 6px; color: var(--lapis); font-family: var(--title);
+  font-weight: normal; font-size: 36px; line-height: 1.1;
+  border-bottom: 2px solid var(--vermillon); box-shadow: 0 3px 0 -1px var(--or); }
+#ui h2::first-letter { color: var(--vermillon); font-size: 1.35em; }
+#ui h3 { margin: 16px 0 6px; color: var(--vermillon); font-family: var(--caps); font-weight: normal;
+  font-size: 20px; }
+#ui .close { float: right; margin-left: 12px; }
+#ui .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 10px; }
+#ui .weapon { text-align: left; display: block; width: 100%; padding: 10px 12px; font-family: var(--text); }
+#ui .weapon b { display: block; font-family: var(--caps); font-weight: normal; font-size: 20px;
+  margin-bottom: 4px; color: var(--lapis); }
+#ui .weapon small { display: block; font-size: 15px; line-height: 1.35; }
+#ui .weapon.on { box-shadow: inset 0 0 0 3px var(--vermillon); }
+#ui .card { position: absolute; right: 12px; top: 182px; width: min(340px, calc(100vw - 32px));
+  max-height: calc(100vh - 290px); overflow: auto; padding: 14px 18px; font-size: 16px; line-height: 1.4; }
+#ui .card h2 { font-size: 30px; margin-bottom: 4px; }
+#ui .card .house { font-family: var(--caps); font-size: 18px; margin-bottom: 8px; display: flex;
+  gap: 8px; align-items: center; }
+#ui .card .hpbar { height: 12px; border: 2px solid var(--encre); background: var(--velin); margin: 2px 0 8px; }
 #ui .card .hpbar i { display: block; height: 100%; background: var(--vert); }
 #ui .card ul { margin: 4px 0; padding-left: 18px; }
-#ui table { border-collapse: collapse; width: 100%; font-size: 14px; table-layout: fixed; }
+#ui .card h3 { margin-top: 10px; font-size: 18px; }
+#ui table { border-collapse: collapse; width: 100%; font-size: 16px; table-layout: fixed; }
 #ui td:nth-child(1) { width: 52%; } #ui td:nth-child(2) { width: 100px; } #ui td:nth-child(3) { width: 22%; }
-#ui td { padding: 3px 4px; border-bottom: 1px solid var(--velin); vertical-align: middle; }
-#ui td input { width: 84px; font: inherit; padding: 4px; border: 1px solid var(--encre); border-radius: 4px; }
-#ui td.unit, #ui td.def { color: var(--brun); font-size: 12px; white-space: nowrap; }
-#ui .note { font-size: 13px; font-style: italic; margin: 0 0 6px; }
-#ui .actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
-#ui .help p { white-space: pre-line; font-size: 15px; line-height: 1.5; }
+#ui td { padding: 3px 4px; border-bottom: 1px solid var(--gilt); vertical-align: middle; }
+#ui td input { width: 84px; font: inherit; padding: 4px; border: 2px solid var(--encre); border-radius: 3px;
+  background: var(--ceruse); }
+#ui td.unit, #ui td.def { color: var(--brun); font-size: 13px; white-space: nowrap; }
+#ui .note { font-size: 16px; font-style: italic; margin: 0 0 6px; }
+#ui .actions { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+#ui .help p, #ui .pause p { font-size: 17px; line-height: 1.5; margin: 0 0 10px; }
+#ui .pause { min-width: 360px; text-align: center; }
+#ui .pause .actions { flex-direction: column; align-items: stretch; }
 #ui .hidden { display: none !important; }
 `;
 
@@ -75,6 +154,14 @@ export function el<K extends keyof HTMLElementTagNameMap>(
   if (className) e.className = className;
   if (text) e.textContent = text;
   return e;
+}
+
+/** A heraldic shield in a house's tinctures (placeholder until the painted blazons). */
+export function shield(primary: number, secondary: number, small = false): HTMLElement {
+  const s = el('div', small ? 'shield small' : 'shield');
+  s.style.setProperty('--p', css(primary));
+  s.style.setProperty('--s', css(secondary));
+  return s;
 }
 
 /** A button that never steals keyboard focus from the game. */

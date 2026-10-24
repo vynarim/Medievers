@@ -4,6 +4,7 @@ Liste des éléments de tiers intégrés au jeu ou au dépôt, avec leur licence
 
 | Élément | Auteur / source | Licence | Emplacement |
 |---|---|---|---|
+| Polices *UnifrakturMaguntia*, *IM Fell English*, *IM Fell English SC* | Peter Wiegel ; Igino Marini (paquets [Fontsource](https://fontsource.org)) | SIL OFL 1.1 | `@fontsource/*` (npm) |
 | Skills `.claude/` (structure et principe « NOT ASSESSED ») | [Claude Code Game Studios](https://github.com/Donchitos/Claude-Code-Game-Studios), © 2026 Donchitos | MIT | `.claude/` |
 
 Les dépendances npm gardent leur propre licence (voir `pnpm licenses list`).
