@@ -198,6 +198,7 @@ Le détail des tâches et des critères d'acceptation est dans [docs/BACKLOG.md]
 
 | Document | Contenu |
 |---|---|
+| [Manuel du joueur (PDF)](docs/manual/Medievers-Manuel-du-joueur.pdf) | Toutes les règles expliquées au joueur, avec l'état de chacune (en jeu, moteur prêt, prévu). Régénéré par `pnpm run manual` |
 | [docs/GDD.md](docs/GDD.md) | Game design : règles, unités, arsenal, modes, IA, contrôles, UI, cartes |
 | [docs/TECH_SPEC.md](docs/TECH_SPEC.md) | Architecture, déterminisme, terrain, physique, formats, LAN, budgets de performance |
 | [docs/ASSETS.md](docs/ASSETS.md) | Direction artistique, conventions et liste des assets |

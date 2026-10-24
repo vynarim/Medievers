@@ -1,0 +1,105 @@
+// Builds the player's manual: docs/manual/manuel.md -> HTML -> PDF (Chromium via Playwright).
+// Numbers that exist in src/content are injected here so the manual cannot drift from the game.
+// Usage: pnpm run manual
+import { execSync } from 'node:child_process';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { marked } from 'marked';
+import { chromium } from 'playwright';
+import { MASK_PALETTE, MATERIALS } from '../src/content/materials.ts';
+import { Material, type MaterialId } from '../src/sim/terrain/material.ts';
+
+const dir = new URL('../docs/manual/', import.meta.url);
+const OUTPUT = 'Medievers-Manuel-du-joueur.pdf';
+
+const STATUS: Record<string, string> = {
+  jeu: '<span class="st st-jeu">En jeu</span>',
+  moteur: '<span class="st st-moteur">Moteur prêt</span>',
+  prevu: '<span class="st st-prevu">Prévu</span>',
+};
+
+const MATERIAL_NAMES: Record<MaterialId, [string, string]> = {
+  [Material.Air]: ['Air', 'Le vide : on y tombe.'],
+  [Material.Earth]: ['Terre', 'Le sol ordinaire.'],
+  [Material.Rock]: ['Roche', 'La roche peinte et les piliers du cadre.'],
+  [Material.BuiltStone]: ['Pierre bâtie', 'Les murs posés et les remparts.'],
+  [Material.Wood]: ['Bois', 'Planches, coques et échafaudages.'],
+  [Material.Ladder]: ['Échelle', 'On y grimpe ; les projectiles la traversent.'],
+};
+
+function materialsTable(): string {
+  const rows = MATERIALS.filter((m) => m.id !== Material.Air).map((m) => {
+    const [name, note] = MATERIAL_NAMES[m.id];
+    const c = MASK_PALETTE.find((p) => p.material === m.id);
+    const swatch = c
+      ? `<span class="swatch" style="background:rgb(${c.r},${c.g},${c.b})"></span>`
+      : '';
+    const solidity = m.solid ? 'bloque tout' : m.climbable ? 'praticable' : 'traversable';
+    const strength = !m.destructible
+      ? '<strong>indestructible</strong>'
+      : m.resistancePct > 100
+        ? `résiste ${m.resistancePct / 100}× mieux aux explosions`
+        : 'se creuse normalement';
+    return `| ${swatch} **${name}** | ${solidity} | ${strength} | ${note} |`;
+  });
+  return [
+    '| Matière | Passage | Explosions | Où on la trouve |',
+    '|---|---|---|---|',
+    ...rows,
+  ].join('\n');
+}
+
+function edition(): string {
+  const date = new Date().toLocaleDateString('fr-FR', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+  let rev = '';
+  try {
+    rev = execSync('git rev-parse --short HEAD', { encoding: 'utf8' }).trim();
+  } catch {
+    rev = 'hors git';
+  }
+  return `<p class="edition">Édition du ${date} · version ${rev}</p>`;
+}
+
+const source = readFileSync(new URL('manuel.md', dir), 'utf8')
+  .replaceAll('{{edition}}', edition())
+  .replaceAll('{{materials}}', materialsTable())
+  .replace(/\{\{st:(\w+)\}\}/g, (_, key: string) => {
+    const badge = STATUS[key];
+    if (!badge) throw new Error(`unknown status tag {{st:${key}}}`);
+    return badge;
+  });
+const leftover = source.match(/\{\{[^}]+\}\}/);
+if (leftover) throw new Error(`unknown placeholder ${leftover[0]}`);
+
+const body = await marked.parse(source);
+const css = readFileSync(new URL('manual.css', dir), 'utf8');
+const html = `<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>Medievers — Manuel du joueur</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=UnifrakturMaguntia&display=swap" rel="stylesheet">
+<style>${css}</style></head><body>${body}</body></html>`;
+
+// MANUAL_HTML=<path> also writes the HTML, to preview the layout.
+if (process.env.MANUAL_HTML) writeFileSync(process.env.MANUAL_HTML, html);
+
+const browser = await chromium.launch({ headless: true });
+try {
+  const page = await browser.newPage();
+  await page.setContent(html, { waitUntil: 'networkidle' });
+  await page.evaluate(() => document.fonts.ready);
+  const pdf = await page.pdf({
+    format: 'A4',
+    printBackground: true,
+    margin: { top: '18mm', bottom: '18mm', left: '16mm', right: '16mm' },
+    displayHeaderFooter: true,
+    headerTemplate: '<span></span>',
+    footerTemplate:
+      '<div style="width:100%;text-align:center;font-size:8pt;color:#6b4a2e;font-family:Georgia,serif">Medievers — Manuel du joueur · <span class="pageNumber"></span> / <span class="totalPages"></span></div>',
+  });
+  writeFileSync(new URL(OUTPUT, dir), pdf);
+  console.log(`wrote docs/manual/${OUTPUT}`);
+} finally {
+  await browser.close();
+}
