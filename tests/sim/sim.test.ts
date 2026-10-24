@@ -220,7 +220,7 @@ describe('turn loop', () => {
     expect(unit(d, 1).x).toBe(x1);
   });
 
-  it('lets the team choose its unit before it acts, even the same one again', () => {
+  it('lets the team choose its unit before it acts, but not the one that played last', () => {
     const config: MatchConfig = {
       rules: CLASSIC_RULES,
       teams: [{ spawns: [100, 200] }, { spawns: [900, 1000] }],
@@ -241,7 +241,43 @@ describe('turn loop', () => {
     d.step([{ t: 'skip' }]);
     d.until('action'); // team 1
     d.step([{ t: 'skip' }]);
-    d.until('action'); // team 0 again: unit 1 is proposed, unit 2 plays again
+    d.until('action'); // team 0 again: unit 2 played last, it rests
+    expect(d.sim.view().turn.restingUnitId).toBe(2);
+    expect(d.sim.view().turn.activeUnitId).toBe(1);
+    d.step([{ t: 'selectUnit', unitId: 2 }]);
+    expect(d.sim.view().turn.activeUnitId).toBe(1);
+  });
+
+  it('lets the last unit standing play every turn', () => {
+    const config: MatchConfig = {
+      rules: CLASSIC_RULES,
+      teams: [{ spawns: [100] }, { spawns: [900] }],
+    };
+    const d = new Driver(config, 3);
+    for (let i = 0; i < 3; i++) {
+      d.until('action');
+      expect(d.sim.view().turn.restingUnitId).toBe(-1);
+      d.step([{ t: 'skip' }]);
+      d.until('transition');
+    }
+  });
+
+  it('lets the same unit play again in logs recorded before noRepeat', () => {
+    const turn: TurnRules = { ...CLASSIC_RULES.turn };
+    delete (turn as { noRepeat?: boolean }).noRepeat;
+    const config: MatchConfig = {
+      rules: { ...CLASSIC_RULES, turn },
+      teams: [{ spawns: [100, 200] }, { spawns: [900] }],
+    };
+    const d = new Driver(config, 3);
+    d.until('action');
+    d.step([{ t: 'selectUnit', unitId: 2 }]);
+    d.step([{ t: 'skip' }]);
+    d.until('transition');
+    d.until('action');
+    d.step([{ t: 'skip' }]);
+    d.until('transition');
+    d.until('action');
     d.step([{ t: 'selectUnit', unitId: 2 }]);
     expect(d.sim.view().turn.activeUnitId).toBe(2);
   });

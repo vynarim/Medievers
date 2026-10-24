@@ -26,7 +26,7 @@ Ce manuel décrit le jeu tel qu'on le joue. Il grandit avec le jeu : chaque règ
 
 ## 1. Le principe
 
-Deux à quatre **maisons** s'affrontent sur une carte peinte, chacune avec trois à six combattants. On joue **chacun son tour** : pendant votre tour, un seul de vos combattants agit. Il se déplace, choisit une arme, vise et tire. Le terrain se creuse sous les explosions, les combattants sont projetés, tombent, se noient.
+Deux à quatre **maisons** s'affrontent sur une carte peinte, chacune avec un à six combattants (quatre par défaut, à régler dans ⚙ Réglages, onglet Tour). On joue **chacun son tour** : pendant votre tour, un seul de vos combattants agit. Il se déplace, choisit une arme, vise et tire. Le terrain se creuse sous les explosions, les combattants sont projetés, tombent, se noient.
 
 **La victoire** revient à la dernière maison qui a encore au moins un combattant debout. Si toutes les maisons tombent dans la même explosion, c'est une égalité.
 
@@ -47,7 +47,7 @@ Un chroniqueur à l'humour douteux commente la partie {{st:jeu}} : chaque tour s
 - Le sablier **ne s'arrête pas** pendant que vous visez : la pression du temps fait partie du jeu.
 - Un combattant **touché pendant son propre tour** termine son tour aussitôt.
 - **Le tir ami existe** : une flèche ou une explosion blesse aussi vos propres combattants, et vous-même.
-- **Vous choisissez qui joue** : le jeu propose un combattant, mais un clic sur un autre de vos combattants (sur lui ou sur son nom), ou le bouton **⇄ Combattant**, lui donne la main, tant que personne n'a encore bougé ni tiré ce tour (viser ne compte pas). Ensuite, sa fiche indique « la maison a déjà bougé ou tiré ce tour ». Vous pouvez jouer le même plusieurs tours de suite.
+- **Vous choisissez qui joue** : le jeu propose un combattant, mais un clic sur un autre de vos combattants (sur lui ou sur son nom), ou le bouton **⇄ Combattant**, lui donne la main, tant que personne n'a encore bougé ni tiré ce tour (viser ne compte pas). Ensuite, sa fiche indique « la maison a déjà bougé ou tiré ce tour ». En revanche, le combattant qui a joué le tour précédent de votre maison **souffle** : il ne peut pas rejouer tout de suite (sa fiche l'indique), sauf s'il est le dernier debout.
 - Les morts sont constatées à la fin de la résolution : un combattant à 0 PV ne tombe qu'une fois que tout s'est arrêté.
 
 ## 3. Vos combattants

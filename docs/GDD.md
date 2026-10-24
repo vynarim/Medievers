@@ -17,7 +17,7 @@
 ## 2. Boucle de jeu
 
 ### 2.1 Partie (escarmouche)
-1. Configuration : 2 à 4 équipes (V1 : 2 équipes garanties, 3–4 en P1), 3 à 6 unités par équipe, carte, schéma de règles.
+1. Configuration : 2 à 4 équipes (V1 : 2 équipes garanties, 3–4 en P1), 1 à 6 unités par équipe (**4 par défaut**, réglable : « Combattants par maison », décidé le 2026-10-24 ; placement réparti sur la part de carte de chaque maison, sur un sol large), carte, schéma de règles.
 2. Placement : automatique (aléatoire seedé) ou manuel (option).
 3. Tours alternés jusqu'à ce qu'il reste une seule équipe vivante, ou fin du Déluge.
 
@@ -30,7 +30,7 @@
 | Résolution | variable + 2 s | Attente fin des projectiles, explosions et chutes ; les morts sont alors constatées, puis une pause de 2 s (réglable) laisse voir l'impact et le commentaire avant le tour suivant |
 | Fin de tour | — | Passifs de fin de tour, apparition éventuelle d'un reliquaire |
 
-- **Choix du combattant** (décidé le 2026-10-24) : à chaque tour, la maison qui joue **choisit** lequel de ses combattants agit, avant qu'il ne bouge ou ne tire (clic sur le combattant ou sur son nom, ou bouton **⇄ Combattant** qui passe au suivant ; viser ne compte pas comme agir). Elle peut rejouer le même tour après tour : c'est un choix stratégique. Par défaut, le jeu propose le suivant dans l'ordre de l'équipe. Les règles « rotation imposée » restent disponibles pour les vieux logs (`turn.freeSelect`).
+- **Choix du combattant** (décidé le 2026-10-24) : à chaque tour, la maison qui joue **choisit** lequel de ses combattants agit, avant qu'il ne bouge ou ne tire (clic sur le combattant ou sur son nom, ou bouton **⇄ Combattant** qui passe au suivant ; viser ne compte pas comme agir). **Pas deux tours de suite** (décidé le 2026-10-24, remplace « elle peut rejouer le même ») : le combattant qui a joué le tour précédent de sa maison souffle ce tour-ci ; on choisit parmi les autres. Seul survivant, il joue à chaque tour (`turn.noRepeat`). Par défaut, le jeu propose le suivant dans l'ordre de l'équipe. Les règles « rotation imposée » restent disponibles pour les vieux logs (`turn.freeSelect`).
 - Le timer se met en pause pendant la visée de précision ? **Non** (le temps est une pression voulue). Il se met en pause pendant la résolution.
 - Garde-fou : une résolution est coupée au bout de 30 s, pour qu'une entité bloquée ne fige jamais la partie (`src/content/rules.ts`).
 

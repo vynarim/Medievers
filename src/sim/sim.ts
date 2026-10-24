@@ -114,6 +114,7 @@ function createState(config: MatchConfig, seed: number, mask: Mask): SimState {
       resolutionTicks: 0,
       activeTeam: teams.length - 1,
       activeUnitId: 0,
+      restingUnitId: -1,
       wind: 0,
       aim: AIM_UP_RIGHT,
       weapon: 'bow',
@@ -159,11 +160,15 @@ function startTurn(s: SimState, events: SimEvent[]): void {
   }
   if (!team) return;
   const count = team.unitIds.length;
+  // The unit that played last time rests this turn, if another one can play (rules.noRepeat).
+  const last = team.lastPlayed >= 0 ? (team.unitIds[team.lastPlayed] ?? -1) : -1;
+  const others = team.unitIds.filter((id) => id !== last && unitById(s, id)?.alive).length;
+  s.turn.restingUnitId = s.rules.turn.noRepeat && others > 0 ? last : -1;
   let unit: Unit | undefined;
   for (let i = 1; i <= count; i++) {
     const idx = (team.lastPlayed + i) % count;
     const candidate = unitById(s, team.unitIds[idx] ?? -1);
-    if (candidate?.alive) {
+    if (candidate?.alive && candidate.id !== s.turn.restingUnitId) {
       team.lastPlayed = idx;
       unit = candidate;
       break;
@@ -370,6 +375,7 @@ export function nextTeammate(s: SimView): number | null {
   const from = ids.indexOf(s.turn.activeUnitId);
   for (let i = 1; i < ids.length; i++) {
     const id = ids[(from + i) % ids.length];
+    if (id === s.turn.restingUnitId) continue;
     if (s.units.some((u) => u.id === id && u.alive)) return id ?? null;
   }
   return null;
@@ -383,6 +389,7 @@ function selectUnit(s: SimState, unitId: number): void {
   const idx = team?.unitIds.indexOf(unitId) ?? -1;
   const unit = unitById(s, unitId);
   if (!team || idx < 0 || !unit?.alive || unitId === t.activeUnitId) return;
+  if (unitId === t.restingUnitId) return;
   t.activeUnitId = unitId;
   team.lastPlayed = idx;
   t.aim = unit.facing > 0 ? AIM_UP_RIGHT : AIM_UP_LEFT;
@@ -481,6 +488,7 @@ function hashState(s: SimState): number {
   // Hashed only when the rule exists, so logs recorded before it keep their reference hashes.
   if (s.rules.unit.moveBudget !== undefined) int(t.moveLeft);
   if (s.rules.unit.turnTicks !== undefined) int(t.turnHold);
+  if (s.rules.turn.noRepeat) int(t.restingUnitId);
   if (s.rules.kitchen) {
     const k = s.kitchen;
     for (const v of k ? [k.x, k.y, k.expiresTurn] : [-1]) int(v);

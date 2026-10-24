@@ -47,6 +47,8 @@ export interface TurnState {
   resolutionTicks: number;
   activeTeam: number;
   activeUnitId: number;
+  /** unit of the playing team that played its previous turn and may not play this one; -1 none */
+  restingUnitId: number;
   /** -10..10, drawn at each turn start (GDD §5) */
   wind: number;
   /** BAM */

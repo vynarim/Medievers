@@ -38,10 +38,20 @@ export interface TurnRules {
    * after turn (GDD §2.2, 2026-10-24). Absent from older logs: fixed rotation.
    */
   readonly freeSelect?: boolean;
+  /**
+   * With freeSelect, the unit that played the team's previous turn sits this one out, unless it
+   * is the last one standing (GDD §2.2, 2026-10-24). Absent from older logs: any unit.
+   */
+  readonly noRepeat?: boolean;
 }
 
 export interface MatchRules {
   readonly turn: TurnRules;
+  /**
+   * units per house when the match is set up (GDD §2.1: 3 to 6). Read by the app to place the
+   * spawns; the sim only sees the resulting spawn list.
+   */
+  readonly unitsPerTeam?: number;
   /** HP of every unit at match start (GDD §3.1: 100, options 50 / 150 / 200) */
   readonly startHp: number;
   readonly unit: UnitRules;
@@ -64,7 +74,9 @@ export const CLASSIC_RULES: MatchRules = {
     moveAfterShot: true,
     retreatMaxTicks: 5 * TICKS_PER_SECOND,
     freeSelect: true,
+    noRepeat: true,
   },
+  unitsPerTeam: 4,
   startHp: 100,
   unit: UNIT_RULES,
   wind: WIND_RULES,

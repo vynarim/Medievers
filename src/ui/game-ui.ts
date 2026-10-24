@@ -281,12 +281,12 @@ export class GameUi {
         when === 'switch'
           ? !canSwitch
           : when === 'walk'
-          ? !canMove || !moveLeft
-          : when === 'jump'
-            ? !canMove || !jumpLeft
-            : when === 'end'
-              ? !canMove
-              : phase !== 'action';
+            ? !canMove || !moveLeft
+            : when === 'jump'
+              ? !canMove || !jumpLeft
+              : when === 'end'
+                ? !canMove
+                : phase !== 'action';
     }
     // Before the shot it passes the turn; after it, it ends the turn.
     const skipLabel = phase === 'retreat' ? t('ui.endTurn') : t('ui.skip');
@@ -332,8 +332,9 @@ export class GameUi {
     const active = u.id === v.turn.activeUnitId && v.turn.phase !== 'gameOver';
     // A teammate of the playing unit: says whether a click can still hand it the turn.
     const mate = !active && u.team === v.turn.activeTeam && v.turn.phase !== 'gameOver';
-    const switchable = mate && canSwitchUnit(v);
-    const signature = `${u.hp}|${u.alive}|${u.grounded}|${active}|${switchable}|${v.turn.weapon}|${v.turn.phase}`;
+    const switchable = mate && canSwitchUnit(v) && u.id !== v.turn.restingUnitId;
+    const resting = mate && u.id === v.turn.restingUnitId;
+    const signature = `${u.hp}|${u.alive}|${u.grounded}|${active}|${switchable}|${resting}|${v.turn.weapon}|${v.turn.phase}`;
     if (signature === this.cardSignature) return;
     this.cardSignature = signature;
 
@@ -346,7 +347,13 @@ export class GameUi {
         : active
           ? t('card.state.active')
           : mate
-            ? t(switchable ? 'card.state.mate' : 'card.state.tooLate')
+            ? t(
+                resting
+                  ? 'card.state.resting'
+                  : switchable
+                    ? 'card.state.mate'
+                    : 'card.state.tooLate',
+              )
             : t('card.state.waiting');
     const house = el('div', 'house');
     house.append(

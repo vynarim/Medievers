@@ -24,6 +24,7 @@ import { applyOverrides, type TuningOverrides } from '../ui/tuning-model.ts';
 import { COLORS, css } from '../ui/tokens.ts';
 import { uiScale } from '../ui/ui-scale.ts';
 import { AutoSaver, clearSave } from '../app/autosave.ts';
+import { spawnColumns } from '../app/spawns.ts';
 import { replay, type GameLog } from '../sim/log.ts';
 import { frame, type Point } from './framing.ts';
 import { Scenery } from './scenery.ts';
@@ -130,9 +131,10 @@ export class BattleScene extends Phaser.Scene {
 
   create(): void {
     const { map, mask, seed, rules } = this.data_;
+    const perTeam = rules.unitsPerTeam ?? map.spawns[0]?.length ?? 3;
     const config: MatchConfig = {
       rules,
-      teams: map.spawns.map((spawns) => ({ spawns })),
+      teams: spawnColumns(mask, map.spawns.length, perTeam).map((spawns) => ({ spawns })),
     };
     const resume = this.data_.resume;
     // A saved match replays to where it was left: same seed, same commands, same state.
