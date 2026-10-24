@@ -119,9 +119,9 @@ Les valeurs ci-dessous sont celles du schéma de règles *Classique*. « Vent »
 | **Miracle** | Vous téléporte sur un point libre ; votre tour s'arrête | 1 |
 | **Passer son tour** | — | ∞ |
 
-### 4.5 Comment se calculent les dégâts
+### 4.5 Comment se calculent les dégâts {{st:moteur}}
 
-Une explosion fait ses dégâts maximum en son centre, puis de moins en moins jusqu'au bord de son rayon. Au bord, elle ne fait plus rien. Un combattant à mi-rayon reçoit la moitié des dégâts. L'explosion **projette** aussi les combattants, d'autant plus fort qu'ils sont touchés durement. Ils rebondissent puis glissent jusqu'à s'arrêter. Les talents (Haubert, Majesté) s'appliquent ensuite.
+Une explosion fait ses dégâts maximum en son centre, puis de moins en moins jusqu'au bord de son rayon. Au bord, elle ne fait plus rien. Un combattant à mi-rayon reçoit la moitié des dégâts. La distance se mesure jusqu'au milieu du corps du combattant. L'explosion **projette** aussi les combattants, d'autant plus fort qu'ils sont touchés durement. Ils rebondissent puis glissent jusqu'à s'arrêter. Les talents (Haubert, Majesté) s'appliquent ensuite.
 
 ## 5. Le champ de bataille
 

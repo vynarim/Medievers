@@ -142,7 +142,7 @@ export interface Sim {
 ### 5.3 Explosions
 - Elles creusent un disque de rayon R (forme variable possible via un tampon de masque prédéfini).
 - Dégâts linéaires selon la distance au centre de la hitbox : `dmg = max × (1 − d/R)`, arrondis à l'entier, avec les multiplicateurs de passifs.
-- Impulsion radiale proportionnelle aux dégâts.
+- Impulsion radiale proportionnelle aux dégâts : 40 sub-px/tick par PV infligé (avant passifs), plus une poussée vers le haut de 35 % de cette vitesse (`src/content/world.ts`, à régler en playtest). Une explosion au centre exact de la hitbox pousse à la verticale.
 - Ordre de résolution : explosions ordonnées par id d'entité ; les réactions en chaîne (barils) sont placées en file pour le tick suivant.
 
 ### 5.4 Grappin
