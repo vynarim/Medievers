@@ -147,6 +147,8 @@ const STYLE = `
   margin-bottom: 4px; color: var(--lapis); }
 #ui .weapon small { display: block; font-size: 15px; line-height: 1.35; }
 #ui .weapon.on { box-shadow: inset 0 0 0 3px var(--vermillon); }
+#ui .weapon .art { float: right; margin: 0 0 4px 8px; line-height: 0; }
+#ui .weapon:disabled .art { filter: grayscale(1); }
 #ui .card { position: absolute; right: 12px; top: 182px; width: var(--col);
   max-height: calc(100vh - 290px); overflow: auto; padding: 14px 18px; font-size: 16px; line-height: 1.4; }
 #ui .card.left { right: auto; left: 12px; top: 250px; max-height: calc(100vh - 358px); }

@@ -20,6 +20,7 @@ import {
   type TuningOverrides,
 } from './tuning-model.ts';
 import { weaponLines } from './weapon-info.ts';
+import { weaponArt } from './weapon-art.ts';
 
 const STORAGE_KEY = 'medievers.tuning.v1';
 
@@ -465,7 +466,9 @@ export class GameUi {
       // A cleric may not take up a melee weapon (GDD §3.2).
       const allowed = !unit || mayUse(v, unit, w);
       const b = button('', `weapon${w.id === v.turn.weapon ? ' on' : ''}`);
-      b.append(el('b', '', t(`weapons.${w.id}`)));
+      const art = el('span', 'art');
+      art.innerHTML = weaponArt(w.id, 60);
+      b.append(art, el('b', '', t(`weapons.${w.id}`)));
       for (const line of weaponLines({ ...w, ammo })) b.append(el('small', '', line));
       if (!allowed) b.append(el('small', '', t('weapons.forbidden')));
       b.disabled = ammo === 0 || !allowed || v.turn.phase !== 'action';
