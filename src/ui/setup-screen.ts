@@ -4,7 +4,7 @@ import { CLASS_IDS, type ClassId } from '../content/classes.ts';
 import { FACTIONS } from '../content/factions.ts';
 import { MAX_HOUSES, MAX_UNITS, MIN_HOUSES, SCHEME_IDS } from '../content/schemes.ts';
 import { MAP_THEMES } from '../content/maps.ts';
-import { fixSetup, type MatchSetup } from '../app/match-setup.ts';
+import { TURN_SECONDS, fixSetup, type MatchSetup } from '../app/match-setup.ts';
 import { loadLastReplay, parseLog } from '../app/autosave.ts';
 import type { GameLog } from '../sim/log.ts';
 import { t } from './i18n.ts';
@@ -140,6 +140,14 @@ export function showSetupScreen(
     );
     regicide.title = t('setup.regicide.tip');
     regicide.addEventListener('click', () => update({ ...setup, regicide: !setup.regicide }));
+    // The turn's length: each click offers the next one.
+    const seconds = setup.turnSeconds ?? TURN_SECONDS[0] ?? 45;
+    const turnLength = button(t('setup.turnSeconds', { s: seconds }));
+    turnLength.title = t('setup.turnSeconds.tip');
+    turnLength.addEventListener('click', () => {
+      const i = TURN_SECONDS.indexOf(seconds);
+      update({ ...setup, turnSeconds: TURN_SECONDS[(i + 1) % TURN_SECONDS.length] ?? seconds });
+    });
     const houses = el('div', 'tools');
     const addHouse = button(t('setup.houseMore'));
     addHouse.disabled = setup.lineups.length >= MAX_HOUSES;
@@ -151,7 +159,7 @@ export function showSetupScreen(
     removeHouse.addEventListener('click', () =>
       update({ ...setup, lineups: setup.lineups.slice(0, -1) }),
     );
-    houses.append(addHouse, removeHouse, regicide, el('p', 'note', t('setup.note')));
+    houses.append(addHouse, removeHouse, regicide, turnLength, el('p', 'note', t('setup.note')));
     panel.append(houses);
 
     const start = el('div', 'start');

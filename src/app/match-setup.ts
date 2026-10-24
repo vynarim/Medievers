@@ -1,7 +1,7 @@
 // The match chosen on the setup screen (GDD §2.1, §6): scheme, houses, their line-ups and
 // Régicide, saved locally, and the match rules and config it gives. Pure but for the storage.
 import { CLASS_IDS, defaultLineup, type ClassId } from '../content/classes.ts';
-import { CLASSIC_RULES, type MatchRules } from '../content/rules.ts';
+import { CLASSIC_RULES, TICKS_PER_SECOND, type MatchRules } from '../content/rules.ts';
 import {
   MAX_HOUSES,
   MAX_UNITS,
@@ -22,7 +22,13 @@ export interface MatchSetup {
   readonly regicide: boolean;
   /** class of each unit of each house; its length is the number of houses */
   readonly lineups: readonly (readonly ClassId[])[];
+  /** seconds to play a turn, one of TURN_SECONDS (2026-10-25); absent from older saves: 45 */
+  readonly turnSeconds?: number;
 }
+
+/** The turn lengths offered on the setup screen, in seconds; the default one first. */
+export const TURN_SECONDS: readonly number[] = [45, 60, 90, 30];
+const DEFAULT_TURN_SECONDS = 45;
 
 export function defaultSetup(custom: boolean): MatchSetup {
   return {
@@ -31,6 +37,7 @@ export function defaultSetup(custom: boolean): MatchSetup {
     regicide: false,
     // One unit of each class per house (2026-10-24).
     lineups: [defaultLineup(6, false), defaultLineup(6, false)],
+    turnSeconds: DEFAULT_TURN_SECONDS,
   };
 }
 
@@ -57,7 +64,10 @@ export function fixSetup(s: MatchSetup): MatchSetup {
   const lineups = s.lineups.slice(0, MAX_HOUSES).map((l) => fixLineup(l, s.regicide));
   while (lineups.length < MIN_HOUSES) lineups.push(defaultLineup(6, s.regicide));
   const map = MAP_THEMES.includes(s.map) ? s.map : 'valley';
-  return { map, scheme, regicide: s.regicide, lineups };
+  const turnSeconds = TURN_SECONDS.includes(s.turnSeconds ?? 0)
+    ? (s.turnSeconds ?? DEFAULT_TURN_SECONDS)
+    : DEFAULT_TURN_SECONDS;
+  return { map, scheme, regicide: s.regicide, lineups, turnSeconds };
 }
 
 export function loadSetup(custom: boolean): MatchSetup {
@@ -87,8 +97,11 @@ export function rulesFor(s: MatchSetup, custom: TuningOverrides): MatchRules {
     CLASSIC_RULES,
     s.scheme === 'custom' ? custom : SCHEME_OVERRIDES[s.scheme],
   );
+  // The turn lasts what was chosen, before and after the shot alike.
+  const turn = (s.turnSeconds ?? DEFAULT_TURN_SECONDS) * TICKS_PER_SECOND;
   return {
     ...base,
+    turn: { ...base.turn, actionTicks: turn, retreatMaxTicks: turn },
     regicide: s.regicide,
     unitsPerTeam: Math.max(...s.lineups.map((l) => l.length)),
   };

@@ -25,8 +25,8 @@
 | Phase | Durée par défaut | Description |
 |---|---|---|
 | Transition | 2 s | Caméra vers l'unité active, affichage du vent |
-| Action | 30 s pour tout le tour (décidé le 2026-10-25, au lieu de 45 s) | Déplacement libre, choix d'une arme, visée, tir |
-| Après le tir | **tout le temps d'action restant** (au moins 3 s) | Décidé le 2026-10-24, remplace le repli de 5 s au plus (étude E2) : le déplacement pas encore utilisé reste utilisable après le tir, le temps aussi ; `turn.retreatMaxTicks` vaut 30 s en Classique (la durée du tour : **le tir ne fait pas baisser le sablier**, qui continue de s'écouler, décidé le 2026-10-25) et reste réglable. Le tir ne termine pas le tour (décidé le 2026-10-24) : on peut se déplacer puis tirer, ou tirer puis se déplacer, avec les déplacements pas encore utilisés (marche ou saut, plus tard escalade). **Fin du tour** termine le tour ; il se termine aussi tout seul quand il ne reste aucun déplacement et que le tir est retombé |
+| Action | **45 s** pour tout le tour par défaut, au choix 30, 45, 60 ou 90 s sur l'écran de préparation (décidé le 2026-10-25) | Déplacement libre, choix d'une arme, visée, tir |
+| Après le tir | **tout le temps d'action restant** (au moins 3 s) | Décidé le 2026-10-24, remplace le repli de 5 s au plus (étude E2) : le déplacement pas encore utilisé reste utilisable après le tir, le temps aussi ; `turn.retreatMaxTicks` vaut la durée du tour ( **le tir ne fait pas baisser le sablier**, qui continue de s'écouler, décidé le 2026-10-25) et reste réglable. Le tir ne termine pas le tour (décidé le 2026-10-24) : on peut se déplacer puis tirer, ou tirer puis se déplacer, avec les déplacements pas encore utilisés (marche ou saut, plus tard escalade). **Fin du tour** termine le tour ; il se termine aussi tout seul quand il ne reste aucun déplacement et que le tir est retombé |
 | Résolution | variable + 2 s | Attente fin des projectiles, explosions et chutes ; les morts sont alors constatées, puis une pause de 2 s (réglable) laisse voir l'impact et le commentaire avant le tour suivant |
 | Fin de tour | — | Passifs de fin de tour, apparition éventuelle d'un reliquaire |
 

@@ -41,4 +41,16 @@ describe('match setup (BACKLOG 3.6)', () => {
     );
     expect(rulesFor({ ...setup, regicide: true }, {}).regicide).toBe(true);
   });
+
+  it('give the turn the length chosen, 45 s by default and for older saves', () => {
+    const setup = defaultSetup(false);
+    expect(rulesFor(setup, {}).turn.actionTicks).toBe(45 * 60);
+    const minute = rulesFor({ ...setup, turnSeconds: 60 }, {});
+    expect(minute.turn.actionTicks).toBe(60 * 60);
+    expect(minute.turn.retreatMaxTicks).toBe(60 * 60);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { turnSeconds, ...old } = setup;
+    expect(fixSetup(old).turnSeconds).toBe(45);
+    expect(fixSetup({ ...setup, turnSeconds: 7 }).turnSeconds).toBe(45);
+  });
 });
