@@ -106,6 +106,18 @@ export function tuningGroups(rules: MatchRules): TuningGroup[] {
         field('explosion.liftPct', 'tuning.liftPct', 'units.percent', 1, 5, 0, 200),
       ],
     },
+    ...(rules.burn
+      ? [
+          {
+            titleKey: 'tuning.group.burn',
+            fields: [
+              field('burn.startRound', 'tuning.burnStart', 'units.rounds', 1, 1, 0, 50),
+              field('burn.advancePx', 'tuning.burnAdvance', 'units.px', 1, 10, 0, 1000),
+              field('burn.damage', 'tuning.burnDamage', 'units.hp', 1, 5, 0, 200),
+            ],
+          },
+        ]
+      : []),
     ...(rules.kitchen
       ? [
           {

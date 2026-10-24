@@ -97,6 +97,8 @@ export class BattleScene extends Phaser.Scene {
   private scenery!: Scenery;
   private saver!: AutoSaver;
   private world!: Phaser.GameObjects.Graphics;
+  /** the burnt ends of the parchment, over the terrain, under the units */
+  private burnGfx!: Phaser.GameObjects.Graphics;
   private debugGfx!: Phaser.GameObjects.Graphics;
   private labels = new Map<number, Phaser.GameObjects.Text>();
   private debugText!: Phaser.GameObjects.Text;
@@ -154,6 +156,7 @@ export class BattleScene extends Phaser.Scene {
     this.scenery = new Scenery(this, this.sim.view().terrain);
     this.terrain = new TerrainLayer(this, () => this.sim.view().terrain);
     this.world = this.add.graphics().setDepth(6);
+    this.burnGfx = this.add.graphics().setDepth(5.5);
     this.debugGfx = this.add.graphics().setDepth(20);
 
     for (const u of this.sim.view().units) {
@@ -187,6 +190,7 @@ export class BattleScene extends Phaser.Scene {
       ...this.scenery.objects,
       ...this.terrain.images,
       this.world,
+      this.burnGfx,
       this.debugGfx,
       ...this.labels.values(),
     ];
@@ -419,6 +423,7 @@ export class BattleScene extends Phaser.Scene {
     this.terrain.flush();
     this.updateCamera(alpha, delta);
     this.drawWorld(alpha, time);
+    this.drawBurn(time);
     if (this.debug) this.drawDebug();
     else {
       this.debugGfx.clear();
@@ -761,6 +766,48 @@ export class BattleScene extends Phaser.Scene {
   }
 
   /** A little tombstone where a unit fell. */
+  /**
+   * The burnt ends of the parchment: charred page, a brown scorched rim that curls, and a line
+   * of flames along it (GDD §2.5).
+   */
+  private drawBurn(time: number): void {
+    const g = this.burnGfx;
+    g.clear();
+    const burn = this.sim.view().burnPx;
+    if (burn <= 0) return;
+    const { map } = this.data_;
+    const top = -SKY_EXTRA;
+    const bottom = map.height;
+    for (const side of [-1, 1] as const) {
+      // edge: x of the fire line; inward: direction of the unburnt page
+      const edge = side < 0 ? burn : map.width - burn;
+      const inward = -side;
+      g.fillStyle(COLORS.encre, 0.86);
+      g.fillRect(side < 0 ? 0 : edge, top, burn, bottom - top);
+      // Scorched rim, wavy like curling paper.
+      g.fillStyle(COLORS.terreOmbre, 0.85);
+      g.beginPath();
+      g.moveTo(edge, top);
+      for (let y = top; y <= bottom; y += 24) {
+        const wave = 10 + 8 * Math.sin(y / 37 + time / 900) + 5 * Math.sin(y / 11);
+        g.lineTo(edge + inward * wave, y);
+      }
+      g.lineTo(edge, bottom);
+      g.closePath();
+      g.fillPath();
+      // Flames licking along the edge.
+      for (let y = top; y <= bottom; y += 34) {
+        const flick = Math.sin(time / 120 + y) * 6;
+        const h = 26 + 10 * Math.sin(time / 210 + y / 7);
+        const x = edge + inward * 6;
+        g.fillStyle(COLORS.vermillon, 0.95);
+        g.fillTriangle(x, y - 12, x, y + 12, x + inward * h + flick, y);
+        g.fillStyle(COLORS.or, 0.95);
+        g.fillTriangle(x, y - 6, x, y + 6, x + inward * h * 0.55 - flick, y);
+      }
+    }
+  }
+
   /** La cuisine de campagne: stone hearth, flames, a cauldron on a tripod, rising steam. */
   private drawKitchen(g: Phaser.GameObjects.Graphics, time: number): void {
     const k = this.sim.view().kitchen;

@@ -7,3 +7,4 @@ export * from './weapons.ts';
 export * from './maps.ts';
 export * from './factions.ts';
 export * from './kitchen.ts';
+export * from './burn.ts';

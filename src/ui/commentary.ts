@@ -28,6 +28,8 @@ export class Commentary {
   private damage = 0;
   private quipped = false;
   private lastUnit = -1;
+  /** the ends of the map are already on fire */
+  private burning = false;
   /** a shot ended without damage so far: tick, impact point and shooter, to call the miss */
   private pendingMiss: { tick: number; x: number; y: number; unitId: number } | null = null;
 
@@ -143,6 +145,10 @@ export class Commentary {
           }
           break;
         }
+        case 'burnSpread':
+          this.hud.say(pick(this.burning ? 'quip.burn' : 'quip.burnStart'), now);
+          this.burning = true;
+          break;
         case 'kitchenGone':
           this.hud.say(pick('quip.kitchenGone'), now);
           break;

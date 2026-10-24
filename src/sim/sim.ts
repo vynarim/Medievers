@@ -8,7 +8,7 @@ import { createExplosionQueue, explode, takeDueExplosions } from './explosions/e
 import { ANGLE_MASK, cosQ14 } from './math/angle.ts';
 import { FNV_OFFSET, hashInt } from './math/hash.ts';
 import { createPrng, nextRange } from './math/prng.ts';
-import { SUBPX, subToPx } from './math/fixed.ts';
+import { SUBPX, idiv, subToPx } from './math/fixed.ts';
 import type { Phase, MatchConfig, SimState, TeamState } from './state.ts';
 import type { Mask } from './terrain/mask.ts';
 import { createTerrain, terrainHash } from './terrain/terrain.ts';
@@ -126,6 +126,7 @@ function createState(config: MatchConfig, seed: number, mask: Mask): SimState {
     },
     nextEntityId: nextId,
     kitchen: null,
+    burnPx: 0,
     kitchenCounts: teams.map(() => 0),
     winner: null,
     rules: config.rules,
@@ -422,7 +423,39 @@ function callDeaths(s: SimState, events: SimEvent[]): void {
   }
 }
 
+/**
+ * End of a turn with rules.burn: units in the burnt ends lose HP, then, once a round is over and
+ * the fire has started, it eats further in (GDD §2.5).
+ */
+function burnTurn(s: SimState, events: SimEvent[]): void {
+  const r = s.rules.burn;
+  if (!r) return;
+  const width = s.terrain.width;
+  for (const u of s.units) {
+    if (!u.alive || s.burnPx === 0) continue;
+    const x = subToPx(u.x);
+    if (x >= s.burnPx && x < width - s.burnPx) continue;
+    const damage = Math.min(u.hp, r.damage);
+    u.hp -= damage;
+    events.push({ e: 'unitDamaged', unitId: u.id, damage });
+  }
+  const n = s.turn.number;
+  const rounds = idiv(n, s.teams.length);
+  if (n % s.teams.length === 0 && rounds >= r.startRound && s.burnPx < width >> 1) {
+    s.burnPx = Math.min(width >> 1, s.burnPx + r.advancePx);
+    events.push({ e: 'burnSpread', px: s.burnPx });
+    if (s.kitchen) {
+      const kx = subToPx(s.kitchen.x);
+      if (kx < s.burnPx || kx >= width - s.burnPx) {
+        s.kitchen = null;
+        events.push({ e: 'kitchenGone' });
+      }
+    }
+  }
+}
+
 function endTurn(s: SimState, events: SimEvent[]): void {
+  burnTurn(s, events);
   callDeaths(s, events);
   const alive = s.teams.filter((team) => teamAlive(s, team));
   if (alive.length <= 1) {
@@ -489,6 +522,7 @@ function hashState(s: SimState): number {
   if (s.rules.unit.moveBudget !== undefined) int(t.moveLeft);
   if (s.rules.unit.turnTicks !== undefined) int(t.turnHold);
   if (s.rules.turn.noRepeat) int(t.restingUnitId);
+  if (s.rules.burn) int(s.burnPx);
   if (s.rules.kitchen) {
     const k = s.kitchen;
     for (const v of k ? [k.x, k.y, k.expiresTurn] : [-1]) int(v);

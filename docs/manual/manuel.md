@@ -164,6 +164,10 @@ De temps en temps, au début d'un tour, **un foyer avec un chaudron** s'installe
 - Une seule cuisine à la fois ; si personne n'y touche, elle s'éteint au bout de deux tours de table.
 - Toutes ces valeurs se règlent dans l'onglet **Cuisine de campagne** des réglages. Une partie commencée avant l'arrivée de la cuisine n'en aura pas : recommencez la partie pour la voir.
 
+### Le parchemin brûle {{st:jeu}}
+
+Après deux tours de table, un moine maladroit renverse sa chandelle : **la carte prend feu à ses deux bouts**. À la fin de chaque tour de table, le feu mange 120 pixels de plus de chaque côté. Un combattant qui se trouve dans la partie brûlée à la fin d'un tour perd **20 PV**, à chaque tour. Les armées n'ont donc pas intérêt à rester sur les bords : il faut se rapprocher de l'ennemi. Une cuisine de campagne rattrapée par le feu s'éteint. Réglages : onglet **Parchemin en feu**.
+
 ### 5.4 Le Déluge {{st:prevu}}
 
 Pour que les parties ne s'éternisent pas, **le Déluge** arrive après 20 tours (ou 15 minutes). Une pleine page enluminée l'annonce : « *Et les eaux montèrent…* ». Ensuite, l'eau monte de 48 pixels à chaque fin de tour, et en option tous les combattants perdent 5 PV. L'eau noie instantanément.

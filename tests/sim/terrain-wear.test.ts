@@ -25,9 +25,9 @@ function wallMask(): Mask {
   return { width, height, data };
 }
 
-// No wind, no field kitchen: every arrow follows the same path.
+// No wind, no field kitchen, no fire: every arrow follows the same path.
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const { kitchen, ...NO_KITCHEN } = CLASSIC_RULES;
+const { kitchen, burn, ...NO_KITCHEN } = CLASSIC_RULES;
 const CALM: MatchRules = { ...NO_KITCHEN, wind: { ...CLASSIC_RULES.wind, max: 0 } };
 
 /**

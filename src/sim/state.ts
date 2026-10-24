@@ -89,6 +89,8 @@ export interface SimState {
   nextEntityId: number;
   /** null when there is none; always null without rules.kitchen */
   kitchen: KitchenState | null;
+  /** px burnt away at each end of the map (rules.burn); 0 without it */
+  burnPx: number;
   /** kitchens that appeared on each team's turn, for fairness (GDD §4.9) */
   readonly kitchenCounts: number[];
   /** team id of the winner, -1 for a draw, null while playing */
