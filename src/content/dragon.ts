@@ -29,8 +29,9 @@ export const DRAGON_RULES: DragonRules = {
   speed: 2 * 256,
   diveSpeed: 12 * 256,
   clearance: 100,
-  swing: 70,
-  swingTicks: 300,
+  // 2026-10-25: from just over the heads up to 240 px higher, and down again, every 7 s.
+  swing: 240,
+  swingTicks: 420,
 };
 
 /** px: the dragon's body, around its centre, where a shot or a blast touches it */
