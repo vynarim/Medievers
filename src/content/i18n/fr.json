@@ -1275,6 +1275,7 @@
   "tuning.wallHp": "PV d'une muraille",
   "tuning.bridgeHp": "PV d'un pont",
   "tuning.crushMax": "Écrasement : PV au plus",
+  "object.grave.text": "Ci-gît, tombé pour la {house}.",
   "object.structure.tower": "Tour",
   "object.structure.woodTower": "Tour de bois",
   "object.structure.wall": "Muraille",

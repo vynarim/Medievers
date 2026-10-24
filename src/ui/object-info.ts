@@ -10,7 +10,7 @@ import type { SimView } from '../sim/sim.ts';
 import { t } from './i18n.ts';
 import { StructureState } from '../content/structures.ts';
 import { classOf, maxHpOf } from '../sim/classes.ts';
-import { unitName } from '../content/factions.ts';
+import { FACTIONS, unitName } from '../content/factions.ts';
 import { UNIT_HEIGHT } from '../sim/units/unit.ts';
 
 export type ObjectRef =
@@ -19,7 +19,9 @@ export type ObjectRef =
   | { readonly kind: 'pot'; readonly id: number }
   | { readonly kind: 'kitchen' }
   | { readonly kind: 'beast' }
-  | { readonly kind: 'structure'; readonly id: number };
+  | { readonly kind: 'structure'; readonly id: number }
+  /** the tombstone of a fallen unit, by the unit's id */
+  | { readonly kind: 'grave'; readonly id: number };
 
 export interface ObjectInfo {
   readonly title: string;
@@ -27,6 +29,20 @@ export interface ObjectInfo {
   /** world px: top centre of the object, where the bubble points */
   readonly x: number;
   readonly y: number;
+}
+
+/** px: a tombstone, standing where its unit fell */
+export const GRAVE_WIDTH = 24;
+export const GRAVE_HEIGHT = 34;
+
+/** The fallen unit whose tombstone stands under world point (x, y), if any. */
+export function graveAt(v: SimView, x: number, y: number, slop: number): ObjectRef | null {
+  for (const u of v.units) {
+    if (!u.alive && inBox(x, y, u.x / SUBPX, u.y / SUBPX, GRAVE_WIDTH, GRAVE_HEIGHT, slop)) {
+      return { kind: 'grave', id: u.id };
+    }
+  }
+  return null;
 }
 
 /** px around a pot that still counts as clicking it */
@@ -64,6 +80,8 @@ export function objectAt(v: SimView, x: number, y: number, slop: number): Object
   if (b && inBox(x, y, b.x / SUBPX, b.y / SUBPX, BEAST_WIDTH, BEAST_HEIGHT + 20, slop)) {
     return { kind: 'beast' };
   }
+  const grave = graveAt(v, x, y, slop);
+  if (grave) return grave;
   // A tower, a wall: the pixel clicked belongs to a standing structure.
   const px = Math.floor(x);
   const py = Math.floor(y);
@@ -93,6 +111,17 @@ export function unitInfo(v: SimView, unitId: number, above: number): ObjectInfo 
 export function objectInfo(v: SimView, ref: ObjectRef): ObjectInfo | null {
   const r = v.rules;
   switch (ref.kind) {
+    case 'grave': {
+      const u = v.units.find((x) => x.id === ref.id);
+      if (!u || u.alive) return null;
+      const f = FACTIONS[u.team];
+      return {
+        title: unitName(u.id),
+        text: t('object.grave.text', { house: f ? t(f.nameKey) : '' }),
+        x: u.x / SUBPX,
+        y: u.y / SUBPX - GRAVE_HEIGHT,
+      };
+    }
     case 'structure': {
       const st = v.structures.find((c) => c.id === ref.id);
       if (!st || st.state === StructureState.Fallen) return null;

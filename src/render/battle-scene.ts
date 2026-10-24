@@ -31,7 +31,15 @@ import { ReplayInput } from '../input/replay-input.ts';
 import { spawnColumns } from '../app/spawns.ts';
 import { replay, type GameLog } from '../sim/log.ts';
 import { frame, type Point } from './framing.ts';
-import { objectAt, objectInfo, unitInfo, type ObjectRef } from '../ui/object-info.ts';
+import {
+  GRAVE_HEIGHT,
+  GRAVE_WIDTH,
+  graveAt,
+  objectAt,
+  objectInfo,
+  unitInfo,
+  type ObjectRef,
+} from '../ui/object-info.ts';
 import { Scenery } from './scenery.ts';
 import { FixedStep } from './fixed-step.ts';
 import { TerrainLayer } from './terrain-layer.ts';
@@ -800,6 +808,11 @@ export class BattleScene extends Phaser.Scene {
         const at = this.cameras.main.getWorldPoint(p.x, p.y);
         const hover = this.unitAt(at.x, at.y);
         if (hover) info = unitInfo(v, hover.id, LABEL_REACH);
+        else {
+          // A tombstone says who lies there, and for which house.
+          const grave = graveAt(v, at.x, at.y, 4 / this.cameras.main.zoom);
+          if (grave) info = objectInfo(v, grave);
+        }
       }
     }
     if (!info) {
@@ -1128,7 +1141,7 @@ export class BattleScene extends Phaser.Scene {
       const [x, y] = this.pos(`u${u.id}`, alpha, u.x, u.y);
       if (!u.alive) {
         label?.setVisible(false);
-        this.drawGrave(g, x, y);
+        this.drawGrave(g, x, y, FACTIONS[u.team]?.primary ?? COLORS.roche);
         continue;
       }
       const faction = FACTIONS[u.team] ?? FACTIONS[0];
@@ -1757,11 +1770,15 @@ export class BattleScene extends Phaser.Scene {
     }
   }
 
-  private drawGrave(g: Phaser.GameObjects.Graphics, x: number, y: number): void {
-    g.fillStyle(COLORS.roche, 1);
+  /** A tombstone in the colour of the fallen unit's house. */
+  private drawGrave(g: Phaser.GameObjects.Graphics, x: number, y: number, colour: number): void {
+    const w = GRAVE_WIDTH;
+    const h = GRAVE_HEIGHT;
+    const round = { tl: w / 2, tr: w / 2, bl: 0, br: 0 };
+    g.fillStyle(colour, 1);
     g.lineStyle(3, COLORS.encre, 1);
-    g.fillRoundedRect(x - 12, y - 34, 24, 34, { tl: 12, tr: 12, bl: 0, br: 0 });
-    g.strokeRoundedRect(x - 12, y - 34, 24, 34, { tl: 12, tr: 12, bl: 0, br: 0 });
+    g.fillRoundedRect(x - w / 2, y - h, w, h, round);
+    g.strokeRoundedRect(x - w / 2, y - h, w, h, round);
     g.lineStyle(3, COLORS.encre, 1);
     g.lineBetween(x, y - 28, x, y - 10);
     g.lineBetween(x - 6, y - 22, x + 6, y - 22);

@@ -47,4 +47,26 @@ describe('object bubbles', () => {
     expect(objectInfo(v, { kind: 'beast' })?.title).toBe('Escargot des marges');
     expect(objectInfo(v, { kind: 'barrel', id: 999 })).toBeNull();
   });
+
+  it('name the unit under a tombstone, and its house', () => {
+    const sim = new Sim(
+      { rules: CLASSIC_RULES, teams: [{ spawns: [100] }, { spawns: [1100] }] },
+      1,
+      flatMask(),
+    );
+    const s = sim.snapshot();
+    const u = s.units[1];
+    if (u) {
+      u.alive = false;
+      u.hp = 0;
+      u.y = 500 * 256;
+    }
+    sim.restore(s);
+    const v = sim.view();
+    const ref = objectAt(v, 1100, 485, 0);
+    expect(ref).toEqual({ kind: 'grave', id: 2 });
+    const info = ref ? objectInfo(v, ref) : null;
+    expect(info?.title).toBe('Aubri');
+    expect(info?.text).toContain('Maison des Trois Tours');
+  });
 });
