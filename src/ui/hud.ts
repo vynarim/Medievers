@@ -9,7 +9,10 @@ import { button, el, shield } from './overlay.ts';
 import { COLORS, css } from './tokens.ts';
 
 /** ms a commentary line stays up */
-const CHRONICLE_MS = 5000;
+const CHRONICLE_MS = 8000;
+/** lines of commentary shown at once, the newest at the bottom; ms a line takes to fade */
+const CHRONICLE_LINES = 3;
+const CHRONICLE_FADE = 700;
 /** ms a turn announcement stays up */
 const BANNER_MS = 4200;
 /** ms of one pulse of the playing house's glow (team-glow in overlay.ts) */
@@ -28,8 +31,8 @@ export class Hud {
   private readonly powerFill: HTMLElement;
   private readonly hint: HTMLElement;
   private readonly chronicle: HTMLElement;
+  private lines: { readonly el: HTMLElement; readonly until: number }[] = [];
   private readonly banner: HTMLElement;
-  private chronicleUntil = 0;
   private bannerUntil = 0;
   private signature = '';
   private power = -1;
@@ -72,7 +75,7 @@ export class Hud {
     this.hint = el('div', 'hint', t('hud.hint'));
     weapon.append(this.weaponName, power, this.hint);
 
-    this.chronicle = el('div', 'chronicle faded');
+    this.chronicle = el('div', 'chronicles');
     this.banner = el('div', 'banner panel faded');
     root.append(this.teams, wind, this.timer, weapon, this.chronicle, this.banner);
     // A click or tap anywhere dismisses a turn announcement (not the end-of-match one).
@@ -87,11 +90,15 @@ export class Hud {
     window.removeEventListener('pointerdown', this.dismiss, true);
   }
 
-  /** Shows a line of commentary in the phylactery. */
+  /**
+   * Shows a line of commentary in a phylactery, under the ones still up: two things said in a
+   * row (two coffers picked up on one walk) are both read.
+   */
   say(text: string, now: number): void {
-    this.chronicle.textContent = text;
-    this.chronicle.classList.remove('faded');
-    this.chronicleUntil = now + CHRONICLE_MS;
+    const line = el('div', 'chronicle', text);
+    this.chronicle.append(line);
+    this.lines.push({ el: line, until: now + CHRONICLE_MS });
+    while (this.lines.length > CHRONICLE_LINES) this.lines.shift()?.el.remove();
   }
 
   /** Centre banner: a title in textura, a subtitle and a quip. Persistent ones stay until replaced. */
@@ -116,7 +123,14 @@ export class Hud {
   }
 
   update(v: SimView, power: number, now: number): void {
-    if (now > this.chronicleUntil) this.chronicle.classList.add('faded');
+    this.lines = this.lines.filter((l) => {
+      if (now > l.until + CHRONICLE_FADE) {
+        l.el.remove();
+        return false;
+      }
+      if (now > l.until) l.el.classList.add('faded');
+      return true;
+    });
     if (now > this.bannerUntil) this.banner.classList.add('faded');
     if (power !== this.power) {
       this.power = power;

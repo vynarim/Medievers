@@ -122,8 +122,9 @@ const STYLE = `
 #ui .hud-weapon .power i { display: block; height: 100%; background: var(--vermillon); }
 #ui .hud-weapon .hint { font-size: 14px; }
 /* Phylactery, the speech scroll of the marginal figures: the running commentary. */
-#ui .chronicle { position: absolute; top: 96px; left: 50%; transform: translateX(-50%);
-  width: max-content; max-width: min(620px, calc(100vw - 620px)); min-width: 240px; padding: 6px 26px;
+#ui .chronicles { position: absolute; top: 96px; left: 50%; transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center; gap: 6px; pointer-events: none; }
+#ui .chronicle { width: max-content; max-width: min(620px, calc(100vw - 620px)); min-width: 240px; padding: 6px 26px;
   text-align: center; font-size: 19px; line-height: 1.3; background: var(--ceruse);
   border: 2px solid var(--encre); border-radius: 18px / 50%;
   box-shadow: inset 0 0 0 3px var(--ceruse), inset 0 0 0 4px var(--or), var(--lift);
