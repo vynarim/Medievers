@@ -167,10 +167,18 @@ const STYLE = `
 #ui td.unit, #ui td.def { color: var(--brun); font-size: 13px; white-space: nowrap; }
 #ui .note { font-size: 16px; margin: 0 0 6px; }
 #ui .actions { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
-#ui .help { width: min(640px, calc(100vw - 32px)); }
+/* The help keeps one size on every page, so its buttons never move under the finger. */
+#ui .help { width: min(640px, calc(100vw - 32px)); height: min(680px, calc(100vh - 48px));
+  display: flex; flex-direction: column; overflow: hidden; }
+#ui .help .tuto-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+#ui .help .tuto-body p:last-child { margin-bottom: 0; }
+#ui .help .close { position: absolute; top: 18px; right: 24px; margin: 0; }
+#ui .help h2 { padding-right: 64px; flex: none; }
+#ui .help .tuto-pic { flex: none; }
 #ui .tuto-pic svg { display: block; width: 100%; max-height: 32vh; margin: 0 auto 10px;
   border: 2px solid var(--encre); box-shadow: inset 0 0 0 2px var(--or); }
-#ui .tuto-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; }
+#ui .tuto-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 12px;
+  flex: none; }
 #ui .tuto-count { font-family: var(--caps); font-size: 16px; }
 #ui .help p, #ui .pause p { font-size: 17px; line-height: 1.5; margin: 0 0 10px; }
 #ui .pause { min-width: 360px; text-align: center; }
