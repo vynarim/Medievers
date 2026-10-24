@@ -65,20 +65,14 @@ const STYLE = `
 #ui .sys { position: absolute; top: 12px; right: 12px; display: flex; gap: 6px; }
 
 /* HUD */
-#ui .hud-turn { position: absolute; top: 12px; left: 12px; display: flex; gap: 12px;
-  align-items: center; padding: 10px 18px 10px 12px; width: var(--col); }
-#ui .hud-turn .title { font-family: var(--title); font-size: 30px; line-height: 1; }
-#ui .hud-turn .house { font-family: var(--caps); font-size: 18px; }
-#ui .breath { height: 8px; margin-top: 4px; width: 170px; border: 2px solid var(--encre);
-  background: var(--velin); }
+#ui .breath { height: 9px; border: 2px solid var(--encre); background: var(--velin); }
 #ui .breath i { display: block; height: 100%; background: var(--vert); }
-#ui .hud-turn .phase { font-size: 16px; }
 #ui .shield { flex: none; width: 40px; height: 48px; border: 3px solid var(--encre);
   border-radius: 0 0 50% 50% / 0 0 62% 62%; position: relative; overflow: hidden; background: var(--p); }
 #ui .shield::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 32%;
   background: var(--s); border-bottom: 2px solid var(--encre); }
 #ui .shield.small { width: 22px; height: 27px; border-width: 2px; }
-#ui .hud-teams { position: absolute; top: 148px; left: 12px; display: flex; flex-direction: column; gap: 6px; }
+#ui .hud-teams { position: absolute; top: 12px; left: 12px; display: flex; flex-direction: column; gap: 6px; }
 #ui .team { display: flex; align-items: center; gap: 8px; padding: 4px 12px 4px 6px;
   font-family: var(--caps); font-size: 14px; width: var(--col); }
 #ui .team .name { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -102,8 +96,9 @@ const STYLE = `
 #ui .hud-wind .game-title { font-family: var(--title); font-size: 46px; line-height: 1;
   color: var(--vermillon); white-space: nowrap; }
 #ui .hud-wind .game-title::first-letter, #ui .hud-wind .game-title .last { color: var(--lapis); }
-#ui .hud-wind .wind-row { display: flex; flex-direction: column; align-items: stretch; gap: 4px;
-  width: 132px; padding-left: 16px; border-left: 2px solid var(--gilt); }
+#ui .hud-wind .wind-row, #ui .hud-wind .turn-row { display: flex; flex-direction: column;
+  align-items: stretch; gap: 4px; width: 132px; padding-left: 16px; border-left: 2px solid var(--gilt); }
+#ui .hud-wind .turn-row { width: 110px; }
 #ui .hud-wind .label { font-family: var(--caps); font-size: 15px; white-space: nowrap;
   text-align: left; }
 #ui .hud-wind .track { position: relative; height: 9px; border: 2px solid var(--encre);

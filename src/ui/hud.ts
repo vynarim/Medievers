@@ -16,10 +16,7 @@ const BANNER_MS = 4200;
 const GLOW_MS = 1600;
 
 export class Hud {
-  private readonly turnShield: HTMLElement;
   private readonly turnTitle: HTMLElement;
-  private readonly turnHouse: HTMLElement;
-  private readonly turnPhase: HTMLElement;
   private readonly breath: HTMLElement;
   private readonly breathFill: HTMLElement;
   private readonly teams: HTMLElement;
@@ -38,18 +35,15 @@ export class Hud {
   private power = -1;
 
   constructor(root: HTMLElement) {
-    const turn = el('div', 'hud-turn panel');
-    this.turnShield = el('div');
-    this.turnTitle = el('div', 'title');
-    this.turnHouse = el('div', 'house');
-    this.turnPhase = el('div', 'phase');
-    const turnText = el('div');
+    // The turn, right of the wind in the title cartouche; the house that plays is told by its
+    // glowing row, so neither its arms nor its name are repeated here.
+    const turn = el('div', 'turn-row');
+    this.turnTitle = el('div', 'label');
     this.breath = el('div', 'breath');
     this.breathFill = el('i');
     this.breath.append(this.breathFill);
     this.breath.title = t('hud.breath');
-    turnText.append(this.turnTitle, this.turnHouse, this.turnPhase, this.breath);
-    turn.append(this.turnShield, turnText);
+    turn.append(this.turnTitle, this.breath);
 
     this.teams = el('div', 'hud-teams');
 
@@ -64,7 +58,7 @@ export class Hud {
     const name = t('game.title');
     const title = el('div', 'game-title', name.slice(0, -1));
     title.append(el('span', 'last', name.slice(-1)));
-    wind.append(title, windRow);
+    wind.append(title, windRow, turn);
 
     this.timer = el('div', 'hud-timer panel');
     this.timerSecs = el('div', 'secs');
@@ -80,7 +74,7 @@ export class Hud {
 
     this.chronicle = el('div', 'chronicle faded');
     this.banner = el('div', 'banner panel faded');
-    root.append(turn, this.teams, wind, this.timer, weapon, this.chronicle, this.banner);
+    root.append(this.teams, wind, this.timer, weapon, this.chronicle, this.banner);
     // A click or tap anywhere dismisses a turn announcement (not the end-of-match one).
     window.addEventListener('pointerdown', this.dismiss, true);
   }
@@ -161,16 +155,9 @@ export class Hud {
     if (signature === this.signature) return;
     this.signature = signature;
 
-    const faction = FACTIONS[turn.activeTeam];
-    this.turnShield.replaceChildren(
-      shield(faction?.primary ?? COLORS.encre, faction?.secondary ?? COLORS.or),
-    );
     this.turnTitle.textContent =
       turn.phase === 'placement' ? t('hud.placement') : t('hud.turn', { n: turn.number });
-    this.turnHouse.textContent = faction ? t(faction.nameKey) : '';
-    this.turnHouse.style.color = css(faction?.ink ?? COLORS.encre);
-    this.turnPhase.textContent = t(`hud.phase.${turn.phase}`);
-    this.breath.classList.toggle('hidden', breath < 0);
+    this.breath.classList.toggle('hidden', breath < 0 || turn.phase === 'placement');
     this.breathFill.style.width = `${Math.max(0, breath)}%`;
 
     const max = v.rules.startHp * Math.max(1, ...v.teams.map((x) => x.unitIds.length));
