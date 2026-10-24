@@ -95,6 +95,10 @@ const ZOOM_MAX = 1.6;
 const EDGE_SCROLL_SPEED = 900;
 /** ms an explosion burst lasts */
 const BURST_MS = 520;
+/** ms a lightning bolt stays on screen, ms it holds full before fading, ms it strikes again */
+const BOLT_MS = 1300;
+const BOLT_HOLD_MS = 800;
+const BOLT_RESTRIKE_MS = 260;
 /** px from the body centre to the middle of the aim arrowhead, which can be dragged */
 const AIM_TIP = 172;
 /** size of the diaper pattern tile, px */
@@ -787,7 +791,9 @@ export class BattleScene extends Phaser.Scene {
       if (e.e === 'structureFell') this.cameras.main.shake(400, 0.01);
       if (e.e === 'lightning') {
         this.bolts.push({ x: e.x, y: e.y, born: this.time.now });
-        this.cameras.main.flash(180, 255, 250, 235);
+        this.cameras.main.flash(350, 255, 250, 235);
+        // A second, weaker flash as the bolt strikes again (drawBolts flickers with it).
+        this.time.delayedCall(BOLT_RESTRIKE_MS, () => this.cameras.main.flash(250, 255, 250, 235));
         this.cameras.main.shake(260, 0.008);
       }
       if (e.e === 'turnStarted' || e.e === 'shotFired') this.manualCamera = false;
@@ -1339,9 +1345,16 @@ export class BattleScene extends Phaser.Scene {
         }
       }
     }
-    this.bolts = this.bolts.filter((b) => time - b.born < 420);
+    this.bolts = this.bolts.filter((b) => time - b.born < BOLT_MS);
     for (const b of this.bolts) {
-      const k = 1 - (time - b.born) / 420;
+      // Full for a while, a flicker as it strikes again, then it fades.
+      const age = time - b.born;
+      const k =
+        age < BOLT_RESTRIKE_MS && age > BOLT_RESTRIKE_MS - 90
+          ? 0.3
+          : age < BOLT_HOLD_MS
+            ? 1
+            : 1 - (age - BOLT_HOLD_MS) / (BOLT_MS - BOLT_HOLD_MS);
       const pts: Phaser.Math.Vector2[] = [];
       const top = view.y - 40;
       const steps = 9;
