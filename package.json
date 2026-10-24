@@ -17,6 +17,7 @@
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "gen:lut": "node tools/gen-trig-lut.ts",
     "check": "pnpm run lint && pnpm run typecheck && pnpm test"
   },
   "dependencies": {

@@ -107,7 +107,7 @@ export default tseslint.config(
     languageOptions: { globals: { ...globals.browser } },
   },
   {
-    files: ['*.config.{js,ts}', 'tests/**/*.ts'],
+    files: ['*.config.{js,ts}', 'tests/**/*.ts', 'tools/**/*.ts'],
     languageOptions: { globals: { ...globals.node } },
   },
   simGuard,
