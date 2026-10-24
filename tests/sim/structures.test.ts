@@ -131,7 +131,6 @@ describe('structures with hit points (GDD §4.7)', () => {
 
 describe('towers built by the match (2026-10-25)', () => {
   function flat(): Sim {
-     
     const rules: MatchRules = {
       ...CALM,
       structures: { ...STRUCTURE_RULES, towerHeight: 200 },

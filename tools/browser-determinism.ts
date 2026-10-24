@@ -40,7 +40,9 @@ try {
       const page = await browser.newPage();
       await page.goto(url);
       await page.waitForFunction(() => typeof window.medieverseChecks === 'function');
-      results[`${name} ${browser.version()}`] = await page.evaluate(() => window.medieverseChecks());
+      results[`${name} ${browser.version()}`] = await page.evaluate(() =>
+        window.medieverseChecks(),
+      );
     } finally {
       await browser.close();
     }
