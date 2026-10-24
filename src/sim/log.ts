@@ -1,5 +1,5 @@
 // Game log (TECH_SPEC §2.1): match config, seed, map and timed commands. It is the replay
-// format, the test fixture format and the LAN stream.
+// format, the test fixture format and how an online match is resumed.
 import type { TimedCommand } from './commands.ts';
 import { Sim } from './sim.ts';
 import type { MatchConfig } from './state.ts';

@@ -24,6 +24,7 @@
     "format:check": "prettier --check .",
     "gen:lut": "node tools/gen-trig-lut.ts",
     "manual": "node tools/build-manual.ts",
+    "online:probe": "node tools/online-probe.ts",
     "check": "pnpm run lint && pnpm run typecheck && pnpm test && pnpm run test:determinism && pnpm run test:browser"
   },
   "dependencies": {
@@ -31,6 +32,7 @@
     "@fontsource/im-fell-english-sc": "5.3.0",
     "@fontsource/unifrakturmaguntia": "5.3.0",
     "fast-png": "8.0.0",
+    "firebase": "13.0.0",
     "phaser": "4.2.1"
   },
   "devDependencies": {

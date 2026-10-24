@@ -38,6 +38,8 @@ export function showSetupScreen(
   onCancel?: () => void,
   /** « Revoir la dernière partie » and « Importer un replay »: watch that log */
   onWatch?: (log: GameLog) => void,
+  /** online matches (GDD §6): create one with this setup, or join one by its code */
+  online?: { host: (setup: MatchSetup) => void; join: () => void },
 ): () => void {
   const root = uiRoot();
   if (!styled) {
@@ -182,6 +184,21 @@ export function showSetupScreen(
       const load = button(t('setup.import'));
       load.addEventListener('click', () => file.click());
       start.append(file, load);
+    }
+    if (online) {
+      const host = button(t('setup.onlineHost'));
+      host.title = t('setup.onlineHostTip');
+      host.addEventListener('click', () => {
+        close();
+        online.host(setup);
+      });
+      const join = button(t('setup.onlineJoin'));
+      join.title = t('setup.onlineJoinTip');
+      join.addEventListener('click', () => {
+        close();
+        online.join();
+      });
+      start.append(host, join);
     }
     const go = button(t('setup.start'), 'fire');
     go.addEventListener('click', () => {

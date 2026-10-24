@@ -1,0 +1,35 @@
+{
+  "rules": {
+    "medieverse": {
+      "rooms": {
+        "$code": {
+          ".read": "auth != null && (data.child('host').val() === auth.uid || data.child('guest').val() === auth.uid)",
+          ".write": "auth != null && ((!data.exists() && newData.child('host').val() === auth.uid) || (data.child('host').val() === auth.uid && !newData.exists()))",
+          ".validate": "!newData.exists() || newData.hasChildren(['v', 'host', 'createdAt'])",
+          "v": { ".read": "auth != null", ".validate": "newData.isNumber()" },
+          "host": { ".read": "auth != null", ".validate": "newData.isString()" },
+          "createdAt": { ".validate": "newData.isNumber()" },
+          "guest": {
+            ".read": "auth != null",
+            ".write": "auth != null && data.parent().exists() && (!data.exists() || data.val() === auth.uid) && newData.val() === auth.uid"
+          },
+          "to": {
+            "$role": {
+              "$msg": {
+                ".write": "auth != null && (root.child('medieverse/rooms/' + $code + '/host').val() === auth.uid || root.child('medieverse/rooms/' + $code + '/guest').val() === auth.uid)",
+                ".validate": "($role === 'host' || $role === 'guest') && newData.isString() && newData.val().length <= 65536"
+              }
+            }
+          },
+          "online": {
+            "$role": {
+              ".write": "auth != null && (root.child('medieverse/rooms/' + $code + '/host').val() === auth.uid || root.child('medieverse/rooms/' + $code + '/guest').val() === auth.uid)",
+              ".validate": "($role === 'host' || $role === 'guest') && newData.isBoolean()"
+            }
+          },
+          "$other": { ".validate": false }
+        }
+      }
+    }
+  }
+}

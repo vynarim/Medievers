@@ -92,6 +92,11 @@ export class GameUi {
   /** « Passez la main » between two houses (caltrop fog, GDD §6), over its own veil */
   private readonly handover: HTMLElement;
   private readonly handoverVeil: HTMLElement;
+  /** online: a line over the action bar (who is waited for), and the error that ends the match */
+  private readonly netStatus: HTMLElement;
+  private readonly netError: HTMLElement;
+  /** the houses played on this device (online: the creator's or the other's) */
+  private mine: (team: number) => boolean = () => true;
   /** called once the house whose turn it is has taken the device */
   private handoverDone: (() => void) | null = null;
   /** the modal on screen, if any */
@@ -249,6 +254,8 @@ export class GameUi {
     );
     this.pause.append(el('h2', '', t('pause.title')), el('p', '', t('pause.body')), pauseActions);
     this.handoverVeil = el('div', 'veil hidden');
+    this.netStatus = el('div', 'net-status panel hidden');
+    this.netError = this.modal('pause');
     this.handover = this.modal('pause');
     this.root.append(
       bar,
@@ -263,6 +270,8 @@ export class GameUi {
       this.pause,
       this.handoverVeil,
       this.handover,
+      this.netStatus,
+      this.netError,
     );
   }
 
@@ -370,6 +379,27 @@ export class GameUi {
     this.handoverVeil.classList.remove('hidden');
   }
 
+  /** Online: the houses this device plays; the controls work on their turns only. */
+  setLocalTeams(mine: (team: number) => boolean): void {
+    this.mine = mine;
+  }
+
+  /** Online: a short line over the action bar (the other player is slow, away, pausing), or none. */
+  setNetStatus(text: string | null): void {
+    this.netStatus.classList.toggle('hidden', text === null);
+    if (text !== null && this.netStatus.textContent !== text) this.netStatus.textContent = text;
+  }
+
+  /** Online: the match cannot go on (desync, the other player left); `leave` goes back. */
+  showNetError(text: string, leave: () => void): void {
+    this.show(null);
+    const actions = el('div', 'actions');
+    actions.append(this.click(button(t('online.leave')), leave));
+    this.netError.replaceChildren(el('h2', '', t('online.errorTitle')), el('p', '', text), actions);
+    this.netError.classList.remove('hidden');
+    this.handoverVeil.classList.remove('hidden');
+  }
+
   /** Escape: closes the open menu, or opens the pause menu; never skips « Passez la main ». */
   escape(): void {
     if (this.handingOver) return;
@@ -465,10 +495,12 @@ export class GameUi {
       this.fire.style.background = css(colour);
       this.fire.style.borderColor = css(colour);
     }
+    // Online, the other player's turns are watched, not played.
+    const ours = this.mine(view.turn.activeTeam);
     for (const b of this.actionButtons) {
       const when = b.dataset.when;
       b.disabled =
-        when === 'switch'
+        !ours || when === 'switch'
           ? !canSwitch
           : when === 'walk'
             ? !canMove || !moveLeft

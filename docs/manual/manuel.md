@@ -20,7 +20,8 @@ Ce manuel décrit le jeu tel qu'on le joue. Il grandit avec le jeu : chaque règ
 | Moteur de simulation | Calcul exact et identique sur tous les appareils, terrain, combattants, projectiles, explosions, tours | terminée |
 | Première version jouable | Formes simples à l'écran, clavier, souris et tactile, arc, fronde et pot | jouable (reste à essayer sur une vraie tablette) |
 | Règles complètes | Classes, Régicide, Déluge, flammes, tours qui s'effondrent, schémas de règles, écran de préparation | jouable |
-| Jeu en ligne, IA, arsenal complet | — | à venir |
+| Jeu en ligne | Créer une partie, la rejoindre par un code, reprise après rechargement | jouable |
+| IA, arsenal complet | — | à venir |
 | Graphismes et musique | Le style enluminé et la musique | à venir |
 
 <div class="page-break"></div>
@@ -220,14 +221,16 @@ Pour que les parties ne s'éternisent pas, **le Déluge** arrive après 20 tours
 | Mode | Joueurs | État |
 |---|---|---|
 | **Escarmouche contre l'IA** | 1 humain contre 1 à 3 maisons de l'IA | {{st:prevu}} |
-| **Hotseat** | 2 à 4 humains sur le même appareil, qui se passent la main | {{st:jeu}} |
-| **Mixte** | Humains et IA dans la même partie | {{st:prevu}} |
-| **En ligne** | 2 joueurs à distance, chacun sur son appareil : l'un crée la partie et donne le code, l'autre la rejoint | {{st:prevu}} |
+| **Mixte** | Joueurs en ligne et maisons de l'IA dans la même partie | {{st:prevu}} |
+| **En ligne** | 2 joueurs à distance, chacun sur son appareil : l'un crée la partie et donne le code, l'autre la rejoint | {{st:jeu}} |
 | **Replays** | « Revoir la partie » sur la tapisserie de fin (ou à tout moment, depuis le début) ; « Revoir la dernière partie » et « Importer un replay… » sur l'écran de préparation ; pendant le replay : pause, vitesse ×1, ×2, ×4, depuis le début, **Exporter** (fichier JSON) et Quitter. Tous les pièges y sont visibles | {{st:jeu}} |
+
+**Jouer en ligne** {{st:jeu}} : le jeu se joue sur https://medieverse-06.web.app. Sur l'écran de préparation, l'un choisit la carte, les règles et les maisons, puis touche **Créer une partie en ligne** : un code de six signes s'affiche (par exemple `K7M-2QX`). Il le donne à son adversaire, qui touche **Rejoindre une partie…** et le saisit. Celui qui a créé la partie joue la 1ʳᵉ maison (et la 3ᵉ), l'autre la 2ᵉ (et la 4ᵉ). Pendant le tour adverse, on regarde : les gestes de l'adversaire arrivent avec une demi-seconde de retard. Chacun ne voit que ses propres chausse-trapes. La pause, l'aide et les réglages arrêtent le jeu des deux côtés. Si la page se recharge, le jeu retrouve la partie tout seul et rattrape ce qui s'est passé. Quitter une partie en cours la laisse à l'adversaire.
+
+On ne joue jamais à deux sur le même appareil : c'est en ligne, ou contre l'IA (à venir). En attendant l'IA, **À la bataille !** lance une partie d'essai sur un seul appareil.
 
 **Régicide** (option) {{st:jeu}} : chaque maison a un Roi, et sa mort élimine toute la maison : ses autres combattants quittent aussitôt le champ.
 
-**Brouillard des chausse-trapes** (option, active par défaut) {{st:jeu}} : chaque maison ne voit que ses propres chausse-trapes. Pour que personne ne lorgne les pièges des autres, un écran **Passez la main** s'affiche chaque fois que le tour change de maison : le jeu s'arrête et aucun piège n'est dessiné tant que la maison suivante n'a pas pris l'appareil et touché **À nous la main !**. Sans brouillard, pas d'écran, et tous les pièges sont visibles de tous.
 
 **Préparer la bataille** {{st:jeu}} : avant la première partie, et ensuite par **Nouvelle partie…** (menu ☰ Pause, ou la tapisserie de fin), un écran permet de choisir les règles, le Régicide, le nombre de maisons (2 à 4) et, pour chacune, ses combattants (1 à 6) et leur classe. Le jeu s'en souvient ; **Recommencer** rejoue la même préparation.
 

@@ -177,6 +177,8 @@ const STYLE = `
 #ui .pause .actions { flex-direction: column; align-items: stretch; }
 #ui .pause .house { font-family: var(--caps); font-size: 24px; display: flex; gap: 12px;
   align-items: center; justify-content: center; margin: 4px 0 12px; }
+#ui .net-status { position: absolute; left: 50%; bottom: 96px; transform: translateX(-50%);
+  padding: 6px 16px; font-family: var(--caps); font-size: 18px; color: var(--lapis); pointer-events: none; }
 #ui .hidden { display: none !important; }
 `;
 

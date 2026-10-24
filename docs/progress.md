@@ -12,9 +12,12 @@
 - Livré ensuite : **l'échelle termine le tour** (un appui monte ou descend toute l'échelle sans dépenser la marche, `unit.ladderEndsTurn`, replay `ladder-whole`) ; clés de stockage du navigateur renommées en `medieverse.*` (anciennes sauvegardes et réglages abandonnés, accord de l'utilisateur).
 - Limites du lot 3 levées depuis : pioche, sape, chausse-trapes, murs de pierres et volée de trébuchet sont livrés (M4 en avance), la visionneuse de replays aussi (7.7). Reste sans IA : `src/ai/` est vide, le mode solo n'existe pas encore.
 
+- Livré le 2026-10-24 (lot 4, M9) : **jeu en ligne** par code de partie, sur Firebase (`videogames-06`, base par défaut en europe-west1, connexion anonyme, site https://medieverse-06.web.app). `src/net/` : protocole, `Lockstep` (un producteur par tick, délai 30 ticks, lots de 6), `connect` (bonjour, version, départ, reprise), transport mémoire (tests) et `FirebaseTransport` ; `RemoteInputSource` ; écrans de création, de jonction et de reprise ; règles `database.rules.json`. Preuves : `tests/net/lockstep.test.ts` (latence et désordre, attente, désync, reprise, version, pause) et `pnpm run online:probe <url du serveur de dev>` (deux navigateurs se retrouvent en ~3 s, un troisième est refusé, une page rechargée reprend, hashes de tour identiques ; `--meet-only` contre le site hébergé).
+- Décidé le 2026-10-24 : **plus de hotseat**, jamais deux humains sur le même appareil (en ligne ou contre l'IA). « À la bataille ! » reste pour les essais jusqu'à l'IA ; l'écran « Passez la main » et l'option de brouillard sont à retirer avec elle.
+
 ## À reprendre en premier
 1. **Clore M2** : quand l'utilisateur aura fait les deux vérifications humaines du rapport, consigner le résultat et passer la gate à PASS.
-2. **Lot 3 (M3)** : **M3 terminé**, gate du 2026-10-24 = **PASS** ([rapport](reports/gates/2026-10-24-M3.md)). Prochaine étape : lot 4, **le jeu en ligne** (M9, remplace le LAN, décidé le 2026-10-24).
+2. **Lot 3 (M3)** : **M3 terminé**, gate du 2026-10-24 = **PASS** ([rapport](reports/gates/2026-10-24-M3.md)). Lot 4 (en ligne) livré, gate M9 à passer : 9.6 demande une partie complète entre deux appareils sur deux réseaux (vérification humaine).
 3. **Passer le projet Firebase `videogames-06` en Blaze** (action de l'utilisateur, dans la console : roue dentée › Utilisation et facturation). Ensuite : instance Realtime Database dédiée à Medieverse, nettoyage planifié des salles abandonnées, alerte de budget à 1 € (BACKLOG 9.7, TECH_SPEC §8.5). Blaze servira aussi aux mails.
 4. **À chaque mécanique livrée** : manuel + `pnpm run manual`, champs de réglage, GDD, et commit + push automatique (préférence de l'utilisateur).
 

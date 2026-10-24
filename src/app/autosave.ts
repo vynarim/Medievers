@@ -37,6 +37,8 @@ export class AutoSaver {
   private readonly mapId: string;
   private readonly commands: TimedCommand[];
   private lastWrite = -Infinity;
+  /** false: the log is kept in memory only (an online match is not resumed from this device) */
+  persist = true;
 
   constructor(config: MatchConfig, seed: number, mapId: string, commands: TimedCommand[] = []) {
     this.config = config;
@@ -67,7 +69,7 @@ export class AutoSaver {
 
   /** Writes the log up to `tick`, at most once a second unless commands arrived. */
   flush(tick: number, now: number): void {
-    if (now - this.lastWrite < FLUSH_MS) return;
+    if (!this.persist || now - this.lastWrite < FLUSH_MS) return;
     const log = this.logAt(tick);
     try {
       localStorage.setItem(KEY, JSON.stringify(log));

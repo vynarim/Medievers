@@ -1,0 +1,12 @@
+{
+  "projects": {
+    "default": "videogames-06"
+  },
+  "targets": {
+    "videogames-06": {
+      "hosting": {
+        "medieverse": ["medieverse-06"]
+      }
+    }
+  }
+}

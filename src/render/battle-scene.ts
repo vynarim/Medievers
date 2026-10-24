@@ -44,6 +44,10 @@ import { rulesFor, saveSetup, type MatchSetup } from '../app/match-setup.ts';
 import { showSetupScreen } from '../ui/setup-screen.ts';
 import { StructureState, type StructurePlacement } from '../content/structures.ts';
 import { buildMap, mapForLog, type BuiltMap } from '../app/map-build.ts';
+import { leaveMatch, type OnlineMatch } from '../app/online.ts';
+import { hostFlow, joinFlow } from '../app/online-flow.ts';
+import { roleOfTeam } from '../net/protocol.ts';
+import { RemoteInputSource } from '../input/remote-input.ts';
 
 /** The map fields of the battle data, from a built map. */
 export function battleMap(
@@ -75,6 +79,20 @@ export interface BattleData {
   readonly resume?: GameLog;
   /** a match to watch from its start (the replay viewer): its log replaces seed and rules */
   readonly replay?: GameLog;
+  /** an online match (GDD §6): its commands come through the lockstep */
+  readonly online?: OnlineMatch;
+}
+
+/** The battle of an online match: the map and the rules the creator chose. */
+export function onlineBattle(m: OnlineMatch): BattleData {
+  const s = m.lockstep.start;
+  return {
+    ...battleMap(buildMap(s.setup.map, s.seed)),
+    seed: s.seed,
+    rules: s.rules,
+    setup: s.setup,
+    online: m,
+  };
 }
 
 /** Playback speeds of the replay viewer. */
@@ -181,6 +199,13 @@ export class BattleScene extends Phaser.Scene {
   /** the commands of the match being watched, and its log */
   private watch: ReplayInput | null = null;
   private watchLog: GameLog | null = null;
+  /** the online match being played, and the commands it hands over */
+  private online: OnlineMatch | null = null;
+  private remote: RemoteInputSource | null = null;
+  /** ms since the commands of the next tick were last missing (the other player is slow) */
+  private stalledSince: number | null = null;
+  /** an online match error already shown (desync, the other player left) */
+  private netShown = false;
   /** sim ticks per clock tick while watching (×1, ×2, ×4) */
   private speed = 1;
   private fps = 60;
@@ -240,6 +265,12 @@ export class BattleScene extends Phaser.Scene {
       ? new AutoSaver(from.config, from.seed, from.mapId, [...from.commands])
       : new AutoSaver(config, seed, this.data_.mapId);
     this.replaying = watch !== undefined;
+    this.online = this.data_.online ?? null;
+    this.remote = this.online ? new RemoteInputSource(this.online.lockstep) : null;
+    this.stalledSince = null;
+    this.netShown = false;
+    // An online match is not resumed from this device's save, but by its code.
+    if (this.online) this.saver.persist = false;
     this.watch = watch ? new ReplayInput(watch) : null;
     this.watchLog = watch ?? null;
     this.speed = 1;
@@ -337,6 +368,18 @@ export class BattleScene extends Phaser.Scene {
         quit: () => this.newMatch(),
       });
     }
+    if (this.online && this.remote) {
+      // The first ticks this peer owns, then, for a match under way, the catch-up at full speed.
+      this.online.lockstep.produceAfter(this.sim.view(), (tk) =>
+        this.input_.poll(tk, this.sim.view()),
+      );
+      if (this.online.resumed) {
+        while (this.remote.ready(this.sim.view().tick + 1)) {
+          this.playOnline(this.sim.view().tick + 1, false);
+        }
+      }
+      this.ui.setLocalTeams((team) => this.mine(team));
+    }
     const turn = this.sim.view().turn;
     if (watch) {
       this.ui.hud.announce(
@@ -346,7 +389,7 @@ export class BattleScene extends Phaser.Scene {
         COLORS.lapis,
         this.time.now,
       );
-    } else if (resume) {
+    } else if (resume || this.online?.resumed) {
       this.ui.hud.announce(
         t('hud.resumed'),
         t('hud.turn', { n: turn.number }),
@@ -442,6 +485,10 @@ export class BattleScene extends Phaser.Scene {
    * settings were just applied, so the scheme becomes « Personnalisé ».
    */
   private restart(overrides: TuningOverrides, custom = false): void {
+    if (this.online) {
+      this.leaveOnline(true);
+      return;
+    }
     const setup: MatchSetup = custom ? { ...this.data_.setup, scheme: 'custom' } : this.data_.setup;
     if (custom) saveSetup(setup);
     this.startMatch(setup, overrides);
@@ -470,6 +517,16 @@ export class BattleScene extends Phaser.Scene {
   /** The setup screen, over the paused match: a new match as chosen, or back to this one. */
   private newMatch(): void {
     this.paused = true;
+    if (this.online) {
+      // Leaving the match in the middle: the other player is told.
+      leaveMatch(this.online, this.sim.view().turn.phase !== 'gameOver');
+      this.online = null;
+      this.remote = null;
+    }
+    const back = (): void => this.newMatch();
+    const play = (m: OnlineMatch): void => {
+      this.scene.restart(onlineBattle(m));
+    };
     showSetupScreen(
       this.data_.setup,
       (setup) => {
@@ -487,6 +544,14 @@ export class BattleScene extends Phaser.Scene {
         clearSave();
         const data: BattleData = { ...this.data_, ...(built ? battleMap(built) : {}), replay: log };
         this.scene.restart(data);
+      },
+      {
+        host: (setup) => {
+          saveSetup(setup);
+          const seed = (this.data_.seed + 0x9e3779b9) >>> 0;
+          hostFlow(setup, rulesFor(setup, loadOverrides()), seed, play, back);
+        },
+        join: () => joinFlow(play, back),
       },
     );
   }
@@ -611,14 +676,21 @@ export class BattleScene extends Phaser.Scene {
         : null;
 
     // The pause menu, help and settings stop the clock; the debug pause allows single steps.
-    if (this.paused || this.ui.blocking) {
-      if (this.stepOnce && !this.ui.blocking) this.tick();
+    // Online, they stop it for both players.
+    const ls = this.online?.lockstep;
+    ls?.setPaused(this.ui.blocking);
+    const stopped = this.paused || this.ui.blocking || ls?.remotePaused === true;
+    if (stopped) {
+      if (this.stepOnce && !this.ui.blocking && !this.online) this.tick();
       this.stepOnce = false;
       this.clock.reset();
     } else {
-      for (let n = this.clock.advance(delta) * this.speed; n > 0; n--) this.tick();
+      for (let n = this.clock.advance(delta) * this.speed; n > 0; n--) {
+        if (!this.tick()) break;
+      }
     }
-    const alpha = this.paused || this.ui.blocking ? 1 : this.clock.alpha;
+    const alpha = stopped ? 1 : this.clock.alpha;
+    this.updateOnline(time);
 
     const click = this.input_.takeClick();
     if (click) this.selectAt(click.x, click.y);
@@ -650,13 +722,46 @@ export class BattleScene extends Phaser.Scene {
     }
   }
 
+  /** Online: who is waited for, a desync, the other player gone (TECH_SPEC §8.4). */
+  private updateOnline(time: number): void {
+    const online = this.online;
+    if (!online) return;
+    const ls = online.lockstep;
+    const over = this.sim.view().turn.phase === 'gameOver';
+    if (!this.netShown && ls.desyncTurn !== null) {
+      this.netShown = true;
+      this.ui.showNetError(t('online.desync', { turn: ls.desyncTurn }), () =>
+        this.leaveOnline(false),
+      );
+    } else if (!this.netShown && ls.remoteResigned && !over) {
+      this.netShown = true;
+      this.ui.showNetError(t('online.resigned'), () => this.leaveOnline(false));
+    }
+    const waiting = this.stalledSince !== null && time - this.stalledSince > 1500;
+    this.ui.setNetStatus(
+      ls.remotePaused
+        ? t('online.paused')
+        : waiting
+          ? t(online.transport.otherOnline ? 'online.waitingPeer' : 'online.peerAway')
+          : null,
+    );
+  }
+
+  /** Leaves the online match (telling the other player when `resign`) for the setup screen. */
+  private leaveOnline(resign: boolean): void {
+    if (this.online) leaveMatch(this.online, resign);
+    this.online = null;
+    this.remote = null;
+    this.newMatch();
+  }
+
   /**
    * Caltrop fog (GDD §6): when the turn goes to another house, « Passez la main » stops the clock
    * and hides every caltrop until that house has taken the device. Not while the armies are
    * placed (no caltrop yet), nor in a replay or once the match is over.
    */
   private handOver(): void {
-    if (!this.data_.setup.fog || this.replaying || this.ui.handingOver) return;
+    if (!this.data_.setup.fog || this.replaying || this.online || this.ui.handingOver) return;
     const turn = this.sim.view().turn;
     if (turn.phase === 'gameOver' || turn.phase === 'placement') return;
     if (turn.activeTeam === this.handedTo) return;
@@ -762,14 +867,26 @@ export class BattleScene extends Phaser.Scene {
       );
   }
 
-  private tick(): void {
-    this.snapshotPositions();
+  /** Plays one tick; false when an online match waits for the other player's commands. */
+  private tick(): boolean {
     const view = this.sim.view();
+    if (this.online && this.remote) {
+      const next = view.tick + 1;
+      if (!this.remote.ready(next)) {
+        this.stalledSince ??= this.time.now;
+        return false;
+      }
+      this.stalledSince = null;
+      this.snapshotPositions();
+      this.playOnline(next, true);
+      return true;
+    }
+    this.snapshotPositions();
     if (this.watch) {
       // Watching: the recorded commands, and nothing past the end of the log.
-      if (this.watch.done(view.tick)) return;
+      if (this.watch.done(view.tick)) return false;
       this.handleEvents(this.sim.step(this.watch.poll(view.tick + 1)));
-      return;
+      return true;
     }
     const cmds = this.input_.poll(view.tick + 1, view);
     this.saver.record(view.tick + 1, cmds, this.time.now);
@@ -779,6 +896,37 @@ export class BattleScene extends Phaser.Scene {
       saveLastReplay(this.saver.logAt(this.sim.view().tick));
     }
     this.handleEvents(events);
+    return true;
+  }
+
+  /**
+   * Online: plays tick `next` with the lockstep's commands, compares the turn hashes, then
+   * decides the commands of the tick this peer owns, from its player (`live`) or none (catching
+   * up after a reload).
+   */
+  private playOnline(next: number, live: boolean): void {
+    const online = this.online;
+    const remote = this.remote;
+    if (!online || !remote) return;
+    const cmds = remote.poll(next);
+    this.saver.record(next, cmds, this.time.now);
+    const events = this.sim.step(cmds);
+    for (const e of events) {
+      if (e.e === 'turnStarted') online.lockstep.turnStarted(e.turn, this.sim.hash());
+    }
+    online.lockstep.produceAfter(this.sim.view(), (t) =>
+      live ? this.input_.poll(t, this.sim.view()) : [],
+    );
+    if (events.some((e) => e.e === 'gameOver')) {
+      saveLastReplay(this.saver.logAt(this.sim.view().tick));
+      leaveMatch(online, false);
+    }
+    if (live) this.handleEvents(events);
+  }
+
+  /** The houses this device plays: all of them, or online the creator's or the other's. */
+  private mine(team: number): boolean {
+    return !this.online || roleOfTeam(team) === this.online.role;
   }
 
   private handleEvents(events: readonly SimEvent[]): void {
@@ -1866,7 +2014,10 @@ export class BattleScene extends Phaser.Scene {
     if (this.ui.handingOver) return;
     const v = this.sim.view();
     const all = !this.data_.setup.fog || v.turn.phase === 'gameOver' || this.replaying;
-    for (const m of all ? v.mines : visibleMines(v, v.turn.activeTeam)) {
+    const seen = this.online
+      ? v.teams.flatMap((team) => (this.mine(team.id) ? visibleMines(v, team.id) : []))
+      : visibleMines(v, v.turn.activeTeam);
+    for (const m of all ? v.mines : seen) {
       const x = m.x / SUBPX;
       const y = m.y / SUBPX;
       const f = FACTIONS[m.team];

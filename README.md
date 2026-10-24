@@ -39,7 +39,7 @@ Jeu Web 2D d'artillerie au tour par tour, dans l'esprit de *Worms*, dessiné à 
 | 📜 | **Le manuscrit vivant** | Tout ressemble à une page enluminée : aplats, cernes noirs, fonds or, cadres architecturés. Le terrain détruit révèle le vélin. |
 | 💥 | **Chaos lisible** | Physique imprévisible mais toujours compréhensible. Chaque tir raté peut devenir drôle. |
 | ⏳ | **Tour par tour accessible** | Une partie se comprend en 2 minutes et se maîtrise en 20 heures. |
-| 🏠 | **Local d'abord** | On joue ensemble dans la même pièce : contre l'IA, en hotseat sur un seul appareil, puis à distance, en ligne. |
+| 🌐 | **Chacun son écran** | Contre l'IA, ou en ligne contre un ami : l'un crée la partie, l'autre la rejoint avec un code. Jamais à deux sur le même appareil. |
 
 Le ton est **burlesque** : les personnages gardent la gravité figée des enluminures, visages impassibles et gestes hiératiques, mais subissent des catastrophes absurdes. Pas de sang : les coups font voler des étoiles, des plumes et des éclats de vélin. Public visé : 10 ans et plus.
 
@@ -73,8 +73,7 @@ Toutes les unités partagent le même arsenal. Chaque classe ajoute un passif.
 | Mode | Prévu |
 |---|---|
 | Escarmouche contre l'IA (Écuyer, Chevalier, Connétable) | V1 |
-| Hotseat, de 2 à 4 joueurs sur le même appareil | V1 |
-| Mixte, humains et IA | V1 |
+| Mixte, joueurs en ligne et IA | V1 |
 | Replays exportables en JSON | V1 |
 | En ligne, 2 joueurs à distance (partie rejointe par un code) | Jalon M9 |
 
