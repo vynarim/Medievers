@@ -1,8 +1,11 @@
 // Placeholder figures of the six classes (GDD §3.2, ASSETS « Visuel »), drawn in the house's
-// tinctures until the rigs of M6: the knight in mail, surcoat and great helm with his shield; the
-// archer hooded, in a short tunic; the slinger bareheaded, in a shorter one; the sapper in a cap
-// and a leather apron; the cleric tonsured, in a long robe; the king bearded, in a mantle lined
-// with ermine. Their tools (quiver, sling, pick, crosier, crown) are the class marks.
+// tinctures until the rigs of M6. Redrawn on 2026-10-25 after the Maciejowski figures (ASSETS
+// §1.2 « Figures »): oval faces in three-quarter profile with an almond eye, an arched brow, a
+// nose and a small mouth; rounded shoulders, both arms, tubular folds and scalloped hems; hose
+// that taper to pointed shoes. The knight in mail, surcoat and barrel helm with his shield; the
+// archer in a dagged chaperon; the slinger bare-legged and cross-gartered; the sapper in a cap,
+// rolled sleeves and a leather apron; the cleric in alb and chasuble, tonsured; the king bearded,
+// long-haired, in a mantle lined with ermine. Their tools are the class marks (class-marks.ts).
 import Phaser from 'phaser';
 import type { ClassId } from '../content/classes.ts';
 import { COLORS } from '../ui/tokens.ts';
@@ -10,145 +13,311 @@ import { COLORS } from '../ui/tokens.ts';
 type G = Phaser.GameObjects.Graphics;
 type Pt = { x: number; y: number };
 
-const poly = (points: readonly Pt[]): Phaser.Math.Vector2[] =>
-  points.map((p) => new Phaser.Math.Vector2(p.x, p.y));
-
 const ink = COLORS.encre;
 const mail = COLORS.roche;
 const hair = COLORS.terreOmbre;
+const skin = COLORS.carnation;
 
-function shape(g: G, points: readonly Pt[], fill: number, line = 3): void {
-  const p = poly(points);
-  g.fillStyle(fill, 1);
-  g.fillPoints(p, true);
-  g.lineStyle(line, ink, 1);
-  g.strokePoints(p, true);
+/** A colour darkened to `k` (the far limbs, in the shade of the body). */
+function shade(c: number, k = 0.78): number {
+  const r = Math.round(((c >> 16) & 0xff) * k);
+  const gr = Math.round(((c >> 8) & 0xff) * k);
+  const b = Math.round((c & 0xff) * k);
+  return (r << 16) | (gr << 8) | b;
 }
 
-/** Legs: grey mail with rows of little arcs, or cloth hose; pointed black shoes. */
-function legs(g: G, x: number, y: number, facing: number, kind: 'mail' | number): void {
-  for (const lx of [x - 9, x + 2]) {
-    g.fillStyle(kind === 'mail' ? mail : kind, 1);
-    g.lineStyle(2, ink, 1);
-    g.fillRect(lx, y - 22, 7, 20);
-    g.strokeRect(lx, y - 22, 7, 20);
-    if (kind === 'mail') {
-      g.lineStyle(1, ink, 0.55);
-      for (let ry = y - 19; ry < y - 3; ry += 4) {
-        g.beginPath();
-        g.arc(lx + 3.5, ry, 2.5, 0, Math.PI);
-        g.strokePath();
-      }
+/** Points along a quadratic curve from a to b bent towards c (a excluded). */
+function quad(a: Pt, c: Pt, b: Pt, n = 6): Pt[] {
+  const out: Pt[] = [];
+  for (let i = 1; i <= n; i++) {
+    const t = i / n;
+    const u = 1 - t;
+    out.push({
+      x: u * u * a.x + 2 * u * t * c.x + t * t * b.x,
+      y: u * u * a.y + 2 * u * t * c.y + t * t * b.y,
+    });
+  }
+  return out;
+}
+
+/** A figure's frame: local x grows towards where it faces, y up from the feet (negative). */
+class Frame {
+  readonly g: G;
+  readonly x: number;
+  readonly y: number;
+  readonly f: number;
+
+  constructor(g: G, x: number, y: number, f: number) {
+    this.g = g;
+    this.x = x;
+    this.y = y;
+    this.f = f;
+  }
+
+  /** World point of local (dx, dy). */
+  p(dx: number, dy: number): Pt {
+    return { x: this.x + this.f * dx, y: this.y + dy };
+  }
+
+  /** A filled shape outlined in ink, from local points. */
+  shape(points: readonly Pt[], fill: number, line = 2.5): void {
+    const p = points.map((q) => new Phaser.Math.Vector2(this.x + this.f * q.x, this.y + q.y));
+    this.g.fillStyle(fill, 1);
+    this.g.fillPoints(p, true);
+    if (line > 0) {
+      this.g.lineStyle(line, ink, 1);
+      this.g.strokePoints(p, true);
     }
-    g.fillStyle(ink, 1);
-    g.fillTriangle(lx - 1, y - 3, lx + 8 + facing * 4, y, lx - 1, y);
+  }
+
+  /** An ink stroke along local points. */
+  stroke(points: readonly Pt[], width: number, colour: number = ink, alpha = 1): void {
+    const p = points.map((q) => new Phaser.Math.Vector2(this.x + this.f * q.x, this.y + q.y));
+    this.g.lineStyle(width, colour, alpha);
+    this.g.strokePoints(p, false);
+  }
+
+  circle(dx: number, dy: number, r: number, fill: number, line = 0): void {
+    const c = this.p(dx, dy);
+    this.g.fillStyle(fill, 1);
+    this.g.fillCircle(c.x, c.y, r);
+    if (line > 0) {
+      this.g.lineStyle(line, ink, 1);
+      this.g.strokeCircle(c.x, c.y, r);
+    }
   }
 }
 
-/** The heater shield on the back side: the house's field with a chevron. */
-function shield(g: G, x: number, y: number, facing: number, primary: number, secondary: number) {
-  const sx = x - facing * 14;
-  shape(
-    g,
-    [
-      { x: sx - 10, y: y - 56 },
-      { x: sx + 10, y: y - 56 },
-      { x: sx + 9, y: y - 40 },
-      { x: sx, y: y - 26 },
-      { x: sx - 9, y: y - 40 },
-    ],
-    secondary,
-  );
-  g.fillStyle(primary, 1);
-  g.fillPoints(
-    poly([
-      { x: sx - 9, y: y - 36 },
-      { x: sx, y: y - 47 },
-      { x: sx + 9, y: y - 36 },
-      { x: sx + 7, y: y - 31 },
-      { x: sx, y: y - 40 },
-      { x: sx - 7, y: y - 31 },
-    ]),
-    true,
-  );
-  g.lineStyle(3, ink, 1);
-  g.strokePoints(
-    poly([
-      { x: sx - 10, y: y - 56 },
-      { x: sx + 10, y: y - 56 },
-      { x: sx + 9, y: y - 40 },
-      { x: sx, y: y - 26 },
-      { x: sx - 9, y: y - 40 },
-    ]),
-    true,
-  );
+const P = (x: number, y: number): Pt => ({ x, y });
+
+type Hose = 'mail' | 'bare' | number;
+
+/** Two legs in hose (or mail, or bare and cross-gartered), the far one in shade, pointed shoes. */
+function legs(F: Frame, hose: Hose, top = -24): void {
+  for (const [dx, far] of [
+    [-3, true],
+    [3, false],
+  ] as const) {
+    const base = hose === 'mail' ? mail : hose === 'bare' ? skin : hose;
+    const colour = far ? shade(base, 0.85) : base;
+    F.shape(
+      [
+        P(dx - 4, top),
+        P(dx + 4, top),
+        P(dx + 3.5, -12),
+        P(dx + 3, -4),
+        P(dx - 3, -4),
+        P(dx - 3.5, -12),
+      ],
+      colour,
+      2,
+    );
+    if (hose === 'mail') {
+      for (let ry = top + 3; ry < -5; ry += 4) {
+        F.stroke(quad(P(dx - 3, ry), P(dx, ry + 2.5), P(dx + 3, ry), 4), 1, ink, 0.5);
+      }
+    } else if (hose === 'bare') {
+      // Leather bindings crossed up the shin.
+      F.stroke([P(dx - 3, -6), P(dx + 3, -11), P(dx - 3, -16), P(dx + 3, -21)], 1.5, hair);
+    }
+    // A pointed shoe, its toe forward.
+    F.shape([P(dx - 3.5, -5), P(dx + 3.5, -5), P(dx + 10, -0.5), P(dx - 3.5, 0)], ink, 0);
+  }
 }
 
-/** The forward arm: a sleeve reaching out, a bare hand. */
-function arm(g: G, x: number, y: number, facing: number, sleeve: number): void {
-  const ax = x + facing * 8;
-  shape(
-    g,
+/**
+ * A garment from the shoulders down to `hem`, flaring by `flare`, with rounded shoulders, a
+ * scalloped hem and tubular folds.
+ */
+function robe(F: Frame, colour: number, hem: number, flare: number, folds = 3): void {
+  const w = 11 + flare;
+  const scallops: Pt[] = [];
+  const n = 6;
+  for (let i = 0; i <= n; i++) {
+    const hx = w - (2 * w * i) / n;
+    scallops.push(P(hx, hem + (i % 2 === 0 ? 0 : 1.6)));
+  }
+  F.shape(
     [
-      { x: ax - 4, y: y - 56 },
-      { x: ax + 4, y: y - 56 },
-      { x: ax + facing * 12 + 3, y: y - 40 },
-      { x: ax + facing * 12 - 3, y: y - 36 },
+      P(-5, -61),
+      P(5, -61),
+      ...quad(P(5, -61), P(11, -61), P(11.5, -54)),
+      P(10, -42),
+      ...scallops,
+      P(-10, -42),
+      ...quad(P(-11.5, -54), P(-11, -61), P(-5, -61)).slice(0, -1),
+      P(-11.5, -54),
     ],
-    sleeve,
+    colour,
+  );
+  // Tubular folds, fanning down from the waist.
+  for (let i = 0; i < folds; i++) {
+    const t = folds === 1 ? 0.5 : i / (folds - 1);
+    const top = -7 + 14 * t;
+    const bottom = -w + 4 + (2 * w - 8) * t;
+    F.stroke(
+      quad(P(top, -40), P((top + bottom) / 2 + 1, (hem - 40) / 2), P(bottom, hem - 1)),
+      1.5,
+      ink,
+      0.4,
+    );
+  }
+}
+
+/** A belt across the waist, its buckle in front. */
+function belt(F: Frame, colour: number): void {
+  F.shape([P(-11, -44), P(11, -44), P(11, -40), P(-11, -40)], colour, 1.5);
+  F.circle(5, -42, 1.6, COLORS.or, 1);
+}
+
+/** The far arm, behind the body: only the sleeve and the hand show past its back. */
+function farArm(F: Frame, sleeve: number): void {
+  F.shape(
+    [P(-6, -59), P(-11, -57), P(-15, -46), P(-15, -41), P(-11, -41), P(-8, -50)],
+    shade(sleeve),
     2,
   );
-  g.fillStyle(COLORS.carnation, 1);
-  g.fillCircle(ax + facing * 12, y - 37, 3);
+  F.circle(-13.5, -39, 2.8, shade(skin, 0.92), 1.5);
 }
 
-/** A tunic from the shoulders down to `hem`, with tubular folds and a girdle. */
-function tunic(g: G, x: number, y: number, hem: number, flare: number, primary: number) {
-  shape(
-    g,
+/**
+ * The near arm, bent forward at the elbow, its hand at about (20, −37), where the class marks hang
+ * their tools. `forearm`: the bare forearm of rolled sleeves, if any.
+ */
+function nearArm(F: Frame, sleeve: number, forearm: number | null = null): void {
+  if (forearm !== null) {
+    F.shape([P(12, -48), P(15, -47), P(20, -39), P(17, -36), P(11, -44)], forearm, 2);
+    F.shape([P(4, -59), P(10, -58), P(16, -47), P(11, -43), P(6, -51)], sleeve, 2);
+  } else {
+    F.shape(
+      [P(4, -59), P(10, -58), P(14, -48), P(20, -40), P(17, -36), P(10, -44), P(6, -51)],
+      sleeve,
+      2,
+    );
+  }
+  F.circle(19.5, -37.5, 3.2, skin, 1.5);
+}
+
+/**
+ * An oval face in three-quarter profile, centred at local (hx, hy): an almond eye, an arched brow,
+ * a nose and a small mouth, a touch of rose on the cheek.
+ */
+function face(F: Frame, hx: number, hy: number): void {
+  // Neck.
+  F.shape(
+    [P(hx - 3.5, hy + 7), P(hx + 2.5, hy + 7), P(hx + 2.5, hy + 12), P(hx - 3.5, hy + 12)],
+    skin,
+    1.5,
+  );
+  const outline: Pt[] = [];
+  for (let i = 0; i < 20; i++) {
+    const a = (i / 20) * Math.PI * 2;
+    outline.push(P(hx + Math.cos(a) * 9, hy + Math.sin(a) * 10.5));
+  }
+  F.shape(outline, skin, 2.5);
+  // Nose, past the profile.
+  F.shape([P(hx + 8, hy - 3), P(hx + 11.5, hy + 2.5), P(hx + 8, hy + 3.5)], skin, 0);
+  F.stroke([P(hx + 8.5, hy - 3), P(hx + 11.5, hy + 2.5), P(hx + 8.5, hy + 3.5)], 1.6);
+  // Almond eye and arched brow.
+  F.shape(
+    [P(hx + 2.5, hy - 1), P(hx + 4.5, hy - 2.4), P(hx + 6.8, hy - 1), P(hx + 4.5, hy + 0.2)],
+    ink,
+    0,
+  );
+  F.stroke(quad(P(hx + 1.5, hy - 4), P(hx + 4.5, hy - 6.5), P(hx + 7.5, hy - 4.5), 4), 1.4);
+  // Small mouth, and the cheek.
+  F.stroke([P(hx + 5, hy + 6), P(hx + 7.5, hy + 5.6)], 1.4);
+  F.g.fillStyle(COLORS.roseGarance, 0.45);
+  const cheek = F.p(hx + 2.5, hy + 3);
+  F.g.fillCircle(cheek.x, cheek.y, 2.2);
+}
+
+/** Hair over the crown and down the back of the head; `long` falls to the shoulders. */
+function hairCap(F: Frame, hx: number, hy: number, colour: number, long = false): void {
+  const back = long ? hy + 12 : hy + 5;
+  F.shape(
     [
-      { x: x - 10, y: y - 58 },
-      { x: x + 10, y: y - 58 },
-      { x: x + 10 + flare, y: hem },
-      { x: x - 10 - flare, y: hem },
+      P(hx + 7, hy - 6),
+      ...quad(P(hx + 7, hy - 6), P(hx + 3, hy - 13.5), P(hx - 4, hy - 11)),
+      ...quad(P(hx - 4, hy - 11), P(hx - 11.5, hy - 8), P(hx - 10, back)),
+      P(hx - 5, back),
+      P(hx - 4, hy - 1),
+      P(hx + 1, hy - 6),
+    ],
+    colour,
+    2,
+  );
+  // Locks drawn in, as the illuminators did.
+  F.stroke(quad(P(hx - 6, hy - 8), P(hx - 9, hy - 2), P(hx - 7.5, back - 2), 4), 1, ink, 0.5);
+}
+
+/** The knight's barrel helm over his mail coif, a gilt cross over the eye slit. */
+function barrelHelm(F: Frame, hx: number, hy: number): void {
+  F.shape(
+    [P(hx - 4, hy + 7), P(hx + 3, hy + 7), P(hx + 4, hy + 13), P(hx - 5, hy + 13)],
+    mail,
+    1.5,
+  );
+  F.shape(
+    [
+      ...quad(P(hx - 10, hy - 6), P(hx - 10, hy - 13.5), P(hx, hy - 13.5)),
+      ...quad(P(hx, hy - 13.5), P(hx + 10, hy - 13.5), P(hx + 10, hy - 6)),
+      P(hx + 10.5, hy + 10),
+      P(hx - 10.5, hy + 10),
+    ],
+    mail,
+  );
+  // The eye slit, the gilt cross over it, breaths on the cheek.
+  F.shape(
+    [P(hx - 4, hy - 4), P(hx + 10, hy - 4), P(hx + 10, hy - 1.5), P(hx - 4, hy - 1.5)],
+    ink,
+    0,
+  );
+  F.shape(
+    [P(hx + 3, hy - 11), P(hx + 5.5, hy - 11), P(hx + 5.5, hy + 8), P(hx + 3, hy + 8)],
+    COLORS.or,
+    1,
+  );
+  F.shape(
+    [P(hx - 2, hy + 1), P(hx + 10, hy + 1), P(hx + 10, hy + 3.2), P(hx - 2, hy + 3.2)],
+    COLORS.or,
+    1,
+  );
+  for (const [bx, by] of [
+    [-5, 5],
+    [-2, 6],
+    [-5, 8],
+    [-2, 9],
+  ] as const)
+    F.circle(hx + bx, hy + by, 0.9, ink);
+  F.stroke([P(hx - 10, hy - 7), P(hx + 10, hy - 7)], 1, ink, 0.5);
+}
+
+/** The heater shield on the far arm: the house's field, a chevron of its second tincture. */
+function shield(F: Frame, primary: number, secondary: number): void {
+  const top = -58;
+  F.shape(
+    [
+      P(-22, top),
+      P(-6, top),
+      P(-6, top + 14),
+      ...quad(P(-6, top + 14), P(-7, top + 26), P(-14, top + 33)),
+      ...quad(P(-14, top + 33), P(-21, top + 26), P(-22, top + 14)),
     ],
     primary,
   );
-  g.lineStyle(1.5, ink, 0.45);
-  for (const fx of [-7, 0, 7]) g.lineBetween(x + fx * 0.6, y - 44, x + fx, hem - 1);
-}
-
-function girdle(g: G, x: number, y: number, colour: number): void {
-  g.fillStyle(colour, 1);
-  g.fillRect(x - 12, y - 42, 24, 4);
-  g.lineStyle(1.5, ink, 1);
-  g.strokeRect(x - 12, y - 42, 24, 4);
-}
-
-/** A bare face, its eye towards `facing`. */
-function face(g: G, hx: number, hy: number, facing: number): void {
-  g.fillStyle(COLORS.carnation, 1);
-  g.fillCircle(hx, hy, 10);
-  g.lineStyle(3, ink, 1);
-  g.strokeCircle(hx, hy, 10);
-  g.fillStyle(ink, 1);
-  g.fillCircle(hx + facing * 5, hy - 1, 1.8);
-}
-
-/** The knight's mail coif and flat-topped great helm, a gilt cross over the eye slit. */
-function greatHelm(g: G, hx: number, hy: number, facing: number): void {
-  const top = hy - 13;
-  g.fillStyle(mail, 1);
-  g.fillRoundedRect(hx - 10, top, 20, 25, { tl: 3, tr: 3, bl: 6, br: 6 });
-  g.lineStyle(3, ink, 1);
-  g.strokeRoundedRect(hx - 10, top, 20, 25, { tl: 3, tr: 3, bl: 6, br: 6 });
-  g.fillStyle(ink, 1);
-  g.fillRect(hx - 8 + facing * 3, hy - 3, 14, 3);
-  g.fillStyle(COLORS.or, 1);
-  g.fillRect(hx + facing * 3 - 1, hy - 9, 3, 18);
-  g.fillRect(hx + facing * 3 - 6, hy - 3, 13, 2);
-  g.lineStyle(1, ink, 0.6);
-  for (let k = -1; k <= 1; k++) g.strokeCircle(hx - facing * 5, hy + 5 + k * 3, 1);
+  F.shape(
+    [
+      P(-21, top + 22),
+      P(-14, top + 12),
+      P(-7, top + 22),
+      P(-7, top + 27),
+      P(-14, top + 17),
+      P(-21, top + 27),
+    ],
+    secondary,
+    1.5,
+  );
 }
 
 /**
@@ -166,173 +335,189 @@ export function drawFigure(
   active: boolean,
   time: number,
 ): void {
-  const hx = x + facing * 2;
-  const hy = y - 66;
+  const F = new Frame(g, x, y, facing);
+  // The head's centre, in local coordinates.
+  const hx = 2;
+  const hy = -66;
   if (active) {
     // Gilt nimbus, as on the saints of the manuscript.
     const pulse = 1 + Math.sin(time / 250) * 0.06;
+    const c = F.p(hx, hy);
     g.fillStyle(COLORS.or, 1);
-    g.fillCircle(hx, hy, 21 * pulse);
+    g.fillCircle(c.x, c.y, 21 * pulse);
     g.lineStyle(3, ink, 1);
-    g.strokeCircle(hx, hy, 21 * pulse);
+    g.strokeCircle(c.x, c.y, 21 * pulse);
     g.lineStyle(2, COLORS.ocre, 1);
-    g.strokeCircle(hx, hy, 16 * pulse);
+    g.strokeCircle(c.x, c.y, 16 * pulse);
   }
   switch (cls ?? 'knight') {
     case 'knight':
-      legs(g, x, y, facing, 'mail');
-      shield(g, x, y, facing, primary, secondary);
-      arm(g, x, y, facing, mail);
-      tunic(g, x, y, y - 20, 6, primary);
-      g.lineStyle(2, ink, 1);
-      g.lineBetween(x + facing * 2, y - 30, x + facing * 2, y - 20);
-      girdle(g, x, y, secondary);
-      greatHelm(g, hx, hy, facing);
+      legs(F, 'mail');
+      farArm(F, mail);
+      shield(F, primary, secondary);
+      // Mail sleeves under a long surcoat, split in front.
+      robe(F, primary, -19, 5);
+      F.stroke([P(3, -30), P(3, -19)], 2);
+      belt(F, secondary);
+      nearArm(F, mail);
+      barrelHelm(F, hx, hy);
       break;
-    case 'king': {
-      // A mantle behind, lined with ermine, then mail, surcoat and a bearded face.
-      shape(
-        g,
+    case 'king':
+      // The mantle behind, its ermine lining showing at the edge.
+      F.shape([P(-12, -61), P(12, -61), P(15, -3), P(-24, -3)], primary);
+      F.shape([P(-12, -59), P(-8, -59), P(-19, -4), P(-24, -3)], COLORS.ceruse, 1.5);
+      for (const ty of [-50, -38, -26, -14]) F.circle(-10.5 + (ty + 59) * -0.2, ty, 1, ink);
+      legs(F, 'mail');
+      farArm(F, secondary);
+      robe(F, secondary, -10, 6, 4);
+      belt(F, primary);
+      nearArm(F, secondary);
+      // Ermine collar over the shoulders.
+      F.shape([P(-11, -62), P(11, -62), P(12, -56), P(-12, -56)], COLORS.ceruse, 2);
+      for (const dx of [-6, 0, 6])
+        F.shape([P(dx - 1.2, -60), P(dx + 1.2, -60), P(dx, -56.5)], ink, 0);
+      face(F, hx, hy);
+      hairCap(F, hx, hy, hair, true);
+      // A pointed beard and moustache.
+      F.shape(
         [
-          { x: x - 11, y: y - 60 },
-          { x: x + 11, y: y - 60 },
-          { x: x - facing * 4 + 16, y: y - 6 },
-          { x: x - facing * 4 - 16, y: y - 6 },
+          P(hx + 7.5, hy + 3),
+          P(hx + 6, hy + 11),
+          P(hx + 1, hy + 15),
+          P(hx - 2, hy + 9),
+          P(hx - 3, hy + 3),
         ],
-        primary,
+        hair,
+        2,
       );
-      legs(g, x, y, facing, 'mail');
-      shield(g, x, y, facing, primary, secondary);
-      arm(g, x, y, facing, primary);
-      tunic(g, x, y, y - 18, 7, secondary);
-      girdle(g, x, y, primary);
-      // Ermine collar: white with black tails.
-      g.fillStyle(COLORS.ceruse, 1);
-      g.fillRoundedRect(x - 13, y - 62, 26, 8, 3);
-      g.lineStyle(2, ink, 1);
-      g.strokeRoundedRect(x - 13, y - 62, 26, 8, 3);
-      g.fillStyle(ink, 1);
-      for (const dx of [-7, 0, 7])
-        g.fillTriangle(x + dx - 1.5, y - 60, x + dx + 1.5, y - 60, x + dx, y - 56);
-      face(g, hx, hy, facing);
-      // Hair and a full beard.
-      g.fillStyle(hair, 1);
-      g.lineStyle(2, ink, 1);
-      g.beginPath();
-      g.arc(hx, hy + 2, 10, 0.15 * Math.PI, 0.85 * Math.PI);
-      g.closePath();
-      g.fillPath();
-      g.strokePath();
-      g.fillRect(hx - 10, hy - 10, 20, 5);
+      F.stroke([P(hx + 4, hy + 4.5), P(hx + 8.5, hy + 4)], 1.6, hair);
       break;
-    }
     case 'archer':
-      legs(g, x, y, facing, hair);
-      arm(g, x, y, facing, primary);
-      tunic(g, x, y, y - 24, 4, primary);
-      girdle(g, x, y, hair);
-      // Chaperon: a hood round the face and over the shoulders, its liripipe hanging behind.
-      g.fillStyle(secondary, 1);
-      g.lineStyle(3, ink, 1);
-      g.fillCircle(hx - facing, hy - 1, 13);
-      g.strokeCircle(hx - facing, hy - 1, 13);
-      shape(
-        g,
+      legs(F, shade(primary, 0.6));
+      farArm(F, primary);
+      robe(F, primary, -24, 3);
+      belt(F, hair);
+      nearArm(F, primary);
+      face(F, hx, hy);
+      // Chaperon: a hood framing the face, a dagged shoulder cape, the liripipe hanging behind.
+      F.shape(
         [
-          { x: hx - facing * 8, y: hy - 8 },
-          { x: hx - facing * 24, y: hy + 4 },
-          { x: hx - facing * 22, y: hy + 8 },
-          { x: hx - facing * 6, y: hy - 2 },
+          P(hx + 7, hy - 7),
+          ...quad(P(hx + 7, hy - 7), P(hx + 2, hy - 15), P(hx - 6, hy - 12)),
+          ...quad(P(hx - 6, hy - 12), P(hx - 13, hy - 6), P(hx - 10, hy + 6)),
+          P(hx - 20, hy + 13),
+          P(hx - 19, hy + 16),
+          P(hx - 6, hy + 10),
+          P(hx - 4, hy + 2),
+          P(hx - 1, hy - 5),
         ],
         secondary,
         2,
       );
-      face(g, hx + facing * 2, hy + 1, facing);
-      shape(
-        g,
+      F.shape(
         [
-          { x: x - 14, y: y - 60 },
-          { x: x + 14, y: y - 60 },
-          { x: x + 12, y: y - 52 },
-          { x: x - 12, y: y - 52 },
+          P(-13, -61),
+          P(12, -61),
+          P(14, -53),
+          P(10, -50),
+          P(7, -53),
+          P(3, -50),
+          P(-1, -53),
+          P(-5, -50),
+          P(-9, -53),
+          P(-13, -50),
         ],
         secondary,
         2,
       );
       break;
     case 'slinger':
-      legs(g, x, y, facing, COLORS.carnation);
-      arm(g, x, y, facing, COLORS.carnation);
-      tunic(g, x, y, y - 28, 3, primary);
-      girdle(g, x, y, hair);
-      face(g, hx, hy, facing);
-      // Shock of unruly hair.
-      g.fillStyle(hair, 1);
-      g.lineStyle(2, ink, 1);
-      g.beginPath();
-      g.arc(hx - facing * 1, hy - 2, 10.5, Math.PI * 1.05, Math.PI * 1.95);
-      g.closePath();
-      g.fillPath();
-      g.strokePath();
-      for (const dx of [-7, -2, 3, 8])
-        g.fillTriangle(hx + dx - 3, hy - 9, hx + dx + 3, hy - 9, hx + dx, hy - 15);
-      break;
-    case 'sapper':
-      legs(g, x, y, facing, hair);
-      arm(g, x, y, facing, primary);
-      tunic(g, x, y, y - 24, 4, primary);
-      // Leather apron in front.
-      shape(
-        g,
+      legs(F, 'bare', -30);
+      farArm(F, skin);
+      robe(F, primary, -28, 2, 2);
+      belt(F, hair);
+      nearArm(F, skin);
+      face(F, hx, hy);
+      // A shock of unruly curls.
+      F.shape(
         [
-          { x: x + facing * 1 - 8, y: y - 44 },
-          { x: x + facing * 1 + 8, y: y - 44 },
-          { x: x + facing * 1 + 10, y: y - 20 },
-          { x: x + facing * 1 - 10, y: y - 20 },
+          P(hx + 8, hy - 5),
+          P(hx + 7, hy - 11),
+          P(hx + 3, hy - 9),
+          P(hx + 1, hy - 15),
+          P(hx - 3, hy - 11),
+          P(hx - 7, hy - 15),
+          P(hx - 8, hy - 9),
+          P(hx - 13, hy - 9),
+          P(hx - 10, hy - 3),
+          P(hx - 12, hy + 3),
+          P(hx - 7, hy + 5),
+          P(hx - 4, hy - 1),
+          P(hx + 1, hy - 6),
         ],
-        COLORS.ocre,
+        hair,
         2,
       );
-      girdle(g, x, y, hair);
-      face(g, hx, hy, facing);
+      break;
+    case 'sapper':
+      legs(F, hair);
+      farArm(F, primary);
+      robe(F, primary, -24, 3, 2);
+      // Leather apron in front, on a strap round the neck.
+      F.stroke([P(-2, -60), P(3, -50)], 1.5, hair);
+      F.shape([P(-1, -50), P(9, -50), P(12, -21), P(-4, -21)], COLORS.ocre, 2);
+      F.stroke([P(3, -46), P(4, -24)], 1, ink, 0.4);
+      belt(F, hair);
+      nearArm(F, primary, skin);
+      face(F, hx, hy);
+      hairCap(F, hx, hy, hair);
       // Round felt cap with a rolled brim.
-      g.fillStyle(secondary, 1);
-      g.lineStyle(2.5, ink, 1);
-      g.beginPath();
-      g.arc(hx, hy - 4, 11, Math.PI, Math.PI * 2);
-      g.closePath();
-      g.fillPath();
-      g.strokePath();
-      g.fillStyle(hair, 1);
-      g.fillRoundedRect(hx - 12, hy - 6, 24, 5, 2);
-      g.strokeRoundedRect(hx - 12, hy - 6, 24, 5, 2);
+      F.shape([...quad(P(hx - 10, hy - 6), P(hx, hy - 19), P(hx + 10, hy - 6), 8)], secondary, 2.5);
+      F.shape(
+        [P(hx - 11.5, hy - 8), P(hx + 11, hy - 8), P(hx + 11, hy - 4.5), P(hx - 11.5, hy - 4.5)],
+        shade(secondary, 0.75),
+        2,
+      );
       break;
     case 'cleric':
-      // A long robe to the feet, a white scapular, a cord.
-      shape(
-        g,
+      // A white alb to the feet, a bell-shaped chasuble over it, wide sleeves.
+      robe(F, COLORS.ceruse, -1, 5, 2);
+      farArm(F, primary);
+      F.shape(
         [
-          { x: x - 10, y: y - 58 },
-          { x: x + 10, y: y - 58 },
-          { x: x + 16, y: y - 1 },
-          { x: x - 16, y: y - 1 },
+          P(-5, -61),
+          P(5, -61),
+          ...quad(P(5, -61), P(12, -60), P(15, -48)),
+          ...quad(P(15, -48), P(16, -30), P(10, -20)),
+          P(0, -17),
+          P(-10, -20),
+          ...quad(P(-10, -20), P(-16, -30), P(-15, -48)),
+          ...quad(P(-15, -48), P(-12, -60), P(-5, -61)),
         ],
         primary,
       );
-      g.fillStyle(COLORS.ceruse, 1);
-      g.lineStyle(1.5, ink, 1);
-      g.fillRect(x - 4, y - 58, 8, 54);
-      g.strokeRect(x - 4, y - 58, 8, 54);
-      g.lineStyle(2, ink, 1);
-      g.lineBetween(x - 12, y - 40, x + 12, y - 40);
-      g.lineBetween(x + facing * 6, y - 40, x + facing * 8, y - 24);
-      arm(g, x, y, facing, primary);
-      face(g, hx, hy, facing);
+      // The orphrey: a gilt band down the front.
+      F.shape([P(1, -60), P(5, -60), P(5, -18), P(1, -18)], COLORS.or, 1.5);
+      F.shape([P(4, -59), P(11, -58), P(18, -44), P(20, -38), P(13, -36), P(7, -50)], primary, 2);
+      F.circle(19.5, -37.5, 3.2, skin, 1.5);
+      face(F, hx, hy);
       // Tonsure: a ring of hair round a bare crown.
-      g.lineStyle(4, hair, 1);
-      g.beginPath();
-      g.arc(hx, hy - 1, 9, Math.PI * 1.05, Math.PI * 1.95);
-      g.strokePath();
+      F.shape(
+        [
+          P(hx + 7, hy - 6),
+          P(hx + 8, hy - 3),
+          P(hx + 4, hy - 6),
+          P(hx - 3, hy - 7),
+          P(hx - 7, hy - 3),
+          P(hx - 6, hy + 4),
+          P(hx - 10, hy + 3),
+          P(hx - 10, hy - 6),
+          P(hx - 4, hy - 10),
+          P(hx + 3, hy - 10),
+        ],
+        hair,
+        2,
+      );
       break;
   }
 }
