@@ -229,10 +229,14 @@ export class GameUi {
     this.resetView = this.click(button(t('ui.resetView'), 'icon hidden'), () => opts.resetView());
     this.resetView.title = t('tip.resetView');
     if (document.fullscreenEnabled) sys.append(this.fullscreenButton());
+    const helpButton = this.click(button('?', 'icon'), () => this.toggle(this.help));
+    helpButton.title = t('ui.help');
+    const settingsButton = this.click(button('⚙', 'icon'), () => this.openSettings());
+    settingsButton.title = t('ui.settings');
     sys.append(
       this.resetView,
-      this.click(button(`? ${t('ui.help')}`), () => this.toggle(this.help)),
-      this.click(button(`⚙ ${t('ui.settings')}`), () => this.openSettings()),
+      helpButton,
+      settingsButton,
       this.click(button(`☰ ${t('ui.pause')}`), () => this.toggle(this.pause)),
     );
 
