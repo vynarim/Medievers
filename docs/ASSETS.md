@@ -54,6 +54,15 @@
 
 Colonnes des tableaux : **P** = priorité (P0 prototype / vertical slice, P1 V1, P2 après V1). **Qté** = nombre de fichiers ou de pièces.
 
+### 2.1 Placeholders (lots 1 à 8)
+
+Jusqu'à la production artistique (BACKLOG, lot 9), aucun fichier image n'est requis :
+
+- **Tout visuel est référencé par sa clé d'asset** (le nommage ci-dessus : `unit_knight_head_02`, `vfx_explosion_m_04`…), jamais par un chemin de fichier écrit en dur.
+- Quand le fichier correspondant n'existe pas, `src/render` génère au démarrage une **texture placeholder sous la même clé**, dessinée par le code (`Graphics` puis `generateTexture`). Les unités sont des capsules aux couleurs de la maison, les projectiles des cercles, les pièces de rig des rectangles à la bonne taille avec leur pivot, et le terrain des aplats par matériau.
+- Les dimensions, les pivots et les zones tintables du placeholder sont ceux de la spec finale. Remplacer un placeholder revient donc à déposer le fichier : aucune modification de code.
+- Les placeholders ne sont jamais livrés comme assets finaux. `asset-audit` signale toute clé encore servie par un placeholder.
+
 ## 3. Unités (cutout rigs)
 
 ### 3.1 Pièces communes à toutes les classes (squelette de base)

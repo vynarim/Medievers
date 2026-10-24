@@ -4,6 +4,26 @@ Chaque tâche est dimensionnée pour une session Claude Code. Les critères d'ac
 
 Ordre recommandé : simulation d'abord, en headless et testée, puis rendu en greybox, puis art. La production artistique (planche de style, ASSETS §9.1) peut démarrer **en parallèle dès M1**.
 
+## Ordre d'exécution (décidé le 2026-10-24)
+
+La priorité est le moteur : simulation, règles, réseau, IA. Jusqu'au lot 9, tous les visuels sont des **placeholders dessinés par le code** (ASSETS §2.1). Les numéros de jalon et de tâche restent ceux des sections ci-dessous : seul l'ordre de réalisation change.
+
+| Lot | Contenu | Tâches | Gate |
+|---|---|---|---|
+| 1 | Moteur de simulation headless + déterminisme inter-navigateurs | M1, dont 1.10 (ex-9.3) | M1 |
+| 2 | Greybox jouable | M2 | M2 |
+| 3 | Règles complètes | M3 | M3 |
+| 4 | Connexions LAN | M9 (9.1, 9.2, 9.4, 9.5, 9.6 si besoin) | M9 |
+| 5 | IA | M5 | M5 |
+| 6 | Arsenal complet (chaque arme livrée avec son support IA) | M4 | M4 |
+| 7 | Moteur de présentation, sans art final | Tâches **[tech]** de M6 et M7 | M6 [tech], M7 [tech] |
+| 8 | Plateforme | M8 | M8 |
+| 9 | Art et son (assets générés puis retouchés, ASSETS §9) | Tâches **[art]** de M6 et M7 | M6, M7 |
+
+- Le lot 9 peut démarrer en parallèle dès que le format de rig (6.1) est figé.
+- Dans M6 et M7, **[tech]** désigne une tâche réalisable avec des placeholders, et **[art]** une tâche qui dépend des assets finaux.
+- Une gate de jalon partiel (« M6 [tech] ») ne vérifie que les tâches marquées [tech].
+
 ---
 
 ## M0 — Fondations
@@ -27,6 +47,7 @@ Ordre recommandé : simulation d'abord, en headless et testée, puis rendu en gr
 | 1.7 | Boucle de tour : phases, timer en ticks, repli, résolution « tout au repos », fin de partie | Partie scriptée de 3 tours jouée jusqu'à la fin |
 | 1.8 | `GameCommand`, `Sim.step`, `snapshot`/`restore`, log de partie | Snapshot, N steps, restore puis N steps donnent le même hash |
 | 1.9 | `pnpm run sim:headless` + `pnpm run test:determinism` avec 2 replays de référence | Rejeu vert en CI |
+| 1.10 | Test de déterminisme inter-navigateurs (anciennement 9.3) : les replays de référence rejoués dans Chrome et Firefox (Playwright) | Hashes identiques à ceux de Node |
 
 ## M2 — Greybox jouable
 | # | Tâche | CA |
@@ -79,26 +100,26 @@ Ordre recommandé : simulation d'abord, en headless et testée, puis rendu en gr
 
 | # | Tâche | CA |
 |---|---|---|
-| 6.1 | Format `rig.json` + `anim/*.json`, runtime d'animation cutout | Le Chevalier P0 joue toutes ses animations P0 |
-| 6.2 | Tint de faction + composition dynamique du blason sur l'écu et la bannière | 8 blasons pré-composés affichés |
-| 6.3 | `pnpm run maps:build` (découpe, validations) | La carte Jéricho passe les validations |
-| 6.4 | Carte Jéricho complète (peinture, masque, parallaxe, cadre) | — |
-| 6.5 | Bord « vélin déchiré » sur les carves | Validé visuellement |
-| 6.6 | VFX P0 (explosion M, débris, poussière, étoiles, trajectoire) | — |
-| 6.7 | HUD P0 (vent, timer, phylactères, cartouches) | — |
-| 6.8 | Audio P0 (8 SFX d'armes, 5 SFX d'unités, 1 piste de musique) | — |
-| 6.9 | **Vertical slice** : Jéricho, 2 maisons, 3 Chevaliers chacune, arc/fronde/pot/épée/mur, hotseat et IA | Démo jouable sur PC et tablette à 60 fps |
+| 6.1 **[tech]** | Format `rig.json` + `anim/*.json`, runtime d'animation cutout | Le Chevalier P0 joue toutes ses animations P0 (rig placeholder accepté en lot 7) |
+| 6.2 **[tech]** | Tint de faction + composition dynamique du blason sur l'écu et la bannière | 8 blasons pré-composés affichés |
+| 6.3 **[tech]** | `pnpm run maps:build` (découpe, validations) | La carte de test greybox passe les validations (Jéricho : vérifiée au lot 9) |
+| 6.4 **[art]** | Carte Jéricho complète (peinture, masque, parallaxe, cadre) | — |
+| 6.5 **[art]** | Bord « vélin déchiré » sur les carves | Validé visuellement |
+| 6.6 **[art]** | VFX P0 (explosion M, débris, poussière, étoiles, trajectoire) | — |
+| 6.7 **[tech]** | HUD P0 (vent, timer, phylactères, cartouches) | — |
+| 6.8 **[art]** | Audio P0 (8 SFX d'armes, 5 SFX d'unités, 1 piste de musique) | — |
+| 6.9 **[art]** | **Vertical slice** : Jéricho, 2 maisons, 3 Chevaliers chacune, arc/fronde/pot/épée/mur, hotseat et IA | Démo jouable sur PC et tablette à 60 fps |
 
 ## M7 — Contenu V1
 | # | Tâche | CA |
 |---|---|---|
-| 7.1 | Rigs et animations des 5 autres classes | — |
-| 7.2 | Assets de toutes les armes et VFX P1 | — |
-| 7.3 | Cartes Ela, Camp, Arche, Tour, Verger | Chacune passe `maps:build` et `maps:soak` |
-| 7.4 | Menus complets, écran titre, victoire, « passez la main », « tournez l'appareil » | — |
-| 7.5 | Éditeur de blason et gestion des équipes (persistance) | — |
-| 7.6 | Audio P1 complet | — |
-| 7.7 | Replays : revoir la dernière partie, export et import JSON | Un replay importé est identique bit à bit |
+| 7.1 **[art]** | Rigs et animations des 5 autres classes | — |
+| 7.2 **[art]** | Assets de toutes les armes et VFX P1 | — |
+| 7.3 **[art]** | Cartes Ela, Camp, Arche, Tour, Verger | Chacune passe `maps:build` et `maps:soak` |
+| 7.4 **[tech]** | Menus complets, écran titre, victoire, « passez la main », « tournez l'appareil » | — |
+| 7.5 **[tech]** | Éditeur de blason et gestion des équipes (persistance) | — |
+| 7.6 **[art]** | Audio P1 complet | — |
+| 7.7 **[tech]** | Replays : revoir la dernière partie, export et import JSON | Un replay importé est identique bit à bit |
 
 ## M8 — Finition et plateforme
 | # | Tâche | CA |
@@ -114,7 +135,7 @@ Ordre recommandé : simulation d'abord, en headless et testée, puis rendu en gr
 |---|---|---|
 | 9.1 | **Spike WebRTC** : 2 PC du réseau cible, `iceServers: []`, signaling par copier-coller ; tester Chrome↔Chrome, Chrome↔Firefox et Edge ; mesurer la taille du SDP compressé | Rapport Go/No-Go dans `docs/adr/0002-lan-transport.md` |
 | 9.2 | Interface `Transport` + `RemoteInputSource` + protocole (TECH_SPEC §8.1) | Tests avec un transport en mémoire |
-| 9.3 | Test de déterminisme inter-navigateurs (mêmes replays dans Chrome et Firefox) | Hashes identiques |
+| 9.3 | *Déplacée en 1.10* | — |
 | 9.4 | UI d'appairage : QR + code texte, lecture QR caméra (optionnelle) | Appairage en moins de 1 min, en 2 échanges |
 | 9.5 | Lockstep par tour, détection de désync, reconnexion par rejeu | Désync simulée détectée ; reconnexion OK |
 | 9.6 | *Si le spike échoue* : `tools/lan-server` (Node WS + statique, exécutable unique) | Connexion par URL LAN depuis le second PC |

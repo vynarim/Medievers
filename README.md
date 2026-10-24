@@ -180,7 +180,7 @@ pnpm run dev        # http://localhost:5173
 | Jalon | Contenu | État |
 |---|---|---|
 | **M0** | Fondations : choix de Phaser, scaffold, garde-fou ESLint, `check` | ✅ [rapport de gate](docs/reports/gates/2026-10-24-M0.md) |
-| **M1** | Noyau de simulation headless : math entière, terrain, unités, projectiles, explosions, tours, replays | ⏳ prochain |
+| **M1** | Noyau de simulation headless : math entière, terrain, unités, projectiles, explosions, tours, replays, déterminisme Chrome/Firefox | ⏳ en cours |
 | **M2** | Greybox jouable dans le navigateur, PC et tablette | |
 | **M3** | Règles complètes : vent, reliquaires, Déluge, classes, schémas | |
 | **M4** | Arsenal complet | |
