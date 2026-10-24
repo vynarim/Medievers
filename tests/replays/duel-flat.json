@@ -1,0 +1,67 @@
+{
+ "version": 1,
+ "config": {
+  "rules": {
+   "turn": {
+    "transitionTicks": 120,
+    "actionTicks": 2700,
+    "retreatTicks": 180,
+    "maxResolutionTicks": 1800
+   },
+   "startHp": 60
+  },
+  "teams": [
+   {
+    "spawns": [
+     300
+    ]
+   },
+   {
+    "spawns": [
+     420
+    ]
+   }
+  ]
+ },
+ "seed": 7,
+ "mapId": "flat",
+ "commands": [
+  [
+   121,
+   {
+    "t": "aim",
+    "angle": 0
+   }
+  ],
+  [
+   121,
+   {
+    "t": "fire",
+    "power": 1024
+   }
+  ],
+  [
+   423,
+   {
+    "t": "skip"
+   }
+  ],
+  [
+   544,
+   {
+    "t": "aim",
+    "angle": 0
+   }
+  ],
+  [
+   544,
+   {
+    "t": "fire",
+    "power": 1024
+   }
+  ]
+ ],
+ "endTick": 725,
+ "description": "Bow duel on flat ground, 60 HP: two hits win in three turns.",
+ "expectedHash": "1f176e5e"
+}

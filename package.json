@@ -14,13 +14,17 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:browser": "node tools/browser-determinism.ts",
+    "test:determinism": "node tools/test-determinism.ts",
+    "sim:headless": "node tools/sim-headless.ts",
+    "replays:record": "node tools/record-reference-replays.ts",
+    "maps:test": "node tools/gen-test-maps.ts",
     "lint": "eslint . --max-warnings 0",
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "gen:lut": "node tools/gen-trig-lut.ts",
     "manual": "node tools/build-manual.ts",
-    "check": "pnpm run lint && pnpm run typecheck && pnpm test && pnpm run test:browser"
+    "check": "pnpm run lint && pnpm run typecheck && pnpm test && pnpm run test:determinism && pnpm run test:browser"
   },
   "dependencies": {
     "fast-png": "8.0.0",

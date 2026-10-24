@@ -5,3 +5,4 @@ docs
 .claude
 *.md
 src/sim/math/trig-lut.ts
+tests/replays

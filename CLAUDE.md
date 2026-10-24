@@ -64,6 +64,7 @@ docs/
 - `pnpm run check` — lint + typecheck + tests + test:browser
 - `pnpm run test:determinism` — rejeu des replays de référence de `tests/replays/`
 - `pnpm run sim:headless <replay.json>` — exécution CLI sans rendu
+- `pnpm run replays:record` — enregistre les replays de référence manquants (`--force` pour réécrire, avec `regen-hash: <raison>` dans le commit)
 
 ## Conventions
 

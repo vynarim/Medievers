@@ -10,11 +10,19 @@ import {
   nextU32,
 } from '../../src/sim/math/index.ts';
 import { SIN_Q14 } from '../../src/sim/math/trig-lut.ts';
+import { replay, type ReplayFile } from '../../src/sim/index.ts';
 
 export type CheckResults = Record<string, number>;
 
+export interface CheckInput {
+  /** tests/fixtures/maps/test-mask.png */
+  readonly maskPng: Uint8Array;
+  /** reference replays by file name, with the mask PNG of their map */
+  readonly replays: readonly { name: string; file: ReplayFile; mapPng: Uint8Array }[];
+}
+
 /** Each probe returns a 32-bit hash summarising its outputs. */
-export function runChecks(maskPng: Uint8Array): CheckResults {
+export function runChecks({ maskPng, replays }: CheckInput): CheckResults {
   let math = FNV_OFFSET;
   for (let i = 0; i < 4096; i++) math = hashInt(math, SIN_Q14[i] ?? 0);
   for (let y = -300; y <= 300; y += 7) {
@@ -27,5 +35,9 @@ export function runChecks(maskPng: Uint8Array): CheckResults {
   for (let i = 0; i < 10000; i++) prng = hashInt(prng, nextU32(s));
 
   const mask = decodeMaskPng(maskPng);
-  return { math, prng, mask: hashBytes(FNV_OFFSET, mask.data) };
+  const results: CheckResults = { math, prng, mask: hashBytes(FNV_OFFSET, mask.data) };
+  for (const r of replays) {
+    results[r.name] = replay(r.file, decodeMaskPng(r.mapPng)).hash() >>> 0;
+  }
+  return results;
 }

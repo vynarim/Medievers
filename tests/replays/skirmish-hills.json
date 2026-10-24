@@ -1,0 +1,364 @@
+{
+ "version": 1,
+ "config": {
+  "rules": {
+   "turn": {
+    "transitionTicks": 120,
+    "actionTicks": 2700,
+    "retreatTicks": 180,
+    "maxResolutionTicks": 1800
+   },
+   "startHp": 100
+  },
+  "teams": [
+   {
+    "spawns": [
+     150,
+     420
+    ]
+   },
+   {
+    "spawns": [
+     1150,
+     1420
+    ]
+   }
+  ]
+ },
+ "seed": 20261024,
+ "mapId": "hills",
+ "commands": [
+  [
+   121,
+   {
+    "t": "move",
+    "dir": 1
+   }
+  ],
+  [
+   152,
+   {
+    "t": "move",
+    "dir": 0
+   }
+  ],
+  [
+   153,
+   {
+    "t": "selectWeapon",
+    "id": "sling"
+   }
+  ],
+  [
+   153,
+   {
+    "t": "aim",
+    "angle": 3650
+   }
+  ],
+  [
+   153,
+   {
+    "t": "fire",
+    "power": 760
+   }
+  ],
+  [
+   455,
+   {
+    "t": "move",
+    "dir": -1
+   }
+  ],
+  [
+   493,
+   {
+    "t": "move",
+    "dir": 0
+   }
+  ],
+  [
+   494,
+   {
+    "t": "jump",
+    "kind": "forward"
+   }
+  ],
+  [
+   545,
+   {
+    "t": "selectWeapon",
+    "id": "greekFire"
+   }
+  ],
+  [
+   545,
+   {
+    "t": "setFuse",
+    "seconds": 3
+   }
+  ],
+  [
+   545,
+   {
+    "t": "aim",
+    "angle": 2539
+   }
+  ],
+  [
+   545,
+   {
+    "t": "fire",
+    "power": 783
+   }
+  ],
+  [
+   897,
+   {
+    "t": "move",
+    "dir": 1
+   }
+  ],
+  [
+   942,
+   {
+    "t": "move",
+    "dir": 0
+   }
+  ],
+  [
+   943,
+   {
+    "t": "selectWeapon",
+    "id": "sling"
+   }
+  ],
+  [
+   943,
+   {
+    "t": "aim",
+    "angle": 3632
+   }
+  ],
+  [
+   943,
+   {
+    "t": "fire",
+    "power": 806
+   }
+  ],
+  [
+   1245,
+   {
+    "t": "move",
+    "dir": -1
+   }
+  ],
+  [
+   1297,
+   {
+    "t": "move",
+    "dir": 0
+   }
+  ],
+  [
+   1298,
+   {
+    "t": "selectWeapon",
+    "id": "greekFire"
+   }
+  ],
+  [
+   1298,
+   {
+    "t": "setFuse",
+    "seconds": 2
+   }
+  ],
+  [
+   1298,
+   {
+    "t": "aim",
+    "angle": 2557
+   }
+  ],
+  [
+   1298,
+   {
+    "t": "fire",
+    "power": 829
+   }
+  ],
+  [
+   1600,
+   {
+    "t": "move",
+    "dir": 1
+   }
+  ],
+  [
+   1659,
+   {
+    "t": "move",
+    "dir": 0
+   }
+  ],
+  [
+   1660,
+   {
+    "t": "jump",
+    "kind": "forward"
+   }
+  ],
+  [
+   1711,
+   {
+    "t": "selectWeapon",
+    "id": "sling"
+   }
+  ],
+  [
+   1711,
+   {
+    "t": "aim",
+    "angle": 3614
+   }
+  ],
+  [
+   1711,
+   {
+    "t": "fire",
+    "power": 852
+   }
+  ],
+  [
+   2013,
+   {
+    "t": "move",
+    "dir": -1
+   }
+  ],
+  [
+   2079,
+   {
+    "t": "move",
+    "dir": 0
+   }
+  ],
+  [
+   2080,
+   {
+    "t": "selectWeapon",
+    "id": "greekFire"
+   }
+  ],
+  [
+   2080,
+   {
+    "t": "setFuse",
+    "seconds": 4
+   }
+  ],
+  [
+   2080,
+   {
+    "t": "aim",
+    "angle": 2575
+   }
+  ],
+  [
+   2080,
+   {
+    "t": "fire",
+    "power": 875
+   }
+  ],
+  [
+   2515,
+   {
+    "t": "move",
+    "dir": 1
+   }
+  ],
+  [
+   2588,
+   {
+    "t": "move",
+    "dir": 0
+   }
+  ],
+  [
+   2589,
+   {
+    "t": "selectWeapon",
+    "id": "sling"
+   }
+  ],
+  [
+   2589,
+   {
+    "t": "aim",
+    "angle": 3596
+   }
+  ],
+  [
+   2589,
+   {
+    "t": "fire",
+    "power": 898
+   }
+  ],
+  [
+   2891,
+   {
+    "t": "move",
+    "dir": -1
+   }
+  ],
+  [
+   2971,
+   {
+    "t": "move",
+    "dir": 0
+   }
+  ],
+  [
+   2972,
+   {
+    "t": "jump",
+    "kind": "forward"
+   }
+  ],
+  [
+   3023,
+   {
+    "t": "selectWeapon",
+    "id": "greekFire"
+   }
+  ],
+  [
+   3023,
+   {
+    "t": "setFuse",
+    "seconds": 3
+   }
+  ],
+  [
+   3023,
+   {
+    "t": "aim",
+    "angle": 2593
+   }
+  ],
+  [
+   3023,
+   {
+    "t": "fire",
+    "power": 921
+   }
+  ]
+ ],
+ "endTick": 3262,
+ "description": "2 vs 2 on the hills map: walking, jumps, sling and Greek fire for eight turns, with wind.",
+ "expectedHash": "f4410a9f"
+}

@@ -15,7 +15,7 @@ import {
   TEST_MASK_HEIGHT,
   TEST_MASK_WIDTH,
   expectedTestMask,
-} from '../../fixtures/maps/test-mask.ts';
+} from '../../fixtures/maps/test-maps.ts';
 
 const fixture = (): Uint8Array =>
   new Uint8Array(readFileSync(new URL('../../fixtures/maps/test-mask.png', import.meta.url)));

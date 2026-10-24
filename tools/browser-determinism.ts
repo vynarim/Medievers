@@ -1,14 +1,25 @@
 // Cross-browser determinism (BACKLOG 1.10): runs tests/browser/checks.ts in Node, Chromium (V8),
 // Firefox (SpiderMonkey) and WebKit (JavaScriptCore, as on iPad); fails unless all results match.
 // Usage: pnpm run test:browser
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { chromium, firefox, webkit, type BrowserType } from 'playwright';
 import { createServer } from 'vite';
+import type { ReplayFile } from '../src/sim/index.ts';
 import { runChecks, type CheckResults } from '../tests/browser/checks.ts';
+import { maskPathFor } from './lib/maps-node.ts';
 
 const root = new URL('..', import.meta.url);
 const maskPng = new Uint8Array(readFileSync(new URL('tests/fixtures/maps/test-mask.png', root)));
 const engines: Record<string, BrowserType> = { chromium, firefox, webkit };
+
+const replayDir = new URL('tests/replays/', root);
+const replays = readdirSync(replayDir)
+  .filter((f) => f.endsWith('.json'))
+  .sort()
+  .map((name) => {
+    const file = JSON.parse(readFileSync(new URL(name, replayDir), 'utf8')) as ReplayFile;
+    return { name, file, mapPng: new Uint8Array(readFileSync(maskPathFor(file.mapId))) };
+  });
 
 const server = await createServer({
   root: new URL('tests/browser/', root).pathname.replace(/^\/([A-Za-z]:)/, '$1'),
@@ -22,7 +33,7 @@ try {
   const url = server.resolvedUrls?.local[0];
   if (!url) throw new Error('vite did not report a local URL');
 
-  const results: Record<string, CheckResults> = { node: runChecks(maskPng) };
+  const results: Record<string, CheckResults> = { node: runChecks({ maskPng, replays }) };
   for (const [name, engine] of Object.entries(engines)) {
     const browser = await engine.launch({ headless: true });
     try {
@@ -42,7 +53,7 @@ try {
     const hashes = Object.entries(r)
       .map(([k, v]) => `${k}=${v.toString(16).padStart(8, '0')}`)
       .join(' ');
-    console.log(`${same ? 'OK  ' : 'DIFF'} ${env.padEnd(20)} ${hashes}`);
+    console.log(`${same ? 'OK  ' : 'DIFF'} ${env.padEnd(22)} ${hashes}`);
   }
 } finally {
   await server.close();
