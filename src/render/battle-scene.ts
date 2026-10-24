@@ -1151,7 +1151,7 @@ export class BattleScene extends Phaser.Scene {
         label.setVisible(true);
         label.setPosition(x, bottom);
         if (label.text !== unitName(u.id)) label.setText(unitName(u.id));
-        label.setColor(css(primary));
+        label.setColor(css(faction?.ink ?? primary));
         this.drawScroll(g, x, bottom, label.width, label.height, isActive);
         this.drawLifeBar(g, x, bottom + 2, u.hp / maxHpOf(v, u), primary);
         this.drawAfflictions(g, u.id, x, bottom - label.height - 8);

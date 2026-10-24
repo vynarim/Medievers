@@ -168,7 +168,7 @@ export class Hud {
     this.turnTitle.textContent =
       turn.phase === 'placement' ? t('hud.placement') : t('hud.turn', { n: turn.number });
     this.turnHouse.textContent = faction ? t(faction.nameKey) : '';
-    this.turnHouse.style.color = css(faction?.primary ?? COLORS.encre);
+    this.turnHouse.style.color = css(faction?.ink ?? COLORS.encre);
     this.turnPhase.textContent = t(`hud.phase.${turn.phase}`);
     this.breath.classList.toggle('hidden', breath < 0);
     this.breathFill.style.width = `${Math.max(0, breath)}%`;

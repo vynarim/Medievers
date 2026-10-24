@@ -64,7 +64,7 @@ export class Commentary {
       t('hud.turn', { n: turn }),
       `${house} · ${name}`,
       pick('quip.turn', { name, house }),
-      f?.primary ?? COLORS.encre,
+      f?.ink ?? COLORS.encre,
       now,
     );
   }

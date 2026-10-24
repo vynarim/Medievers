@@ -584,7 +584,7 @@ export class GameUi {
       shield(faction?.primary ?? COLORS.encre, faction?.secondary ?? COLORS.or, true),
       el('span', '', faction ? t(faction.nameKey) : ''),
     );
-    house.style.color = css(faction?.primary ?? COLORS.encre);
+    house.style.color = css(faction?.ink ?? COLORS.encre);
     const hpBar = el('div', 'hpbar');
     const fill = el('i');
     const maxHp = maxHpOf(v, u);

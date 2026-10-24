@@ -98,7 +98,7 @@ export function showSetupScreen(
       const name = el('div', 'name');
       if (f) name.append(shield(f.primary, f.secondary, true));
       name.append(el('span', '', f ? t(f.nameKey) : ''));
-      name.style.color = css(f?.primary ?? 0);
+      name.style.color = css(f?.ink ?? 0);
       row.append(name);
       const setLineup = (next: ClassId[]): void => {
         const lineups = setup.lineups.map((l, k) => (k === h ? next : [...l]));
