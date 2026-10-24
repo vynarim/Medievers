@@ -132,7 +132,7 @@ Toutes les valeurs sont des défauts dans `src/content/weapons.ts`, ajustables p
 
 ## 5. Vent
 - Valeur entière de −10 à +10, tirée par PRNG à chaque tour. Une option permet de le figer à 0.
-- Il affecte les projectiles marqués « Vent » (accélération horizontale proportionnelle), la bannière, les anges des reliquaires et la fumée (visuel).
+- Il affecte les projectiles marqués « Vent » (accélération horizontale proportionnelle : 2 sub-px/tick² par point de vent, multipliée par le facteur de vent de l'arme, `src/content/world.ts`), la bannière, les anges des reliquaires et la fumée (visuel).
 - Indicateur : une bannière en haut d'écran dont la longueur et le sens suivent la valeur du vent. Un petit ange soufflant en marge apparaît au-delà de ±7.
 
 ## 6. Modes de jeu
