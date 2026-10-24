@@ -202,4 +202,21 @@ describe('LocalControls', () => {
     for (let i = 0; i < (CLASSIC_RULES.turn.settleTicks ?? 0); i++) b.tick();
     expect(b.sim.view().turn.number).toBe(2);
   });
+
+  it('climbs a ladder on a press of ↑, not with ↑ held on reaching it', () => {
+    const { sim, tick } = setup();
+    // A ladder from the ground up, a little right of the unit (x = 300).
+    const snap = sim.snapshot();
+    const t = snap.terrain;
+    for (let y = 300; y < 500; y++)
+      for (let x = 380; x < 384; x++) t.data[y * t.width + x] = Material.Ladder;
+    sim.restore(snap);
+    // Aiming up while walking to it: no climb.
+    const walked: GameCommand[] = [];
+    for (let i = 0; i < 60; i++) walked.push(...tick({ right: true, up: true }));
+    expect(walked.some((c) => c.t === 'climb' && c.dir !== 0)).toBe(false);
+    tick({});
+    // A fresh press climbs.
+    expect(tick({ up: true })).toContainEqual({ t: 'climb', dir: -1 });
+  });
 });

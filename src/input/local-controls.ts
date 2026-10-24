@@ -96,6 +96,9 @@ export function aimFor(elevation: number, facing: number): number {
 export class LocalControls {
   private walkSent: -1 | 0 | 1 = 0;
   private climbSent: -1 | 0 | 1 = 0;
+  /** ↑ and ↓ held on the previous tick: a key already held on reaching a ladder does not climb */
+  private upBefore = false;
+  private downBefore = false;
   private pendingJumpTick = -1;
   private charging = false;
   /** 0..1024 while charging, for the HUD gauge */
@@ -112,6 +115,10 @@ export class LocalControls {
     }
     const unit = view.units.find((u) => u.id === turn.activeUnitId);
     const canMove = turn.phase === 'action' || turn.phase === 'retreat';
+    const upPressed = input.up && !this.upBefore;
+    const downPressed = input.down && !this.downBefore;
+    this.upBefore = input.up;
+    this.downBefore = input.down;
     if (!unit || !canMove) {
       this.reset();
       return out;
@@ -123,16 +130,20 @@ export class LocalControls {
       out.push({ t: 'move', dir });
       this.walkSent = dir;
     }
-    // On a ladder, ↑ and ↓ (keys or buttons) climb instead of aiming (GDD §4.4).
+    // At a ladder, a press of ↑ or ↓ (key or button) climbs instead of aiming (GDD §4.4). Climbing
+    // is a choice: walking up to a ladder with ↑ or ↓ already held (aiming) does not take it.
     const onLadder = canClimb(view.terrain, unit, view.rules.unit);
-    const climbDir: -1 | 0 | 1 =
-      input.climb !== 0
-        ? input.climb
-        : onLadder && input.up !== input.down
-          ? input.up
-            ? -1
-            : 1
-          : 0;
+    const held = this.climbSent === -1 ? input.up : this.climbSent === 1 ? input.down : false;
+    const keyClimb: -1 | 0 | 1 = !onLadder
+      ? 0
+      : held
+        ? this.climbSent
+        : upPressed && !input.down
+          ? -1
+          : downPressed && !input.up
+            ? 1
+            : 0;
+    const climbDir: -1 | 0 | 1 = input.climb !== 0 ? input.climb : keyClimb;
     if (climbDir !== this.climbSent) {
       out.push({ t: 'climb', dir: climbDir });
       this.climbSent = climbDir;
@@ -212,7 +223,7 @@ export class LocalControls {
       // Arrowhead dragged: aim at the pointer, on either side (the sim turns the unit).
       const aim = atan2Bam(input.aimAt.y, input.aimAt.x);
       if (aim !== turn.aim) out.push({ t: 'aim', angle: aim });
-    } else if (!onLadder) {
+    } else if (climbDir === 0) {
       // Keyboard aim.
       const delta = (input.up ? AIM_SPEED : 0) - (input.down ? AIM_SPEED : 0);
       elevation = Math.max(-ELEVATION_MAX, Math.min(ELEVATION_MAX, elevation + delta));
