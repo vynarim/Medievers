@@ -387,6 +387,7 @@ export class BattleScene extends Phaser.Scene {
       newMatch: () => this.newMatch(),
       resetView: () => this.resetView(),
       title: () => this.showTitle(),
+      ...(this.online ? { onlineCode: this.online.code } : {}),
     });
     // A resized window keeps the map filling the screen (the default view reframes itself).
     const onResize = (): void => {

@@ -181,6 +181,8 @@
   "pause.title": "Pause",
   "pause.body": "Le combat est suspendu. Les chevaliers en profitent pour débattre de la vitesse de vol des hirondelles chargées.",
   "pause.resume": "Reprendre",
+  "pause.code": "Code de la partie :",
+  "pause.copied": "Copié !",
   "pause.restart": "Recommencer la partie",
   "quip.turn.1": "{name} s'avance. En grande partie courageusement.",
   "quip.turn.2": "{name} a consulté les astres. Les astres ont haussé les épaules.",

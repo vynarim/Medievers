@@ -52,7 +52,12 @@ export interface GameUiOptions {
   readonly resetView: () => void;
   /** the title screen, over the paused match */
   readonly title: () => void;
+  /** online: the match's code, shown in the pause menu with a button to copy it */
+  readonly onlineCode?: string;
 }
+
+/** ms the copy button says it copied */
+const COPIED_MS = 1500;
 
 /** What the replay viewer's bar drives (the battle scene). */
 export interface ReplayControls {
@@ -270,7 +275,23 @@ export class GameUi {
         this.opts.title();
       }),
     );
-    this.pause.append(el('h2', '', t('pause.title')), el('p', '', t('pause.body')), pauseActions);
+    this.pause.append(el('h2', '', t('pause.title')), el('p', '', t('pause.body')));
+    // Online: the match's code, to give again to the other player, copied in one click.
+    const code = opts.onlineCode;
+    if (code) {
+      const shown = code.length === 6 ? `${code.slice(0, 3)}-${code.slice(3)}` : code;
+      const copy = button(t('online.copy'));
+      copy.addEventListener('click', () => {
+        void navigator.clipboard?.writeText(shown).then(() => {
+          copy.textContent = t('pause.copied');
+          window.setTimeout(() => (copy.textContent = t('online.copy')), COPIED_MS);
+        });
+      });
+      const row = el('div', 'pause-code');
+      row.append(el('span', '', t('pause.code')), el('b', '', shown), copy);
+      this.pause.append(row);
+    }
+    this.pause.append(pauseActions);
     this.netVeil = el('div', 'veil hidden');
     this.netStatus = el('div', 'net-status panel hidden');
     this.netError = this.modal('pause');

@@ -63,6 +63,9 @@ const STYLE = `
 #ui button:disabled { filter: grayscale(1); }
 #ui .fuses { display: flex; gap: 4px; align-items: center; font-family: var(--caps); }
 #ui .sys { position: absolute; top: 12px; right: 12px; display: flex; gap: 6px; }
+#ui .pause-code { display: flex; align-items: center; justify-content: center; gap: 12px;
+  margin: 0 0 12px; font-size: 18px; }
+#ui .pause-code b { font-family: var(--caps); font-size: 26px; letter-spacing: 2px; }
 
 /* HUD */
 #ui .breath { height: 9px; border: 2px solid var(--encre); background: var(--velin); }
