@@ -35,12 +35,18 @@ export interface BattleData {
 const TICK_MS = 1000 / TICKS_PER_SECOND;
 /** Catch-up limit: at most 5 sim steps per frame (TECH_SPEC §3). */
 const MAX_STEPS_PER_FRAME = 5;
-const VIEW_W = 1920;
-const VIEW_H = 1080;
-const ZOOM_MIN = 0.35;
+/** Reference screen height: the default zoom shows as much world on any screen height. */
+const REF_HEIGHT = 1080;
+/** Default zoom at the reference height */
+const ZOOM_DEFAULT = 0.75;
+/** Closest zoom at the reference height */
 const ZOOM_MAX = 1.6;
+/** screen px per second of edge scrolling */
+const EDGE_SCROLL_SPEED = 900;
 /** ms an explosion burst lasts */
 const BURST_MS = 520;
+/** px from the body centre to the middle of the aim arrowhead, which can be dragged */
+const AIM_TIP = 172;
 /** size of the diaper pattern tile, px */
 const DIAPER = 160;
 
@@ -111,7 +117,7 @@ export class BattleScene extends Phaser.Scene {
     const cam = this.cameras.main;
     cam.setBackgroundColor(css(COLORS.velin));
     cam.setBounds(0, 0, map.width, map.height);
-    cam.setZoom(0.75);
+    cam.setZoom(this.defaultZoom());
 
     const page = this.add
       .tileSprite(0, 0, map.width, map.height, this.diaperTexture())
@@ -155,7 +161,7 @@ export class BattleScene extends Phaser.Scene {
       ...this.labels.values(),
     ];
     cam.ignore(this.debugText);
-    this.hudCam = this.cameras.add(0, 0, VIEW_W, VIEW_H, false, 'hud');
+    this.hudCam = this.cameras.add(0, 0, this.scale.width, this.scale.height, false, 'hud');
     this.hudCam.ignore(worldObjects);
 
     this.input_ = new PhaserLocalInput(this);
@@ -174,12 +180,17 @@ export class BattleScene extends Phaser.Scene {
       kb.addKey(code).on('down', () => this.pressed.add(name));
     }
     this.input.on('wheel', (_p: Phaser.Input.Pointer, _o: unknown, _dx: number, dy: number) => {
-      cam.setZoom(Phaser.Math.Clamp(cam.zoom * (dy > 0 ? 0.9 : 1.1), ZOOM_MIN, ZOOM_MAX));
+      this.zoomTo(cam.zoom * (dy > 0 ? 0.9 : 1.1));
     });
     this.ui = new GameUi({
       intents: this.input_.ui,
       restart: (overrides) => this.restart(overrides),
+      resetView: () => this.resetView(),
     });
+    // A resized window keeps the map filling the screen.
+    const onResize = (): void => this.zoomTo(cam.zoom);
+    this.scale.on('resize', onResize);
+    this.events.once('shutdown', () => this.scale.off('resize', onResize));
     this.commentary = new Commentary(this.ui.hud, () => this.restart(loadOverrides()));
     const turn = this.sim.view().turn;
     this.commentary.announceTurn(turn.number, turn.activeTeam, turn.activeUnitId, this.time.now);
@@ -192,6 +203,27 @@ export class BattleScene extends Phaser.Scene {
     this.snapshotPositions();
     const active = this.activeUnit();
     if (active) cam.centerOn(active.x / SUBPX, active.y / SUBPX - 200);
+  }
+
+  /** Zoom that never shows past the map edges, on this screen. */
+  private minZoom(): number {
+    const { map } = this.data_;
+    return Math.max(this.scale.width / map.width, this.scale.height / map.height);
+  }
+
+  private defaultZoom(): number {
+    return Math.max(this.minZoom(), (ZOOM_DEFAULT * this.scale.height) / REF_HEIGHT);
+  }
+
+  private zoomTo(zoom: number): void {
+    const max = Math.max(this.minZoom(), (ZOOM_MAX * this.scale.height) / REF_HEIGHT);
+    this.cameras.main.setZoom(Phaser.Math.Clamp(zoom, this.minZoom(), max));
+  }
+
+  /** « Vue par défaut »: default zoom, camera back on the action. */
+  private resetView(): void {
+    this.cameras.main.setZoom(this.defaultZoom());
+    this.manualCamera = false;
   }
 
   /** New match on the same map, with the next seed. */
@@ -257,7 +289,7 @@ export class BattleScene extends Phaser.Scene {
     if (k('f1')) this.debug = !this.debug;
     if (k('p')) this.paused = !this.paused;
     if (k('n')) this.stepOnce = true;
-    if (k('c')) this.manualCamera = false;
+    if (k('c')) this.resetView();
     if (k('esc')) this.ui.escape();
     const restart = k('r');
     this.pressed.clear();
@@ -270,6 +302,14 @@ export class BattleScene extends Phaser.Scene {
     this.input_.unitCentre = active
       ? { x: active.x / SUBPX, y: active.y / SUBPX - UNIT_HEIGHT / 2 }
       : null;
+    const turn = this.sim.view().turn;
+    this.input_.aimTip =
+      active && turn.phase === 'action'
+        ? {
+            x: active.x / SUBPX + (cosQ14(turn.aim) / 16384) * AIM_TIP,
+            y: active.y / SUBPX - UNIT_HEIGHT / 2 + (sinQ14(turn.aim) / 16384) * AIM_TIP,
+          }
+        : null;
 
     // The pause menu, help and settings stop the clock; the debug pause allows single steps.
     if (this.paused || this.ui.blocking) {
@@ -291,9 +331,15 @@ export class BattleScene extends Phaser.Scene {
     const click = this.input_.takeClick();
     if (click) this.selectAt(click.x, click.y);
     this.ui.update(this.sim.view(), this.input_.controls.power, time);
+    if (this.selectedUnit !== null) {
+      // The card goes to the half of the screen the unit is not in.
+      const u = this.sim.view().units.find((x) => x.id === this.selectedUnit);
+      const cam = this.cameras.main;
+      if (u) this.ui.setCardSide(u.x / SUBPX > cam.worldView.centerX ? 'left' : 'right');
+    }
 
     this.terrain.flush();
-    this.updateCamera(alpha);
+    this.updateCamera(alpha, delta);
     this.drawWorld(alpha, time);
     if (this.debug) this.drawDebug();
     else {
@@ -334,7 +380,12 @@ export class BattleScene extends Phaser.Scene {
         this.bursts.push({ x: e.x / SUBPX, y: e.y / SUBPX, radius: e.radius, born: this.time.now });
       }
     }
-    for (const pop of this.commentary.react(events, this.sim.view(), this.time.now)) {
+    // interp still holds the last drawn position of a shot that just ended.
+    const shotAt = (id: number): { x: number; y: number } | null => {
+      const e = this.interp.get(`s${id}`);
+      return e ? { x: e.cx / SUBPX, y: e.cy / SUBPX } : null;
+    };
+    for (const pop of this.commentary.react(events, this.sim.view(), this.time.now, shotAt)) {
       this.popText(pop);
     }
   }
@@ -354,6 +405,13 @@ export class BattleScene extends Phaser.Scene {
         fontSize: '54px',
         color: css(COLORS.lapis),
         stroke: css(COLORS.or),
+        strokeThickness: 8,
+      },
+      miss: {
+        fontFamily: FONT_TITLE,
+        fontSize: '58px',
+        color: css(COLORS.vertDeGris),
+        stroke: css(COLORS.ceruse),
         strokeThickness: 8,
       },
       damage: {
@@ -414,9 +472,15 @@ export class BattleScene extends Phaser.Scene {
     return v.units.find((u) => u.id === v.turn.activeUnitId);
   }
 
-  private updateCamera(alpha: number): void {
+  private updateCamera(alpha: number, delta: number): void {
     const cam = this.cameras.main;
     const pan = this.input_.pan;
+    const edge = this.input_.edge;
+    if (edge.x !== 0 || edge.y !== 0) {
+      const step = (EDGE_SCROLL_SPEED * Math.min(delta, 50)) / 1000;
+      pan.dx += edge.x * step;
+      pan.dy += edge.y * step;
+    }
     if (pan.dx !== 0 || pan.dy !== 0) {
       cam.scrollX += pan.dx / cam.zoom;
       cam.scrollY += pan.dy / cam.zoom;
@@ -425,7 +489,7 @@ export class BattleScene extends Phaser.Scene {
       this.manualCamera = true;
     }
     if (this.input_.zoom !== 1) {
-      cam.setZoom(Phaser.Math.Clamp(cam.zoom * this.input_.zoom, ZOOM_MIN, ZOOM_MAX));
+      this.zoomTo(cam.zoom * this.input_.zoom);
       this.input_.zoom = 1;
     }
     if (this.input_.recenter) {
@@ -656,8 +720,8 @@ export class BattleScene extends Phaser.Scene {
       g.fillCircle(cx + dx * d, cy + dy * d, 5);
       g.strokeCircle(cx + dx * d, cy + dy * d, 5);
     }
-    const tip = 182;
-    const base = 160;
+    const tip = AIM_TIP + 10;
+    const base = AIM_TIP - 12;
     const pts = poly([
       { x: cx + dx * tip, y: cy + dy * tip },
       { x: cx + dx * base - dy * 12, y: cy + dy * base + dx * 12 },
@@ -681,7 +745,9 @@ export class BattleScene extends Phaser.Scene {
     }
     const drag = this.input_.drag;
     if (drag) {
-      g.lineStyle(3, COLORS.encre, 0.6);
+      // Faint and dashed while too short to fire: releasing there cancels.
+      const armed = this.input_.dragArmed;
+      g.lineStyle(armed ? 4 : 2, armed ? COLORS.vermillon : COLORS.encre, armed ? 0.9 : 0.4);
       g.lineBetween(cx, cy, cx + drag.pullX, cy + drag.pullY);
     }
   }

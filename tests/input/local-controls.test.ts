@@ -3,6 +3,7 @@ import { CLASSIC_RULES } from '../../src/content/rules.ts';
 import {
   CHARGE_SPEED,
   DOUBLE_PRESS_TICKS,
+  SPIN_SPEED,
   LocalControls,
   aimFor,
   elevationOf,
@@ -91,6 +92,34 @@ describe('LocalControls', () => {
     expect(elevationOf(after.turn.aim, -facing)).toBe(e);
   });
 
+  it('sweeps the aim all the way round while the aim button is held, turning the unit', () => {
+    const { sim, tick } = setup();
+    const start = sim.view().turn.aim;
+    const facings = new Set<number>();
+    const ticks = Math.ceil(4096 / SPIN_SPEED);
+    for (let i = 0; i < ticks; i++) {
+      tick({ spin: true });
+      const v = sim.view();
+      facings.add(v.units.find((u) => u.id === v.turn.activeUnitId)?.facing ?? 0);
+    }
+    expect(sim.view().turn.aim).toBe((start - ticks * SPIN_SPEED) & 4095);
+    expect([...facings].sort()).toEqual([-1, 1]);
+  });
+
+  it('aims at the dragged arrowhead on either side, without firing', () => {
+    const { sim, tick } = setup();
+    // Up-left of the unit: the unit turns left and aims at 45° up.
+    const cmds = tick({ aimAt: { x: -100, y: -100 } });
+    expect(cmds).toEqual([{ t: 'aim', angle: 2560 }]);
+    const v = sim.view();
+    expect(v.turn.aim).toBe(2560);
+    expect(v.units.find((u) => u.id === v.turn.activeUnitId)?.facing).toBe(-1);
+    // Holding the arrowhead still sends nothing more; releasing it keeps the aim.
+    expect(tick({ aimAt: { x: -100, y: -100 } })).toEqual([]);
+    expect(tick({})).toEqual([]);
+    expect(sim.view().turn.aim).toBe(2560);
+  });
+
   it('jumps forward after a single press and back after a double press', () => {
     const a = setup();
     expect(a.tick({ jumpPressed: true })).toEqual([]);
@@ -157,6 +186,8 @@ describe('LocalControls', () => {
     b.tick({ selectWeapon: 'greekFire' });
     expect(b.sim.view().turn.weapon).toBe('greekFire');
     expect(b.tick({ skipPressed: true })).toEqual([{ t: 'skip' }]);
-    expect(b.sim.view().turn.number).toBe(2); // everything at rest: the next turn starts at once
+    // Everything is at rest: the next turn starts after the settle pause.
+    for (let i = 0; i < (CLASSIC_RULES.turn.settleTicks ?? 0); i++) b.tick();
+    expect(b.sim.view().turn.number).toBe(2);
   });
 });

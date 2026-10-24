@@ -71,6 +71,8 @@ La priorité est le moteur : simulation, règles, réseau, IA. Jusqu'au lot 9, t
 | 3.4 | Barils et flammes persistantes | — |
 | 3.5 | Mode Régicide | — |
 | 3.6 | Schémas de règles et écran de configuration de partie (greybox) | Les presets du GDD §6 sont disponibles |
+| 3.7 | Usure du terrain par toutes les armes (`chipRadius`, GDD §4.7) | Un test : N flèches percent un mur de pierre bâtie d'épaisseur connue ; replay de référence |
+| 3.8 | Structures à points de vie : calque d'appartenance, PV, états fissurée / ruine, effondrement en blocs qui tombent et écrasent (GDD §4.7, TECH_SPEC §5.4) | Une tour de la carte de test touchée au feu grégeois se fissure puis s'effondre, les combattants dessous sont blessés ; déterminisme vert |
 
 ## M4 — Arsenal complet
 | # | Tâche | CA |
@@ -141,6 +143,11 @@ La priorité est le moteur : simulation, règles, réseau, IA. Jusqu'au lot 9, t
 | 9.6 | *Si le spike échoue* : `tools/lan-server` (Node WS + statique, exécutable unique) | Connexion par URL LAN depuis le second PC |
 
 ---
+
+## Études
+| # | Étude | Livrable |
+|---|---|---|
+| E1 | Vue isométrique / 3/4 de dessus : analyse et spike ([docs/etudes/vue-isometrique.md](etudes/vue-isometrique.md)) | Décision 2D profil vs iso avant M6 |
 
 ## Risques suivis
 | Risque | Impact | Mitigation |

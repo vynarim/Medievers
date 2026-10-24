@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CLASSIC_RULES, type MatchRules } from '../../src/content/rules.ts';
+import { CLASSIC_RULES, type MatchRules, type TurnRules } from '../../src/content/rules.ts';
 import {
   LOG_VERSION,
   Material,
@@ -181,6 +181,52 @@ describe('turn loop', () => {
     }
     for (const w of winds) expect(Math.abs(w)).toBeLessThanOrEqual(10);
     expect(winds.size).toBeGreaterThan(5);
+  });
+
+  it('hurts teammates: friendly fire is always on', () => {
+    const config: MatchConfig = {
+      rules: RULES_60HP,
+      teams: [{ spawns: [300, 420] }, { spawns: [1000] }],
+    };
+    // A level arrow into the teammate 120 px away.
+    const arrow = new Driver(config, 7);
+    arrow.until('action');
+    arrow.step([
+      { t: 'aim', angle: 0 },
+      { t: 'fire', power: 1024 },
+    ]);
+    arrow.until('transition');
+    expect(unit(arrow, 2).hp).toBe(60 - 35);
+    // A pot dropped between the two units of team 0 hurts both.
+    const pot = new Driver({ ...config, teams: [{ spawns: [300, 330] }, { spawns: [1000] }] }, 7);
+    pot.until('action');
+    pot.step([
+      { t: 'selectWeapon', id: 'greekFire' },
+      { t: 'setFuse', seconds: 1 },
+      { t: 'aim', angle: 1024 },
+      { t: 'fire', power: 0 },
+    ]);
+    pot.until('transition');
+    expect(unit(pot, 1).hp).toBeLessThan(60);
+    expect(unit(pot, 2).hp).toBeLessThan(60);
+  });
+
+  it('pauses settleTicks at rest before the next turn, deaths called first', () => {
+    const d = new Driver(DUEL, 7);
+    d.until('action');
+    d.step([{ t: 'skip' }]);
+    const rested = d.sim.view().tick;
+    d.until('transition');
+    expect(d.sim.view().tick - rested).toBe(RULES_60HP.turn.settleTicks);
+    // Without settleTicks (logs recorded before the rule existed), the turn ends at once.
+    const oldTurn: TurnRules = { ...RULES_60HP.turn };
+    delete (oldTurn as { settleTicks?: number }).settleTicks;
+    const old = new Driver({ ...DUEL, rules: { ...RULES_60HP, turn: oldTurn } }, 7);
+    old.until('action');
+    old.step([{ t: 'skip' }]);
+    const at = old.sim.view().tick;
+    old.until('transition');
+    expect(old.sim.view().tick - at).toBe(0);
   });
 
   it('ends the turn at once when the active unit hurts itself', () => {

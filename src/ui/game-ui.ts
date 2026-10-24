@@ -42,6 +42,8 @@ export interface GameUiOptions {
   readonly intents: UiIntents;
   /** restart the match with these overrides applied to the Classique rules */
   readonly restart: (overrides: TuningOverrides) => void;
+  /** default zoom and camera back on the action */
+  readonly resetView: () => void;
 }
 
 export class GameUi {
@@ -81,7 +83,7 @@ export class GameUi {
       this.actionButtons.push(b);
       return b;
     };
-    // Virtual pad, bottom left (GDD §8.2): walk, jump, aim, turn around.
+    // Virtual pad, bottom left (GDD §8.2): walk, jump, aim all round.
     const pad = el('div', 'cluster pad panel');
     pad.append(
       act(
@@ -105,19 +107,9 @@ export class GameUi {
         'tip.jumpBack',
       ),
       act(
-        holdButton(t('ui.aimUp'), (h) => (i.aim = h ? 1 : 0)),
+        holdButton(t('ui.spin'), (h) => (i.spin = h)),
         'action',
-        'tip.aimUp',
-      ),
-      act(
-        holdButton(t('ui.aimDown'), (h) => (i.aim = h ? -1 : 0)),
-        'action',
-        'tip.aimDown',
-      ),
-      act(
-        this.click(button(t('ui.flip')), () => (i.flip = true)),
-        'action',
-        'tip.flip',
+        'tip.spin',
       ),
     );
     // Weapons and fire, bottom right.
@@ -137,7 +129,10 @@ export class GameUi {
       act(holdButton(t('ui.fire'), (h) => (i.charge = h), 'fire')),
     );
     const sys = el('div', 'sys');
+    const view = this.click(button(`◎ ${t('ui.resetView')}`), () => opts.resetView());
+    view.title = t('tip.resetView');
     sys.append(
+      view,
       this.click(button(`? ${t('ui.help')}`), () => this.toggle(this.help)),
       this.click(button(`⚙ ${t('ui.settings')}`), () => this.openSettings()),
       this.click(button(`☰ ${t('ui.pause')}`), () => this.toggle(this.pause)),
@@ -218,6 +213,11 @@ export class GameUi {
     this.selectedUnit = unitId;
     this.cardSignature = '';
     this.card.classList.toggle('hidden', unitId === null);
+  }
+
+  /** Puts the character card on the side of the screen away from its unit. */
+  setCardSide(side: 'left' | 'right'): void {
+    this.card.classList.toggle('left', side === 'left');
   }
 
   /** Called every frame with the current view, the charged power and the frame time in ms. */
@@ -389,6 +389,7 @@ export class GameUi {
   }
 
   destroy(): void {
+    this.hud.destroy();
     this.root.replaceChildren();
   }
 }

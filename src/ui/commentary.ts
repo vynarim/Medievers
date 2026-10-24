@@ -14,8 +14,11 @@ export interface Pop {
   readonly x: number;
   readonly y: number;
   readonly text: string;
-  readonly kind: 'boom' | 'whack' | 'damage';
+  readonly kind: 'boom' | 'whack' | 'damage' | 'miss';
 }
+
+/** ticks to wait after a shot ends before calling it a miss */
+const MISS_DELAY_TICKS = 20;
 
 export class Commentary {
   private readonly hud: Hud;
@@ -25,6 +28,8 @@ export class Commentary {
   private damage = 0;
   private quipped = false;
   private lastUnit = -1;
+  /** a shot ended without damage so far: tick, impact point and shooter, to call the miss */
+  private pendingMiss: { tick: number; x: number; y: number; unitId: number } | null = null;
 
   constructor(hud: Hud, replay: () => void) {
     this.hud = hud;
@@ -36,6 +41,7 @@ export class Commentary {
     this.fired = false;
     this.damage = 0;
     this.quipped = false;
+    this.pendingMiss = null;
     this.lastUnit = unitId;
     const f = FACTIONS[team];
     const house = f ? t(f.nameKey) : '';
@@ -49,8 +55,16 @@ export class Commentary {
     );
   }
 
-  /** Reacts to one tick's events; returns the pops to draw in the world. */
-  react(events: readonly SimEvent[], v: SimView, now: number): Pop[] {
+  /**
+   * Reacts to one tick's events; returns the pops to draw in the world. `shotAt` gives the last
+   * drawn position of a projectile (px), which the sim no longer holds once the shot has ended.
+   */
+  react(
+    events: readonly SimEvent[],
+    v: SimView,
+    now: number,
+    shotAt: (shotId: number) => { x: number; y: number } | null,
+  ): Pop[] {
     const pops: Pop[] = [];
     const exploded = events.some((e) => e.e === 'explosion');
     const house = (team: number): string => {
@@ -61,10 +75,9 @@ export class Commentary {
       switch (e.e) {
         case 'turnStarted': {
           if (this.lastUnit >= 0) {
-            const prev = unitName(this.lastUnit);
-            if (this.fired && this.damage === 0)
-              this.hud.say(pick('quip.miss', { name: prev }), now);
-            else if (!this.fired) this.hud.say(pick('quip.skip', { name: prev }), now);
+            const name = unitName(this.lastUnit);
+            if (!this.fired) this.hud.say(pick('quip.skip', { name }), now);
+            else if (this.pendingMiss) this.hud.say(pick('quip.miss', { name }), now);
           }
           this.announceTurn(e.turn, e.team, e.unitId, now);
           break;
@@ -79,6 +92,13 @@ export class Commentary {
             now,
           );
           break;
+        case 'shotEnded': {
+          const at = shotAt(e.shotId);
+          if (this.damage === 0 && at) {
+            this.pendingMiss = { tick: v.tick, ...at, unitId: v.turn.activeUnitId };
+          }
+          break;
+        }
         case 'explosion':
           pops.push({ x: e.x / SUBPX, y: e.y / SUBPX - 40, text: pick('boom'), kind: 'boom' });
           break;
@@ -124,6 +144,14 @@ export class Commentary {
         default:
           break;
       }
+    }
+    // A miss is called a few ticks after the shot ends, once a delayed blast had its chance.
+    const miss = this.pendingMiss;
+    if (miss && this.damage > 0) this.pendingMiss = null;
+    else if (miss && v.tick >= miss.tick + MISS_DELAY_TICKS) {
+      this.pendingMiss = null;
+      this.hud.say(pick('quip.miss', { name: unitName(miss.unitId) }), now);
+      pops.push({ x: miss.x, y: miss.y - 40, text: pick('oops'), kind: 'miss' });
     }
     return pops;
   }

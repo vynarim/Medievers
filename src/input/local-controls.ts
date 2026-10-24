@@ -22,8 +22,12 @@ export interface RawInput {
   nextWeaponPressed: boolean;
   /** turn around on the spot, keeping the elevation */
   flipPressed: boolean;
+  /** aim button held: the aim sweeps all the way round, turning the unit as it passes behind */
+  spin: boolean;
   /** 1..5 when a fuse key was pressed this tick */
   fusePressed: number | null;
+  /** arrowhead dragged: pointer position relative to the unit's body centre, in world px */
+  aimAt: { readonly x: number; readonly y: number } | null;
   /** drag-to-aim: pull vector from the unit, in world px (pull back to shoot forward) */
   drag: { readonly pullX: number; readonly pullY: number; readonly released: boolean } | null;
 }
@@ -40,12 +44,16 @@ export const emptyInput = (): RawInput => ({
   charge: false,
   nextWeaponPressed: false,
   flipPressed: false,
+  spin: false,
   fusePressed: null,
+  aimAt: null,
   drag: null,
 });
 
 /** BAM per tick while an aim key is held (≈ 1.4°). */
 export const AIM_SPEED = 16;
+/** BAM per tick while the aim button is held: a full turn in about 3 s. */
+export const SPIN_SPEED = 24;
 /** Power gained per tick while charging: full gauge in 1.5 s. */
 export const CHARGE_SPEED = Math.ceil(MAX_POWER / 90);
 /** Ticks to wait for a second jump press before jumping forward. */
@@ -143,11 +151,20 @@ export class LocalControls {
       return out;
     }
 
-    // Keyboard aim.
-    const delta = (input.up ? AIM_SPEED : 0) - (input.down ? AIM_SPEED : 0);
-    elevation = Math.max(-ELEVATION_MAX, Math.min(ELEVATION_MAX, elevation + delta));
-    const aim = aimFor(elevation, facing);
-    if (aim !== turn.aim) out.push({ t: 'aim', angle: aim });
+    if (input.spin) {
+      // Counter-clockwise on screen: right, up, left, down. The sim turns the unit to match.
+      out.push({ t: 'aim', angle: (turn.aim - SPIN_SPEED) & 4095 });
+    } else if (input.aimAt) {
+      // Arrowhead dragged: aim at the pointer, on either side (the sim turns the unit).
+      const aim = atan2Bam(input.aimAt.y, input.aimAt.x);
+      if (aim !== turn.aim) out.push({ t: 'aim', angle: aim });
+    } else {
+      // Keyboard aim.
+      const delta = (input.up ? AIM_SPEED : 0) - (input.down ? AIM_SPEED : 0);
+      elevation = Math.max(-ELEVATION_MAX, Math.min(ELEVATION_MAX, elevation + delta));
+      const aim = aimFor(elevation, facing);
+      if (aim !== turn.aim) out.push({ t: 'aim', angle: aim });
+    }
 
     // Gauge: hold to charge, release to fire; a full gauge fires by itself.
     if (input.charge) {

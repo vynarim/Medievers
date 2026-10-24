@@ -279,10 +279,23 @@ function advancePhase(
       // Hit during its own turn, the active unit stops at once (GDD §2.2).
       if (activeHurt || --t.phaseTicks <= 0) setPhase(s, 'resolution', 0, events);
       break;
-    case 'resolution':
+    case 'resolution': {
       t.resolutionTicks++;
-      if (settled(s) || t.resolutionTicks >= s.rules.turn.maxResolutionTicks) endTurn(s, events);
+      if (t.resolutionTicks >= s.rules.turn.maxResolutionTicks) {
+        endTurn(s, events);
+        break;
+      }
+      // phaseTicks counts the ticks spent at rest; any movement starts the count again.
+      if (!settled(s)) {
+        t.phaseTicks = 0;
+        break;
+      }
+      // Deaths are called as soon as everything stops, then the scene is left to be seen.
+      if (t.phaseTicks === 0) callDeaths(s, events);
+      if (t.phaseTicks >= (s.rules.turn.settleTicks ?? 0)) endTurn(s, events);
+      else t.phaseTicks++;
       break;
+    }
     case 'gameOver':
       break;
   }
@@ -293,13 +306,18 @@ function settled(s: SimState): boolean {
   return s.shots.length === 0 && s.explosions.items.length === 0 && s.units.every(atRest);
 }
 
-function endTurn(s: SimState, events: SimEvent[]): void {
+/** Units at 0 HP die now (GDD §3.1: deaths are called once everything has stopped). */
+function callDeaths(s: SimState, events: SimEvent[]): void {
   for (const u of s.units) {
     if (u.alive && u.hp <= 0) {
       u.alive = false;
       events.push({ e: 'unitDied', unitId: u.id, cause: 'hp' });
     }
   }
+}
+
+function endTurn(s: SimState, events: SimEvent[]): void {
+  callDeaths(s, events);
   const alive = s.teams.filter((team) => teamAlive(s, team));
   if (alive.length <= 1) {
     s.winner = alive[0]?.id ?? -1;

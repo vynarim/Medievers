@@ -27,7 +27,7 @@
 | Transition | 2 s | Caméra vers l'unité active, affichage du vent |
 | Action | 45 s | Déplacement libre, choix d'une arme, visée, tir |
 | Repli | 3 s | Après le tir, déplacement autorisé, pas de nouvelle attaque |
-| Résolution | variable | Attente fin des projectiles, explosions, chutes, morts |
+| Résolution | variable + 2 s | Attente fin des projectiles, explosions et chutes ; les morts sont alors constatées, puis une pause de 2 s (réglable) laisse voir l'impact et le commentaire avant le tour suivant |
 | Fin de tour | — | Passifs de fin de tour, apparition éventuelle d'un reliquaire |
 
 - Unité active : rotation par équipe (unité suivante vivante), ou choix libre (option « sélection libre », comme Worms).
@@ -131,6 +131,14 @@ Toutes les valeurs sont des défauts dans `src/content/weapons.ts`, ajustables p
 - **Flammes** : 3 PV par tick de contact (plafonné à 10 par tour). Elles s'éteignent dans l'eau.
 - **Terrain indestructible** : roche peinte et piliers de cadre.
 
+### 4.7 Décors destructibles (décidé le 2026-10-24)
+- **Tout tir abîme le décor.** Les armes sans explosion entament le terrain au point d'impact : un petit cratère de quelques pixels (flèche 3 px, pierre de fronde 5 px, valeurs à régler en playtest). Percer un mur à l'arc prend très longtemps, mais reste possible.
+- **Les structures ont des points de vie** : tours, murailles, ponts, échafaudages, arbres. Chaque structure d'une carte est déclarée dans `map.json` avec son type ; les PV et la sensibilité par type vivent dans `src/content/structures.ts`.
+- Chaque coup qui touche une structure lui retire des PV : les dégâts de l'arme, multipliés selon le matériau (le feu grégeois ronge le bois deux fois plus vite que la pierre, une flèche ne fait qu'un quart de ses dégâts à une muraille). Le cratère creusé s'ajoute, comme pour le terrain.
+- **États visibles** : intacte, fissurée (66 % des PV ou moins), en ruine (33 % ou moins). Le rendu ajoute des fissures et fait tomber des éclats.
+- **À 0 PV, la structure s'effondre** : ce qu'il en reste se détache en blocs qui tombent, écrasent les combattants dessous (dégâts selon la hauteur de chute, comme une chute de combattant) et se reposent en gravats. Un combattant perché dessus tombe avec.
+- La roche peinte et les piliers de cadre restent indestructibles.
+
 ## 5. Vent
 - Valeur entière de −10 à +10, tirée par PRNG à chaque tour. Une option permet de le figer à 0.
 - Il affecte les projectiles marqués « Vent » (accélération horizontale proportionnelle : 2 sub-px/tick² par point de vent, multipliée par le facteur de vent de l'arme, `src/content/world.ts`), la bannière, les anges des reliquaires et la fumée (visuel).
@@ -182,18 +190,19 @@ L'IA joue via `InputSource` et produit les mêmes commandes qu'un humain. Elle �
 |---|---|
 | Marcher | ← → ou A/D |
 | Saut avant / arrière | Entrée / Entrée ×2 |
-| Viser (angle) | ↑ ↓ ou souris |
+| Viser (angle) | ↑ ↓, ou glisser la pointe de la flèche de visée (n'importe quel côté, l'unité se retourne) |
 | Se retourner sur place | T (garde l'élévation de la visée) |
 | Tirer (jauge de puissance) | Espace maintenu puis relâché |
-| Drag-to-aim | Clic gauche maintenu sur l'unité, tirer en arrière, relâcher |
+| Drag-to-aim | Clic gauche maintenu sur l'unité, tirer en arrière d'au moins 48 px écran (sinon rien n'est visé ni tiré : un clic ne tire jamais), relâcher |
 | Arsenal | Clic droit ou Tab |
 | Mèche (pot) | Touches 1–5 |
 | Caméra | Bords d'écran, glisser clic molette, molette = zoom |
-| Recentrer | C ou double clic |
+| Recentrer | C ou bouton **Vue** (zoom par défaut et recentrage), double clic (recentrage seul) |
 | Pause / menu | Échap : menu Reprendre, Recommencer, Aide, Réglages. Le temps s'arrête aussi pendant l'aide et les réglages, pas pendant l'arsenal |
 
 ### 8.2 Tablette
-- **Pad virtuel** en bas à gauche (← → saut, saut arrière, ▲ ▼ visée, ⇄ se retourner), boutons **Arsenal**, **Passer** et **Tir** en bas à droite, **Aide**, **Réglages** et **Pause** en haut à droite.
+- **Pad virtuel** en bas à gauche (← → saut, saut arrière, **⟳ Viser** maintenu : la visée fait le tour complet et l'unité se retourne quand elle passe derrière elle), boutons **Arsenal**, **Passer** et **Tir** en bas à droite, **Aide**, **Réglages** et **Pause** en haut à droite.
+- **Pointe de visée** : glisser la pointe rouge de la flèche de visée oriente le tir, sans tirer.
 - **Drag-to-aim** : glisser depuis l'unité active. Une ligne pointillée enluminée prolonge la trajectoire, avec une longueur limitée (passif Archer ×2).
 - **Mode jauge** : roue d'angle autour de l'unité et bouton Tir maintenu pour la puissance.
 - Caméra : glisser à 1 doigt hors de l'unité, pincer pour zoomer, double-tap pour recentrer.
@@ -202,7 +211,7 @@ L'IA joue via `InputSource` et produit les mêmes commandes qu'un humain. Elle �
 
 ## 9. UI / HUD
 - **Unité active** : auréole dorée et flèche qui oscille au-dessus de son nom ; son cartouche passe à l'or. La visée est une ligne de points vermillon et or terminée par une pointe de flèche.
-- **Commentaire** : un phylactère sous la bannière de vent affiche la dernière réplique ; une annonce centrale ouvre chaque tour (numéro, maison, combattant, réplique).
+- **Commentaire** : un phylactère sous la bannière de vent affiche la dernière réplique ; une annonce centrale ouvre chaque tour (numéro, maison, combattant, réplique) ; elle reste environ 4 s et un clic n'importe où la ferme.
 - **Haut** : bannière de vent au centre, sablier du timer à droite (un vrai sablier qui s'écoule), tour courant et compte à rebours du Déluge à gauche.
 - **Bas** : barres de vie par équipe sous forme de phylactères avec blason ; fiche de l'unité active (nom, classe, PV).
 - **Au-dessus des unités** : nom et PV dans un petit cartouche aux couleurs de la maison.

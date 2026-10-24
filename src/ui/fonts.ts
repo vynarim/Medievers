@@ -1,8 +1,8 @@
-// UI typefaces (ASSETS §8): a textura for titles, IM Fell for readable text. Bundled (OFL),
+// UI typefaces (ASSETS §8): a textura for titles, IM Fell roman for readable text (its italic
+// reads poorly, so the UI never uses it). Bundled (OFL),
 // so the game needs no network; Phaser texts are created only after they have loaded.
 import '@fontsource/unifrakturmaguntia/400.css';
 import '@fontsource/im-fell-english/400.css';
-import '@fontsource/im-fell-english/400-italic.css';
 import '@fontsource/im-fell-english-sc/400.css';
 
 export const FONT_TITLE = "'UnifrakturMaguntia', 'IM Fell English', Georgia, serif";

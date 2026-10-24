@@ -13,7 +13,10 @@ const STYLE = `
   --shade: rgba(42, 29, 20, 0.45); --gilt: rgba(212, 169, 60, 0.7);
   --frame: inset 0 0 0 3px var(--ceruse), inset 0 0 0 5px var(--or);
   --lift: 0 6px 18px var(--shade);
+  /* every side panel has this width, so the columns line up */
+  --col: 300px;
 }
+#ui, #ui * { box-sizing: border-box; }
 #ui { position: fixed; inset: 0; pointer-events: none; font-family: var(--text);
   color: var(--encre); user-select: none; -webkit-user-select: none; z-index: 10; }
 /* Parchment panel: vellum, ink border, gilt fillet inside (ASSETS §1.1: cernes, gold). */
@@ -38,10 +41,10 @@ const STYLE = `
 
 /* HUD */
 #ui .hud-turn { position: absolute; top: 12px; left: 12px; display: flex; gap: 12px;
-  align-items: center; padding: 10px 18px 10px 12px; min-width: 250px; }
+  align-items: center; padding: 10px 18px 10px 12px; width: var(--col); }
 #ui .hud-turn .title { font-family: var(--title); font-size: 30px; line-height: 1; }
 #ui .hud-turn .house { font-family: var(--caps); font-size: 18px; }
-#ui .hud-turn .phase { font-style: italic; font-size: 15px; color: var(--brun); }
+#ui .hud-turn .phase { font-size: 16px; }
 #ui .shield { flex: none; width: 40px; height: 48px; border: 3px solid var(--encre);
   border-radius: 0 0 50% 50% / 0 0 62% 62%; position: relative; overflow: hidden; background: var(--p); }
 #ui .shield::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 32%;
@@ -49,15 +52,21 @@ const STYLE = `
 #ui .shield.small { width: 22px; height: 27px; border-width: 2px; }
 #ui .hud-teams { position: absolute; top: 104px; left: 12px; display: flex; flex-direction: column; gap: 6px; }
 #ui .team { display: flex; align-items: center; gap: 8px; padding: 4px 12px 4px 6px;
-  font-family: var(--caps); font-size: 15px; min-width: 250px; }
-#ui .team .name { flex: 1; }
-#ui .team .hp { width: 90px; height: 10px; border: 2px solid var(--encre); background: var(--velin); }
+  font-family: var(--caps); font-size: 14px; width: var(--col); }
+#ui .team .name { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#ui .team .hp { flex: none; width: 64px; height: 10px; border: 2px solid var(--encre); background: var(--velin); }
 #ui .team .hp i { display: block; height: 100%; background: var(--p); }
 #ui .team.out { opacity: 0.45; text-decoration: line-through; }
+/* Title cartouche: the game's name, with a compact wind gauge under it. */
 #ui .hud-wind { position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
-  padding: 6px 18px 8px; text-align: center; min-width: 300px; }
-#ui .hud-wind .label { font-family: var(--caps); font-size: 17px; }
-#ui .hud-wind .track { position: relative; height: 14px; margin-top: 4px; border: 2px solid var(--encre);
+  padding: 4px 16px 6px; text-align: center; width: 210px; }
+#ui .hud-wind .game-title { font-family: var(--title); font-size: 30px; line-height: 1.05;
+  color: var(--vermillon); }
+#ui .hud-wind .game-title::first-letter { color: var(--lapis); }
+#ui .hud-wind .wind-row { display: flex; align-items: center; gap: 8px; margin-top: 2px; }
+#ui .hud-wind .label { font-family: var(--caps); font-size: 14px; white-space: nowrap; min-width: 58px;
+  text-align: left; }
+#ui .hud-wind .track { flex: 1; position: relative; height: 9px; border: 2px solid var(--encre);
   background: var(--velin); }
 #ui .hud-wind .track::after { content: ''; position: absolute; left: 50%; top: -4px; bottom: -4px;
   width: 2px; background: var(--encre); }
@@ -68,16 +77,16 @@ const STYLE = `
 #ui .hud-timer .secs { font-family: var(--title); font-size: 38px; line-height: 1; }
 #ui .hud-timer.hurry .secs { color: var(--vermillon); }
 #ui .hud-timer.idle { opacity: 0.5; }
-#ui .hud-weapon { position: absolute; right: 12px; bottom: 100px; padding: 6px 16px 8px;
-  text-align: center; width: 300px; }
+#ui .hud-weapon { position: absolute; right: 12px; bottom: 100px; padding: 6px 16px 8px; width: var(--col);
+  text-align: center; }
 #ui .hud-weapon .name { font-family: var(--caps); font-size: 19px; }
 #ui .hud-weapon .power { height: 12px; margin: 4px 0 2px; border: 2px solid var(--encre); background: var(--velin); }
 #ui .hud-weapon .power i { display: block; height: 100%; background: var(--vermillon); }
-#ui .hud-weapon .hint { font-style: italic; font-size: 13px; color: var(--brun); }
+#ui .hud-weapon .hint { font-size: 14px; }
 /* Phylactery, the speech scroll of the marginal figures: the running commentary. */
-#ui .chronicle { position: absolute; top: 86px; left: 50%; transform: translateX(-50%);
+#ui .chronicle { position: absolute; top: 96px; left: 50%; transform: translateX(-50%);
   width: max-content; max-width: min(620px, calc(100vw - 620px)); min-width: 240px; padding: 6px 26px;
-  text-align: center; font-style: italic; font-size: 18px; line-height: 1.3; background: var(--ceruse);
+  text-align: center; font-size: 19px; line-height: 1.3; background: var(--ceruse);
   border: 2px solid var(--encre); border-radius: 18px / 50%;
   box-shadow: inset 0 0 0 3px var(--ceruse), inset 0 0 0 4px var(--or), var(--lift);
   transition: opacity 0.6s; }
@@ -87,7 +96,7 @@ const STYLE = `
   transition: opacity 0.5s; pointer-events: none; }
 #ui .banner .big { font-family: var(--title); font-size: 54px; line-height: 1.1; }
 #ui .banner .sub { font-family: var(--caps); font-size: 22px; margin-top: 4px; }
-#ui .banner .quip { font-style: italic; font-size: 19px; margin-top: 10px; }
+#ui .banner .quip { font-size: 20px; margin-top: 10px; }
 #ui .banner button { margin-top: 14px; pointer-events: auto; }
 
 /* Modals */
@@ -108,8 +117,9 @@ const STYLE = `
   margin-bottom: 4px; color: var(--lapis); }
 #ui .weapon small { display: block; font-size: 15px; line-height: 1.35; }
 #ui .weapon.on { box-shadow: inset 0 0 0 3px var(--vermillon); }
-#ui .card { position: absolute; right: 12px; top: 182px; width: min(340px, calc(100vw - 32px));
+#ui .card { position: absolute; right: 12px; top: 182px; width: var(--col);
   max-height: calc(100vh - 290px); overflow: auto; padding: 14px 18px; font-size: 16px; line-height: 1.4; }
+#ui .card.left { right: auto; left: 12px; top: 214px; max-height: calc(100vh - 322px); }
 #ui .card h2 { font-size: 30px; margin-bottom: 4px; }
 #ui .card .house { font-family: var(--caps); font-size: 18px; margin-bottom: 8px; display: flex;
   gap: 8px; align-items: center; }
@@ -123,7 +133,7 @@ const STYLE = `
 #ui td input { width: 84px; font: inherit; padding: 4px; border: 2px solid var(--encre); border-radius: 3px;
   background: var(--ceruse); }
 #ui td.unit, #ui td.def { color: var(--brun); font-size: 13px; white-space: nowrap; }
-#ui .note { font-size: 16px; font-style: italic; margin: 0 0 6px; }
+#ui .note { font-size: 16px; margin: 0 0 6px; }
 #ui .actions { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
 #ui .help p, #ui .pause p { font-size: 17px; line-height: 1.5; margin: 0 0 10px; }
 #ui .pause { min-width: 360px; text-align: center; }

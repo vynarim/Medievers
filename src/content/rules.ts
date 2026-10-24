@@ -15,6 +15,11 @@ export interface TurnRules {
   readonly retreatTicks: number;
   /** ticks: hard cap on a resolution, so a stuck entity cannot freeze the game */
   readonly maxResolutionTicks: number;
+  /**
+   * ticks: pause once everything has stopped, before the next turn, so the last impact and its
+   * commentary can be seen (GDD §2.2: 2 s). Absent from logs recorded before 2026-10-24: 0.
+   */
+  readonly settleTicks?: number;
 }
 
 export interface MatchRules {
@@ -35,6 +40,7 @@ export const CLASSIC_RULES: MatchRules = {
     actionTicks: 45 * TICKS_PER_SECOND,
     retreatTicks: 3 * TICKS_PER_SECOND,
     maxResolutionTicks: 30 * TICKS_PER_SECOND,
+    settleTicks: 2 * TICKS_PER_SECOND,
   },
   startHp: 100,
   unit: UNIT_RULES,

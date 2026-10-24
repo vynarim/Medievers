@@ -71,6 +71,7 @@ const RULE_VALUES: Record<string, string> = {
   transition: seconds(CLASSIC_RULES.turn.transitionTicks),
   action: seconds(CLASSIC_RULES.turn.actionTicks),
   retreat: seconds(CLASSIC_RULES.turn.retreatTicks),
+  settle: seconds(CLASSIC_RULES.turn.settleTicks ?? 0),
 };
 
 function edition(): string {

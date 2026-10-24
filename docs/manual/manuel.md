@@ -41,11 +41,12 @@ Un chroniqueur à l'humour douteux commente la partie {{st:jeu}} : chaque tour s
 | Transition | {{rules:transition}} | La caméra rejoint votre combattant. Le vent du tour s'affiche. |
 | Action | {{rules:action}} | Vous vous déplacez librement, choisissez une arme, visez et tirez. |
 | Repli | {{rules:retreat}} | Après le tir, vous pouvez encore bouger pour vous mettre à l'abri, mais plus attaquer. |
-| Résolution | variable | Le jeu attend que tout soit retombé : projectiles, explosions, chutes. Le sablier est en pause. |
+| Résolution | variable, puis {{rules:settle}} | Le jeu attend que tout soit retombé : projectiles, explosions, chutes. Les morts sont alors constatées, puis une courte pause laisse voir le résultat et le commentaire. Le sablier est en pause. |
 | Fin de tour | — | Les effets de fin de tour s'appliquent, et un reliquaire peut tomber du ciel. |
 
 - Le sablier **ne s'arrête pas** pendant que vous visez : la pression du temps fait partie du jeu.
 - Un combattant **touché pendant son propre tour** termine son tour aussitôt.
+- **Le tir ami existe** : une flèche ou une explosion blesse aussi vos propres combattants, et vous-même.
 - Vos combattants jouent à tour de rôle, dans l'ordre de l'équipe. Une option permettra de choisir librement lequel joue.
 - Les morts sont constatées à la fin de la résolution : un combattant à 0 PV ne tombe qu'une fois que tout s'est arrêté.
 
@@ -191,14 +192,14 @@ L'IA joue avec les mêmes règles et les mêmes commandes que vous. Elle ne voit
 |---|---|
 | Marcher | ← → ou A / D |
 | Saut avant / arrière | Entrée / Entrée deux fois |
-| Viser | ↑ ↓ ou la souris |
+| Viser | ↑ ↓, ou faire glisser la pointe rouge de la flèche de visée |
 | Se retourner sur place | T |
 | Tirer avec la jauge | Maintenir Espace, relâcher pour tirer |
 | Tirer « à la fronde » | Cliquer sur le combattant, tirer en arrière, relâcher |
 | Ouvrir l'arsenal | Clic droit ou Tab |
 | Régler la mèche d'un pot | Touches 1 à 5 |
 | Déplacer la caméra / zoomer | Bords de l'écran ou clic molette / molette |
-| Recentrer | C ou double clic |
+| Revenir à la vue par défaut | C ou le bouton **◎ Vue** (double clic : recentrer seulement) |
 | Afficher les informations de debug | F1 (puis P : pause, N : avancer d'un instant) |
 | Pause | Échap |
 
@@ -206,7 +207,7 @@ L'IA joue avec les mêmes règles et les mêmes commandes que vous. Elle ne voit
 
 Le combattant qui joue porte une **auréole dorée**, une **flèche** oscille au-dessus de son nom et son cartouche passe à l'or. Une annonce au centre de l'écran rappelle à chaque tour qui a la main.
 
-Il vise **du côté où il regarde** : la ligne de points rouges et dorés, terminée par une pointe de flèche, part de lui. ↑ ↓ lèvent ou baissent la visée. Pour tirer de l'autre côté, **T** (ou le bouton **⇄ Se tourner**) le retourne sur place en gardant la même hauteur de visée ; marcher avec ← → le retourne aussi.
+Il vise **du côté où il regarde** : la ligne de points rouges et dorés, terminée par une pointe de flèche, part de lui. Le plus simple : **attrapez la pointe rouge** à la souris ou au doigt et faites-la glisser où vous voulez viser, même derrière lui ; il se retourne tout seul, et rien ne part tant que vous n'avez pas tiré. Sans souris, maintenez **⟳ Viser** : la visée fait le tour complet, et le combattant se retourne quand elle passe derrière lui. Au clavier, ↑ ↓ lèvent ou baissent la visée, et **T** le retourne sur place ; marcher avec ← → le retourne aussi.
 
 ### À la souris {{st:jeu}}
 
@@ -216,8 +217,7 @@ En bas à gauche, le **pad** :
 
 - **◀** et **▶** : maintenir le bouton pour marcher ;
 - **Sauter** et **↶ Arrière** ;
-- **▲ Viser** et **▼** : maintenir pour lever ou baisser la visée ;
-- **⇄ Se tourner** : se retourner sur place.
+- **⟳ Viser** : maintenir pour faire tourner la visée tout autour du combattant.
 
 En bas à droite, les armes :
 
@@ -226,9 +226,9 @@ En bas à droite, les armes :
 - **Passer** : finir son tour sans tirer ;
 - **Tirer** : maintenir pour charger la puissance, relâcher pour tirer.
 
-Au-dessus, le cartouche de l'arme en main montre la jauge de puissance. En haut à droite : **Aide**, **Réglages** et **Pause**. Le menu de pause (aussi sur Échap) propose de reprendre, de recommencer la partie, de lire l'aide ou d'ouvrir les réglages ; le temps est arrêté tant qu'il est ouvert, comme pendant l'aide et les réglages.
+Au-dessus, le cartouche de l'arme en main montre la jauge de puissance. En haut à droite : **Vue** (revenir au zoom par défaut et recentrer), **Aide**, **Réglages** et **Pause**. La souris posée contre un bord de l'écran fait défiler la carte. Le menu de pause (aussi sur Échap) propose de reprendre, de recommencer la partie, de lire l'aide ou d'ouvrir les réglages ; le temps est arrêté tant qu'il est ouvert, comme pendant l'aide et les réglages.
 
-On peut aussi viser « à la fronde » : appuyer sur son combattant, tirer en arrière, relâcher.
+On peut aussi viser « à la fronde » : appuyer sur son combattant, tirer franchement en arrière (le trait devient rouge quand le tir est armé), relâcher. Un simple clic sur le combattant ne tire jamais, et revenir près de lui avant de relâcher annule le tir.
 
 ### La fiche du combattant {{st:jeu}}
 
@@ -240,9 +240,9 @@ Le bouton **⚙ Réglages** ouvre toutes les valeurs du jeu en cours de réglage
 
 ### Sur tablette {{st:jeu}}
 
-- Le **pad** en bas à gauche pour marcher, sauter, viser et se retourner ; **Arsenal**, **Passer** et **Tirer** en bas à droite. Tous les boutons font au moins 48 px de côté.
+- Le **pad** en bas à gauche pour marcher, sauter et viser ; **Arsenal**, **Passer** et **Tirer** en bas à droite. Tous les boutons font au moins 48 px de côté.
 - **Viser à la fronde** : glissez depuis votre combattant, puis relâchez.
-- **Viser à la jauge** : ▲ ▼ pour l'angle, le bouton Tirer maintenu pour la puissance.
+- **Viser à la jauge** : ⟳ Viser maintenu (ou la pointe rouge glissée) pour l'angle, le bouton Tirer maintenu pour la puissance.
 - **Caméra** : un doigt glissé hors du combattant pour se déplacer, deux doigts pour zoomer, double tap pour recentrer.
 - **Frappes du ciel** {{st:prevu}} : touchez la cible, puis Confirmer.
 

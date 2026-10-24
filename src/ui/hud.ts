@@ -11,7 +11,7 @@ import { COLORS, css } from './tokens.ts';
 /** ms a commentary line stays up */
 const CHRONICLE_MS = 5000;
 /** ms a turn announcement stays up */
-const BANNER_MS = 2600;
+const BANNER_MS = 4200;
 
 export class Hud {
   private readonly turnShield: HTMLElement;
@@ -50,7 +50,9 @@ export class Hud {
     const track = el('div', 'track');
     this.windFill = el('div', 'fill');
     track.append(this.windFill);
-    wind.append(this.windLabel, track);
+    const windRow = el('div', 'wind-row');
+    windRow.append(this.windLabel, track);
+    wind.append(el('div', 'game-title', t('game.title')), windRow);
 
     this.timer = el('div', 'hud-timer panel');
     this.timerSecs = el('div', 'secs');
@@ -67,6 +69,16 @@ export class Hud {
     this.chronicle = el('div', 'chronicle faded');
     this.banner = el('div', 'banner panel faded');
     root.append(turn, this.teams, wind, this.timer, weapon, this.chronicle, this.banner);
+    // A click or tap anywhere dismisses a turn announcement (not the end-of-match one).
+    window.addEventListener('pointerdown', this.dismiss, true);
+  }
+
+  private readonly dismiss = (): void => {
+    if (this.bannerUntil !== Infinity) this.bannerUntil = 0;
+  };
+
+  destroy(): void {
+    window.removeEventListener('pointerdown', this.dismiss, true);
   }
 
   /** Shows a line of commentary in the phylactery. */

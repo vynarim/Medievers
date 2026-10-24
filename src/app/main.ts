@@ -22,10 +22,9 @@ async function boot(): Promise<void> {
   const game = new Phaser.Game({
     type: Phaser.WEBGL,
     parent: 'game',
-    width: 1920,
-    height: 1080,
     backgroundColor: '#1a1410',
-    scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
+    // The canvas fills the window, whatever its shape; the camera zoom adapts (battle-scene).
+    scale: { mode: Phaser.Scale.RESIZE, width: '100%', height: '100%' },
     input: { activePointers: 3 },
     render: { antialiasGL: false },
     scene: [],

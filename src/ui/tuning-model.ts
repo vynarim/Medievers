@@ -64,6 +64,7 @@ export function tuningGroups(rules: MatchRules): TuningGroup[] {
       fields: [
         field('turn.actionTicks', 'tuning.actionTime', 'units.seconds', TPS, 1, 5, 180),
         field('turn.retreatTicks', 'tuning.retreatTime', 'units.seconds', TPS, 0.5, 0, 15),
+        field('turn.settleTicks', 'tuning.settleTime', 'units.seconds', TPS, 0.5, 0, 10),
         field('startHp', 'tuning.startHp', 'units.hp', 1, 10, 10, 500),
       ],
     },

@@ -1,4 +1,5 @@
-// Local player input through Phaser: keyboard, mouse and touch (drag-to-aim, one-finger pan,
+// Local player input through Phaser: keyboard, mouse and touch (drag-to-aim, dragging the aim
+// arrowhead, one-finger pan,
 // pinch zoom, double tap to recentre) feed LocalControls (GDD §8).
 import Phaser from 'phaser';
 import type { GameCommand } from '../sim/commands.ts';
@@ -9,8 +10,17 @@ import { UiIntents } from './ui-intents.ts';
 
 /** px around the active unit's body centre where a press starts drag-to-aim */
 const DRAG_GRAB_RADIUS = 70;
+/** game px from the canvas border where the mouse scrolls the camera (GDD §8.1) */
+const EDGE_PX = 24;
+/** screen px around the aim arrowhead where a press grabs it to re-aim */
+const TIP_GRAB_RADIUS = 36;
 /** px a press may move and still count as a click */
 const CLICK_SLOP = 6;
+/**
+ * Screen px a slingshot pull must reach before it aims or can fire. A click on the unit, even
+ * a shaky one, never shoots; bringing the pointer back inside this distance cancels the shot.
+ */
+const SLING_ARM_PX = 48;
 /** ms and px between two taps of a double tap (recentre the camera, GDD §8.2) */
 const DOUBLE_TAP_MS = 320;
 const DOUBLE_TAP_SLOP = 40;
@@ -33,14 +43,22 @@ export class PhaserLocalInput implements InputSource {
   private readonly scene: Phaser.Scene;
   /** body centre of the active unit in world px, set by the scene each frame */
   unitCentre: { x: number; y: number } | null = null;
+  /** aim arrowhead in world px while the unit can aim, set by the scene each frame */
+  aimTip: { x: number; y: number } | null = null;
+  /** pointer relative to the unit centre while the arrowhead is dragged */
+  private aimAt: { x: number; y: number } | null = null;
   /** current drag pull vector, for the scene's aim preview */
   drag: { pullX: number; pullY: number } | null = null;
+  /** true while the pull is long enough to aim and fire (see SLING_ARM_PX) */
+  dragArmed = false;
   private dragReleased = false;
   private weaponClick = false;
   /** presses latched from key events, so a tap shorter than a frame is never lost */
   private pressed = { jump: false, weapon: false, flip: false, fuse: null as number | null };
   /** camera pan requested by a drag on empty ground, consumed by the scene */
   pan = { dx: 0, dy: 0 };
+  /** camera scroll direction while the mouse rests at a border of the canvas (-1, 0, 1) */
+  edge = { x: 0, y: 0 };
   /** zoom factor requested by a pinch since the last frame, consumed by the scene */
   zoom = 1;
   /** set by a double tap: the scene recentres the camera */
@@ -75,6 +93,7 @@ export class PhaserLocalInput implements InputSource {
     scene.input.on('pointerdown', this.onDown, this);
     scene.input.on('pointermove', this.onMove, this);
     scene.input.on('pointerup', this.onUp, this);
+    scene.input.on('gameout', this.onOut, this);
   }
 
   /** Pointer position in world px, through the main (world) camera. */
@@ -107,6 +126,10 @@ export class PhaserLocalInput implements InputSource {
     }
     const c = this.unitCentre;
     const w = this.world(p);
+    if (c && this.overTip(w)) {
+      this.aimAt = { x: w.x - c.x, y: w.y - c.y };
+      return;
+    }
     if (c && Math.hypot(w.x - c.x, w.y - c.y) <= DRAG_GRAB_RADIUS) {
       this.drag = { pullX: 0, pullY: 0 };
       return;
@@ -114,7 +137,33 @@ export class PhaserLocalInput implements InputSource {
     this.panFrom = { x: p.x, y: p.y };
   }
 
+  /** True when a world point is on the aim arrowhead (radius in screen px). */
+  private overTip(w: { x: number; y: number }): boolean {
+    const tip = this.aimTip;
+    const zoom = this.scene.cameras.main.zoom;
+    return !!tip && Math.hypot(w.x - tip.x, w.y - tip.y) * zoom <= TIP_GRAB_RADIUS;
+  }
+
+  /** The mouse left the canvas (or went over a DOM panel): stop edge scrolling. */
+  private onOut(): void {
+    this.edge = { x: 0, y: 0 };
+  }
+
   private onMove(p: Phaser.Input.Pointer): void {
+    if (!p.wasTouch) {
+      const { width, height } = this.scene.scale;
+      const side = (v: number, max: number): number =>
+        v < EDGE_PX ? -1 : v > max - EDGE_PX ? 1 : 0;
+      this.edge = p.isDown ? { x: 0, y: 0 } : { x: side(p.x, width), y: side(p.y, height) };
+    }
+    if (this.aimAt && this.unitCentre) {
+      const w = this.world(p);
+      this.aimAt = { x: w.x - this.unitCentre.x, y: w.y - this.unitCentre.y };
+      return;
+    }
+    if (!p.isDown) {
+      this.scene.input.setDefaultCursor(this.overTip(this.world(p)) ? 'grab' : 'default');
+    }
     if (this.pinchDistance > 0) {
       const spread = this.touchSpread();
       if (spread > 0) {
@@ -126,6 +175,8 @@ export class PhaserLocalInput implements InputSource {
     if (this.drag && this.unitCentre) {
       const w = this.world(p);
       this.drag = { pullX: w.x - this.unitCentre.x, pullY: w.y - this.unitCentre.y };
+      const zoom = this.scene.cameras.main.zoom;
+      this.dragArmed = Math.hypot(this.drag.pullX, this.drag.pullY) * zoom >= SLING_ARM_PX;
     } else if (this.panFrom && p.isDown) {
       this.pan.dx += this.panFrom.x - p.x;
       this.pan.dy += this.panFrom.y - p.y;
@@ -150,9 +201,9 @@ export class PhaserLocalInput implements InputSource {
       } else this.lastTap = { time: p.upTime, x: p.x, y: p.y };
     }
     this.downAt = null;
+    this.aimAt = null;
     if (this.drag) {
-      const len = Math.hypot(this.drag.pullX, this.drag.pullY);
-      if (len > CLICK_SLOP) this.dragReleased = true;
+      if (this.dragArmed) this.dragReleased = true;
       else this.drag = null;
     }
     this.panFrom = null;
@@ -171,22 +222,25 @@ export class PhaserLocalInput implements InputSource {
     const ui = this.ui.take();
     input.left = k.left.isDown || k.a.isDown || this.ui.walk < 0;
     input.right = k.right.isDown || k.d.isDown || this.ui.walk > 0;
-    input.up = k.up.isDown || this.ui.aim > 0;
-    input.down = k.down.isDown || this.ui.aim < 0;
+    input.up = k.up.isDown;
+    input.down = k.down.isDown;
+    input.spin = this.ui.spin;
     input.charge = k.space.isDown || this.ui.charge;
     input.jumpKind = ui.jump;
     input.selectWeapon = ui.selectWeapon;
     input.skipPressed = ui.skip;
     input.jumpPressed = this.pressed.jump;
     input.nextWeaponPressed = this.pressed.weapon || this.weaponClick;
-    input.flipPressed = this.pressed.flip || ui.flip;
+    input.flipPressed = this.pressed.flip;
     input.fusePressed = this.pressed.fuse ?? ui.fuse;
+    input.aimAt = this.aimAt;
     this.pressed = { jump: false, weapon: false, flip: false, fuse: null };
     this.weaponClick = false;
-    if (this.drag) {
+    if (this.drag && this.dragArmed) {
       input.drag = { ...this.drag, released: this.dragReleased };
       if (this.dragReleased) {
         this.drag = null;
+        this.dragArmed = false;
         this.dragReleased = false;
       }
     }
@@ -197,5 +251,6 @@ export class PhaserLocalInput implements InputSource {
     this.scene.input.off('pointerdown', this.onDown, this);
     this.scene.input.off('pointermove', this.onMove, this);
     this.scene.input.off('pointerup', this.onUp, this);
+    this.scene.input.off('gameout', this.onOut, this);
   }
 }

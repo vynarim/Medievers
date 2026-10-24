@@ -146,7 +146,13 @@ export interface Sim {
 - Impulsion radiale proportionnelle aux dégâts : 40 sub-px/tick par PV infligé (avant passifs), plus une poussée vers le haut de 35 % de cette vitesse (`src/content/world.ts`, à régler en playtest). Une explosion au centre exact de la hitbox pousse à la verticale.
 - Ordre de résolution : explosions ordonnées par id d'entité ; les réactions en chaîne (barils) sont placées en file pour le tick suivant.
 
-### 5.4 Grappin
+### 5.4 Usure et structures (GDD §4.7)
+- **Usure** : `WeaponDef.chipRadius` (px) creuse un disque à l'impact d'un projectile sans explosion, avec la résistance du matériau comme pour les explosions. 0 désactive.
+- **Calque d'appartenance** : un `Uint8Array` parallèle au masque donne l'id de structure de chaque pixel (0 = aucune). Il est produit au chargement à partir de `map.json` (`structures: [{ "id", "type", "rect" }]`, ou un `structures.png` si les formes l'exigent).
+- **État** : `structures: { id, type, hp, state }[]`, trié par id, inclus dans le hash. Un coup applique ses dégâts aux structures dont l'emprise croise le rayon d'impact (une seule fois par structure et par coup), pondérés par `StructureDef.damagePct[weapon]`.
+- **Effondrement** : à 0 PV, les pixels restants de la structure sont retirés du masque et découpés en blocs de 32 × 32 au plus. Chaque bloc est un corps entier (position et vitesse en sub-px, sans rotation) qui tombe sous la gravité, inflige des dégâts de chute aux unités qu'il traverse, puis s'imprime dans le masque en terre (gravats) quand il se pose. L'ordre est celui des ids de bloc ; la résolution du tour attend que tous les blocs soient posés.
+
+### 5.5 Grappin
 - Contrainte de distance unique (pendule) avec ré-ancrage aux coins du masque (wrap de corde). La V1 se limite à un seul point d'ancrage, le wrap est en P1.
 
 ## 6. Cartes
