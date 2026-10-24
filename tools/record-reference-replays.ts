@@ -5,6 +5,7 @@
 import { existsSync, writeFileSync } from 'node:fs';
 import { BEAST_RULES } from '../src/content/beasts.ts';
 import { CRATE_RULES } from '../src/content/crates.ts';
+import { DELUGE_RULES } from '../src/content/deluge.ts';
 import { KITCHEN_RULES } from '../src/content/kitchen.ts';
 import { CLASSIC_RULES, type MatchRules } from '../src/content/rules.ts';
 import { formatHash, type MatchConfig, type ReplayFile } from '../src/sim/index.ts';
@@ -355,6 +356,33 @@ const SCRIPTS: readonly Script[] = [
           { t: 'selectWeapon', id: weapon },
           { t: 'aim', angle: team === 0 ? 3720 - turn * 13 : 2420 + turn * 13 },
           { t: 'fire', power: 780 + turn * 17 },
+        ]);
+        r.until('transition');
+      }
+    },
+  },
+  {
+    name: 'deluge',
+    description:
+      'Le Déluge (GDD §2.4) from turn 2, rising fast: slings while the water climbs the hills ' +
+      'and drowns the low ground, until a house is gone.',
+    mapId: 'hills',
+    seed: 1421,
+    config: {
+      rules: {
+        ...NO_PLACEMENT,
+        deluge: { ...DELUGE_RULES, startTurn: 2, risePx: 60, damage: 5 },
+      },
+      teams: [{ spawns: [200, 560] }, { spawns: [1000, 1400] }],
+    },
+    play: (r) => {
+      for (let turn = 0; turn < 20 && r.sim.view().turn.phase !== 'gameOver'; turn++) {
+        r.until('action');
+        const team = r.sim.view().turn.activeTeam;
+        r.step([
+          { t: 'selectWeapon', id: 'sling' },
+          { t: 'aim', angle: team === 0 ? 3700 : 2440 },
+          { t: 'fire', power: 700 + turn * 11 },
         ]);
         r.until('transition');
       }

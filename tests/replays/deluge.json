@@ -1,0 +1,363 @@
+{
+ "version": 1,
+ "config": {
+  "rules": {
+   "turn": {
+    "transitionTicks": 120,
+    "actionTicks": 2700,
+    "retreatTicks": 180,
+    "maxResolutionTicks": 1800,
+    "settleTicks": 120,
+    "moveAfterShot": true,
+    "retreatMaxTicks": 300,
+    "freeSelect": true,
+    "noRepeat": true
+   },
+   "unitsPerTeam": 4,
+   "startHp": 100,
+   "unit": {
+    "walkSpeed": 384,
+    "maxStep": 12,
+    "slopeWindow": 7,
+    "jumpForward": {
+     "vx": 2100,
+     "vy": -2304
+    },
+    "jumpBack": {
+     "vx": 256,
+     "vy": -2688
+    },
+    "fallSafeHeight": 160,
+    "fallPxPerHp": 8,
+    "fallMaxDamage": 30,
+    "moveBudget": 280,
+    "slopeTakeoff": true,
+    "turnTicks": 12
+   },
+   "wind": {
+    "max": 10,
+    "accelPerUnit": 2
+   },
+   "explosion": {
+    "knockbackPerHp": 40,
+    "liftPct": 35
+   },
+   "weapons": [
+    {
+     "id": "bow",
+     "behavior": "directHit",
+     "projectileRadius": 0,
+     "windPct": 100,
+     "maxSpeed": 6144,
+     "damage": 35,
+     "explosionRadius": 0,
+     "chipRadius": 3,
+     "knockbackPct": 60,
+     "bouncePct": 0,
+     "defaultFuse": 0,
+     "ammo": -1
+    },
+    {
+     "id": "sling",
+     "thrown": true,
+     "behavior": "directHit",
+     "projectileRadius": 2,
+     "windPct": 100,
+     "maxSpeed": 5120,
+     "damage": 25,
+     "explosionRadius": 0,
+     "chipRadius": 5,
+     "knockbackPct": 250,
+     "bouncePct": 0,
+     "defaultFuse": 0,
+     "ammo": -1
+    },
+    {
+     "id": "greekFire",
+     "thrown": true,
+     "behavior": "fusedBouncer",
+     "projectileRadius": 5,
+     "windPct": 0,
+     "maxSpeed": 4608,
+     "damage": 45,
+     "explosionRadius": 60,
+     "knockbackPct": 100,
+     "bouncePct": 45,
+     "defaultFuse": 60,
+     "ammo": 3,
+     "fuseTurns": 180
+    },
+    {
+     "id": "crossbow",
+     "behavior": "directHit",
+     "projectileRadius": 0,
+     "windPct": 40,
+     "maxSpeed": 7680,
+     "damage": 45,
+     "explosionRadius": 0,
+     "chipRadius": 4,
+     "knockbackPct": 80,
+     "bouncePct": 0,
+     "defaultFuse": 0,
+     "ammo": 2,
+     "fixedPower": true
+    },
+    {
+     "id": "pitchPot",
+     "thrown": true,
+     "behavior": "cluster",
+     "projectileRadius": 5,
+     "windPct": 0,
+     "maxSpeed": 4352,
+     "damage": 30,
+     "explosionRadius": 50,
+     "knockbackPct": 100,
+     "bouncePct": 40,
+     "defaultFuse": 180,
+     "ammo": 1,
+     "fragments": {
+      "count": 5,
+      "damage": 15,
+      "radius": 30,
+      "speed": 1536
+     }
+    },
+    {
+     "id": "mace",
+     "behavior": "melee",
+     "projectileRadius": 0,
+     "windPct": 0,
+     "maxSpeed": 0,
+     "damage": 30,
+     "explosionRadius": 0,
+     "knockbackPct": 320,
+     "bouncePct": 0,
+     "defaultFuse": 0,
+     "ammo": -1,
+     "reach": 34
+    }
+   ],
+   "kitchen": {
+    "healHp": 30,
+    "chanceStartPermille": 250,
+    "chanceDecayPct": 80,
+    "chanceFloorPermille": 20,
+    "lifeRounds": 2,
+    "placeTolerancePct": 10
+   },
+   "burn": {
+    "startRound": 2,
+    "advancePx": 60,
+    "damage": 20
+   },
+   "barrels": {
+    "count": 5,
+    "damage": 40,
+    "radius": 70,
+    "chainDelay": 8
+   },
+   "crates": {
+    "chancePermille": 300,
+    "maxOnMap": 3,
+    "trapPermille": 100,
+    "balmPermille": 350,
+    "balmHp": 25,
+    "fallSpeed": 256,
+    "windDrift": 20,
+    "blastDamage": 15,
+    "blastRadius": 40,
+    "trapDamage": 35,
+    "trapRadius": 60
+   },
+   "beasts": {
+    "spawnPermille": 80,
+    "hareStep": 300,
+    "snailStep": 60,
+    "hareClimb": 40,
+    "kickDamage": 15,
+    "kickSpeed": 2400,
+    "slimeTurns": 2,
+    "biteDamage": 3,
+    "biteTurns": 3
+   },
+   "classes": {
+    "knight": {
+     "blastTakenPct": 75,
+     "jumpPct": 84
+    },
+    "archer": {
+     "previewPct": 200
+    },
+    "slinger": {
+     "throwPct": 115,
+     "hpDelta": -10
+    },
+    "sapper": {
+     "digPct": 200
+    },
+    "cleric": {
+     "blessHp": 10,
+     "blessRadius": 120
+    },
+    "king": {
+     "auraPct": 110,
+     "auraRadius": 200,
+     "hpDelta": -20
+    }
+   },
+   "deluge": {
+    "startTurn": 2,
+    "startTicks": 54000,
+    "risePx": 60,
+    "damage": 5
+   }
+  },
+  "teams": [
+   {
+    "spawns": [
+     200,
+     560
+    ]
+   },
+   {
+    "spawns": [
+     1000,
+     1400
+    ]
+   }
+  ]
+ },
+ "seed": 1421,
+ "mapId": "hills",
+ "commands": [
+  [
+   121,
+   {
+    "t": "selectWeapon",
+    "id": "sling"
+   }
+  ],
+  [
+   121,
+   {
+    "t": "aim",
+    "angle": 3700
+   }
+  ],
+  [
+   121,
+   {
+    "t": "fire",
+    "power": 700
+   }
+  ],
+  [
+   663,
+   {
+    "t": "selectWeapon",
+    "id": "sling"
+   }
+  ],
+  [
+   663,
+   {
+    "t": "aim",
+    "angle": 2440
+   }
+  ],
+  [
+   663,
+   {
+    "t": "fire",
+    "power": 711
+   }
+  ],
+  [
+   1205,
+   {
+    "t": "selectWeapon",
+    "id": "sling"
+   }
+  ],
+  [
+   1205,
+   {
+    "t": "aim",
+    "angle": 3700
+   }
+  ],
+  [
+   1205,
+   {
+    "t": "fire",
+    "power": 722
+   }
+  ],
+  [
+   1747,
+   {
+    "t": "selectWeapon",
+    "id": "sling"
+   }
+  ],
+  [
+   1747,
+   {
+    "t": "aim",
+    "angle": 2440
+   }
+  ],
+  [
+   1747,
+   {
+    "t": "fire",
+    "power": 733
+   }
+  ],
+  [
+   2289,
+   {
+    "t": "selectWeapon",
+    "id": "sling"
+   }
+  ],
+  [
+   2289,
+   {
+    "t": "aim",
+    "angle": 3700
+   }
+  ],
+  [
+   2289,
+   {
+    "t": "fire",
+    "power": 744
+   }
+  ],
+  [
+   2831,
+   {
+    "t": "selectWeapon",
+    "id": "sling"
+   }
+  ],
+  [
+   2831,
+   {
+    "t": "aim",
+    "angle": 2440
+   }
+  ],
+  [
+   2831,
+   {
+    "t": "fire",
+    "power": 755
+   }
+  ]
+ ],
+ "endTick": 3252,
+ "description": "Le Déluge (GDD §2.4) from turn 2, rising fast: slings while the water climbs the hills and drowns the low ground, until a house is gone.",
+ "expectedHash": "6b4d54dd"
+}

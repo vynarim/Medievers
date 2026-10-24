@@ -381,5 +381,20 @@
   "tuning.clericRadius": "Clerc : portée du soin",
   "tuning.kingAura": "Roi : dégâts des alliés proches",
   "tuning.kingRadius": "Roi : portée de l'aura",
-  "tuning.kingHp": "Roi : PV en plus"
+  "tuning.kingHp": "Roi : PV en plus",
+  "object.unit.hp": "{hp} / {max} PV",
+  "hud.deluge": "Et les eaux montèrent…",
+  "hud.delugeSub": "Le Déluge : l'eau monte à chaque fin de tour",
+  "quip.deluge.1": "Noé n'a pas été prévenu. Personne n'a été prévenu. Sauf les canards.",
+  "quip.deluge.2": "Quarante jours et quarante nuits ? Non : quelques tours suffiront.",
+  "quip.deluge.3": "Le ciel trouve que cette guerre traîne. Il ouvre les vannes.",
+  "quip.water.1": "L'eau monte. Les poissons prennent des notes.",
+  "quip.water.2": "Encore un étage d'eau. Les chevaliers en armure regrettent leurs choix de vie.",
+  "quip.water.3": "Le niveau monte. Qui a laissé le robinet du firmament ouvert ?",
+  "tuning.group.deluge": "Déluge",
+  "tuning.delugeTurn": "Début (tours)",
+  "tuning.delugeTime": "Début (au plus tard)",
+  "tuning.delugeRise": "Montée par tour",
+  "tuning.delugeDamage": "PV perdus par tour",
+  "units.minutes": "min"
 }

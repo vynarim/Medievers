@@ -12,3 +12,4 @@ export * from './barrels.ts';
 export * from './crates.ts';
 export * from './beasts.ts';
 export * from './classes.ts';
+export * from './deluge.ts';

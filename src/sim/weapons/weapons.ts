@@ -87,12 +87,7 @@ export function fire(state: SimState, u: Unit, power: number, events: SimEvent[]
  * sub-px/tick: launch speed of `def` thrown by u at power 0..1024 (crossbow: always full), with
  * the slinger's stronger arm. The renderer uses it for the aim preview.
  */
-export function shotSpeed(
-  state: ClassView,
-  u: Unit,
-  def: WeaponDef,
-  power: number,
-): number {
+export function shotSpeed(state: ClassView, u: Unit, def: WeaponDef, power: number): number {
   const p = def.fixedPower ? MAX_POWER : Math.max(0, Math.min(power, MAX_POWER));
   return idiv(idiv(def.maxSpeed * p, MAX_POWER) * throwPct(state, u, def), 100);
 }

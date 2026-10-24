@@ -30,12 +30,12 @@ import { AutoSaver, clearSave } from '../app/autosave.ts';
 import { spawnColumns } from '../app/spawns.ts';
 import { replay, type GameLog } from '../sim/log.ts';
 import { frame, type Point } from './framing.ts';
-import { objectAt, objectInfo, type ObjectRef } from '../ui/object-info.ts';
+import { objectAt, objectInfo, unitInfo, type ObjectRef } from '../ui/object-info.ts';
 import { Scenery } from './scenery.ts';
 import { FixedStep } from './fixed-step.ts';
 import { TerrainLayer } from './terrain-layer.ts';
 import { drawClassMark } from './class-marks.ts';
-import { aimPreviewTicks, classOf } from '../sim/classes.ts';
+import { aimPreviewTicks, classOf, maxHpOf } from '../sim/classes.ts';
 import { shotSpeed } from '../sim/weapons/weapons.ts';
 import { defaultLineup } from '../content/classes.ts';
 
@@ -76,7 +76,7 @@ const SKY_EXTRA = 2000;
 /** Screen px kept clear of units by the default view, before the overlay scale: HUD and bar. */
 const FRAME_MARGINS = { top: 130, bottom: 110, side: 30 } as const;
 /** px above the feet and either side of a unit where a click still picks it: its name label */
-const LABEL_REACH = 80;
+const LABEL_REACH = 44;
 const LABEL_HALF_WIDTH = 34;
 
 /** Phaser's polygon calls want Vector2 instances. */
@@ -113,6 +113,10 @@ export class BattleScene extends Phaser.Scene {
   private beastShown: { x: number; y: number } | null = null;
   /** the burnt ends of the parchment, over the terrain, under the units */
   private burnGfx!: Phaser.GameObjects.Graphics;
+  /** the water (le Déluge), over the units it has drowned */
+  private waterGfx!: Phaser.GameObjects.Graphics;
+  /** px: top of the water as drawn, easing up after the sim's */
+  private waterShown = Infinity;
   private debugGfx!: Phaser.GameObjects.Graphics;
   private labels = new Map<number, Phaser.GameObjects.Text>();
   private debugText!: Phaser.GameObjects.Text;
@@ -178,6 +182,8 @@ export class BattleScene extends Phaser.Scene {
     this.terrain = new TerrainLayer(this, () => this.sim.view().terrain);
     this.world = this.add.graphics().setDepth(6);
     this.burnGfx = this.add.graphics().setDepth(5.5);
+    this.waterGfx = this.add.graphics().setDepth(6.5);
+    this.waterShown = this.sim.view().waterY;
     this.debugGfx = this.add.graphics().setDepth(20);
 
     this.debugText = this.add
@@ -197,6 +203,7 @@ export class BattleScene extends Phaser.Scene {
       ...this.terrain.images,
       this.world,
       this.burnGfx,
+      this.waterGfx,
       this.debugGfx,
     ];
     cam.ignore(this.debugText);
@@ -482,6 +489,7 @@ export class BattleScene extends Phaser.Scene {
     this.updateCamera(alpha, delta);
     this.drawWorld(alpha, time, delta);
     this.drawBurn(time);
+    this.drawWater(time, delta);
     if (this.debug) this.drawDebug();
     else {
       this.debugGfx.clear();
@@ -489,9 +497,21 @@ export class BattleScene extends Phaser.Scene {
     }
   }
 
-  /** Keeps the object bubble over its object, and closes it once the object is gone. */
+  /**
+   * Keeps the object bubble over its object, and closes it once the object is gone. With a
+   * mouse, a unit under the pointer gets a bubble with its class and HP.
+   */
   private updateBubble(): void {
-    const info = this.infoRef ? objectInfo(this.sim.view(), this.infoRef) : null;
+    const v = this.sim.view();
+    let info = this.infoRef ? objectInfo(v, this.infoRef) : null;
+    if (!this.infoRef) {
+      const p = this.input.activePointer;
+      if (!p.wasTouch && p.x > 0 && p.y > 0) {
+        const at = this.cameras.main.getWorldPoint(p.x, p.y);
+        const hover = this.unitAt(at.x, at.y);
+        if (hover) info = unitInfo(v, hover.id, LABEL_REACH);
+      }
+    }
     if (!info) {
       this.infoRef = null;
       this.ui.showBubble(null, 0, 0);
@@ -510,15 +530,7 @@ export class BattleScene extends Phaser.Scene {
       this.input_.ui.place = x;
       return;
     }
-    const hit = this.sim
-      .view()
-      .units.find(
-        (u) =>
-          u.alive &&
-          Math.abs(x - u.x / SUBPX) <= Math.max(UNIT_HALF_WIDTH + 8, LABEL_HALF_WIDTH) &&
-          y <= u.y / SUBPX + 8 &&
-          y >= u.y / SUBPX - UNIT_HEIGHT - LABEL_REACH,
-      );
+    const hit = this.unitAt(x, y);
     this.selectedUnit = hit?.id ?? null;
     this.ui.selectUnit(this.selectedUnit);
     // No unit there: a barrel, a reliquary, the kitchen, a beast or a pot gets its bubble.
@@ -529,6 +541,19 @@ export class BattleScene extends Phaser.Scene {
     if (hit && hit.team === v.turn.activeTeam && hit.id !== v.turn.activeUnitId) {
       this.input_.ui.selectUnit = hit.id;
     }
+  }
+
+  /** The living unit under world point (x, y): its figure or its name label. */
+  private unitAt(x: number, y: number): Readonly<Unit> | undefined {
+    return this.sim
+      .view()
+      .units.find(
+        (u) =>
+          u.alive &&
+          Math.abs(x - u.x / SUBPX) <= Math.max(UNIT_HALF_WIDTH + 8, LABEL_HALF_WIDTH) &&
+          y <= u.y / SUBPX + 8 &&
+          y >= u.y / SUBPX - UNIT_HEIGHT - LABEL_REACH,
+      );
   }
 
   private tick(): void {
@@ -720,16 +745,20 @@ export class BattleScene extends Phaser.Scene {
       drawClassMark(g, classOf(v, u), x, y, u.facing);
 
       if (label) {
+        // A small phylactery with the name and a thin life bar under it; the figures are in the
+        // card (click) and in the bubble shown on hover.
+        const bottom = y - UNIT_HEIGHT - 18;
         label.setVisible(true);
-        label.setPosition(x, y - UNIT_HEIGHT - 12);
-        label.setText(`${unitName(u.id)}\n${u.hp}`);
+        label.setPosition(x, bottom);
+        if (label.text !== unitName(u.id)) label.setText(unitName(u.id));
         label.setColor(css(primary));
-        this.drawScroll(g, x, y - UNIT_HEIGHT - 12, label.width, label.height, isActive);
-        this.drawAfflictions(g, u.id, x, y - UNIT_HEIGHT - 12 - label.height - 10);
+        this.drawScroll(g, x, bottom, label.width, label.height, isActive);
+        this.drawLifeBar(g, x, bottom + 2, u.hp / maxHpOf(v, u), primary);
+        this.drawAfflictions(g, u.id, x, bottom - label.height - 8);
       }
       if (isActive) {
         // Bobbing pointer above the name: who plays is never in doubt.
-        const top = y - UNIT_HEIGHT - 12 - (label?.height ?? 56) - 14 + Math.sin(time / 180) * 7;
+        const top = y - UNIT_HEIGHT - 18 - (label?.height ?? 28) - 12 + Math.sin(time / 180) * 7;
         g.fillStyle(COLORS.or, 1);
         g.lineStyle(4, COLORS.encre, 1);
         g.fillTriangle(x - 20, top - 30, x + 20, top - 30, x, top);
@@ -961,6 +990,48 @@ export class BattleScene extends Phaser.Scene {
   }
 
   /**
+   * The water of the Déluge: ultramarine bands with curling wave crests, as the manuscript draws
+   * the Flood; it rises slowly to the sim's level.
+   */
+  private drawWater(time: number, delta: number): void {
+    const g = this.waterGfx;
+    g.clear();
+    const { map } = this.data_;
+    const target = this.sim.view().waterY;
+    if (target >= map.height && this.waterShown >= map.height) return;
+    this.waterShown += (target - this.waterShown) * Math.min(1, delta / 600);
+    const top = this.waterShown;
+    g.fillStyle(COLORS.lapis, 0.88);
+    g.fillRect(0, top + 6, map.width, map.height - top);
+    // Paler bands lower down, like the strokes of a brush.
+    g.lineStyle(3, COLORS.azur, 0.6);
+    for (let y = top + 28; y < map.height; y += 30) {
+      g.beginPath();
+      for (let x = 0; x <= map.width; x += 40) {
+        const yy = y + Math.sin(x / 70 + time / 700 + y) * 4;
+        if (x === 0) g.moveTo(x, yy);
+        else g.lineTo(x, yy);
+      }
+      g.strokePath();
+    }
+    // Crests: a row of curls rolling over, outlined in ink, with a white lip.
+    for (let x = -40; x <= map.width + 40; x += 48) {
+      const cx = x + ((time / 40) % 48);
+      const cy = top + 6 + Math.sin(cx / 90 + time / 500) * 3;
+      g.fillStyle(COLORS.azur, 1);
+      g.fillCircle(cx, cy, 12);
+      g.lineStyle(2, COLORS.encre, 0.9);
+      g.beginPath();
+      g.arc(cx, cy, 12, Math.PI, Math.PI * 1.9);
+      g.strokePath();
+      g.lineStyle(2, COLORS.ceruse, 0.9);
+      g.beginPath();
+      g.arc(cx + 2, cy + 1, 6, Math.PI * 1.1, Math.PI * 2.2);
+      g.strokePath();
+    }
+  }
+
+  /**
    * The beast of the margins: a hare with long ears or a snail with a spiral shell. It moves
    * between turns in one go; the drawing hops (hare) or slides (snail) after it.
    */
@@ -1018,8 +1089,8 @@ export class BattleScene extends Phaser.Scene {
   }
 
   /**
-   * Phylactery behind a unit's name: a strip of parchment whose ends roll up, gilt for the unit
-   * that plays. (x, bottom) is the label's anchor, w × h its size.
+   * Name tag behind a unit's name: a small plain rectangle, gilt for the unit that plays.
+   * (x, bottom) is the label's anchor, w × h its size.
    */
   private drawScroll(
     g: Phaser.GameObjects.Graphics,
@@ -1029,24 +1100,27 @@ export class BattleScene extends Phaser.Scene {
     h: number,
     gilt: boolean,
   ): void {
-    const left = x - w / 2;
-    const top = bottom - h;
-    g.fillStyle(gilt ? COLORS.or : COLORS.ceruse, 1);
-    g.lineStyle(2, COLORS.encre, 1);
-    g.fillRect(left + 6, top, w - 12, h);
-    g.lineBetween(left + 6, top, left + w - 6, top);
-    g.lineBetween(left + 6, bottom, left + w - 6, bottom);
-    // Rolled ends: a curl at each side, the inside of the roll a shade darker.
-    for (const [cx, dir] of [
-      [left + 6, -1],
-      [left + w - 6, 1],
-    ] as const) {
-      g.fillStyle(COLORS.velin, 1);
-      g.fillEllipse(cx, top + h / 2, 12, h);
-      g.strokeEllipse(cx, top + h / 2, 12, h);
-      g.fillStyle(COLORS.ocre, 1);
-      g.fillEllipse(cx + dir * 2, top + h / 2, 5, h * 0.55);
-    }
+    g.fillStyle(gilt ? COLORS.or : COLORS.ceruse, gilt ? 0.95 : 0.8);
+    g.fillRect(x - w / 2, bottom - h, w, h);
+    g.lineStyle(1, COLORS.encre, 0.5);
+    g.strokeRect(x - w / 2, bottom - h, w, h);
+  }
+
+  /** A thin life bar in the house's colour, centred on x, its top at y; ratio 0..1. */
+  private drawLifeBar(
+    g: Phaser.GameObjects.Graphics,
+    x: number,
+    y: number,
+    ratio: number,
+    colour: number,
+  ): void {
+    const w = 36;
+    const h = 4;
+    const r = Math.max(0, Math.min(1, ratio));
+    g.fillStyle(COLORS.encre, 0.35);
+    g.fillRect(x - w / 2, y, w, h);
+    g.fillStyle(colour, 1);
+    g.fillRect(x - w / 2, y, w * r, h);
   }
 
   /** The name label of a unit, made the first time it shows (units placed during the match). */
@@ -1055,12 +1129,15 @@ export class BattleScene extends Phaser.Scene {
     if (!label) {
       label = this.add
         .text(0, 0, '', {
-          fontFamily: FONT_CAPS,
-          fontSize: '30px',
+          fontFamily: FONT_TEXT,
+          fontSize: '17px',
+          fontStyle: 'bold',
           color: css(COLORS.encre),
           align: 'center',
-          padding: { x: 14, y: 2 },
+          padding: { x: 5, y: 0 },
         })
+        // Drawn at three times its size, so the name stays crisp under the camera zoom.
+        .setResolution(3)
         .setOrigin(0.5, 1)
         .setDepth(7);
       this.hudCam.ignore(label);

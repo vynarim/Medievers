@@ -21,6 +21,8 @@ export interface TeamConfig {
 export interface MatchConfig {
   readonly rules: MatchRules;
   readonly teams: readonly TeamConfig[];
+  /** px: top of the map's water (map.json waterLevel); absent: no water until the Déluge */
+  readonly waterLevel?: number;
 }
 
 export interface TeamState {
@@ -174,6 +176,10 @@ export interface SimState {
   readonly afflictions: Affliction[];
   /** px burnt away at each end of the map (rules.burn); 0 without it */
   burnPx: number;
+  /** px: top of the water; the map height (or more) when there is none */
+  waterY: number;
+  /** the Déluge has begun: the water rises at every turn end (rules.deluge) */
+  deluge: boolean;
   /** kitchens that appeared on each team's turn, for fairness (GDD §4.9) */
   readonly kitchenCounts: number[];
   /** team id of the winner, -1 for a draw, null while playing */

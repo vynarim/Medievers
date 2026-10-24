@@ -1,12 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { CLASSIC_RULES, type MatchRules } from '../rules-fixture.ts';
-import {
-  Material,
-  Sim,
-  type Mask,
-  type MatchConfig,
-  SUBPX,
-} from '../../src/sim/index.ts';
+import { Material, Sim, type Mask, type MatchConfig, SUBPX } from '../../src/sim/index.ts';
 
 const WALL_X = 600;
 const WALL_THICKNESS = 20;

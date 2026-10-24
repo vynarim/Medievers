@@ -28,6 +28,7 @@ import { Trick } from '../content/beasts.ts';
 import { blastMovesPots, potsTurn, stepPots } from './pots.ts';
 import { kitchenTurn, inKitchen, stepKitchen, useKitchen } from './kitchen.ts';
 import { fire, stepShots } from './weapons/weapons.ts';
+import { delugeTurnEnd, drownThings, drownUnits, hasWater, underWater } from './deluge.ts';
 import {
   blastTakenPct,
   blessAtTurnEnd,
@@ -168,6 +169,8 @@ function createState(config: MatchConfig, seed: number, mask: Mask): SimState {
       .map(({ unitId, team, x }) => ({ unitId, team, x })),
     afflictions: [],
     burnPx: 0,
+    waterY: config.waterLevel ?? terrain.height,
+    deluge: false,
     kitchenCounts: teams.map(() => 0),
     winner: null,
     rules: config.rules,
@@ -268,7 +271,7 @@ function placeUnit(s: SimState, x: number, events: SimEvent[]): boolean {
     0,
     maxHpOf(s, { id: next.unitId, team: next.team }),
   );
-  if (!settle(u, s.terrain)) return false;
+  if (!settle(u, s.terrain) || underWater(s, subToPx(u.y))) return false;
   s.placing.shift();
   s.units.push(u);
   s.units.sort((a, b) => a.id - b.id);
@@ -411,6 +414,7 @@ function advanceTick(s: SimState, phaseJustSet: boolean, events: SimEvent[]): vo
     }
   }
 
+  drownUnits(s, events);
   stepShots(s, events);
 
   for (const e of takeDueExplosions(s.explosions, s.tick)) {
@@ -431,6 +435,7 @@ function advanceTick(s: SimState, phaseJustSet: boolean, events: SimEvent[]): vo
   stepBarrels(s, events);
   stepCrates(s, events);
   stepPots(s);
+  drownThings(s, events);
 
   const hurt = active !== undefined && (active.hp < hpBefore || !active.alive);
   advancePhase(s, hurt, phaseJustSet, events);
@@ -596,6 +601,7 @@ function burnTurn(s: SimState, events: SimEvent[]): void {
 function endTurn(s: SimState, events: SimEvent[]): void {
   blessAtTurnEnd(s, events);
   burnTurn(s, events);
+  delugeTurnEnd(s, events);
   beastsTurnEnd(s, events);
   maybeDropCrate(s, events);
   callDeaths(s, events);
@@ -673,6 +679,10 @@ function hashState(s: SimState): number {
     for (const p of s.placing) for (const v of [p.unitId, p.team, p.x]) int(v);
   }
   if (s.rules.burn) int(s.burnPx);
+  if (s.rules.deluge || hasWater(s)) {
+    int(s.waterY);
+    int(s.deluge ? 1 : 0);
+  }
   if (s.rules.weapons.some((w) => w.fuseTurns !== undefined)) {
     int(s.pots.length);
     for (const p of s.pots) {

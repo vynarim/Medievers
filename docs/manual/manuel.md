@@ -199,9 +199,9 @@ Un tir, un coup de masse ou une explosion qui touche la bête la renvoie dans sa
 
 Après deux tours de table, un moine maladroit renverse sa chandelle : **la carte prend feu à ses deux bouts**. À la fin de chaque tour de table, le feu mange 60 pixels de plus de chaque côté. Un combattant qui se trouve dans la partie brûlée à la fin d'un tour perd **20 PV**, à chaque tour. Les armées n'ont donc pas intérêt à rester sur les bords : il faut se rapprocher de l'ennemi. Une cuisine de campagne rattrapée par le feu s'éteint. Réglages : onglet **Parchemin en feu**.
 
-### 5.4 Le Déluge {{st:prevu}}
+### 5.4 Le Déluge {{st:jeu}}
 
-Pour que les parties ne s'éternisent pas, **le Déluge** arrive après 20 tours (ou 15 minutes). Une pleine page enluminée l'annonce : « *Et les eaux montèrent…* ». Ensuite, l'eau monte de 48 pixels à chaque fin de tour, et en option tous les combattants perdent 5 PV. L'eau noie instantanément.
+Pour que les parties ne s'éternisent pas, **le Déluge** arrive après 20 tours (ou 15 minutes). Une pleine page enluminée l'annonce : « *Et les eaux montèrent…* ». Ensuite, l'eau monte de 48 pixels à chaque fin de tour, et tous les combattants perdent 5 PV (0 pour s'en passer). L'eau noie instantanément : un combattant qui y tombe, ou que l'eau rattrape, est perdu. Ce qui tombe à l'eau disparaît aussi : tirs, reliquaires, barils, pots, cuisine, bêtes. Si l'eau emporte toutes les maisons à la fois, c'est une égalité. Réglages : onglet **Déluge**.
 
 ## 6. Les modes de jeu
 
@@ -279,7 +279,9 @@ On peut aussi viser « à la fronde » : appuyer sur son combattant, tirer franc
 
 ### La fiche du combattant {{st:jeu}}
 
-Un clic sur n'importe quel combattant ouvre sa fiche : nom, maison, points de vie, état (joue ce tour, attend, en l'air, tombé), classe et talent (à venir), un rappel des règles de marche, de chute et de mort, et, pour le combattant qui joue, l'arme en main avec ses caractéristiques.
+Au-dessus de chaque combattant, une petite étiquette porte son nom, et une fine barre à ses couleurs montre ce qui lui reste de vie. À la souris, il suffit de passer sur un combattant pour voir sa classe et ses points de vie exacts.
+
+Un clic sur n'importe quel combattant ouvre sa fiche : nom, maison, points de vie, état (joue ce tour, attend, en l'air, tombé), classe, talent et contrepartie, un rappel des règles de marche, de chute et de mort, et, pour le combattant qui joue, l'arme en main avec ses caractéristiques.
 
 ### Les bulles d'objets {{st:jeu}}
 

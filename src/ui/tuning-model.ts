@@ -146,6 +146,19 @@ export function tuningGroups(rules: MatchRules): TuningGroup[] {
           },
         ]
       : []),
+    ...(rules.deluge
+      ? [
+          {
+            titleKey: 'tuning.group.deluge',
+            fields: [
+              field('deluge.startTurn', 'tuning.delugeTurn', 'units.turns', 1, 1, 1, 200),
+              field('deluge.startTicks', 'tuning.delugeTime', 'units.minutes', 3600, 1, 1, 120),
+              field('deluge.risePx', 'tuning.delugeRise', 'units.px', 1, 4, 0, 400),
+              field('deluge.damage', 'tuning.delugeDamage', 'units.hp', 1, 1, 0, 100),
+            ],
+          },
+        ]
+      : []),
     ...(rules.classes
       ? [
           {

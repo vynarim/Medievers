@@ -8,6 +8,9 @@ import { KITCHEN_HEIGHT, KITCHEN_WIDTH } from '../content/kitchen.ts';
 import { SUBPX } from '../sim/math/fixed.ts';
 import type { SimView } from '../sim/sim.ts';
 import { t } from './i18n.ts';
+import { classOf, maxHpOf } from '../sim/classes.ts';
+import { unitName } from '../content/factions.ts';
+import { UNIT_HEIGHT } from '../sim/units/unit.ts';
 
 export type ObjectRef =
   | { readonly kind: 'barrel'; readonly id: number }
@@ -63,6 +66,20 @@ export function objectAt(v: SimView, x: number, y: number, slop: number): Object
 }
 
 /** Name, description and anchor of an object, or null once it has left the map. */
+/** The hover bubble of a unit: name, class and HP; `above` px over its head (its label). */
+export function unitInfo(v: SimView, unitId: number, above: number): ObjectInfo | null {
+  const u = v.units.find((x) => x.id === unitId);
+  if (!u?.alive) return null;
+  const cls = classOf(v, u);
+  const hp = t('object.unit.hp', { hp: u.hp, max: maxHpOf(v, u) });
+  return {
+    title: unitName(u.id),
+    text: cls ? `${t(`classes.${cls}`)} · ${hp}` : hp,
+    x: u.x / SUBPX,
+    y: u.y / SUBPX - UNIT_HEIGHT - above,
+  };
+}
+
 export function objectInfo(v: SimView, ref: ObjectRef): ObjectInfo | null {
   const r = v.rules;
   switch (ref.kind) {

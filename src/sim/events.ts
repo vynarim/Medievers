@@ -67,4 +67,8 @@ export type SimEvent =
   | { readonly e: 'placeRefused'; readonly x: number }
   /** px burnt away at each end of the map, after the fire spread */
   | { readonly e: 'burnSpread'; readonly px: number }
+  /** « Et les eaux montèrent… » (GDD §2.4) */
+  | { readonly e: 'delugeStarted' }
+  /** px: new top of the water */
+  | { readonly e: 'waterRose'; readonly y: number }
   | { readonly e: 'gameOver'; readonly winner: number };

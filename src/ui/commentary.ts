@@ -202,6 +202,18 @@ export class Commentary {
           this.hud.say(pick(this.burning ? 'quip.burn' : 'quip.burnStart'), now);
           this.burning = true;
           break;
+        case 'delugeStarted':
+          this.hud.announce(
+            t('hud.deluge'),
+            t('hud.delugeSub'),
+            pick('quip.deluge'),
+            COLORS.lapis,
+            now,
+          );
+          break;
+        case 'waterRose':
+          if (!events.some((x) => x.e === 'delugeStarted')) this.hud.say(pick('quip.water'), now);
+          break;
         case 'kitchenGone':
           this.hud.say(pick('quip.kitchenGone'), now);
           break;

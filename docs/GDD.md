@@ -44,6 +44,7 @@
 - Annonce en pleine page enluminée (« Et les eaux montèrent… »).
 - Chaque fin de tour : niveau d'eau +48 px ; toutes les unités perdent 5 PV (option).
 - L'eau tue instantanément (noyade).
+- Précisions de programmation (2026-10-25) : valeurs dans `src/content/deluge.ts` (`MatchRules.deluge`, absent des vieux logs : pas de Déluge), réglables dans ⚙ Réglages ; les 5 PV par tour sont réglables, 0 les supprime. Le Déluge commence à la fin du tour N (ou du premier tour fini après 15 minutes de jeu) et l'eau monte dès cette fin de tour, depuis le bas de la carte (ou depuis le niveau d'eau de la carte, `waterLevel`). Un combattant se noie dès que ses pieds passent sous la surface, à tout instant ; on ne peut pas poser un combattant sous l'eau au placement. Tirs, reliquaires, barils, pots posés, cuisine et bête qui passent sous l'eau disparaissent. Rendu : bandes d'outremer et crêtes de vagues enroulées ; annonce « Et les eaux montèrent… ». Replay de référence `deluge`.
 
 ### 2.5 Le parchemin brûle (décidé le 2026-10-24)
 - Après **2 tours de table**, la carte prend feu **à ses deux extrémités**, comme une page de parchemin approchée d'une chandelle. À la fin de chaque tour de table, le feu avance de **60 px** de chaque côté (décidé le 2026-10-24, réduit de 120) (jusqu'au milieu de la carte au plus).
