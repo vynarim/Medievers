@@ -175,6 +175,8 @@ const STYLE = `
 #ui .help p, #ui .pause p { font-size: 17px; line-height: 1.5; margin: 0 0 10px; }
 #ui .pause { min-width: 360px; text-align: center; }
 #ui .pause .actions { flex-direction: column; align-items: stretch; }
+#ui .pause .house { font-family: var(--caps); font-size: 24px; display: flex; gap: 12px;
+  align-items: center; justify-content: center; margin: 4px 0 12px; }
 #ui .hidden { display: none !important; }
 `;
 

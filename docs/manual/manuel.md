@@ -132,7 +132,7 @@ La **masse d'armes** est jouable {{st:jeu}} : le bouton devient « Frapper » ; 
 | **Pioche** {{st:jeu}} | « Creuser » : creuse droit vers le bas pendant 3 s, environ 90 px dans la terre (180 pour un Sapeur), plus lentement dans la pierre, pas du tout dans la roche. Le temps du tour s'arrête pendant qu'on creuse | 2 |
 | **Sape** {{st:jeu}} | « Creuser » : un tunnel à plat, ou en biais à 45° vers le haut ou le bas selon la visée, pendant 4 s (environ 180 px, 360 pour un Sapeur) ; le combattant le suit | 2 |
 | **Échelle** | Pose une échelle de 200 px que tout le monde peut emprunter | 2 |
-| **Chausse-trape** {{st:jeu}} | « Poser » : le piège tombe juste devant vous. Il s'arme en 2 s puis saute sous le premier combattant qui marche dessus, ami ou ennemi : 40 dégâts dans un rayon de 50 px. Une explosion proche le fait sauter aussi. Seule la maison qui joue voit ses propres pièges (et ceux des autres quand c'est un Sapeur qui joue) | 2 |
+| **Chausse-trape** {{st:jeu}} | « Poser » : le piège tombe juste devant vous. Il s'arme en 2 s puis saute sous le premier combattant qui marche dessus, ami ou ennemi : 40 dégâts dans un rayon de 50 px. Une explosion proche le fait sauter aussi. Seule la maison qui joue voit ses propres pièges (et ceux des autres quand c'est un Sapeur qui joue), si le **brouillard des chausse-trapes** est actif ; sinon, tous les pièges sont visibles de tous | 2 |
 | **Miracle** | Vous téléporte sur un point libre ; votre tour s'arrête | 1 |
 | **Passer son tour** | — | ∞ |
 
@@ -226,6 +226,8 @@ Pour que les parties ne s'éternisent pas, **le Déluge** arrive après 20 tours
 | **Replays** | « Revoir la partie » sur la tapisserie de fin (ou à tout moment, depuis le début) ; « Revoir la dernière partie » et « Importer un replay… » sur l'écran de préparation ; pendant le replay : pause, vitesse ×1, ×2, ×4, depuis le début, **Exporter** (fichier JSON) et Quitter. Tous les pièges y sont visibles | {{st:jeu}} |
 
 **Régicide** (option) {{st:jeu}} : chaque maison a un Roi, et sa mort élimine toute la maison : ses autres combattants quittent aussitôt le champ.
+
+**Brouillard des chausse-trapes** (option, active par défaut) {{st:jeu}} : chaque maison ne voit que ses propres chausse-trapes. Pour que personne ne lorgne les pièges des autres, un écran **Passez la main** s'affiche chaque fois que le tour change de maison : le jeu s'arrête et aucun piège n'est dessiné tant que la maison suivante n'a pas pris l'appareil et touché **À nous la main !**. Sans brouillard, pas d'écran, et tous les pièges sont visibles de tous.
 
 **Préparer la bataille** {{st:jeu}} : avant la première partie, et ensuite par **Nouvelle partie…** (menu ☰ Pause, ou la tapisserie de fin), un écran permet de choisir les règles, le Régicide, le nombre de maisons (2 à 4) et, pour chacune, ses combattants (1 à 6) et leur classe. Le jeu s'en souvient ; **Recommencer** rejoue la même préparation.
 

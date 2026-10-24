@@ -88,7 +88,12 @@ export function showSetupScreen(
     );
     regicide.title = t('setup.regicide.tip');
     regicide.addEventListener('click', () => update({ ...setup, regicide: !setup.regicide }));
-    panel.append(el('h3', '', t('setup.mode')), regicide);
+    const fog = button(t(setup.fog ? 'setup.fog.on' : 'setup.fog.off'), setup.fog ? 'on' : '');
+    fog.title = t('setup.fog.tip');
+    fog.addEventListener('click', () => update({ ...setup, fog: !setup.fog }));
+    const modes = el('div', 'row');
+    modes.append(regicide, fog);
+    panel.append(el('h3', '', t('setup.mode')), modes);
 
     panel.append(el('h3', '', t('setup.houses')));
     setup.lineups.forEach((lineup, h) => {

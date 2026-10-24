@@ -20,6 +20,12 @@ export interface MatchSetup {
   readonly map: MapTheme;
   readonly scheme: SchemeId;
   readonly regicide: boolean;
+  /**
+   * Brouillard des chausse-trapes (GDD §6): each house sees only its own caltrops, and a « Passez
+   * la main » screen hides the field between two houses; off, every caltrop is in plain sight.
+   * Display only: the sim and the log never see it.
+   */
+  readonly fog: boolean;
   /** class of each unit of each house; its length is the number of houses */
   readonly lineups: readonly (readonly ClassId[])[];
 }
@@ -29,6 +35,7 @@ export function defaultSetup(custom: boolean): MatchSetup {
     map: 'valley',
     scheme: custom ? 'custom' : 'classic',
     regicide: false,
+    fog: true,
     lineups: [defaultLineup(4, false), defaultLineup(4, false)],
   };
 }
@@ -56,7 +63,8 @@ export function fixSetup(s: MatchSetup): MatchSetup {
   const lineups = s.lineups.slice(0, MAX_HOUSES).map((l) => fixLineup(l, s.regicide));
   while (lineups.length < MIN_HOUSES) lineups.push(defaultLineup(4, s.regicide));
   const map = MAP_THEMES.includes(s.map) ? s.map : 'valley';
-  return { map, scheme, regicide: s.regicide, lineups };
+  // A setup saved before the option has none: the fog, as before.
+  return { map, scheme, regicide: s.regicide, fog: s.fog !== false, lineups };
 }
 
 export function loadSetup(custom: boolean): MatchSetup {

@@ -89,6 +89,11 @@ export class GameUi {
   private readonly help: HTMLElement;
   private readonly settings: HTMLElement;
   private readonly pause: HTMLElement;
+  /** « Passez la main » between two houses (caltrop fog, GDD §6), over its own veil */
+  private readonly handover: HTMLElement;
+  private readonly handoverVeil: HTMLElement;
+  /** called once the house whose turn it is has taken the device */
+  private handoverDone: (() => void) | null = null;
   /** the modal on screen, if any */
   private open: HTMLElement | null = null;
   private selectedUnit: number | null = null;
@@ -243,6 +248,8 @@ export class GameUi {
       this.click(button(`⚙ ${t('ui.settings')}`), () => this.openSettings()),
     );
     this.pause.append(el('h2', '', t('pause.title')), el('p', '', t('pause.body')), pauseActions);
+    this.handoverVeil = el('div', 'veil hidden');
+    this.handover = this.modal('pause');
     this.root.append(
       bar,
       sys,
@@ -254,6 +261,8 @@ export class GameUi {
       this.help,
       this.settings,
       this.pause,
+      this.handoverVeil,
+      this.handover,
     );
   }
 
@@ -315,13 +324,55 @@ export class GameUi {
     this.resetView.classList.toggle('hidden', !away);
   }
 
-  /** True while a menu that stops the clock is open (pause, help, settings). */
+  /** True while a menu that stops the clock is open (pause, help, settings, « Passez la main »). */
   get blocking(): boolean {
-    return this.open !== null && this.open !== this.arsenal;
+    return this.handingOver || (this.open !== null && this.open !== this.arsenal);
   }
 
-  /** Escape: closes the open menu, or opens the pause menu. */
+  /** True while the « Passez la main » screen waits for the next house. */
+  get handingOver(): boolean {
+    return this.handoverDone !== null;
+  }
+
+  /**
+   * « Passez la main à … » (GDD §6): the next house takes the device before its caltrops show.
+   * Only its button closes it; `done` runs then.
+   */
+  showHandover(team: number, done: () => void): void {
+    this.show(null);
+    this.selectUnit(null);
+    this.handoverDone = done;
+    const f = FACTIONS[team];
+    const house = f ? t(f.nameKey) : '';
+    const name = el('div', 'house');
+    name.append(
+      shield(f?.primary ?? COLORS.encre, f?.secondary ?? COLORS.or),
+      el('span', '', house),
+    );
+    name.style.color = css(f?.primary ?? COLORS.encre);
+    const go = this.click(button(t('handover.go'), 'fire'), () => {
+      this.handover.classList.add('hidden');
+      this.handoverVeil.classList.add('hidden');
+      this.handoverDone = null;
+      done();
+    });
+    go.style.background = css(f?.primary ?? COLORS.vermillon);
+    go.style.borderColor = css(f?.primary ?? COLORS.vermillon);
+    const actions = el('div', 'actions');
+    actions.append(go);
+    this.handover.replaceChildren(
+      el('h2', '', t('handover.title')),
+      name,
+      el('p', '', t('handover.body', { house })),
+      actions,
+    );
+    this.handover.classList.remove('hidden');
+    this.handoverVeil.classList.remove('hidden');
+  }
+
+  /** Escape: closes the open menu, or opens the pause menu; never skips « Passez la main ». */
   escape(): void {
+    if (this.handingOver) return;
     this.show(this.open ? null : this.pause);
   }
 
