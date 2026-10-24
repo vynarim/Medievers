@@ -9,10 +9,16 @@ export function weaponLines(w: WeaponDef): string[] {
       : w.windPct < 100
         ? t('weapon.wind.weak')
         : t('weapon.wind.full');
-  return [
+  const lines = [
     `${t('weapon.damage')} : ${w.damage}`,
     `${t('weapon.radius')} : ${w.explosionRadius > 0 ? `${w.explosionRadius} px` : '—'}`,
     `${t('weapon.wind')} : ${wind}`,
     `${t('weapon.ammo')} : ${w.ammo < 0 ? t('weapon.unlimited') : w.ammo}`,
   ];
+  if (w.fixedPower) lines.push(t('weapon.fixedPower'));
+  if (w.fragments) {
+    lines.push(t('weapon.fragments', { n: w.fragments.count, damage: w.fragments.damage }));
+  }
+  if (w.reach) lines.push(t('weapon.reach', { px: w.reach }));
+  return lines;
 }

@@ -49,7 +49,7 @@ function weaponFields(w: WeaponDef): TuningField[] {
   if (w.chipRadius !== undefined) {
     fields.push(field(`${p}.chipRadius`, 'tuning.chipRadius', 'units.px', 1, 1, 0, 30));
   }
-  if (w.behavior === 'fusedBouncer') {
+  if (w.behavior === 'fusedBouncer' || w.behavior === 'cluster') {
     fields.push(
       field(`${p}.explosionRadius`, 'tuning.explosionRadius', 'units.px', 1, 1, 1, 300),
       field(`${p}.bouncePct`, 'tuning.bouncePct', 'units.percent', 1, 5, 0, 100),

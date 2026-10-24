@@ -292,7 +292,8 @@ export class GameUi {
     const skipLabel = phase === 'retreat' ? t('ui.endTurn') : t('ui.skip');
     if (this.skip.textContent !== skipLabel) this.skip.textContent = skipLabel;
     const def = view.rules.weapons.find((w) => w.id === view.turn.weapon);
-    this.fuses.classList.toggle('hidden', def?.behavior !== 'fusedBouncer');
+    const fused = def?.behavior === 'fusedBouncer' || def?.behavior === 'cluster';
+    this.fuses.classList.toggle('hidden', !fused);
     const fuseSeconds = Math.round((view.turn.fuse || (def?.defaultFuse ?? 0)) / 60);
     for (const b of this.fuses.querySelectorAll('button')) {
       b.classList.toggle('on', b.dataset.fuse === String(fuseSeconds));

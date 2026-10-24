@@ -2,6 +2,7 @@
 // so a game log replays with the values it was played with. Times in ticks (60 per second).
 import { BARREL_RULES, type BarrelRules } from './barrels.ts';
 import { BURN_RULES, type BurnRules } from './burn.ts';
+import { CRATE_RULES, type CrateRules } from './crates.ts';
 import { KITCHEN_RULES, type KitchenRules } from './kitchen.ts';
 import { UNIT_RULES, type UnitRules } from './units.ts';
 import { WEAPONS, type WeaponDef, type WeaponId } from './weapons.ts';
@@ -67,6 +68,8 @@ export interface MatchRules {
   readonly burn?: BurnRules;
   /** powder barrels on the map (GDD §4.6); absent from older logs: none */
   readonly barrels?: BarrelRules;
+  /** reliquaries brought down by angels (GDD §4.5); absent from older logs: none */
+  readonly crates?: CrateRules;
 }
 
 /** « Classique » rules scheme (GDD §6). */
@@ -91,6 +94,7 @@ export const CLASSIC_RULES: MatchRules = {
   kitchen: KITCHEN_RULES,
   burn: BURN_RULES,
   barrels: BARREL_RULES,
+  crates: CRATE_RULES,
 };
 
 /** Index of a weapon in the match arsenal; throws for a weapon the match does not have. */

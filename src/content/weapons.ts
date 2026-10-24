@@ -1,12 +1,23 @@
 // Weapon definitions (GDD §4). Speeds in sub-px/tick (256 = 1 px), radii in px, times in ticks.
 // Only the weapons implemented in src/sim/weapons are listed; the rest arrive with M2 and M4.
 
-export type WeaponId = 'bow' | 'sling' | 'greekFire';
+export type WeaponId = 'bow' | 'sling' | 'greekFire' | 'crossbow' | 'pitchPot' | 'mace';
+
+/** Fragments a cluster weapon throws when it bursts (pot de poix, GDD §4.1). */
+export interface FragmentDef {
+  readonly count: number;
+  /** HP at the centre of each fragment's blast */
+  readonly damage: number;
+  /** px: blast radius of each fragment */
+  readonly radius: number;
+  /** sub-px/tick: launch speed of the fragments */
+  readonly speed: number;
+}
 
 export interface WeaponDef {
   readonly id: WeaponId;
   /** behaviour implemented in src/sim/weapons */
-  readonly behavior: 'directHit' | 'fusedBouncer';
+  readonly behavior: 'directHit' | 'fusedBouncer' | 'cluster' | 'melee';
   /** px; 0 = point projectile */
   readonly projectileRadius: number;
   /** percent of wind acceleration applied (GDD §4.1 « Vent ») */
@@ -30,6 +41,12 @@ export interface WeaponDef {
   readonly defaultFuse: number;
   /** starting ammunition; -1 = unlimited */
   readonly ammo: number;
+  /** the power is always full: only the angle is aimed (crossbow) */
+  readonly fixedPower?: boolean;
+  /** cluster: the fragments of the burst */
+  readonly fragments?: FragmentDef;
+  /** px: melee reach, from the body centre along the aim */
+  readonly reach?: number;
 }
 
 export const WEAPONS: readonly WeaponDef[] = [
@@ -72,6 +89,49 @@ export const WEAPONS: readonly WeaponDef[] = [
     knockbackPct: 100,
     bouncePct: 45,
     defaultFuse: 3 * 60,
+    ammo: 3,
+  },
+  {
+    id: 'crossbow',
+    behavior: 'directHit',
+    projectileRadius: 0,
+    windPct: 40,
+    maxSpeed: 30 * 256,
+    damage: 45,
+    explosionRadius: 0,
+    chipRadius: 4,
+    knockbackPct: 80,
+    bouncePct: 0,
+    defaultFuse: 0,
+    ammo: 2,
+    fixedPower: true,
+  },
+  {
+    id: 'pitchPot',
+    behavior: 'cluster',
+    projectileRadius: 5,
+    windPct: 0,
+    maxSpeed: 17 * 256,
+    damage: 30,
+    explosionRadius: 50,
+    knockbackPct: 100,
+    bouncePct: 40,
+    defaultFuse: 3 * 60,
+    ammo: 1,
+    fragments: { count: 5, damage: 15, radius: 30, speed: 6 * 256 },
+  },
+  {
+    id: 'mace',
+    behavior: 'melee',
+    projectileRadius: 0,
+    windPct: 0,
+    maxSpeed: 0,
+    damage: 30,
+    explosionRadius: 0,
+    knockbackPct: 320,
+    bouncePct: 0,
+    defaultFuse: 0,
     ammo: -1,
+    reach: 34,
   },
 ];

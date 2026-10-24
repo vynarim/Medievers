@@ -33,6 +33,17 @@ export type SimEvent =
   | { readonly e: 'kitchenUsed'; readonly unitId: number; readonly heal: number }
   | { readonly e: 'kitchenGone' }
   | { readonly e: 'barrelLost'; readonly id: number }
+  /** px: column where the angel brings a reliquary down */
+  | { readonly e: 'crateDropped'; readonly id: number; readonly x: number }
+  | {
+      readonly e: 'crateTaken';
+      readonly id: number;
+      readonly unitId: number;
+      readonly kind: number;
+      readonly weapon: number;
+      readonly heal: number;
+    }
+  | { readonly e: 'crateBurst'; readonly id: number; readonly trap: boolean }
   /** px burnt away at each end of the map, after the fire spread */
   | { readonly e: 'burnSpread'; readonly px: number }
   | { readonly e: 'gameOver'; readonly winner: number };

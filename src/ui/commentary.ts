@@ -145,6 +145,31 @@ export class Commentary {
           }
           break;
         }
+        case 'crateDropped':
+          this.hud.say(pick('quip.crate'), now);
+          break;
+        case 'crateTaken': {
+          const name = unitName(e.unitId);
+          const w = v.rules.weapons[e.weapon];
+          if (e.kind === 1) {
+            this.hud.say(pick('quip.crateBalm', { name, heal: e.heal }), now);
+            const u = v.units.find((x) => x.id === e.unitId);
+            if (u && e.heal > 0) {
+              pops.push({
+                x: u.x / SUBPX,
+                y: u.y / SUBPX - UNIT_HEIGHT - 20,
+                text: `+${e.heal}`,
+                kind: 'heal',
+              });
+            }
+          } else if (w) {
+            this.hud.say(pick('quip.crateWeapon', { name, weapon: t(`weapons.${w.id}`) }), now);
+          }
+          break;
+        }
+        case 'crateBurst':
+          if (e.trap) this.hud.say(pick('quip.crateTrap'), now);
+          break;
         case 'burnSpread':
           this.hud.say(pick(this.burning ? 'quip.burn' : 'quip.burnStart'), now);
           this.burning = true;

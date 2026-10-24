@@ -17,6 +17,7 @@ import type { Mask } from '../sim/terrain/mask.ts';
 import type { Terrain } from '../sim/terrain/terrain.ts';
 import { UNIT_HALF_WIDTH, UNIT_HEIGHT, type Unit } from '../sim/units/unit.ts';
 import { BARREL_HEIGHT, BARREL_WIDTH } from '../content/barrels.ts';
+import { CRATE_HEIGHT, CRATE_WIDTH } from '../content/crates.ts';
 import { Commentary, type Pop } from '../ui/commentary.ts';
 import { FONT_CAPS, FONT_TEXT, FONT_TITLE } from '../ui/fonts.ts';
 import { GameUi, loadOverrides } from '../ui/game-ui.ts';
@@ -555,6 +556,7 @@ export class BattleScene extends Phaser.Scene {
     };
     for (const u of v.units) put(`u${u.id}`, u.x, u.y);
     for (const s of v.shots) put(`s${s.projectile.id}`, s.projectile.x, s.projectile.y);
+    for (const c of v.crates) put(`c${c.id}`, c.x, c.y);
     for (const key of this.interp.keys()) if (!seen.has(key)) this.interp.delete(key);
   }
 
@@ -616,6 +618,7 @@ export class BattleScene extends Phaser.Scene {
 
     this.drawKitchen(g, time);
     this.drawBarrels(g);
+    this.drawCrates(g, alpha, time);
     for (const u of v.units) {
       const label = this.labels.get(u.id);
       const [x, y] = this.pos(`u${u.id}`, alpha, u.x, u.y);
@@ -663,7 +666,15 @@ export class BattleScene extends Phaser.Scene {
       const speed = Math.hypot(p.vx, p.vy) || 1;
       const dx = p.vx / speed;
       const dy = p.vy / speed;
-      if (s.weapon === 'bow') {
+      if (s.fragment) {
+        // A drop of burning pitch.
+        g.fillStyle(COLORS.or, 0.9);
+        g.fillCircle(x - dx * 4, y - dy * 4, 4);
+        g.fillStyle(COLORS.encre, 1);
+        g.fillCircle(x, y, 3);
+        continue;
+      }
+      if (s.weapon === 'bow' || s.weapon === 'crossbow') {
         g.lineStyle(4, COLORS.terreOmbre, 1);
         g.lineBetween(x - dx * 34, y - dy * 34, x, y);
         g.fillStyle(COLORS.encre, 1);
@@ -679,7 +690,7 @@ export class BattleScene extends Phaser.Scene {
         );
       } else {
         const r = Math.max(5, p.radius);
-        const fire = s.weapon === 'greekFire';
+        const fire = s.weapon === 'greekFire' || s.weapon === 'pitchPot';
         if (fire) {
           const flicker = 1 + Math.sin(time / 40) * 0.25;
           g.fillStyle(COLORS.or, 0.9);
@@ -807,6 +818,51 @@ export class BattleScene extends Phaser.Scene {
         g.fillStyle(COLORS.or, 0.95);
         g.fillTriangle(x, y - 6, x, y + 6, x + inward * h * 0.55 - flick, y);
       }
+    }
+  }
+
+  /** Reliquaries: a gilt coffer with a cross, under an angel's wings while it comes down. */
+  private drawCrates(g: Phaser.GameObjects.Graphics, alpha: number, time: number): void {
+    for (const c of this.sim.view().crates) {
+      const [x, y] = this.pos(`c${c.id}`, alpha, c.x, c.y);
+      const w = CRATE_WIDTH;
+      const h = CRATE_HEIGHT;
+      if (!c.landed) {
+        // Wings flapping above the coffer, and the cords.
+        const flap = Math.sin(time / 160) * 8;
+        g.fillStyle(COLORS.ceruse, 1);
+        g.lineStyle(2, COLORS.encre, 1);
+        for (const side of [-1, 1]) {
+          g.fillTriangle(
+            x,
+            y - h - 26,
+            x + side * 34,
+            y - h - 34 - flap,
+            x + side * 18,
+            y - h - 16,
+          );
+          g.strokeTriangle(
+            x,
+            y - h - 26,
+            x + side * 34,
+            y - h - 34 - flap,
+            x + side * 18,
+            y - h - 16,
+          );
+        }
+        g.fillStyle(COLORS.carnation, 1);
+        g.fillCircle(x, y - h - 30, 6);
+        g.lineStyle(1, COLORS.encre, 0.8);
+        g.lineBetween(x - 8, y - h - 20, x - w / 2, y - h);
+        g.lineBetween(x + 8, y - h - 20, x + w / 2, y - h);
+      }
+      g.fillStyle(COLORS.or, 1);
+      g.lineStyle(3, COLORS.encre, 1);
+      g.fillRect(x - w / 2, y - h, w, h);
+      g.strokeRect(x - w / 2, y - h, w, h);
+      g.fillStyle(COLORS.vermillon, 1);
+      g.fillRect(x - 2, y - h + 4, 4, h - 8);
+      g.fillRect(x - 7, y - h + 8, 14, 4);
     }
   }
 

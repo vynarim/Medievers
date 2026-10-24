@@ -1,0 +1,275 @@
+{
+ "version": 1,
+ "config": {
+  "rules": {
+   "turn": {
+    "transitionTicks": 120,
+    "actionTicks": 2700,
+    "retreatTicks": 180,
+    "maxResolutionTicks": 1800,
+    "settleTicks": 120,
+    "moveAfterShot": true,
+    "retreatMaxTicks": 300,
+    "freeSelect": true,
+    "noRepeat": true
+   },
+   "unitsPerTeam": 4,
+   "startHp": 100,
+   "unit": {
+    "walkSpeed": 384,
+    "maxStep": 12,
+    "slopeWindow": 7,
+    "jumpForward": {
+     "vx": 2100,
+     "vy": -2304
+    },
+    "jumpBack": {
+     "vx": 256,
+     "vy": -2688
+    },
+    "fallSafeHeight": 160,
+    "fallPxPerHp": 8,
+    "fallMaxDamage": 30,
+    "moveBudget": 280,
+    "slopeTakeoff": true,
+    "turnTicks": 12
+   },
+   "wind": {
+    "max": 10,
+    "accelPerUnit": 2
+   },
+   "explosion": {
+    "knockbackPerHp": 40,
+    "liftPct": 35
+   },
+   "weapons": [
+    {
+     "id": "bow",
+     "behavior": "directHit",
+     "projectileRadius": 0,
+     "windPct": 100,
+     "maxSpeed": 6144,
+     "damage": 35,
+     "explosionRadius": 0,
+     "chipRadius": 3,
+     "knockbackPct": 60,
+     "bouncePct": 0,
+     "defaultFuse": 0,
+     "ammo": -1
+    },
+    {
+     "id": "sling",
+     "behavior": "directHit",
+     "projectileRadius": 2,
+     "windPct": 100,
+     "maxSpeed": 5120,
+     "damage": 25,
+     "explosionRadius": 0,
+     "chipRadius": 5,
+     "knockbackPct": 250,
+     "bouncePct": 0,
+     "defaultFuse": 0,
+     "ammo": -1
+    },
+    {
+     "id": "greekFire",
+     "behavior": "fusedBouncer",
+     "projectileRadius": 5,
+     "windPct": 0,
+     "maxSpeed": 4608,
+     "damage": 45,
+     "explosionRadius": 60,
+     "knockbackPct": 100,
+     "bouncePct": 45,
+     "defaultFuse": 180,
+     "ammo": 3
+    },
+    {
+     "id": "crossbow",
+     "behavior": "directHit",
+     "projectileRadius": 0,
+     "windPct": 40,
+     "maxSpeed": 7680,
+     "damage": 45,
+     "explosionRadius": 0,
+     "chipRadius": 4,
+     "knockbackPct": 80,
+     "bouncePct": 0,
+     "defaultFuse": 0,
+     "ammo": 2,
+     "fixedPower": true
+    },
+    {
+     "id": "pitchPot",
+     "behavior": "cluster",
+     "projectileRadius": 5,
+     "windPct": 0,
+     "maxSpeed": 4352,
+     "damage": 30,
+     "explosionRadius": 50,
+     "knockbackPct": 100,
+     "bouncePct": 40,
+     "defaultFuse": 180,
+     "ammo": 1,
+     "fragments": {
+      "count": 5,
+      "damage": 15,
+      "radius": 30,
+      "speed": 1536
+     }
+    },
+    {
+     "id": "mace",
+     "behavior": "melee",
+     "projectileRadius": 0,
+     "windPct": 0,
+     "maxSpeed": 0,
+     "damage": 30,
+     "explosionRadius": 0,
+     "knockbackPct": 320,
+     "bouncePct": 0,
+     "defaultFuse": 0,
+     "ammo": -1,
+     "reach": 34
+    }
+   ],
+   "kitchen": {
+    "healHp": 30,
+    "chanceStartPermille": 250,
+    "chanceDecayPct": 80,
+    "chanceFloorPermille": 20,
+    "lifeRounds": 2,
+    "placeTolerancePct": 10
+   },
+   "burn": {
+    "startRound": 2,
+    "advancePx": 120,
+    "damage": 20
+   },
+   "barrels": {
+    "count": 5,
+    "damage": 40,
+    "radius": 70,
+    "chainDelay": 8
+   },
+   "crates": {
+    "chancePermille": 300,
+    "maxOnMap": 3,
+    "trapPermille": 100,
+    "balmPermille": 350,
+    "balmHp": 25,
+    "fallSpeed": 256,
+    "windDrift": 20,
+    "blastDamage": 15,
+    "blastRadius": 40,
+    "trapDamage": 35,
+    "trapRadius": 60
+   }
+  },
+  "teams": [
+   {
+    "spawns": [
+     250,
+     350
+    ]
+   },
+   {
+    "spawns": [
+     850,
+     950
+    ]
+   }
+  ]
+ },
+ "seed": 1214,
+ "mapId": "flat",
+ "commands": [
+  [
+   121,
+   {
+    "t": "selectWeapon",
+    "id": "crossbow"
+   }
+  ],
+  [
+   121,
+   {
+    "t": "aim",
+    "angle": 4060
+   }
+  ],
+  [
+   121,
+   {
+    "t": "fire",
+    "power": 1
+   }
+  ],
+  [
+   663,
+   {
+    "t": "selectWeapon",
+    "id": "crossbow"
+   }
+  ],
+  [
+   663,
+   {
+    "t": "aim",
+    "angle": 2084
+   }
+  ],
+  [
+   663,
+   {
+    "t": "fire",
+    "power": 1
+   }
+  ],
+  [
+   1205,
+   {
+    "t": "selectWeapon",
+    "id": "crossbow"
+   }
+  ],
+  [
+   1205,
+   {
+    "t": "aim",
+    "angle": 4060
+   }
+  ],
+  [
+   1205,
+   {
+    "t": "fire",
+    "power": 1
+   }
+  ],
+  [
+   1747,
+   {
+    "t": "selectWeapon",
+    "id": "crossbow"
+   }
+  ],
+  [
+   1747,
+   {
+    "t": "aim",
+    "angle": 2084
+   }
+  ],
+  [
+   1747,
+   {
+    "t": "fire",
+    "power": 1
+   }
+  ]
+ ],
+ "endTick": 2168,
+ "description": "Crossbow (GDD §4.1): two bolts at fixed power across the flat map, with wind.",
+ "expectedHash": "a390b0d3"
+}

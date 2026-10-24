@@ -22,6 +22,7 @@ import {
   type Unit,
 } from './units/unit.ts';
 import { blastReachesBarrels, burnBarrels, placeBarrels, stepBarrels } from './barrels.ts';
+import { blastReachesCrates, burnCrates, maybeDropCrate, stepCrates } from './crates.ts';
 import { kitchenTurn, inKitchen, stepKitchen, useKitchen } from './kitchen.ts';
 import { fire, stepShots } from './weapons/weapons.ts';
 
@@ -128,6 +129,7 @@ function createState(config: MatchConfig, seed: number, mask: Mask): SimState {
     nextEntityId: nextId,
     kitchen: null,
     barrels: [],
+    crates: [],
     burnPx: 0,
     kitchenCounts: teams.map(() => 0),
     winner: null,
@@ -311,11 +313,13 @@ function advanceTick(s: SimState, phaseJustSet: boolean, events: SimEvent[]): vo
     }
     for (const h of res.hits) events.push({ e: 'unitDamaged', unitId: h.unitId, damage: h.damage });
     blastReachesBarrels(s, e);
+    blastReachesCrates(s, e, events);
     // A blast that reaches the kitchen counts as a touch (GDD §4.9).
     if (inKitchen(s, e.x, e.y, e.radius * SUBPX)) useKitchen(s, events);
   }
   stepKitchen(s, events);
   stepBarrels(s, events);
+  stepCrates(s, events);
 
   const hurt = active !== undefined && (active.hp < hpBefore || !active.alive);
   advancePhase(s, hurt, phaseJustSet, events);
@@ -448,6 +452,7 @@ function burnTurn(s: SimState, events: SimEvent[]): void {
   const n = s.turn.number;
   const rounds = idiv(n, s.teams.length);
   burnBarrels(s);
+  burnCrates(s, events);
   if (n % s.teams.length === 0 && rounds >= r.startRound && s.burnPx < width >> 1) {
     s.burnPx = Math.min(width >> 1, s.burnPx + r.advancePx);
     events.push({ e: 'burnSpread', px: s.burnPx });
@@ -463,6 +468,7 @@ function burnTurn(s: SimState, events: SimEvent[]): void {
 
 function endTurn(s: SimState, events: SimEvent[]): void {
   burnTurn(s, events);
+  maybeDropCrate(s, events);
   callDeaths(s, events);
   const alive = s.teams.filter((team) => teamAlive(s, team));
   if (alive.length <= 1) {
@@ -497,6 +503,8 @@ function hashState(s: SimState): number {
     for (const v of [p.id, p.ownerId, p.x, p.y, p.vx, p.vy, p.age, p.clearOfOwner ? 1 : 0]) int(v);
     int(weaponIndexIn(s.rules, shot.weapon));
     int(shot.fuse);
+    // Only fragments carry the flag, so logs without cluster weapons keep their hashes.
+    if (shot.fragment) int(1);
   }
   int(s.explosions.items.length);
   int(s.explosions.nextSeq);
@@ -530,6 +538,11 @@ function hashState(s: SimState): number {
   if (s.rules.unit.turnTicks !== undefined) int(t.turnHold);
   if (s.rules.turn.noRepeat) int(t.restingUnitId);
   if (s.rules.burn) int(s.burnPx);
+  if (s.rules.crates) {
+    int(s.crates.length);
+    for (const c of s.crates)
+      for (const v of [c.id, c.x, c.y, c.kind, c.weapon, c.landed ? 1 : 0]) int(v);
+  }
   if (s.rules.barrels) {
     int(s.barrels.length);
     for (const b of s.barrels) for (const v of [b.id, b.x, b.y]) int(v);

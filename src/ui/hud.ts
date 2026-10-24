@@ -128,7 +128,7 @@ export class Hud {
     const seconds = timed ? Math.ceil(turn.phaseTicks / TICKS_PER_SECOND) : null;
     const def = v.rules.weapons.find((w) => w.id === turn.weapon);
     const fuse =
-      def?.behavior === 'fusedBouncer'
+      def?.behavior === 'fusedBouncer' || def?.behavior === 'cluster'
         ? Math.round((turn.fuse || def.defaultFuse) / TICKS_PER_SECOND)
         : null;
     const hp = v.teams.map((team) =>

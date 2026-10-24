@@ -9,3 +9,4 @@ export * from './factions.ts';
 export * from './kitchen.ts';
 export * from './burn.ts';
 export * from './barrels.ts';
+export * from './crates.ts';

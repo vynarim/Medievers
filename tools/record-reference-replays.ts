@@ -3,6 +3,7 @@
 // Existing files are kept unless --force is given: a reference hash only changes after an
 // intended rule change, with `regen-hash: <reason>` in the commit message (.claude/rules/tests.md).
 import { existsSync, writeFileSync } from 'node:fs';
+import { CRATE_RULES } from '../src/content/crates.ts';
 import { KITCHEN_RULES } from '../src/content/kitchen.ts';
 import { CLASSIC_RULES } from '../src/content/rules.ts';
 import { formatHash, type MatchConfig, type ReplayFile } from '../src/sim/index.ts';
@@ -163,6 +164,96 @@ const SCRIPTS: readonly Script[] = [
           { t: 'selectWeapon', id: pot ? 'greekFire' : 'sling' },
           { t: 'aim', angle: team === 0 ? 3700 - turn * 11 : 2490 + turn * 11 },
           { t: 'fire', power: 700 + turn * 19 },
+        ]);
+        r.until('transition');
+      }
+    },
+  },
+  {
+    name: 'crossbow',
+    description: 'Crossbow (GDD §4.1): two bolts at fixed power across the flat map, with wind.',
+    mapId: 'flat',
+    seed: 1214,
+    config: { rules: CLASSIC_RULES, teams: [{ spawns: [250, 350] }, { spawns: [850, 950] }] },
+    play: (r) => {
+      for (let turn = 0; turn < 4; turn++) {
+        r.until('action');
+        const team = r.sim.view().turn.activeTeam;
+        r.step([
+          { t: 'selectWeapon', id: 'crossbow' },
+          { t: 'aim', angle: team === 0 ? 4060 : 2084 },
+          { t: 'fire', power: 1 },
+        ]);
+        r.until('transition');
+      }
+    },
+  },
+  {
+    name: 'pitch-pot',
+    description: 'Pot de poix (GDD §4.1): a cluster pot bursting into five burning drops.',
+    mapId: 'flat',
+    seed: 1415,
+    config: { rules: CLASSIC_RULES, teams: [{ spawns: [250, 350] }, { spawns: [850, 950] }] },
+    play: (r) => {
+      for (let turn = 0; turn < 2; turn++) {
+        r.until('action');
+        const team = r.sim.view().turn.activeTeam;
+        r.step([
+          { t: 'selectWeapon', id: 'pitchPot' },
+          { t: 'setFuse', seconds: 3 },
+          { t: 'aim', angle: team === 0 ? 3600 : 2544 },
+          { t: 'fire', power: 760 },
+        ]);
+        r.until('transition');
+      }
+    },
+  },
+  {
+    name: 'mace',
+    description: 'Mace (GDD §4.3): units walk up to each other and club the enemy along the aim.',
+    mapId: 'flat',
+    seed: 1302,
+    config: { rules: CLASSIC_RULES, teams: [{ spawns: [500] }, { spawns: [620] }] },
+    play: (r) => {
+      for (let turn = 0; turn < 4; turn++) {
+        r.until('action');
+        const team = r.sim.view().turn.activeTeam;
+        const dir = team === 0 ? 1 : -1;
+        r.step([{ t: 'move', dir }]);
+        r.steps(40);
+        r.step([
+          { t: 'move', dir: 0 },
+          { t: 'selectWeapon', id: 'mace' },
+          { t: 'aim', angle: team === 0 ? 3900 : 2240 },
+          { t: 'fire', power: 0 },
+        ]);
+        r.until('transition');
+      }
+    },
+  },
+  {
+    name: 'reliquaries',
+    description:
+      'Reliquaries (GDD §4.5), one at every chance: they come down with the wind, units walk ' +
+      'into them, slings burst them.',
+    mapId: 'hills',
+    seed: 1099,
+    config: {
+      rules: { ...CLASSIC_RULES, crates: { ...CRATE_RULES, chancePermille: 1000 } },
+      teams: [{ spawns: [300, 600] }, { spawns: [1000, 1300] }],
+    },
+    play: (r) => {
+      for (let turn = 0; turn < 8; turn++) {
+        r.until('action');
+        const team = r.sim.view().turn.activeTeam;
+        const dir = team === 0 ? 1 : -1;
+        r.step([{ t: 'move', dir }]);
+        r.steps(90);
+        r.step([
+          { t: 'move', dir: 0 },
+          { t: 'selectWeapon', id: 'sling' },
+          { t: 'aim', angle: team === 0 ? 3800 - turn * 20 : 2340 + turn * 20 },
+          { t: 'fire', power: 640 + turn * 30 },
         ]);
         r.until('transition');
       }

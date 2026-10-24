@@ -35,6 +35,8 @@ export interface FlyingShot {
   readonly weapon: WeaponId;
   /** ticks left before a fused weapon explodes; 0 = no fuse */
   fuse: number;
+  /** a fragment of a cluster weapon: explodes where it lands */
+  readonly fragment?: boolean;
 }
 
 export interface TurnState {
@@ -84,6 +86,20 @@ export interface Barrel {
   y: number;
 }
 
+/** Reliquary (GDD §4.5). kind: 0 weapon, 1 balm, 2 trap (content/crates.ts CrateKind). */
+export interface Crate {
+  readonly id: number;
+  /** sub-px: centre of its base */
+  x: number;
+  /** sub-px: base */
+  y: number;
+  readonly kind: number;
+  /** index in rules.weapons of the weapon a weapon coffer holds; -1 otherwise */
+  readonly weapon: number;
+  /** it has touched the ground: no more wind drift */
+  landed: boolean;
+}
+
 export interface SimState {
   tick: number;
   readonly prng: PrngState;
@@ -100,6 +116,8 @@ export interface SimState {
   kitchen: KitchenState | null;
   /** sorted by id */
   barrels: Barrel[];
+  /** sorted by id */
+  readonly crates: Crate[];
   /** px burnt away at each end of the map (rules.burn); 0 without it */
   burnPx: number;
   /** kitchens that appeared on each team's turn, for fairness (GDD §4.9) */

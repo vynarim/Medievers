@@ -92,10 +92,10 @@ Toutes les valeurs sont des défauts dans `src/content/weapons.ts`, ajustables p
 | Arme | Type | Dégâts max | Rayon expl. | Vent | Munitions | Notes |
 |---|---|---|---|---|---|---|
 | **Arc** | Projectile tendu | 35 | 0 (impact) | Oui | ∞ | Flèche fichée dans le terrain ; 1 seul tir |
-| **Arbalète** | Projectile très tendu | 45 | 0 | Faible (×0,4) | 3 | Puissance fixe, angle seul |
+| **Arbalète** | Projectile très tendu | 45 | 0 | Faible (×0,4) | 2 | Puissance fixe, angle seul ; le carreau creuse 4 px (programmée le 2026-10-24) |
 | **Fronde** | Projectile balistique | 25 + recul fort | 0 | Oui | ∞ | Recul important : arme d'éjection |
-| **Pot de feu grégeois** | Lancé, rebondit | 45 | 60 px | Non | ∞ | Mèche réglable ; laisse des flammes 3 tours. **Mèche en tours** (décidé le 2026-10-24, à programmer) : 1 = explose à ce tour (après 3 s), 2 = au tour suivant, 3 = dans deux tours ; le pot reste posé, visible avec son compte, et peut être déplacé par les explosions |
-| **Pot de poix** | Lancé, à fragmentation | 30 + 5×15 | 50 / 30 | Non | 2 | Éclate en 5 gouttes enflammées |
+| **Pot de feu grégeois** | Lancé, rebondit | 45 | 60 px | Non | 3 (rareté, décidé le 2026-10-24) | Mèche réglable ; laisse des flammes 3 tours. **Mèche en tours** (décidé le 2026-10-24, à programmer) : 1 = explose à ce tour (après 3 s), 2 = au tour suivant, 3 = dans deux tours ; le pot reste posé, visible avec son compte, et peut être déplacé par les explosions |
+| **Pot de poix** | Lancé, à fragmentation | 30 + 5×15 | 50 / 30 | Non | 1 | Rebondit comme le feu grégeois ; à la fin de la mèche il explose et projette 5 gouttes en éventail vers le haut, chacune explose là où elle tombe (programmé le 2026-10-24) |
 | **Cochon enflammé** | Marcheur | 70 | 90 px | Non | 1 | Avance seul, saute les obstacles, explose sur commande ou au timer de 8 s |
 | **Ruche** | Lancé | 5/tick de contact | — | Oui | 1 | Libère un essaim qui poursuit l'unité la plus proche 4 s |
 | **Faucon** | Tête chercheuse | 50 | 50 px | Oui | 1 | Cible désignée au toucher/clic, puis vol |
@@ -110,7 +110,7 @@ Toutes les valeurs sont des défauts dans `src/content/weapons.ts`, ajustables p
 | Arme | Dégâts | Recul | Notes |
 |---|---|---|---|
 | **Épée** | 25 | Faible | Frappe frontale |
-| **Masse d'armes** | 30 | Fort, angle visé | Équivalent batte de baseball |
+| **Masse d'armes** | 30 | Fort, angle visé | Équivalent batte de baseball : frappe à 34 px dans la direction visée, recul ×3,2 (programmée le 2026-10-24) |
 | **Charge à l'écu** | 20 | Moyen | Course de 120 px, renverse tout sur le trajet |
 
 ### 4.4 Utilitaires
@@ -128,12 +128,27 @@ Toutes les valeurs sont des défauts dans `src/content/weapons.ts`, ajustables p
 | **Passer son tour** | — | ∞ |
 
 ### 4.5 Reliquaires (caisses)
-- Probabilité d'apparition en fin de tour : 30 %. Un ange descend en planant et dépose un coffret ; il est sensible au vent.
+- Probabilité d'apparition en fin de tour : 30 %, 3 reliquaires au plus sur la carte. Un ange descend en planant (1 px par instant) et dépose un coffret ; il est sensible au vent pendant la descente, plus une fois posé. Il tombe hors des bouts de carte et des parties brûlées (programmé le 2026-10-24, `src/content/crates.ts`).
+- Contenu : 10 % de pièges ; sinon 35 % de fioles de baume (+25 PV, sans dépasser les PV de départ) et 65 % de reliquaires d'armes (+1 munition d'une arme à munitions limitées, tirée au hasard).
+- Un tir ou une explosion qui touche un reliquaire le fait éclater (15 dégâts / 40 px ; piège : 35 / 60). Le feu du parchemin les détruit. Si le sol se dérobe, ils retombent.
 - Types :
   - **Reliquaire d'armes** : 1 arme aléatoire, pondérée par rareté.
   - **Fiole de baume** : +25 PV.
   - **Coffret piégé** : 10 % de chances, explose au contact ou si on tire dessus.
 - Ramassage au contact.
+
+### 4.6 bis Qui est affecté par quoi (décidé le 2026-10-24)
+
+| Élément | Vent | Explosion qui l'atteint | Tir qui le touche | Feu du parchemin | Sol qui se dérobe |
+|---|---|---|---|---|---|
+| Flèche, carreau, pierre | Oui (carreau ×0,4) | — | S'arrête sur ce qu'elle touche | — | — |
+| Pots (feu grégeois, poix) | Non | — | Continue sa course | — | — |
+| Gouttes de poix | Non | — | Explosent à l'impact | — | — |
+| Combattant | Non | Dégâts dégressifs + projection | Dégâts + recul de l'arme | 20 PV par fin de tour | Tombe (dégâts de chute) |
+| Baril de poudre | Non | Saute après 8 instants (chaîne) | Saute | Saute | Tombe |
+| Reliquaire | Oui, en descente | Éclate | Éclate (une flèche s'y arrête) | Détruit | Retombe |
+| Cuisine de campagne | Non | Soigne le tireur, disparaît | Soigne le tireur (une flèche s'y arrête) | S'éteint | Tombe |
+| Terrain | — | Cratère (selon le matériau) | Petit trou (flèche 3 px, carreau 4, pierre 5) | Noirci, reste praticable | — |
 
 ### 4.6 Éléments de carte
 - **Barils de poudre** (décidé le 2026-10-24, remplacent les barils de poix) : 5 barils posés au hasard (PRNG du sim) au début de la partie, sur un sol plat, à plus de 70 px des combattants et les uns des autres, hors des 10 % de chaque bout de carte. Un tir qui les touche (une flèche s'y arrête), une explosion qui les atteint ou le feu du parchemin les fait sauter : 40 dégâts dans un rayon de 70 px, avec cratère. Un baril qui saute peut en déclencher d'autres, avec un court délai (réaction en chaîne). Si le sol se dérobe, ils tombent. Valeurs dans `src/content/barrels.ts` (`MatchRules.barrels`, absent des vieux logs), réglables dans ⚙ Réglages.

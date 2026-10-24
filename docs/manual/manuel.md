@@ -84,15 +84,15 @@ Les valeurs ci-dessous sont celles du schéma de règles *Classique*. « Vent »
 
 ### 4.1 Armes de tir et de lancer
 
-Déjà jouables : **arc**, **fronde** et **pot de feu grégeois** {{st:jeu}} (le pot n'allume pas encore de flammes). Les autres armes sont {{st:prevu}}.
+Déjà jouables {{st:jeu}} : **arc**, **arbalète**, **fronde**, **pot de feu grégeois** (il n'allume pas encore de flammes) et **pot de poix**. Les autres armes sont {{st:prevu}}. Les munitions limitées se regagnent dans les reliquaires.
 
 | Arme | Dégâts max | Rayon d'explosion | Vent | Munitions | À savoir |
 |---|---|---|---|---|---|
 | **Arc** | 35 | — | oui | ∞ | La flèche reste fichée dans le décor |
-| **Arbalète** | 45 | — | faible | 3 | Puissance fixe : on ne règle que l'angle |
+| **Arbalète** | 45 | — | faible | 2 | Puissance fixe : on ne règle que l'angle |
 | **Fronde** | 25 | — | oui | ∞ | Fort recul : idéale pour éjecter un ennemi |
-| **Pot de feu grégeois** | 45 | 60 px | non | ∞ | Rebondit ; mèche de 1 à 5 s ; laisse des flammes 3 tours |
-| **Pot de poix** | 30 + 5 × 15 | 50 / 30 px | non | 2 | Éclate en 5 gouttes enflammées |
+| **Pot de feu grégeois** | 45 | 60 px | non | 3 | Rebondit ; mèche de 1 à 5 s ; laisse des flammes 3 tours |
+| **Pot de poix** | 30 + 5 × 15 | 50 / 30 px | non | 1 | Rebondit, puis éclate en 5 gouttes enflammées qui explosent là où elles tombent |
 | **Cochon enflammé** | 70 | 90 px | non | 1 | Avance seul, saute les obstacles, explose sur ordre ou au bout de 8 s |
 | **Ruche** | 5 par contact | — | oui | 1 | L'essaim poursuit le combattant le plus proche pendant 4 s |
 | **Faucon** | 50 | 50 px | oui | 1 | Vous désignez la cible, il y vole |
@@ -105,6 +105,8 @@ Déjà jouables : **arc**, **fronde** et **pot de feu grégeois** {{st:jeu}} (le
 | **Pluie de flèches** | 12 × 10 | — | 1 | Couvre une large zone, faibles dégâts par flèche |
 
 ### 4.3 Mêlée
+
+La **masse d'armes** est jouable {{st:jeu}} : elle frappe à 34 pixels devant vous, dans la direction visée, et envoie l'ennemi très loin. Les autres armes de mêlée sont {{st:prevu}}.
 
 | Arme | Dégâts | Recul | À savoir |
 |---|---|---|---|
@@ -154,6 +156,15 @@ Le vent change à chaque tour, de −10 (fort vers la gauche) à +10 (fort vers 
   - *Coffret piégé* (10 % des cas) : il explose quand on le touche ou qu'on tire dessus.
 - **Barils de poix** : touchés, ils explosent (30 dégâts dans un rayon de 60 px), puis enflamment le sol. Une explosion peut en déclencher d'autres en chaîne.
 - **Flammes** : 3 PV par instant de contact, 10 PV au plus par tour. L'eau les éteint.
+
+### Les reliquaires {{st:jeu}}
+
+À la fin d'un tour sur trois environ, **un ange descend du ciel** avec un reliquaire, qu'il laisse dériver avec le vent avant de le poser. Le premier combattant qui le touche en marchant le prend :
+- **reliquaire d'armes** : une munition de plus pour une arme à munitions limitées ;
+- **fiole de baume** : +25 PV (sans dépasser les PV de départ) ;
+- **coffret piégé** (un sur dix) : il vous explose au nez.
+
+Un tir ou une explosion qui touche un reliquaire le fait éclater, et le feu du parchemin le détruit.
 
 ### Les barils de poudre {{st:jeu}}
 
