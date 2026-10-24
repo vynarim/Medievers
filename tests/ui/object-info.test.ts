@@ -48,7 +48,7 @@ describe('object bubbles', () => {
     expect(objectInfo(v, { kind: 'barrel', id: 999 })).toBeNull();
   });
 
-  it('name the unit under a tombstone, and its house', () => {
+  it('name the unit under a tombstone, with its epitaph', () => {
     const sim = new Sim(
       { rules: CLASSIC_RULES, teams: [{ spawns: [100] }, { spawns: [1100] }] },
       1,
@@ -67,7 +67,6 @@ describe('object bubbles', () => {
     expect(ref).toEqual({ kind: 'grave', id: 2 });
     const info = ref ? objectInfo(v, ref) : null;
     expect(info?.title).toBe('Aubri');
-    expect(info?.text).toContain('Maison des Trois Tours');
     // Its epitaph names it, and stays the same from one look to the next.
     expect(info?.text).toContain('Aubri');
     expect(objectInfo(v, { kind: 'grave', id: 2 })?.text).toBe(info?.text);

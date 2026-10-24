@@ -10,7 +10,7 @@ import type { SimView } from '../sim/sim.ts';
 import { t, variantCount } from './i18n.ts';
 import { StructureState } from '../content/structures.ts';
 import { classOf, maxHpOf } from '../sim/classes.ts';
-import { FACTIONS, unitName } from '../content/factions.ts';
+import { unitName } from '../content/factions.ts';
 import { UNIT_HEIGHT } from '../sim/units/unit.ts';
 
 export type ObjectRef =
@@ -114,13 +114,13 @@ export function objectInfo(v: SimView, ref: ObjectRef): ObjectInfo | null {
     case 'grave': {
       const u = v.units.find((x) => x.id === ref.id);
       if (!u || u.alive) return null;
-      const f = FACTIONS[u.team];
       // Its own epitaph, the same each time one looks: chosen by its id, not at random.
       const n = variantCount('epitaph');
       const epitaph = n > 0 ? t(`epitaph.${1 + (u.id % n)}`, { name: unitName(u.id) }) : '';
       return {
         title: unitName(u.id),
-        text: t('object.grave.text', { epitaph, house: f ? t(f.nameKey) : '' }),
+        // Its house is told by the tombstone's colour.
+        text: epitaph,
         x: u.x / SUBPX,
         y: u.y / SUBPX - GRAVE_HEIGHT,
       };

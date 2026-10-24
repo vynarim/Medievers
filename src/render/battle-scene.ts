@@ -17,7 +17,7 @@ import type { Mask } from '../sim/terrain/mask.ts';
 import type { Terrain } from '../sim/terrain/terrain.ts';
 import { UNIT_HALF_WIDTH, UNIT_HEIGHT, type Unit } from '../sim/units/unit.ts';
 import { BARREL_HEIGHT, BARREL_WIDTH } from '../content/barrels.ts';
-import { CRATE_HEIGHT, CRATE_WIDTH } from '../content/crates.ts';
+import { CRATE_HEIGHT } from '../content/crates.ts';
 import { BeastKind, Trick } from '../content/beasts.ts';
 import { Commentary, type Pop } from '../ui/commentary.ts';
 import { FONT_CAPS, FONT_TEXT, FONT_TITLE } from '../ui/fonts.ts';
@@ -51,7 +51,8 @@ import { targetFor, wallAngle, wallLength, wallRefusal, wallSize } from '../sim/
 import { isProjectile, isTargeted, type WeaponDef } from '../content/weapons.ts';
 import { rulesFor, saveSetup, type MatchSetup } from '../app/match-setup.ts';
 import { showSetupScreen } from '../ui/setup-screen.ts';
-import { unicornTextures } from './unicorn-art.ts';
+import { UNICORN_TEX_SCALE, unicornTextures } from './unicorn-art.ts';
+import { RELIC_TEX_SCALE, reliquaryTextures } from './reliquary-art.ts';
 import { showTitleScreen } from '../ui/title-screen.ts';
 import { StructureState, type StructurePlacement } from '../content/structures.ts';
 import { buildMap, mapForLog, type BuiltMap } from '../app/map-build.ts';
@@ -106,6 +107,8 @@ export function onlineBattle(m: OnlineMatch): BattleData {
   };
 }
 
+/** ms per wing beat of the angels bringing reliquaries down */
+const ANGEL_FLAP = 260;
 /** the unicorn's gallop: ms per stride, px it springs at each */
 const UNICORN_STRIDE = 140;
 const UNICORN_HOP = 6;
@@ -181,6 +184,11 @@ export class BattleScene extends Phaser.Scene {
   private dragonImg!: Phaser.GameObjects.Image;
   /** the unicorn of the sim (GDD §4.12) */
   private unicornImg!: Phaser.GameObjects.Image;
+  /** each reliquary on the map: its shrine, and the angel bringing it down while it falls */
+  private readonly relics = new Map<
+    number,
+    { shrine: Phaser.GameObjects.Image; angel: Phaser.GameObjects.Image }
+  >();
   /** turns-left figures over the pots resting on the map, by pot id */
   private readonly potLabels = new Map<number, Phaser.GameObjects.Text>();
   /** the map object whose bubble is open */
@@ -312,9 +320,11 @@ export class BattleScene extends Phaser.Scene {
       .setDepth(6.6)
       .setVisible(false);
     unicornTextures(this);
+    reliquaryTextures(this);
     this.unicornImg = this.add
       .image(0, 0, 'unicorn_0')
       .setOrigin(0.5, 1)
+      .setScale(1 / UNICORN_TEX_SCALE)
       .setDepth(5.9)
       .setVisible(false);
     this.burnGfx = this.add.graphics().setDepth(5.5);
@@ -1143,7 +1153,7 @@ export class BattleScene extends Phaser.Scene {
 
     this.drawKitchen(g, time);
     this.drawBarrels(g);
-    this.drawCrates(g, alpha, time);
+    this.drawCrates(alpha, time);
     this.drawBeast(g, delta, time);
     this.drawDragon(alpha, time);
     this.drawUnicorn(alpha, time);
@@ -1697,47 +1707,40 @@ export class BattleScene extends Phaser.Scene {
   }
 
   /** Reliquaries: a gilt coffer with a cross, under an angel's wings while it comes down. */
-  private drawCrates(g: Phaser.GameObjects.Graphics, alpha: number, time: number): void {
-    for (const c of this.sim.view().crates) {
-      const [x, y] = this.pos(`c${c.id}`, alpha, c.x, c.y);
-      const w = CRATE_WIDTH;
-      const h = CRATE_HEIGHT;
-      if (!c.landed) {
-        // Wings flapping above the coffer, and the cords.
-        const flap = Math.sin(time / 160) * 8;
-        g.fillStyle(COLORS.ceruse, 1);
-        g.lineStyle(2, COLORS.encre, 1);
-        for (const side of [-1, 1]) {
-          g.fillTriangle(
-            x,
-            y - h - 26,
-            x + side * 34,
-            y - h - 34 - flap,
-            x + side * 18,
-            y - h - 16,
-          );
-          g.strokeTriangle(
-            x,
-            y - h - 26,
-            x + side * 34,
-            y - h - 34 - flap,
-            x + side * 18,
-            y - h - 16,
-          );
-        }
-        g.fillStyle(COLORS.carnation, 1);
-        g.fillCircle(x, y - h - 30, 6);
-        g.lineStyle(1, COLORS.encre, 0.8);
-        g.lineBetween(x - 8, y - h - 20, x - w / 2, y - h);
-        g.lineBetween(x + 8, y - h - 20, x + w / 2, y - h);
+  /** Reliquaries: a gilt shrine, brought down by an angel whose wings beat as it glides. */
+  private drawCrates(alpha: number, time: number): void {
+    const crates = this.sim.view().crates;
+    const live = new Set<number>();
+    for (const c of crates) {
+      live.add(c.id);
+      let r = this.relics.get(c.id);
+      if (!r) {
+        const make = (key: string, depth: number): Phaser.GameObjects.Image => {
+          const image = this.add
+            .image(0, 0, key)
+            .setOrigin(0.5, 1)
+            .setScale(1 / RELIC_TEX_SCALE)
+            .setDepth(depth);
+          this.hudCam.ignore(image);
+          return image;
+        };
+        r = { shrine: make('shrine', 5.8), angel: make('angel_0', 5.85) };
+        this.relics.set(c.id, r);
       }
-      g.fillStyle(COLORS.or, 1);
-      g.lineStyle(3, COLORS.encre, 1);
-      g.fillRect(x - w / 2, y - h, w, h);
-      g.strokeRect(x - w / 2, y - h, w, h);
-      g.fillStyle(COLORS.vermillon, 1);
-      g.fillRect(x - 2, y - h + 4, 4, h - 8);
-      g.fillRect(x - 7, y - h + 8, 14, 4);
+      const [x, y] = this.pos(`c${c.id}`, alpha, c.x, c.y);
+      r.shrine.setPosition(x, y);
+      r.angel.setVisible(!c.landed);
+      if (!c.landed) {
+        // The cords end on the shrine's eaves, just under its roof.
+        const beat = Math.floor(time / ANGEL_FLAP) % 2;
+        r.angel.setTexture(`angel_${beat}`).setPosition(x, y - CRATE_HEIGHT + 4);
+      }
+    }
+    for (const [id, r] of this.relics) {
+      if (live.has(id)) continue;
+      r.shrine.destroy();
+      r.angel.destroy();
+      this.relics.delete(id);
     }
   }
 
