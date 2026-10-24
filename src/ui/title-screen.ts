@@ -26,14 +26,17 @@ const STYLE = `
 #ui .title-screen .actions { justify-content: center; }
 #ui .title-screen .actions button { min-width: 220px; font-size: 20px; }
 #ui .title-screen .colophon { margin-top: 22px; font-size: 13px; color: var(--brun); }
-#ui .title-screen .author { margin-top: 6px; font-family: var(--caps); font-size: 16px; color: var(--encre); }
-#ui .title-screen .author a { color: var(--lapis); pointer-events: auto; user-select: text; }
+#ui .title-screen .author { margin-top: 8px; text-align: right; font-family: var(--caps);
+  font-size: 12px; color: var(--brun); }
+#ui .title-screen .colophon a, #ui .title-screen .author a { color: var(--lapis); pointer-events: auto; user-select: text; }
 `;
 
 let styled = false;
 
 const AUTHOR = 'vynarim';
 const AUTHOR_URL = 'https://github.com/vynarim';
+const YEAR = 2026;
+const BIBLE_URL = 'https://fr.wikipedia.org/wiki/Bible_de_Maciejowski';
 
 export interface TitleChoices {
   /** a match in progress (saved, online, or the one paused behind): take it up again */
@@ -72,13 +75,21 @@ export function showTitleScreen(choices: TitleChoices): void {
     close(first);
   };
   window.addEventListener('keydown', onKey, true);
+  // The manuscript named in the colophon links to its Wikipedia article.
+  const colophon = el('div', 'colophon');
+  const [before = '', after = ''] = t('title.colophon').split('{bible}');
+  const bible = el('a', '', t('title.bible'));
+  bible.href = BIBLE_URL;
+  bible.target = '_blank';
+  bible.rel = 'noopener';
+  colophon.append(before, bible, after);
   // « Un jeu de vynarim », the name linking to the author's GitHub.
   const author = el('div', 'author');
   const link = el('a', '', AUTHOR);
   link.href = AUTHOR_URL;
   link.target = '_blank';
   link.rel = 'noopener';
-  author.append(t('title.by'), ' ', link);
+  author.append(t('title.by'), ' ', link, `, ${YEAR}`);
   const actions = el('div', 'actions');
   const resume = choices.resume;
   if (resume) {
@@ -112,7 +123,7 @@ export function showTitleScreen(choices: TitleChoices): void {
     el('div', 'sub', t('title.sub')),
     el('div', 'quip', t('title.quip')),
     actions,
-    el('div', 'colophon', t('title.colophon')),
+    colophon,
     author,
   );
   screen.append(folio);
