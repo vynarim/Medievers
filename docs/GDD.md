@@ -46,7 +46,7 @@
 - L'eau tue instantanément (noyade).
 
 ### 2.5 Le parchemin brûle (décidé le 2026-10-24)
-- Après **2 tours de table**, la carte prend feu **à ses deux extrémités**, comme une page de parchemin approchée d'une chandelle. À la fin de chaque tour de table, le feu avance de **120 px** de chaque côté (jusqu'au milieu de la carte au plus).
+- Après **2 tours de table**, la carte prend feu **à ses deux extrémités**, comme une page de parchemin approchée d'une chandelle. À la fin de chaque tour de table, le feu avance de **60 px** de chaque côté (décidé le 2026-10-24, réduit de 120) (jusqu'au milieu de la carte au plus).
 - Un combattant qui se trouve dans la partie brûlée à la fin d'un tour (n'importe quel tour) perd **20 PV**. Le feu pousse donc les armées à se rapprocher, et sert de fin forcée à côté du Déluge.
 - Une cuisine de campagne rattrapée par le feu s'éteint.
 - Rendu : page noircie, bord brun qui ondule comme un papier qui se recroqueville, ligne de flammes. Valeurs dans `src/content/burn.ts` (`MatchRules.burn`, absent des vieux logs : pas de feu), réglables dans ⚙ Réglages (onglet Parchemin en feu).

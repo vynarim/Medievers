@@ -12,6 +12,6 @@ export interface BurnRules {
 
 export const BURN_RULES: BurnRules = {
   startRound: 2,
-  advancePx: 120,
+  advancePx: 60,
   damage: 20,
 };
