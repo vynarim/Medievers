@@ -39,87 +39,295 @@ function drawBird(ctx: Ctx, up: boolean): void {
   ctx.stroke();
 }
 
-/** A wyvern in the manner of the marginalia: green body, vermilion wings, curled tail. */
-function drawDragon(ctx: Ctx, up: boolean): void {
+interface Pt {
+  readonly x: number;
+  readonly y: number;
+}
+
+/**
+ * A wyvern of the marginalia (2026-10-24, drawn anew): a green serpent body with a gilt ringed
+ * belly and vermilion spines, bat wings on four fingers, horns, open jaws and a forked tongue, a
+ * long S tail ending in a spade. Frame 0: wings up, 1: level, 2: down.
+ */
+function drawDragon(ctx: Ctx, frame: 0 | 1 | 2): void {
   const ink = css(COLORS.encre);
-  ctx.lineWidth = 3;
+  const green = css(COLORS.vertDeGris);
   ctx.lineJoin = 'round';
-  ctx.strokeStyle = ink;
-  // Curled tail, behind.
-  ctx.beginPath();
-  ctx.moveTo(60, 62);
-  ctx.bezierCurveTo(30, 70, 10, 50, 22, 36);
-  ctx.bezierCurveTo(30, 28, 40, 40, 30, 44);
-  ctx.lineWidth = 7;
-  ctx.strokeStyle = css(COLORS.vertDeGris);
-  ctx.stroke();
-  ctx.lineWidth = 3;
-  ctx.strokeStyle = ink;
-  // Far wing.
-  const wing = (dx: number, shade: number): void => {
-    ctx.fillStyle = css(shade);
-    ctx.beginPath();
-    ctx.moveTo(95 + dx, 52);
-    if (up) {
-      ctx.lineTo(70 + dx, 4);
-      ctx.quadraticCurveTo(90 + dx, 18, 100 + dx, 10);
-      ctx.quadraticCurveTo(108 + dx, 30, 125 + dx, 26);
-    } else {
-      ctx.lineTo(72 + dx, 104);
-      ctx.quadraticCurveTo(92 + dx, 90, 102 + dx, 102);
-      ctx.quadraticCurveTo(110 + dx, 80, 128 + dx, 86);
+  ctx.lineCap = 'round';
+  const P = (x: number, y: number): Pt => ({ x, y });
+  const bez = (s: readonly Pt[], t: number): Pt => {
+    const u = 1 - t;
+    const k = [u * u * u, 3 * u * u * t, 3 * u * t * t, t * t * t];
+    return P(
+      k.reduce((sum, w, i) => sum + w * (s[i]?.x ?? 0), 0),
+      k.reduce((sum, w, i) => sum + w * (s[i]?.y ?? 0), 0),
+    );
+  };
+  // A limb or tail that narrows from w0 to w1 px: an ink outline, then the colour inside.
+  const taper = (
+    segs: readonly (readonly Pt[])[],
+    w0: number,
+    w1: number,
+    colour: string,
+  ): Pt[] => {
+    const pts: Pt[] = [];
+    for (const s of segs) for (let i = 0; i <= 24; i++) pts.push(bez(s, i / 24));
+    for (const pass of [0, 1]) {
+      ctx.strokeStyle = pass ? colour : ink;
+      for (let i = 1; i < pts.length; i++) {
+        const w = w0 + ((w1 - w0) * i) / (pts.length - 1);
+        ctx.lineWidth = pass ? w : w + 5;
+        ctx.beginPath();
+        const a = pts[i - 1];
+        const b = pts[i];
+        if (!a || !b) continue;
+        ctx.moveTo(a.x, a.y);
+        ctx.lineTo(b.x, b.y);
+        ctx.stroke();
+      }
     }
+    return pts;
+  };
+  // A bat wing: the arm from the shoulder to the wrist, four fingers, a scalloped membrane.
+  const wing = (dx: number, dy: number, membrane: string): void => {
+    const S = P(170 + dx, 76 + dy);
+    const E = [P(148, 14), P(112, 46), P(152, 120)][frame] ?? P(112, 46);
+    const tips = (
+      [
+        [P(70, 4), P(84, 38), P(106, 62), P(136, 76)],
+        [P(40, 40), P(58, 70), P(90, 86), P(130, 88)],
+        [P(150, 164), P(126, 162), P(104, 148), P(96, 122)],
+      ] as const
+    )[frame];
+    const e = P(E.x + dx, E.y + dy);
+    const t = tips.map((p) => P(p.x + dx, p.y + dy));
+    const root = P(134 + dx, 82 + dy);
+    const scallop = (a: Pt, b: Pt): void => {
+      const m = P((a.x + b.x) / 2, (a.y + b.y) / 2);
+      ctx.quadraticCurveTo(m.x + (e.x - m.x) * 0.32, m.y + (e.y - m.y) * 0.32, b.x, b.y);
+    };
+    ctx.fillStyle = membrane;
+    ctx.strokeStyle = ink;
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(S.x, S.y);
+    ctx.lineTo(e.x, e.y);
+    const first = t[0];
+    if (first) ctx.lineTo(first.x, first.y);
+    for (let i = 1; i < t.length; i++) {
+      const a = t[i - 1];
+      const b = t[i];
+      if (a && b) scallop(a, b);
+    }
+    const last = t[t.length - 1];
+    if (last) scallop(last, root);
     ctx.closePath();
     ctx.fill();
     ctx.stroke();
+    ctx.lineWidth = 2;
+    for (const p of t) {
+      ctx.beginPath();
+      ctx.moveTo(e.x, e.y);
+      ctx.lineTo(p.x, p.y);
+      ctx.stroke();
+    }
+    taper(
+      [[S, P((S.x + e.x) / 2, (S.y + e.y) / 2), P((S.x + e.x) / 2, (S.y + e.y) / 2), e]],
+      7,
+      4,
+      membrane,
+    );
+    // The thumb claw at the wrist.
+    ctx.fillStyle = ink;
+    ctx.beginPath();
+    ctx.moveTo(e.x - 3, e.y);
+    ctx.lineTo(e.x + 2, e.y - 9);
+    ctx.lineTo(e.x + 4, e.y + 1);
+    ctx.closePath();
+    ctx.fill();
   };
-  wing(-12, COLORS.roseGarance);
-  // Body and neck.
-  ctx.fillStyle = css(COLORS.vertDeGris);
+  // A leg with three claws, bent under the body.
+  const leg = (hip: Pt, knee: Pt, foot: Pt, colour: string): void => {
+    taper([[hip, knee, knee, foot]], 10, 6, colour);
+    ctx.strokeStyle = ink;
+    ctx.lineWidth = 2;
+    for (const d of [-5, 0, 5]) {
+      ctx.beginPath();
+      ctx.moveTo(foot.x, foot.y);
+      ctx.quadraticCurveTo(foot.x + d + 4, foot.y + 6, foot.x + d + 7, foot.y + 3);
+      ctx.stroke();
+    }
+  };
+
+  // Far wing and far leg, behind.
+  wing(-16, -4, css(COLORS.roseGarance));
+  leg(P(128, 98), P(118, 112), P(126, 124), css(COLORS.vertDeGris));
+  // The tail: a long S that curls up at its end, tipped with a spade.
+  const tail = taper(
+    [
+      [P(110, 96), P(76, 120), P(44, 124), P(28, 108)],
+      [P(28, 108), P(14, 94), P(18, 76), P(34, 76)],
+    ],
+    18,
+    4,
+    green,
+  );
+  const end = tail[tail.length - 1] ?? P(34, 76);
+  ctx.fillStyle = css(COLORS.vermillon);
+  ctx.strokeStyle = ink;
+  ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.moveTo(55, 60);
-  ctx.bezierCurveTo(80, 44, 120, 44, 140, 50);
-  ctx.bezierCurveTo(150, 40, 160, 30, 172, 30);
-  ctx.lineTo(176, 40);
-  ctx.bezierCurveTo(165, 42, 158, 52, 150, 62);
-  ctx.bezierCurveTo(120, 74, 80, 72, 55, 60);
+  ctx.moveTo(end.x - 2, end.y);
+  ctx.quadraticCurveTo(end.x + 4, end.y - 12, end.x + 14, end.y - 4);
+  ctx.quadraticCurveTo(end.x + 4, end.y + 8, end.x - 2, end.y);
   ctx.closePath();
   ctx.fill();
   ctx.stroke();
-  // Head with a gilt eye and a little tongue of flame.
+
+  // Body and neck, in one outline.
+  const back = [P(102, 96), P(118, 70), P(166, 64), P(198, 70)];
+  const body = new Path2D();
+  body.moveTo(102, 96);
+  body.bezierCurveTo(118, 70, 166, 64, 198, 70);
+  body.bezierCurveTo(214, 58, 222, 42, 236, 40);
+  body.lineTo(246, 56);
+  body.bezierCurveTo(230, 62, 222, 82, 208, 94);
+  body.bezierCurveTo(182, 112, 132, 114, 102, 96);
+  body.closePath();
+  // Dorsal spines, vermilion, along the back.
+  ctx.fillStyle = css(COLORS.vermillon);
+  ctx.strokeStyle = ink;
+  ctx.lineWidth = 2;
+  for (let i = 1; i <= 7; i++) {
+    const a = bez(back, i / 8.5);
+    const b = bez(back, i / 8.5 + 0.06);
+    ctx.beginPath();
+    ctx.moveTo(a.x, a.y + 2);
+    ctx.lineTo((a.x + b.x) / 2 - 3, a.y - 10);
+    ctx.lineTo(b.x, b.y + 2);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+  }
+  ctx.fillStyle = green;
+  ctx.fill(body);
+  // The gilt belly, ringed like a worm's, inside the body.
+  ctx.save();
+  ctx.clip(body);
+  ctx.strokeStyle = css(COLORS.or);
+  ctx.lineWidth = 16;
   ctx.beginPath();
-  ctx.ellipse(180, 33, 13, 8, -0.2, 0, Math.PI * 2);
-  ctx.fill();
+  ctx.moveTo(104, 104);
+  ctx.bezierCurveTo(132, 118, 184, 116, 212, 96);
+  ctx.bezierCurveTo(226, 84, 232, 66, 248, 60);
   ctx.stroke();
-  ctx.fillStyle = css(COLORS.or);
-  ctx.beginPath();
-  ctx.arc(183, 30, 2.5, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = css(COLORS.vermillon);
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.moveTo(193, 36);
-  ctx.quadraticCurveTo(200, 34, 204, 40);
-  ctx.stroke();
-  // Legs.
+  ctx.strokeStyle = ink;
+  ctx.lineWidth = 1.5;
+  const belly = [P(104, 104), P(132, 118), P(184, 116), P(212, 96)];
+  for (let i = 1; i < 12; i++) {
+    const p = bez(belly, i / 12);
+    ctx.beginPath();
+    ctx.moveTo(p.x - 2, p.y - 9);
+    ctx.quadraticCurveTo(p.x + 3, p.y, p.x - 2, p.y + 9);
+    ctx.stroke();
+  }
+  // Scales on the flank: little arcs in rows.
+  ctx.strokeStyle = css(COLORS.encre);
+  ctx.globalAlpha = 0.45;
+  for (let row = 0; row < 2; row++) {
+    for (let x = 122 + row * 6; x < 196; x += 12) {
+      ctx.beginPath();
+      ctx.arc(x, 82 + row * 8, 5, 0.2, Math.PI - 0.2);
+      ctx.stroke();
+    }
+  }
+  ctx.globalAlpha = 1;
+  ctx.restore();
   ctx.strokeStyle = ink;
   ctx.lineWidth = 3;
-  for (const x of [95, 120]) {
+  ctx.stroke(body);
+
+  // Head: brow, long snout, open jaws with teeth and a forked tongue.
+  ctx.fillStyle = css(COLORS.vermillon);
+  ctx.beginPath();
+  ctx.moveTo(254, 54);
+  ctx.lineTo(284, 56);
+  ctx.lineTo(258, 62);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = css(COLORS.vermillon);
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(266, 58);
+  ctx.quadraticCurveTo(284, 60, 294, 54);
+  ctx.moveTo(288, 57);
+  ctx.lineTo(297, 62);
+  ctx.stroke();
+  ctx.fillStyle = green;
+  ctx.strokeStyle = ink;
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(244, 64);
+  ctx.bezierCurveTo(254, 64, 268, 66, 280, 64);
+  ctx.lineTo(276, 70);
+  ctx.bezierCurveTo(262, 74, 248, 72, 238, 64);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(230, 44);
+  ctx.bezierCurveTo(240, 30, 260, 28, 270, 36);
+  ctx.lineTo(288, 42);
+  ctx.quadraticCurveTo(292, 48, 286, 52);
+  ctx.lineTo(258, 54);
+  ctx.lineTo(244, 62);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  // Teeth.
+  ctx.fillStyle = css(COLORS.ceruse);
+  ctx.lineWidth = 1;
+  for (const x of [264, 272, 280]) {
     ctx.beginPath();
-    ctx.moveTo(x, 68);
-    ctx.lineTo(x - 4, 80);
-    ctx.lineTo(x + 2, 82);
+    ctx.moveTo(x - 3, 53.5);
+    ctx.lineTo(x, 59);
+    ctx.lineTo(x + 3, 53);
+    ctx.closePath();
+    ctx.fill();
     ctx.stroke();
   }
-  // Near wing.
-  wing(6, COLORS.vermillon);
-  // Belly scales.
-  ctx.lineWidth = 1.5;
-  for (let x = 75; x < 140; x += 10) {
+  // Horns, swept back.
+  ctx.fillStyle = css(COLORS.or);
+  ctx.lineWidth = 2;
+  for (const [x, y, l] of [
+    [244, 34, 26],
+    [252, 32, 18],
+  ] as const) {
     ctx.beginPath();
-    ctx.arc(x, 64, 4, 0, Math.PI);
+    ctx.moveTo(x, y + 4);
+    ctx.quadraticCurveTo(x - l * 0.5, y - 4, x - l, y - 10);
+    ctx.quadraticCurveTo(x - l * 0.4, y + 2, x + 8, y + 4);
+    ctx.closePath();
+    ctx.fill();
     ctx.stroke();
   }
+  // Eye: gilt, a black slit; a nostril.
+  ctx.fillStyle = css(COLORS.or);
+  ctx.beginPath();
+  ctx.ellipse(258, 41, 5, 4, -0.2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  ctx.fillStyle = ink;
+  ctx.beginPath();
+  ctx.ellipse(259, 41, 1.3, 3.4, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(283, 45, 1.6, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Near leg, near wing in front.
+  leg(P(186, 100), P(194, 114), P(186, 122), css(COLORS.vertDeGris));
+  wing(0, 0, css(COLORS.vermillon));
 }
 
 /** Bands of manuscript colours, outlined in ink, as the illuminators drew the bow of the Flood. */
@@ -188,8 +396,7 @@ export class SkyLife {
     };
     tex('bird_up', 28, 16, (ctx) => drawBird(ctx, true));
     tex('bird_down', 28, 16, (ctx) => drawBird(ctx, false));
-    tex('dragon_up', 210, 110, (ctx) => drawDragon(ctx, true));
-    tex('dragon_down', 210, 110, (ctx) => drawDragon(ctx, false));
+    for (const f of [0, 1, 2] as const) tex(`dragon_${f}`, 300, 170, (ctx) => drawDragon(ctx, f));
     const rainbowKey = tex('rainbow', 1000, 500, (ctx) => drawRainbow(ctx, 1000, 500));
 
     const flyer = (key: string, depth: number): Flyer => {
@@ -198,8 +405,8 @@ export class SkyLife {
       return { image, vx: 0, vy: 0, phase: 0, live: false };
     };
     for (let i = 0; i < FLOCK_MAX; i++) this.birds.push(flyer('bird_up', 3.5));
-    this.dragon = flyer('dragon_up', 2.5);
-    this.dragon.image.setScale(1.6);
+    this.dragon = flyer('dragon_0', 2.5);
+    this.dragon.image.setScale(1.15);
     this.rainbow = scene.add
       .image(0, 0, rainbowKey)
       .setOrigin(0.5, 1)
@@ -251,7 +458,12 @@ export class SkyLife {
     if (this.dragon.live) {
       this.dragon.vy = Math.sin(this.clock / 900) * 25;
     }
-    fly(this.dragon, DRAGON_FLAP, 'dragon_up', 'dragon_down');
+    fly(this.dragon, DRAGON_FLAP, 'dragon_0', 'dragon_2');
+    // The dragon's wings pass level between up and down: up, level, down, level.
+    if (this.dragon.live) {
+      const beat = Math.floor((this.clock * 2) / DRAGON_FLAP) % 4;
+      this.dragon.image.setTexture(`dragon_${beat === 0 ? 0 : beat === 2 ? 2 : 1}`);
+    }
 
     if (this.rainbowAge >= 0) {
       this.rainbowAge += delta;
