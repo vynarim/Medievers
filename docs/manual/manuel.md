@@ -36,6 +36,9 @@ Un chroniqueur à l'humour douteux commente la partie {{st:jeu}} : chaque tour s
 
 ## 2. Le déroulement d'un tour {{st:jeu}}
 
+**Avant le premier tour, le placement.** Les maisons posent leurs combattants **une par une, à tour de rôle** : cliquez sur la carte à l'endroit voulu (un trait pointillé à vos couleurs montre où il tombera). Pas trop près d'un autre combattant ni du bord, et il faut un sol pour se tenir. Vous avez 20 secondes par combattant ; passé ce délai, il est posé à sa place par défaut. Quand toutes les armées sont en place, le tour 1 commence.
+
+
 | Phase | Durée | Ce qui se passe |
 |---|---|---|
 | Transition | {{rules:transition}} | La caméra rejoint votre combattant. Le vent du tour s'affiche. |

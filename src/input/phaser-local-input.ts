@@ -248,6 +248,7 @@ export class PhaserLocalInput implements InputSource {
     input.jumpDir = ui.jumpDir;
     input.selectWeapon = ui.selectWeapon;
     input.selectUnit = ui.selectUnit;
+    input.place = ui.place;
     input.skipPressed = ui.skip;
     input.jumpPressed = this.pressed.jump;
     input.nextWeaponPressed = this.pressed.weapon || this.weaponClick;

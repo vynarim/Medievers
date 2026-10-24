@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { AutoSaver, clearSave, loadSave } from '../../src/app/autosave.ts';
-import { CLASSIC_RULES } from '../../src/content/rules.ts';
+import { CLASSIC_RULES } from '../rules-fixture.ts';
 import { Material, Sim, replay, type GameCommand, type Mask } from '../../src/sim/index.ts';
 
 /** In-memory stand-in for the browser's localStorage. */

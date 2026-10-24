@@ -21,6 +21,8 @@ export interface RawInput {
   skipPressed: boolean;
   /** unit of the active team chosen to play this turn */
   selectUnit: number | null;
+  /** px: map column chosen for the next unit, during the placement */
+  place: number | null;
   /** charge key held (gauge aiming) */
   charge: boolean;
   nextWeaponPressed: boolean;
@@ -47,6 +49,7 @@ export const emptyInput = (): RawInput => ({
   selectWeapon: null,
   skipPressed: false,
   selectUnit: null,
+  place: null,
   charge: false,
   nextWeaponPressed: false,
   flipPressed: false,
@@ -93,6 +96,9 @@ export class LocalControls {
     const turn = view.turn;
     // Choosing the unit is allowed during the transition too, before anything else.
     if (input.selectUnit !== null) out.push({ t: 'selectUnit', unitId: input.selectUnit });
+    if (input.place !== null && turn.phase === 'placement') {
+      out.push({ t: 'place', x: Math.trunc(input.place) });
+    }
     const unit = view.units.find((u) => u.id === turn.activeUnitId);
     const canMove = turn.phase === 'action' || turn.phase === 'retreat';
     if (!unit || !canMove) {

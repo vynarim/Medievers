@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { BEAST_RULES, BeastKind, Trick } from '../../src/content/beasts.ts';
-import { CLASSIC_RULES, weaponIndexIn, type MatchRules } from '../../src/content/rules.ts';
+import { CLASSIC_RULES, weaponIndexIn, type MatchRules } from '../rules-fixture.ts';
 import {
   Material,
   Sim,

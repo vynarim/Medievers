@@ -124,7 +124,7 @@ export class Hud {
     }
 
     const turn = v.turn;
-    const timed = turn.phase === 'action' || turn.phase === 'retreat';
+    const timed = turn.phase === 'action' || turn.phase === 'retreat' || turn.phase === 'placement';
     const seconds = timed ? Math.ceil(turn.phaseTicks / TICKS_PER_SECOND) : null;
     const def = v.rules.weapons.find((w) => w.id === turn.weapon);
     const fuse =
@@ -159,7 +159,8 @@ export class Hud {
     this.turnShield.replaceChildren(
       shield(faction?.primary ?? COLORS.encre, faction?.secondary ?? COLORS.or),
     );
-    this.turnTitle.textContent = t('hud.turn', { n: turn.number });
+    this.turnTitle.textContent =
+      turn.phase === 'placement' ? t('hud.placement') : t('hud.turn', { n: turn.number });
     this.turnHouse.textContent = faction ? t(faction.nameKey) : '';
     this.turnHouse.style.color = css(faction?.primary ?? COLORS.encre);
     this.turnPhase.textContent = t(`hud.phase.${turn.phase}`);

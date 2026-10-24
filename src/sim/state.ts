@@ -8,7 +8,7 @@ import type { Projectile } from './projectiles/projectile.ts';
 import type { Terrain } from './terrain/terrain.ts';
 import type { Unit } from './units/unit.ts';
 
-export type Phase = 'transition' | 'action' | 'retreat' | 'resolution' | 'gameOver';
+export type Phase = 'transition' | 'action' | 'retreat' | 'resolution' | 'gameOver' | 'placement';
 
 export interface TeamConfig {
   /** px: spawn column of each unit; units drop to the ground below y = 0 */
@@ -130,6 +130,14 @@ export interface Affliction {
   turns: number;
 }
 
+/** A unit still to be put on the map, in placement order (rules.turn.placementTicks). */
+export interface PendingUnit {
+  readonly unitId: number;
+  readonly team: number;
+  /** px: where it goes if its house lets the time run out */
+  readonly x: number;
+}
+
 export interface SimState {
   tick: number;
   readonly prng: PrngState;
@@ -151,6 +159,8 @@ export interface SimState {
   beast: Beast | null;
   /** sorted by id */
   readonly pots: PlacedPot[];
+  /** units still to be placed, the next one first; empty once the battle has begun */
+  readonly placing: PendingUnit[];
   /** sorted by unit id, then trick */
   readonly afflictions: Affliction[];
   /** px burnt away at each end of the map (rules.burn); 0 without it */

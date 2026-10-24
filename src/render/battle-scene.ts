@@ -167,21 +167,6 @@ export class BattleScene extends Phaser.Scene {
     this.burnGfx = this.add.graphics().setDepth(5.5);
     this.debugGfx = this.add.graphics().setDepth(20);
 
-    for (const u of this.sim.view().units) {
-      const label = this.add
-        .text(0, 0, '', {
-          fontFamily: FONT_CAPS,
-          fontSize: '30px',
-          color: css(COLORS.encre),
-          align: 'center',
-          backgroundColor: css(COLORS.ceruse),
-          padding: { x: 8, y: 2 },
-        })
-        .setOrigin(0.5, 1)
-        .setDepth(7);
-      this.labels.set(u.id, label);
-    }
-
     this.debugText = this.add
       .text(32, 200, '', {
         fontFamily: FONT_TEXT,
@@ -200,7 +185,6 @@ export class BattleScene extends Phaser.Scene {
       this.world,
       this.burnGfx,
       this.debugGfx,
-      ...this.labels.values(),
     ];
     cam.ignore(this.debugText);
     this.hudCam = this.cameras.add(0, 0, this.scale.width, this.scale.height, false, 'hud');
@@ -246,6 +230,14 @@ export class BattleScene extends Phaser.Scene {
         COLORS.lapis,
         this.time.now,
       );
+    } else if (turn.phase === 'placement') {
+      this.ui.hud.announce(
+        t('hud.placement'),
+        t('hud.placementSub'),
+        t('hud.placementQuip'),
+        COLORS.lapis,
+        this.time.now,
+      );
     } else {
       this.commentary.announceTurn(turn.number, turn.activeTeam, turn.activeUnitId, this.time.now);
     }
@@ -281,6 +273,11 @@ export class BattleScene extends Phaser.Scene {
       if (!u.alive) continue;
       const [x, y] = this.pos(`u${u.id}`, alpha, u.x, u.y);
       points.push({ x, y });
+    }
+    // During the placement, the whole width of the map, to choose where to stand.
+    if (v.turn.phase === 'placement') {
+      const { map } = this.data_;
+      points.push({ x: 0, y: map.height * 0.75 }, { x: map.width, y: map.height * 0.75 });
     }
     const shot = v.shots[0];
     if (shot) {
@@ -441,6 +438,11 @@ export class BattleScene extends Phaser.Scene {
 
   /** Shows the card of the unit under a click (figure or name label), or hides it. */
   private selectAt(x: number, y: number): void {
+    // During the placement, a click puts the house's next unit down on that column.
+    if (this.sim.view().turn.phase === 'placement') {
+      this.input_.ui.place = x;
+      return;
+    }
     const hit = this.sim
       .view()
       .units.find(
@@ -627,8 +629,9 @@ export class BattleScene extends Phaser.Scene {
     this.drawCrates(g, alpha, time);
     this.drawBeast(g, delta, time);
     this.drawPots(g, time);
+    this.drawPlacementGhost(g, time);
     for (const u of v.units) {
-      const label = this.labels.get(u.id);
+      const label = this.labelFor(u.id);
       const [x, y] = this.pos(`u${u.id}`, alpha, u.x, u.y);
       if (!u.alive) {
         label?.setVisible(false);
@@ -885,6 +888,48 @@ export class BattleScene extends Phaser.Scene {
       g.arc(x - facing * 2, y - 14, 2.5, 0, Math.PI * 1.5);
       g.strokePath();
     }
+  }
+
+  /** The name label of a unit, made the first time it shows (units placed during the match). */
+  private labelFor(unitId: number): Phaser.GameObjects.Text {
+    let label = this.labels.get(unitId);
+    if (!label) {
+      label = this.add
+        .text(0, 0, '', {
+          fontFamily: FONT_CAPS,
+          fontSize: '30px',
+          color: css(COLORS.encre),
+          align: 'center',
+          backgroundColor: css(COLORS.ceruse),
+          padding: { x: 8, y: 2 },
+        })
+        .setOrigin(0.5, 1)
+        .setDepth(7);
+      this.hudCam.ignore(label);
+      this.labels.set(unitId, label);
+    }
+    return label;
+  }
+
+  /**
+   * During the placement: where the pointer would put the next unit, a plumb line in the
+   * house's colour down to the ground.
+   */
+  private drawPlacementGhost(g: Phaser.GameObjects.Graphics, time: number): void {
+    const v = this.sim.view();
+    if (v.turn.phase !== 'placement') return;
+    const p = this.input.activePointer;
+    const w = this.cameras.main.getWorldPoint(p.x, p.y);
+    const x = Math.round(w.x);
+    const t = v.terrain;
+    if (x < 0 || x >= t.width) return;
+    let y = 0;
+    while (y < t.height && (t.data[y * t.width + x] ?? 0) === 0) y++;
+    const faction = FACTIONS[v.turn.activeTeam];
+    const color = faction?.primary ?? COLORS.encre;
+    g.lineStyle(3, color, 0.5 + 0.3 * Math.sin(time / 200));
+    for (let yy = Math.max(0, y - 400); yy < y - 10; yy += 24) g.lineBetween(x, yy, x, yy + 12);
+    this.drawFigure(g, x, y, 1, color, faction?.secondary ?? COLORS.or, false, time);
   }
 
   /** Pots resting on the map, smoking, with the turns left written above in roman figures. */

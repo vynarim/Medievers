@@ -32,7 +32,14 @@ import { fire, stepShots } from './weapons/weapons.ts';
 /** BAM: default aim, 45° above the horizon on the facing side */
 export const AIM_UP_RIGHT = 3584;
 export const AIM_UP_LEFT = 2560;
-const PHASES: readonly Phase[] = ['transition', 'action', 'retreat', 'resolution', 'gameOver'];
+const PHASES: readonly Phase[] = [
+  'transition',
+  'action',
+  'retreat',
+  'resolution',
+  'gameOver',
+  'placement',
+];
 
 export type DeepReadonly<T> = T extends (infer E)[]
   ? readonly DeepReadonly<E>[]
@@ -50,7 +57,8 @@ export class Sim {
   constructor(config: MatchConfig, seed: number, mask: Mask) {
     this.s = createState(config, seed, mask);
     const events: SimEvent[] = [];
-    startTurn(this.s, events);
+    if (this.s.placing.length > 0) beginPlacement(this.s, events);
+    else startTurn(this.s, events);
   }
 
   /** Advances exactly one tick, applying `cmds` to the active unit first. */
@@ -89,14 +97,22 @@ function createState(config: MatchConfig, seed: number, mask: Mask): SimState {
   const units: Unit[] = [];
   const teams: TeamState[] = [];
   let nextId = 1;
+  const placing: { unitId: number; team: number; x: number; rank: number }[] = [];
+  const placement = config.rules.turn.placementTicks !== undefined;
   config.teams.forEach((team, teamId) => {
     const unitIds: number[] = [];
-    for (const xPx of team.spawns) {
-      const u = createUnit(nextId++, teamId, xPx, 0, config.rules.startHp);
+    team.spawns.forEach((xPx, rank) => {
+      const id = nextId++;
+      unitIds.push(id);
+      // With a placement, units are created when their house puts them down.
+      if (placement) {
+        placing.push({ unitId: id, team: teamId, x: xPx, rank });
+        return;
+      }
+      const u = createUnit(id, teamId, xPx, 0, config.rules.startHp);
       settle(u, terrain);
       units.push(u);
-      unitIds.push(u.id);
-    }
+    });
     teams.push({
       id: teamId,
       unitIds,
@@ -135,6 +151,10 @@ function createState(config: MatchConfig, seed: number, mask: Mask): SimState {
     crates: [],
     beast: null,
     pots: [],
+    // One unit per house in turn: first units of every house, then the second ones…
+    placing: placing
+      .sort((a, b) => a.rank - b.rank || a.team - b.team)
+      .map(({ unitId, team, x }) => ({ unitId, team, x })),
     afflictions: [],
     burnPx: 0,
     kitchenCounts: teams.map(() => 0),
@@ -205,8 +225,63 @@ function startTurn(s: SimState, events: SimEvent[]): void {
   events.push({ e: 'turnStarted', turn: t.number, team: team.id, unitId: unit.id, wind: t.wind });
 }
 
+/** The placement begins (or goes on): the house of the next unit to place has the hand. */
+function beginPlacement(s: SimState, events: SimEvent[]): void {
+  const next = s.placing[0];
+  if (!next) return;
+  s.turn.activeTeam = next.team;
+  s.turn.activeUnitId = next.unitId;
+  setPhase(s, 'placement', s.rules.turn.placementTicks ?? 0, events);
+}
+
+/** px: a unit cannot be placed closer than this to another one, nor to the map's sides */
+const PLACE_CLEARANCE = 36;
+
+/**
+ * Puts the next unit of the placement down at column x, dropping it onto the ground; returns
+ * false (nothing done) when the column is not allowed. The last one starts the first turn.
+ */
+function placeUnit(s: SimState, x: number, events: SimEvent[]): boolean {
+  const next = s.placing[0];
+  if (!next) return false;
+  const w = s.terrain.width;
+  if (x < PLACE_CLEARANCE || x >= w - PLACE_CLEARANCE) return false;
+  if (s.units.some((u) => Math.abs(subToPx(u.x) - x) < PLACE_CLEARANCE)) return false;
+  const u = createUnit(next.unitId, next.team, x, 0, s.rules.startHp);
+  if (!settle(u, s.terrain)) return false;
+  s.placing.shift();
+  s.units.push(u);
+  s.units.sort((a, b) => a.id - b.id);
+  events.push({ e: 'unitPlaced', unitId: u.id, x });
+  if (s.placing.length > 0) beginPlacement(s, events);
+  else {
+    s.turn.activeTeam = s.teams.length - 1;
+    startTurn(s, events);
+  }
+  return true;
+}
+
+/** Time is up: the unit goes to its default column, or the nearest allowed one. */
+function autoPlace(s: SimState, events: SimEvent[]): void {
+  const next = s.placing[0];
+  if (!next) return;
+  for (let d = 0; d < s.terrain.width; d += 8) {
+    if (placeUnit(s, next.x + d, events) || placeUnit(s, next.x - d, events)) return;
+  }
+  // Nowhere at all: give up on this unit rather than block the match.
+  s.placing.shift();
+  if (s.placing.length > 0) beginPlacement(s, events);
+  else startTurn(s, events);
+}
+
 function applyCommand(s: SimState, c: GameCommand, events: SimEvent[]): void {
   const t = s.turn;
+  if (c.t === 'place') {
+    if (t.phase === 'placement' && !placeUnit(s, Math.trunc(c.x), events)) {
+      events.push({ e: 'placeRefused', x: Math.trunc(c.x) });
+    }
+    return;
+  }
   const canAct = t.phase === 'action';
   const canMove = canAct || t.phase === 'retreat';
   if (c.t === 'selectUnit') {
@@ -350,6 +425,9 @@ function advancePhase(
   const t = s.turn;
   if (phaseJustSet && t.phase !== 'resolution') return;
   switch (t.phase) {
+    case 'placement':
+      if (--t.phaseTicks <= 0) autoPlace(s, events);
+      break;
     case 'transition':
       if (--t.phaseTicks <= 0) {
         setPhase(s, 'action', s.rules.turn.actionTicks, events);
@@ -558,6 +636,10 @@ function hashState(s: SimState): number {
   if (s.rules.unit.moveBudget !== undefined) int(t.moveLeft);
   if (s.rules.unit.turnTicks !== undefined) int(t.turnHold);
   if (s.rules.turn.noRepeat) int(t.restingUnitId);
+  if (s.rules.turn.placementTicks !== undefined) {
+    int(s.placing.length);
+    for (const p of s.placing) for (const v of [p.unitId, p.team, p.x]) int(v);
+  }
   if (s.rules.burn) int(s.burnPx);
   if (s.rules.weapons.some((w) => w.fuseTurns !== undefined)) {
     int(s.pots.length);

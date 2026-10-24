@@ -301,6 +301,32 @@ const SCRIPTS: readonly Script[] = [
       }
     },
   },
+  {
+    name: 'placement',
+    description:
+      'Placement (GDD §2.1): the houses put their units down one at a time, one refused ' +
+      'column, one unit left to the clock, then two turns of sling.',
+    mapId: 'hills',
+    seed: 1347,
+    config: { rules: CLASSIC_RULES, teams: [{ spawns: [200, 500] }, { spawns: [1100, 1400] }] },
+    play: (r) => {
+      r.step([{ t: 'place', x: 320 }]);
+      r.step([{ t: 'place', x: 1250 }]);
+      r.step([{ t: 'place', x: 330 }]); // too close: refused
+      r.step([{ t: 'place', x: 640 }]);
+      r.until('action'); // the last unit is placed by the clock
+      for (let turn = 0; turn < 2; turn++) {
+        r.until('action');
+        const team = r.sim.view().turn.activeTeam;
+        r.step([
+          { t: 'selectWeapon', id: 'sling' },
+          { t: 'aim', angle: team === 0 ? 3700 : 2440 },
+          { t: 'fire', power: 800 },
+        ]);
+        r.until('transition');
+      }
+    },
+  },
 ];
 
 const force = process.argv.includes('--force');

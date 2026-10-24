@@ -1,0 +1,274 @@
+{
+ "version": 1,
+ "config": {
+  "rules": {
+   "turn": {
+    "transitionTicks": 120,
+    "actionTicks": 2700,
+    "retreatTicks": 180,
+    "maxResolutionTicks": 1800,
+    "settleTicks": 120,
+    "moveAfterShot": true,
+    "retreatMaxTicks": 300,
+    "freeSelect": true,
+    "noRepeat": true,
+    "placementTicks": 1200
+   },
+   "unitsPerTeam": 4,
+   "startHp": 100,
+   "unit": {
+    "walkSpeed": 384,
+    "maxStep": 12,
+    "slopeWindow": 7,
+    "jumpForward": {
+     "vx": 2100,
+     "vy": -2304
+    },
+    "jumpBack": {
+     "vx": 256,
+     "vy": -2688
+    },
+    "fallSafeHeight": 160,
+    "fallPxPerHp": 8,
+    "fallMaxDamage": 30,
+    "moveBudget": 280,
+    "slopeTakeoff": true,
+    "turnTicks": 12
+   },
+   "wind": {
+    "max": 10,
+    "accelPerUnit": 2
+   },
+   "explosion": {
+    "knockbackPerHp": 40,
+    "liftPct": 35
+   },
+   "weapons": [
+    {
+     "id": "bow",
+     "behavior": "directHit",
+     "projectileRadius": 0,
+     "windPct": 100,
+     "maxSpeed": 6144,
+     "damage": 35,
+     "explosionRadius": 0,
+     "chipRadius": 3,
+     "knockbackPct": 60,
+     "bouncePct": 0,
+     "defaultFuse": 0,
+     "ammo": -1
+    },
+    {
+     "id": "sling",
+     "behavior": "directHit",
+     "projectileRadius": 2,
+     "windPct": 100,
+     "maxSpeed": 5120,
+     "damage": 25,
+     "explosionRadius": 0,
+     "chipRadius": 5,
+     "knockbackPct": 250,
+     "bouncePct": 0,
+     "defaultFuse": 0,
+     "ammo": -1
+    },
+    {
+     "id": "greekFire",
+     "behavior": "fusedBouncer",
+     "projectileRadius": 5,
+     "windPct": 0,
+     "maxSpeed": 4608,
+     "damage": 45,
+     "explosionRadius": 60,
+     "knockbackPct": 100,
+     "bouncePct": 45,
+     "defaultFuse": 60,
+     "ammo": 3,
+     "fuseTurns": 180
+    },
+    {
+     "id": "crossbow",
+     "behavior": "directHit",
+     "projectileRadius": 0,
+     "windPct": 40,
+     "maxSpeed": 7680,
+     "damage": 45,
+     "explosionRadius": 0,
+     "chipRadius": 4,
+     "knockbackPct": 80,
+     "bouncePct": 0,
+     "defaultFuse": 0,
+     "ammo": 2,
+     "fixedPower": true
+    },
+    {
+     "id": "pitchPot",
+     "behavior": "cluster",
+     "projectileRadius": 5,
+     "windPct": 0,
+     "maxSpeed": 4352,
+     "damage": 30,
+     "explosionRadius": 50,
+     "knockbackPct": 100,
+     "bouncePct": 40,
+     "defaultFuse": 180,
+     "ammo": 1,
+     "fragments": {
+      "count": 5,
+      "damage": 15,
+      "radius": 30,
+      "speed": 1536
+     }
+    },
+    {
+     "id": "mace",
+     "behavior": "melee",
+     "projectileRadius": 0,
+     "windPct": 0,
+     "maxSpeed": 0,
+     "damage": 30,
+     "explosionRadius": 0,
+     "knockbackPct": 320,
+     "bouncePct": 0,
+     "defaultFuse": 0,
+     "ammo": -1,
+     "reach": 34
+    }
+   ],
+   "kitchen": {
+    "healHp": 30,
+    "chanceStartPermille": 250,
+    "chanceDecayPct": 80,
+    "chanceFloorPermille": 20,
+    "lifeRounds": 2,
+    "placeTolerancePct": 10
+   },
+   "burn": {
+    "startRound": 2,
+    "advancePx": 120,
+    "damage": 20
+   },
+   "barrels": {
+    "count": 5,
+    "damage": 40,
+    "radius": 70,
+    "chainDelay": 8
+   },
+   "crates": {
+    "chancePermille": 300,
+    "maxOnMap": 3,
+    "trapPermille": 100,
+    "balmPermille": 350,
+    "balmHp": 25,
+    "fallSpeed": 256,
+    "windDrift": 20,
+    "blastDamage": 15,
+    "blastRadius": 40,
+    "trapDamage": 35,
+    "trapRadius": 60
+   },
+   "beasts": {
+    "spawnPermille": 80,
+    "hareStep": 300,
+    "snailStep": 60,
+    "hareClimb": 40,
+    "kickDamage": 15,
+    "kickSpeed": 2400,
+    "slimeTurns": 2,
+    "biteDamage": 3,
+    "biteTurns": 3
+   }
+  },
+  "teams": [
+   {
+    "spawns": [
+     200,
+     500
+    ]
+   },
+   {
+    "spawns": [
+     1100,
+     1400
+    ]
+   }
+  ]
+ },
+ "seed": 1347,
+ "mapId": "hills",
+ "commands": [
+  [
+   1,
+   {
+    "t": "place",
+    "x": 320
+   }
+  ],
+  [
+   2,
+   {
+    "t": "place",
+    "x": 1250
+   }
+  ],
+  [
+   3,
+   {
+    "t": "place",
+    "x": 330
+   }
+  ],
+  [
+   4,
+   {
+    "t": "place",
+    "x": 640
+   }
+  ],
+  [
+   1324,
+   {
+    "t": "selectWeapon",
+    "id": "sling"
+   }
+  ],
+  [
+   1324,
+   {
+    "t": "aim",
+    "angle": 3700
+   }
+  ],
+  [
+   1324,
+   {
+    "t": "fire",
+    "power": 800
+   }
+  ],
+  [
+   1866,
+   {
+    "t": "selectWeapon",
+    "id": "sling"
+   }
+  ],
+  [
+   1866,
+   {
+    "t": "aim",
+    "angle": 2440
+   }
+  ],
+  [
+   1866,
+   {
+    "t": "fire",
+    "power": 800
+   }
+  ]
+ ],
+ "endTick": 2287,
+ "description": "Placement (GDD §2.1): the houses put their units down one at a time, one refused column, one unit left to the clock, then two turns of sling.",
+ "expectedHash": "61f4968a"
+}

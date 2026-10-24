@@ -16,6 +16,8 @@ export class UiIntents {
   skip = false;
   /** a unit of the active team clicked to play it this turn */
   selectUnit: number | null = null;
+  /** px: map column clicked during the placement */
+  place: number | null = null;
 
   /** Returns and clears the one-shot intents. */
   take(): {
@@ -25,6 +27,7 @@ export class UiIntents {
     fuse: number | null;
     skip: boolean;
     selectUnit: number | null;
+    place: number | null;
   } {
     const out = {
       jump: this.jump,
@@ -33,6 +36,7 @@ export class UiIntents {
       fuse: this.fuse,
       skip: this.skip,
       selectUnit: this.selectUnit,
+      place: this.place,
     };
     this.jump = null;
     this.jumpDir = null;
@@ -40,6 +44,7 @@ export class UiIntents {
     this.fuse = null;
     this.skip = false;
     this.selectUnit = null;
+    this.place = null;
     return out;
   }
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CLASSIC_RULES, type MatchRules, type TurnRules } from '../../src/content/rules.ts';
+import { CLASSIC_RULES, type MatchRules, type TurnRules } from '../rules-fixture.ts';
 import {
   LOG_VERSION,
   Material,

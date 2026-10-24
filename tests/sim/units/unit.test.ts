@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { MATERIAL_RULES } from '../../../src/content/materials.ts';
-import { CLASSIC_RULES } from '../../../src/content/rules.ts';
+import { CLASSIC_RULES } from '../../rules-fixture.ts';
 import { UNIT_RULES } from '../../../src/content/units.ts';
 import { SUBPX, subToPx } from '../../../src/sim/math/fixed.ts';
 import { Material, createTerrain, type Terrain } from '../../../src/sim/terrain/index.ts';

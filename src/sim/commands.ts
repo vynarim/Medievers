@@ -19,7 +19,9 @@ export type GameCommand =
   | { readonly t: 'fire'; readonly power: number }
   | { readonly t: 'skip' }
   /** free choice of the unit that plays this turn (rules.turn.freeSelect), before it acts */
-  | { readonly t: 'selectUnit'; readonly unitId: number };
+  | { readonly t: 'selectUnit'; readonly unitId: number }
+  /** px: column where the playing house puts its next unit, during the placement */
+  | { readonly t: 'place'; readonly x: number };
 
 /** A command scheduled at a tick, as stored in game logs. */
 export type TimedCommand = readonly [tick: number, command: GameCommand];

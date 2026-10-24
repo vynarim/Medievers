@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { CRATE_RULES, CrateKind } from '../../src/content/crates.ts';
-import { CLASSIC_RULES, weaponIndexIn, type MatchRules } from '../../src/content/rules.ts';
+import { CLASSIC_RULES, weaponIndexIn, type MatchRules } from '../rules-fixture.ts';
 import { WEAPONS } from '../../src/content/weapons.ts';
 import { Material, Sim, type GameCommand, type Mask, type SimEvent } from '../../src/sim/index.ts';
 

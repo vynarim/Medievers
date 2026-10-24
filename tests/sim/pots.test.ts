@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CLASSIC_RULES, type MatchRules } from '../../src/content/rules.ts';
+import { CLASSIC_RULES, type MatchRules } from '../rules-fixture.ts';
 import { Material, Sim, type Mask, type SimEvent } from '../../src/sim/index.ts';
 
 function flatMask(): Mask {

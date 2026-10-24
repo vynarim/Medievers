@@ -145,6 +145,9 @@ export class Commentary {
           }
           break;
         }
+        case 'placeRefused':
+          this.hud.say(t('hud.placeRefused'), now);
+          break;
         case 'potPlaced':
           // A pot laid for a later turn is not a miss.
           this.pendingMiss = null;

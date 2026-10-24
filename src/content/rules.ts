@@ -47,6 +47,12 @@ export interface TurnRules {
    * is the last one standing (GDD §2.2, 2026-10-24). Absent from older logs: any unit.
    */
   readonly noRepeat?: boolean;
+  /**
+   * ticks: the match opens with the houses placing their units one at a time, in turn, with
+   * this long for each; when the time runs out the unit goes to its default column (GDD §2.1,
+   * 2026-10-24). Absent from older logs: units start on their spawn columns.
+   */
+  readonly placementTicks?: number;
 }
 
 export interface MatchRules {
@@ -87,6 +93,7 @@ export const CLASSIC_RULES: MatchRules = {
     retreatMaxTicks: 5 * TICKS_PER_SECOND,
     freeSelect: true,
     noRepeat: true,
+    placementTicks: 20 * TICKS_PER_SECOND,
   },
   unitsPerTeam: 4,
   startHp: 100,

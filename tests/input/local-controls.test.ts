@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CLASSIC_RULES } from '../../src/content/rules.ts';
+import { CLASSIC_RULES } from '../rules-fixture.ts';
 import {
   CHARGE_SPEED,
   DOUBLE_PRESS_TICKS,
