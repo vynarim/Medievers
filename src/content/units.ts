@@ -46,6 +46,11 @@ export interface UnitRules {
    */
   readonly jumpHeadroom?: number;
   /**
+   * px of walk that still leave the jump: a step taken by mistake (turning round costs nothing
+   * already) does not cost the turn its jump (2026-10-25). Absent from older logs: any walk does.
+   */
+  readonly jumpGrace?: number;
+  /**
    * ticks: walking towards the other side first turns the unit round on the spot for this long,
    * without moving, so turning round costs no walk and keeps the jump (2026-10-24). Absent from
    * older logs: the unit turns and walks at once.
@@ -98,6 +103,7 @@ export const UNIT_RULES: UnitRules = {
   moveBudget: 280,
   slopeTakeoff: true,
   jumpHeadroom: 40,
+  jumpGrace: 20,
   turnTicks: 12,
   climbSpeed: 256,
   climbCostPct: 50,

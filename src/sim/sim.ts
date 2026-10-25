@@ -352,6 +352,17 @@ function autoPlace(s: SimState, events: SimEvent[]): void {
   else startTurn(s, events);
 }
 
+/**
+ * The turn may still jump: nothing walked, or no more than rules.unit.jumpGrace px (with a move
+ * budget; without one, always).
+ */
+export function jumpLeft(s: SimView): boolean {
+  const budget = s.rules.unit.moveBudget;
+  if (budget === undefined) return true;
+  const walked = budget * SUBPX - s.turn.moveLeft;
+  return walked <= (s.rules.unit.jumpGrace ?? 0) * SUBPX;
+}
+
 /** The unit has rules.unit.jumpHeadroom px of free room above its head to jump. */
 function headroom(s: SimState, u: Unit): boolean {
   const room = s.rules.unit.jumpHeadroom;
@@ -428,9 +439,10 @@ function applyCommand(s: SimState, c: GameCommand, events: SimEvent[]): void {
       break;
     }
     case 'jump': {
-      // With a move budget, a turn has either a walk or a single jump (GDD §3.1).
+      // With a move budget, a turn has either a walk or a single jump (GDD §3.1); a step or two
+      // taken by mistake still leaves the jump (rules.unit.jumpGrace).
       const budget = s.rules.unit.moveBudget;
-      if (budget !== undefined && t.moveLeft !== budget * SUBPX) return;
+      if (budget !== undefined && !jumpLeft(s)) return;
       // No room above the head: no jump, and nothing spent (rules.unit.jumpHeadroom).
       if (u.grounded && !headroom(s, u)) {
         events.push({ e: 'jumpRefused', unitId: u.id });

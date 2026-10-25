@@ -4,7 +4,7 @@
 import { CLASSIC_RULES, type MatchRules } from '../content/rules.ts';
 import { FACTIONS, unitName } from '../content/factions.ts';
 import type { UiIntents } from '../input/ui-intents.ts';
-import { canSwitchUnit, nextTeammate, type SimView } from '../sim/sim.ts';
+import { canSwitchUnit, jumpLeft, nextTeammate, type SimView } from '../sim/sim.ts';
 import { classOf, maxHpOf, mayUse } from '../sim/classes.ts';
 import { canClimb } from '../sim/units/climb.ts';
 import { ropeDir } from '../input/local-controls.ts';
@@ -492,7 +492,7 @@ export class GameUi {
     const canMove = phase === 'action' || phase === 'retreat';
     const budget = (view.rules.unit.moveBudget ?? 0) * 256;
     const moveLeft = budget === 0 || view.turn.moveLeft > 0;
-    const jumpLeft = budget === 0 || view.turn.moveLeft === budget;
+    const canJump = jumpLeft(view);
     const canSwitch = canSwitchUnit(view) && nextTeammate(view) !== null;
     const ladder = this.onLadder();
     // A ladder that ends the turn is taken whatever the walk left (rules.unit.ladderEndsTurn).
@@ -531,9 +531,9 @@ export class GameUi {
           : when === 'walk'
             ? !canMove || !moveLeft
             : when === 'jump'
-              ? !canMove || !jumpLeft
+              ? !canMove || !canJump
               : when === 'up'
-                ? !canMove || (ladder ? !climbLeft : !jumpLeft)
+                ? !canMove || (ladder ? !climbLeft : !canJump)
                 : when === 'down'
                   ? !canMove || !climbLeft
                   : when === 'rope'

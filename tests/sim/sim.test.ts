@@ -493,13 +493,21 @@ describe('turn loop', () => {
     j.step([{ t: 'move', dir: 1 }]);
     for (let i = 0; i < 30; i++) j.step();
     expect(unit(j, 1).x).toBe(xl);
-    // A unit that walked a little cannot jump any more.
+    // A step taken by mistake still leaves the jump (rules.unit.jumpGrace)...
     const w = new Driver({ ...DUEL, rules, teams: [{ spawns: [300] }, { spawns: [1000] }] }, 1);
     w.until('action');
     w.step([{ t: 'move', dir: 1 }]);
     w.step([{ t: 'move', dir: 0 }]);
     w.step([{ t: 'jump', kind: 'forward' }]);
-    expect(unit(w, 1).grounded).toBe(true);
+    expect(unit(w, 1).grounded).toBe(false);
+    // ...but a real walk does not.
+    const z = new Driver({ ...DUEL, rules, teams: [{ spawns: [300] }, { spawns: [1000] }] }, 1);
+    z.until('action');
+    z.step([{ t: 'move', dir: 1 }]);
+    for (let i = 0; i < 30; i++) z.step();
+    z.step([{ t: 'move', dir: 0 }]);
+    z.step([{ t: 'jump', kind: 'forward' }]);
+    expect(unit(z, 1).grounded).toBe(true);
   });
 
   it('ends the turn at once when the active unit hurts itself', () => {
