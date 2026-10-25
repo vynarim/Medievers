@@ -18,10 +18,11 @@ La priorité est le moteur : simulation, règles, réseau, IA. Jusqu'au lot 9, t
 | 6 | Arsenal complet (chaque arme livrée avec son support IA) | M4 | M4 |
 | 7 | Moteur de présentation, sans art final | Tâches **[tech]** de M6 et M7 | M6 [tech], M7 [tech] |
 | 8 | Plateforme | M8 | M8 |
-| 9 | Art et son (assets générés puis retouchés, ASSETS §9) | Tâches **[art]** de M6 et M7 | M6, M7 |
+| 9 | Art (assets générés puis retouchés, ASSETS §9) | Tâches **[art]** de M6 et M7 | M6, M7 |
+| 10 | Son : bruitages et musique (séparé de l'art le 2026-10-25) | Tâches **[son]** de M6 et M7 | M6, M7 |
 
-- Le lot 9 peut démarrer en parallèle dès que le format de rig (6.1) est figé.
-- Dans M6 et M7, **[tech]** désigne une tâche réalisable avec des placeholders, et **[art]** une tâche qui dépend des assets finaux.
+- Le lot 9 peut démarrer en parallèle dès que le format de rig (6.1) est figé. Le lot 10 ne dépend pas de l'art et peut démarrer à tout moment.
+- Dans M6 et M7, **[tech]** désigne une tâche réalisable avec des placeholders, **[art]** une tâche qui dépend des assets graphiques finaux, et **[son]** une tâche de bruitage ou de musique.
 - Une gate de jalon partiel (« M6 [tech] ») ne vérifie que les tâches marquées [tech].
 
 ---
@@ -117,7 +118,7 @@ La priorité est le moteur : simulation, règles, réseau, IA. Jusqu'au lot 9, t
 | 6.5 **[art]** | Bord « vélin déchiré » sur les carves | Validé visuellement |
 | 6.6 **[art]** | VFX P0 (explosion M, débris, poussière, étoiles, trajectoire) | — |
 | 6.7 **[tech]** | HUD P0 (vent, timer, phylactères, cartouches) | — |
-| 6.8 **[art]** | Audio P0 (8 SFX d'armes, 5 SFX d'unités, 1 piste de musique) | — |
+| 6.8 **[son]** | Audio P0 (8 SFX d'armes, 5 SFX d'unités, 1 piste de musique, cf. 7.8) | — |
 | 6.9 **[art]** | **Vertical slice** : Jéricho, 2 maisons, 3 Chevaliers chacune, arc/fronde/pot/épée/mur, hotseat et IA | Démo jouable sur PC et tablette à 60 fps |
 
 ## M7 — Contenu V1
@@ -133,7 +134,8 @@ La priorité est le moteur : simulation, règles, réseau, IA. Jusqu'au lot 9, t
 | 7.3e **[tech]** | La Boue d'Azincourt (1415) : matériau boue (marche ralentie, chutes amorties), pieux | `maps:soak` ; un replay de la boue et des pieux |
 | 7.4 **[tech]** | Menus complets, écran titre, victoire, « passez la main », « tournez l'appareil » | — |
 | 7.5 **[tech]** | Éditeur de blason et gestion des équipes (persistance) | — |
-| 7.6 **[art]** | Audio P1 complet | — |
+| 7.6 **[son]** | Audio P1 complet | — |
+| 7.8 **[son]** | Musique d'ambiance (demandée le 2026-10-25) : au moins une ritournelle médiévale discrète, un peu modernisée et enjouée, jouée en boucle sous la partie ; volume réglable et coupure dans ⚙ Réglages | La boucle s'enchaîne sans couture ; elle reste sous les bruitages ; coupée, elle le reste après un rechargement |
 | 7.7 **[tech]** | Replays : revoir la dernière partie, export et import JSON | Un replay importé est identique bit à bit |
 
 ## M8 — Finition et plateforme

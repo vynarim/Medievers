@@ -1,21 +1,19 @@
-// DOM heads-up display (GDD §9): turn and house, houses' health, wind banner, hourglass, weapon
-// and power, the phylactery of running commentary, and the centre banner. Reads the sim view.
+// DOM heads-up display (GDD §9): turn and house, houses' health, wind banner, hourglass, the
+// phylactery of running commentary, and the centre banner. Reads the sim view.
 import { FACTIONS, unitName } from '../content/factions.ts';
 import { TICKS_PER_SECOND } from '../content/rules.ts';
-import { MAX_POWER } from '../sim/commands.ts';
 import type { SimView } from '../sim/sim.ts';
 import { houseShortName } from './house-names.ts';
 import { t } from './i18n.ts';
-import { button, el, shield, watchBar } from './overlay.ts';
+import { button, el, shield } from './overlay.ts';
 import { playerArt } from './player-art.ts';
-import { withIcons } from './icons.ts';
 import { COLORS, css } from './tokens.ts';
 
 /** ms a commentary line stays up */
 const CHRONICLE_MS = 8000;
 /** lines of commentary shown at once, the newest at the bottom; ms a line takes to fade */
 const CHRONICLE_LINES = 3;
-const CHRONICLE_FADE = 700;
+const CHRONICLE_FADE = 1300;
 /** ms a turn announcement stays up */
 const BANNER_MS = 4200;
 /** ms of one pulse of the playing house's glow (team-glow in overlay.ts) */
@@ -30,15 +28,11 @@ export class Hud {
   private readonly windFill: HTMLElement;
   private readonly timer: HTMLElement;
   private readonly timerSecs: HTMLElement;
-  private readonly weaponName: HTMLElement;
-  private readonly powerFill: HTMLElement;
-  private readonly hint: HTMLElement;
   private readonly chronicle: HTMLElement;
-  private lines: { readonly el: HTMLElement; readonly until: number }[] = [];
+  private lines: { readonly el: HTMLElement; until: number }[] = [];
   private readonly banner: HTMLElement;
   private bannerUntil = 0;
   private signature = '';
-  private power = -1;
 
   constructor(root: HTMLElement) {
     // The turn, right of the wind in the title cartouche; the house that plays is told by its
@@ -66,18 +60,9 @@ export class Hud {
     this.timerSecs = el('div', 'secs');
     this.timer.append(el('div', 'glass', '⌛'), this.timerSecs);
 
-    const weapon = el('div', 'hud-weapon panel');
-    this.weaponName = el('div', 'name');
-    const power = el('div', 'power');
-    this.powerFill = el('i');
-    power.append(this.powerFill);
-    this.hint = el('div', 'hint');
-    weapon.append(this.weaponName, power, this.hint);
-
     this.chronicle = el('div', 'chronicles');
     this.banner = el('div', 'banner panel faded');
-    root.append(this.teams, wind, this.timer, weapon, this.chronicle, this.banner);
-    watchBar(weapon);
+    root.append(this.teams, wind, this.timer, this.chronicle, this.banner);
     // A click or tap anywhere dismisses a turn announcement (not the end-of-match one).
     window.addEventListener('pointerdown', this.dismiss, true);
   }
@@ -100,7 +85,9 @@ export class Hud {
     line.append(...this.inked(text));
     this.chronicle.append(line);
     this.lines.push({ el: line, until: now + CHRONICLE_MS });
-    while (this.lines.length > CHRONICLE_LINES) this.lines.shift()?.el.remove();
+    // The oldest ones beyond the few kept fade out like the others, sooner.
+    const live = this.lines.filter((l) => l.until >= now);
+    for (const l of live.slice(0, Math.max(0, live.length - CHRONICLE_LINES))) l.until = now;
   }
 
   /** Centre banner: a title in textura, a subtitle and a quip. Persistent ones stay until replaced. */
@@ -157,7 +144,7 @@ export class Hud {
     this.signature = '';
   }
 
-  update(v: SimView, power: number, now: number): void {
+  update(v: SimView, now: number): void {
     if (this.inks.length !== v.units.length) {
       this.inks = v.units
         .map((u) => ({
@@ -175,10 +162,6 @@ export class Hud {
       return true;
     });
     if (now > this.bannerUntil) this.banner.classList.add('faded');
-    if (power !== this.power) {
-      this.power = power;
-      this.powerFill.style.width = `${(power * 100) / MAX_POWER}%`;
-    }
 
     const turn = v.turn;
     const timed = turn.phase === 'action' || turn.phase === 'retreat' || turn.phase === 'placement';
@@ -256,28 +239,5 @@ export class Hud {
     this.timerSecs.textContent = seconds === null ? '—' : String(seconds);
     this.timer.classList.toggle('hurry', seconds !== null && seconds <= 5);
     this.timer.classList.toggle('idle', seconds === null);
-
-    const fuseKey =
-      def?.behavior === 'build'
-        ? `hud.wallLength.${Math.max(1, Math.min(3, fuse ?? 2))}`
-        : def?.fuseTurns !== undefined
-          ? 'hud.fuseTurns'
-          : 'hud.fuse';
-    const fuseText = fuse === null ? '' : ` · ${t(fuseKey, { s: fuse ?? 0 })}`;
-    this.weaponName.textContent = `${t(`weapons.${turn.weapon}`)}${fuseText}`;
-    // How to use the weapon in hand: aim and charge, click the map, or just press.
-    // A weapon's own hint first (the sword strikes at once), then its behaviour's.
-    const own = t(`hud.hint.${turn.weapon}`);
-    const hintKey = `hud.hint.${def?.behavior ?? 'directHit'}`;
-    const hint = !own.startsWith('[')
-      ? own
-      : t(hintKey).startsWith('[')
-        ? t('hud.hint')
-        : t(hintKey);
-    if (this.hint.dataset.text !== hint) {
-      this.hint.dataset.text = hint;
-      this.hint.replaceChildren(...withIcons(hint));
-    }
-    this.hint.classList.toggle('hidden', turn.phase !== 'action');
   }
 }

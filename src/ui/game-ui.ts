@@ -88,6 +88,11 @@ export class GameUi {
   private fuseMax = 5;
   private fuseKind = '';
   private readonly skip: HTMLButtonElement;
+  /**
+   * The label it wears. Not read back from its textContent, which holds the icon's whitespace too:
+   * rebuilt at every frame, the button lost any click held on its icon or label (2026-10-25).
+   */
+  private skipLabel = '';
   private readonly resetView: HTMLButtonElement;
   /** down the ladder, shown at a ladder only */
   private readonly down: HTMLButtonElement;
@@ -297,7 +302,7 @@ export class GameUi {
 
     this.veil = el('div', 'veil hidden');
     this.veil.addEventListener('pointerdown', () => this.show(null));
-    this.arsenal = this.modal();
+    this.arsenal = this.modal('armoury');
     this.card = el('div', 'card panel hidden');
     this.bubble = el('div', 'bubble panel hidden');
     this.bubble.addEventListener('pointerdown', () => this.showBubble(null, 0, 0));
@@ -544,7 +549,7 @@ export class GameUi {
   /** Called every frame with the current view, the charged power and the frame time in ms. */
   update(view: SimView, power: number, now: number): void {
     this.view = view;
-    this.hud.update(view, power, now);
+    this.hud.update(view, now);
     const phase = view.turn.phase;
     const canMove = phase === 'action' || phase === 'retreat';
     const budget = (view.rules.unit.moveBudget ?? 0) * 256;
@@ -606,7 +611,8 @@ export class GameUi {
     }
     // Before the shot it passes the turn; after it, it ends the turn.
     const skipLabel = phase === 'retreat' ? t('ui.endTurn') : t('ui.skip');
-    if (this.skip.textContent !== skipLabel) {
+    if (this.skipLabel !== skipLabel) {
+      this.skipLabel = skipLabel;
       setIcon(this.skip, 'hourglass', skipLabel);
       this.skip.title = t(phase === 'retreat' ? 'tip.endTurn' : 'tip.skip');
     }
@@ -664,9 +670,11 @@ export class GameUi {
       const art = el('span', 'art');
       art.innerHTML = weaponArt(w.id, 60);
       b.append(art, el('b', '', t(`weapons.${w.id}`)));
-      for (const line of weaponLines({ ...w, ammo })) b.append(el('small', '', line));
+      // On a phone held upright only the ammo and why a weapon is greyed stay (class `keep`).
+      for (const line of weaponLines({ ...w, ammo }))
+        b.append(el('small', line.startsWith(t('weapon.ammo')) ? 'keep' : '', line));
       if (!allowed)
-        b.append(el('small', '', t(w.engine ? 'weapons.needEngine' : 'weapons.forbidden')));
+        b.append(el('small', 'keep', t(w.engine ? 'weapons.needEngine' : 'weapons.forbidden')));
       b.disabled = ammo === 0 || !allowed || v.turn.phase !== 'action';
       b.addEventListener('click', () => {
         this.opts.intents.selectWeapon = w.id;
@@ -694,7 +702,6 @@ export class GameUi {
     this.cardSignature = signature;
 
     const faction = FACTIONS[u.team];
-    const r = v.rules.unit;
     const cls = classOf(v, u);
     const state = !u.alive
       ? t('card.state.dead')
@@ -722,15 +729,6 @@ export class GameUi {
     const maxHp = maxHpOf(v, u);
     fill.style.width = `${Math.min(100, (u.hp * 100) / maxHp)}%`;
     hpBar.append(fill);
-    const rules = el('ul');
-    for (const line of [
-      t('card.rule.walk', { speed: (r.walkSpeed / 256).toLocaleString('fr-FR'), step: r.maxStep }),
-      t('card.rule.fall', { safe: r.fallSafeHeight, per: r.fallPxPerHp, max: r.fallMaxDamage }),
-      t('card.rule.hurt'),
-      t('card.rule.death'),
-    ]) {
-      rules.append(el('li', '', line));
-    }
     this.card.replaceChildren(
       this.click(setIcon(button('', 'close'), 'close'), () => this.selectUnit(null)),
       el('h2', '', unitName(u.id)),
@@ -743,8 +741,6 @@ export class GameUi {
         .map((a) => el('div', 'note', t(`card.trick.${a.trick}`, { turns: a.turns }))),
       el('h3', '', cls ? `${t('card.class')} : ${t(`classes.${cls}`)}` : t('card.class')),
       ...this.classLines(v, cls).map((line) => el('div', '', line)),
-      el('h3', '', t('card.rules')),
-      rules,
     );
     if (active) {
       const def = v.rules.weapons.find((w) => w.id === v.turn.weapon);

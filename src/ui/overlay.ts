@@ -42,7 +42,7 @@ const STYLE = `
 #ui .bubble::after { content: ''; position: absolute; left: 50%; bottom: -16px; margin-left: -10px;
   border: 10px solid transparent; border-top: 16px solid var(--encre); border-bottom: 0; }
 /* Replay viewer: its own bar replaces the action bar. */
-#ui.replaying .bar:not(.replay-bar), #ui.replaying .hud-weapon { display: none; }
+#ui.replaying .bar:not(.replay-bar) { display: none; }
 #ui .replay-bar .replay-title { font-family: var(--caps); font-size: 18px; color: var(--vermillon);
   padding: 0 8px; }
 /* Tiny help bubble over a unit that cannot take the turn (selected but resting). */
@@ -65,13 +65,11 @@ const STYLE = `
 /* The fuse: its icon, what it sets, and the value, one press for the next one. */
 #ui button.fuse-pick .value { font-family: var(--title); font-size: 24px; font-weight: normal;
   min-width: 14px; }
-/* Fire fills with the power as it charges (on a phone held upright, where the weapon's panel
-   gives way to the battlefield). */
+/* Fire fills with the power as it charges. */
 #ui button.fire { position: relative; overflow: hidden; }
 #ui button.fire .label { position: relative; }
-#ui button.fire .charge { display: none; position: absolute; left: 0; top: 0; bottom: 0; width: 0;
+#ui button.fire .charge { display: block; position: absolute; left: 0; top: 0; bottom: 0; width: 0;
   background: var(--or); opacity: 0.65; pointer-events: none; }
-#ui.phone button.fire .charge { display: block; }
 #ui .sys { position: absolute; top: 12px; right: 12px; display: flex; gap: 6px; }
 #ui .pause-code { display: flex; align-items: center; justify-content: center; gap: 12px;
   margin: 0 0 12px; font-size: 18px; }
@@ -127,15 +125,6 @@ const STYLE = `
 #ui .hud-timer .secs { font-family: var(--title); font-size: 38px; line-height: 1; }
 #ui .hud-timer.hurry .secs { color: var(--vermillon); }
 #ui .hud-timer.idle { opacity: 0.5; }
-/* The weapon and its power: as wide as its name needs, level with the command bar when the
-   window has room beside it (class weapon-low, set by measureBars), above the bar otherwise. */
-#ui .hud-weapon { position: absolute; right: 16px; bottom: 96px; padding: 6px 16px 8px; min-width: var(--col);
-  max-width: 440px; box-sizing: border-box; text-align: center; }
-#ui .hud-weapon .name { font-family: var(--caps); font-size: 19px; white-space: nowrap; }
-#ui.weapon-low:not(.phone) .hud-weapon { bottom: 12px; }
-#ui .hud-weapon .power { height: 12px; margin: 4px 0 2px; border: 2px solid var(--encre); background: var(--velin); }
-#ui .hud-weapon .power i { display: block; height: 100%; background: var(--vermillon); }
-#ui .hud-weapon .hint { font-size: 14px; }
 /* Phylactery, the speech scroll of the marginal figures: the running commentary. */
 #ui .chronicles { position: absolute; top: 96px; left: 50%; transform: translateX(-50%);
   display: flex; flex-direction: column; align-items: center; gap: 6px; pointer-events: none; }
@@ -143,7 +132,7 @@ const STYLE = `
   text-align: center; font-size: 19px; line-height: 1.3; background: var(--ceruse);
   border: 2px solid var(--encre); border-radius: 18px / 50%;
   box-shadow: inset 0 0 0 3px var(--ceruse), inset 0 0 0 4px var(--or), var(--lift);
-  transition: opacity 0.6s; }
+  transition: opacity 1.2s ease-in; }
 /* Bad news in a red border, good news in a green one. */
 #ui .chronicle.bad { border-color: var(--vermillon); box-shadow: inset 0 0 0 3px var(--ceruse), inset 0 0 0 5px var(--vermillon), var(--lift); }
 #ui .chronicle.good { border-color: var(--vert); box-shadow: inset 0 0 0 3px var(--ceruse), inset 0 0 0 5px var(--vert), var(--lift); }
@@ -173,6 +162,10 @@ const STYLE = `
   box-shadow: none; color: var(--encre); }
 #ui button.close:hover { background: none; color: var(--vermillon); }
 #ui button.close .ico { width: 22px; height: 22px; }
+/* The arsenal takes its width outright: shrunk to fit at left: 50%, it would get half the screen,
+   a single narrow column on a phone. Its buttons let a finger scroll the list (touch-action). */
+#ui .armoury { width: min(780px, calc(100vw - 32px)); }
+#ui .modal button { touch-action: pan-y; }
 #ui .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 10px; }
 #ui .weapon { text-align: left; display: block; width: 100%; padding: 10px 12px; font-family: var(--text); }
 #ui .weapon b { display: block; font-family: var(--caps); font-weight: normal; font-size: 20px;
@@ -261,7 +254,6 @@ html.phone #game { height: calc(100% - var(--bar-h, 0px)); }
 #ui.phone .bar .has-icon .label, #ui.phone .bar .arsenal .label { display: none; }
 #ui.phone .bar .sep { display: none; }
 #ui.phone .bar button.fire { min-width: 120px; }
-#ui.phone .hud-weapon { display: none; }
 /* One line on top: the houses, the wind and the turn, the menu. */
 #ui.phone .hud-teams { max-width: none; width: auto; right: 262px; }
 #ui.phone .team { min-width: 0; padding: 4px 8px 4px 6px; }
@@ -277,9 +269,6 @@ html.phone #game { height: calc(100% - var(--bar-h, 0px)); }
 #ui.phone .hud-timer { top: 88px; right: 12px; width: 76px; height: 76px; }
 /* The default-view button, when shown, under the hourglass. */
 #ui.phone .sys .reset { position: absolute; top: 160px; right: 0; }
-#ui.phone .hud-weapon { right: 50%; bottom: calc(var(--bar-h, 0px) + 8px); transform: translateX(50%);
-  width: min(var(--col), calc(100vw - 24px)); min-width: 0; }
-#ui.phone .hud-weapon .hint { display: none; }
 /* The commentary keeps out of the way: its newest line only, small, in the sky under the HUD. */
 #ui.phone .chronicles { top: 250px; left: 12px; right: 12px; transform: none; }
 #ui.phone .chronicle { max-width: 100%; min-width: 0; padding: 4px 18px; font-size: 17px; opacity: 0.92; }
@@ -287,6 +276,11 @@ html.phone #game { height: calc(100% - var(--bar-h, 0px)); }
 #ui.phone .card, #ui.phone .card.left { left: 12px; right: 12px; width: auto; top: auto;
   bottom: calc(var(--bar-h, 0px) + 80px);
   max-height: 40vh; }
+#ui.phone .armoury .grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+#ui.phone .weapon { padding: 8px; text-align: center; }
+#ui.phone .weapon .art { float: none; display: block; margin: 0 auto 4px; }
+#ui.phone .weapon b { font-size: 18px; }
+#ui.phone .weapon small:not(.keep) { display: none; }
 #ui.phone .pause { min-width: 0; width: calc(100vw - 32px); }
 /* The turn's announcement: a small cartouche, its title and who plays, without the quip. */
 #ui.phone .banner { top: 150px; transform: translateX(-50%); padding: 8px 18px 10px;
@@ -391,17 +385,9 @@ export function watchBar(bar: HTMLElement): void {
 /** --bar-h: CSS px from the top of the highest action bar shown to the bottom of the window. */
 export function measureBars(): void {
   let h = 0;
-  let right = 0;
   for (const b of root?.querySelectorAll<HTMLElement>('.bar') ?? []) {
     if (b.offsetHeight === 0) continue;
-    const r = b.getBoundingClientRect();
-    h = Math.max(h, window.innerHeight - r.top);
-    right = Math.max(right, r.right);
-  }
-  // The weapon panel comes down level with the bar when it fits beside it, a gap kept between.
-  const weapon = root?.querySelector<HTMLElement>('.hud-weapon');
-  if (weapon && weapon.offsetWidth > 0) {
-    root?.classList.toggle('weapon-low', right + 16 <= weapon.getBoundingClientRect().left);
+    h = Math.max(h, window.innerHeight - b.getBoundingClientRect().top);
   }
   const value = `${Math.ceil(h)}px`;
   const style = document.documentElement.style;
