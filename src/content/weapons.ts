@@ -337,6 +337,21 @@ export const WEAPONS: readonly WeaponDef[] = [
     crateAmmo: 3,
   },
   {
+    id: 'crossbow',
+    behavior: 'directHit',
+    projectileRadius: 0,
+    windPct: 40,
+    maxSpeed: 30 * 256,
+    damage: 45,
+    explosionRadius: 0,
+    chipRadius: 4,
+    knockbackPct: 80,
+    bouncePct: 0,
+    defaultFuse: 0,
+    ammo: 2,
+    fixedPower: true,
+  },
+  {
     id: 'sling',
     thrown: true,
     behavior: 'directHit',
@@ -369,21 +384,6 @@ export const WEAPONS: readonly WeaponDef[] = [
     fuseTurns: 3 * 60,
   },
   {
-    id: 'crossbow',
-    behavior: 'directHit',
-    projectileRadius: 0,
-    windPct: 40,
-    maxSpeed: 30 * 256,
-    damage: 45,
-    explosionRadius: 0,
-    chipRadius: 4,
-    knockbackPct: 80,
-    bouncePct: 0,
-    defaultFuse: 0,
-    ammo: 2,
-    fixedPower: true,
-  },
-  {
     id: 'pitchPot',
     thrown: true,
     behavior: 'cluster',
@@ -397,6 +397,77 @@ export const WEAPONS: readonly WeaponDef[] = [
     defaultFuse: 3 * 60,
     ammo: 1,
     fragments: { count: 5, damage: 15, radius: 30, speed: 6 * 256 },
+  },
+  {
+    // Cochon enflammé (2026-10-25): let loose on the facing side, it trots at 2 px a tick, hops
+    // over walls, and goes up at a second press of Fire, or after 8 s, or when a blast reaches it.
+    id: 'flamingPig',
+    behavior: 'walker',
+    ...TOOL,
+    damage: 70,
+    explosionRadius: 90,
+    knockbackPct: 100,
+    ammo: 1,
+    walker: { speed: 2 * 256, fuse: 8 * 60, hop: 7 * 256, maxStep: 8 },
+  },
+  {
+    // Ruche (2026-10-25): thrown like a stone, bent by the wind; where it breaks, a swarm comes
+    // out that flies after the nearest unit, whoever's, for 4 s, stinging it for 5 HP every
+    // half-second it is on it.
+    id: 'beehive',
+    behavior: 'hive',
+    thrown: true,
+    projectileRadius: 4,
+    windPct: 100,
+    maxSpeed: 18 * 256,
+    damage: 5,
+    explosionRadius: 0,
+    knockbackPct: 0,
+    bouncePct: 0,
+    defaultFuse: 0,
+    ammo: 1,
+    hive: { ticks: 4 * 60, speed: 3 * 256, reach: 10, every: 30 },
+  },
+  {
+    // Faucon (2026-10-25): sent at the point clicked (or as far along the aim as the gauge says),
+    // it rises, then steers its way there at 8 px a tick, the wind bending its course, and
+    // strikes the first thing it meets: 50 HP at the centre, 50 px.
+    id: 'falcon',
+    behavior: 'homing',
+    projectileRadius: 4,
+    windPct: 0,
+    maxSpeed: 8 * 256,
+    damage: 50,
+    explosionRadius: 50,
+    knockbackPct: 100,
+    bouncePct: 0,
+    defaultFuse: 0,
+    ammo: 1,
+    homing: { speed: 8 * 256, turn: 80, rise: 16, windDrift: 24, ticks: 6 * 60, reach: 1200 },
+  },
+  {
+    id: 'trebuchet',
+    behavior: 'strike',
+    ...TOOL,
+    projectileRadius: 6,
+    damage: 30,
+    explosionRadius: 45,
+    knockbackPct: 100,
+    ammo: 1,
+    strike: { count: 5, spacing: 28, speed: 3 * 256, range: 1600, height: 300 },
+  },
+  {
+    // Pluie de flèches (2026-10-25): twelve arrows from off the map on a chosen point, 14 px
+    // apart; each one strikes like an arrow (10 HP, a chip in the ground) and the wind bends them.
+    id: 'arrowRain',
+    behavior: 'strike',
+    ...TOOL,
+    windPct: 100,
+    damage: 10,
+    chipRadius: 3,
+    knockbackPct: 30,
+    ammo: 1,
+    strike: { count: 12, spacing: 14, speed: 2 * 256, range: 1600, height: 300 },
   },
   {
     id: 'mace',
@@ -448,6 +519,37 @@ export const WEAPONS: readonly WeaponDef[] = [
     charge: { distance: 120, speed: 6 * 256 },
   },
   {
+    // Grappin (2026-10-25): a hook shot along the aim catches the first ground within 400 px;
+    // the unit hangs and swings from it (← → push, ↑ ↓ haul in or pay out), lets go with a
+    // jump, and may shoot it again in the air. Not the turn's action: a shot may follow.
+    id: 'grapple',
+    behavior: 'rope',
+    ...TOOL,
+    ammo: 5,
+    free: true,
+    rope: { length: 400, minLength: 30, climbSpeed: 3 * 256, pump: 12 },
+  },
+  {
+    // Échelle (2026-10-25): a ladder of 200 px set up just in front of the unit (against a wall
+    // within 40 px); setting it is not the turn's action, climbing it is (as any ladder).
+    id: 'ladder',
+    behavior: 'ladder',
+    ...TOOL,
+    ammo: 2,
+    free: true,
+    ladder: { height: 200 },
+  },
+  {
+    // Bannière (2026-10-25): held up for the next fall of the turn: down at 2 px a tick, carried
+    // by the wind, no fall damage. Not the turn's action; it opens in the air as well.
+    id: 'banner',
+    behavior: 'banner',
+    ...TOOL,
+    ammo: 3,
+    free: true,
+    banner: { fallSpeed: 2 * 256, windDrift: 40 },
+  },
+  {
     // Pioche: 3 s straight down; about 90 px in earth, twice that for a sapper.
     id: 'pick',
     behavior: 'dig',
@@ -482,88 +584,6 @@ export const WEAPONS: readonly WeaponDef[] = [
     wall: { short: 48, medium: 80, long: 120, thickness: 14, reach: 320, fall: true },
   },
   {
-    id: 'trebuchet',
-    behavior: 'strike',
-    ...TOOL,
-    projectileRadius: 6,
-    damage: 30,
-    explosionRadius: 45,
-    knockbackPct: 100,
-    ammo: 1,
-    strike: { count: 5, spacing: 28, speed: 3 * 256, range: 1600, height: 300 },
-  },
-  {
-    // Pluie de flèches (2026-10-25): twelve arrows from off the map on a chosen point, 14 px
-    // apart; each one strikes like an arrow (10 HP, a chip in the ground) and the wind bends them.
-    id: 'arrowRain',
-    behavior: 'strike',
-    ...TOOL,
-    windPct: 100,
-    damage: 10,
-    chipRadius: 3,
-    knockbackPct: 30,
-    ammo: 1,
-    strike: { count: 12, spacing: 14, speed: 2 * 256, range: 1600, height: 300 },
-  },
-  {
-    // Cochon enflammé (2026-10-25): let loose on the facing side, it trots at 2 px a tick, hops
-    // over walls, and goes up at a second press of Fire, or after 8 s, or when a blast reaches it.
-    id: 'flamingPig',
-    behavior: 'walker',
-    ...TOOL,
-    damage: 70,
-    explosionRadius: 90,
-    knockbackPct: 100,
-    ammo: 1,
-    walker: { speed: 2 * 256, fuse: 8 * 60, hop: 7 * 256, maxStep: 8 },
-  },
-  {
-    // Ruche (2026-10-25): thrown like a stone, bent by the wind; where it breaks, a swarm comes
-    // out that flies after the nearest unit, whoever's, for 4 s, stinging it for 5 HP every
-    // half-second it is on it.
-    id: 'beehive',
-    behavior: 'hive',
-    thrown: true,
-    projectileRadius: 4,
-    windPct: 100,
-    maxSpeed: 18 * 256,
-    damage: 5,
-    explosionRadius: 0,
-    knockbackPct: 0,
-    bouncePct: 0,
-    defaultFuse: 0,
-    ammo: 1,
-    hive: { ticks: 4 * 60, speed: 3 * 256, reach: 10, every: 30 },
-  },
-  {
-    // Faucon (2026-10-25): sent at the point clicked (or as far along the aim as the gauge says),
-    // it rises, then steers its way there at 8 px a tick, the wind bending its course, and
-    // strikes the first thing it meets: 50 HP at the centre, 50 px.
-    id: 'falcon',
-    behavior: 'homing',
-    projectileRadius: 4,
-    windPct: 0,
-    maxSpeed: 8 * 256,
-    damage: 50,
-    explosionRadius: 50,
-    knockbackPct: 100,
-    bouncePct: 0,
-    defaultFuse: 0,
-    ammo: 1,
-    homing: { speed: 8 * 256, turn: 80, rise: 16, windDrift: 24, ticks: 6 * 60, reach: 1200 },
-  },
-  {
-    // Grappin (2026-10-25): a hook shot along the aim catches the first ground within 400 px;
-    // the unit hangs and swings from it (← → push, ↑ ↓ haul in or pay out), lets go with a
-    // jump, and may shoot it again in the air. Not the turn's action: a shot may follow.
-    id: 'grapple',
-    behavior: 'rope',
-    ...TOOL,
-    ammo: 5,
-    free: true,
-    rope: { length: 400, minLength: 30, climbSpeed: 3 * 256, pump: 12 },
-  },
-  {
     // Miracle (2026-10-25): the unit is set down on the free point clicked (or along the aim, as
     // far as the gauge says), dropping onto the ground below it; the turn ends there.
     id: 'miracle',
@@ -572,25 +592,5 @@ export const WEAPONS: readonly WeaponDef[] = [
     ammo: 1,
     endsTurn: true,
     teleport: { reach: 900 },
-  },
-  {
-    // Échelle (2026-10-25): a ladder of 200 px set up just in front of the unit (against a wall
-    // within 40 px); setting it is not the turn's action, climbing it is (as any ladder).
-    id: 'ladder',
-    behavior: 'ladder',
-    ...TOOL,
-    ammo: 2,
-    free: true,
-    ladder: { height: 200 },
-  },
-  {
-    // Bannière (2026-10-25): held up for the next fall of the turn: down at 2 px a tick, carried
-    // by the wind, no fall damage. Not the turn's action; it opens in the air as well.
-    id: 'banner',
-    behavior: 'banner',
-    ...TOOL,
-    ammo: 3,
-    free: true,
-    banner: { fallSpeed: 2 * 256, windDrift: 40 },
   },
 ];

@@ -87,6 +87,21 @@
      "crateAmmo": 3
     },
     {
+     "id": "crossbow",
+     "behavior": "directHit",
+     "projectileRadius": 0,
+     "windPct": 40,
+     "maxSpeed": 7680,
+     "damage": 45,
+     "explosionRadius": 0,
+     "chipRadius": 4,
+     "knockbackPct": 80,
+     "bouncePct": 0,
+     "defaultFuse": 0,
+     "ammo": 2,
+     "fixedPower": true
+    },
+    {
      "id": "sling",
      "thrown": true,
      "behavior": "directHit",
@@ -118,21 +133,6 @@
      "fuseTurns": 180
     },
     {
-     "id": "crossbow",
-     "behavior": "directHit",
-     "projectileRadius": 0,
-     "windPct": 40,
-     "maxSpeed": 7680,
-     "damage": 45,
-     "explosionRadius": 0,
-     "chipRadius": 4,
-     "knockbackPct": 80,
-     "bouncePct": 0,
-     "defaultFuse": 0,
-     "ammo": 2,
-     "fixedPower": true
-    },
-    {
      "id": "pitchPot",
      "thrown": true,
      "behavior": "cluster",
@@ -150,6 +150,107 @@
       "damage": 15,
       "radius": 30,
       "speed": 1536
+     }
+    },
+    {
+     "id": "flamingPig",
+     "behavior": "walker",
+     "projectileRadius": 0,
+     "windPct": 0,
+     "maxSpeed": 0,
+     "damage": 70,
+     "explosionRadius": 90,
+     "knockbackPct": 100,
+     "bouncePct": 0,
+     "defaultFuse": 0,
+     "ammo": 1,
+     "walker": {
+      "speed": 512,
+      "fuse": 480,
+      "hop": 1792,
+      "maxStep": 8
+     }
+    },
+    {
+     "id": "beehive",
+     "behavior": "hive",
+     "thrown": true,
+     "projectileRadius": 4,
+     "windPct": 100,
+     "maxSpeed": 4608,
+     "damage": 5,
+     "explosionRadius": 0,
+     "knockbackPct": 0,
+     "bouncePct": 0,
+     "defaultFuse": 0,
+     "ammo": 1,
+     "hive": {
+      "ticks": 240,
+      "speed": 768,
+      "reach": 10,
+      "every": 30
+     }
+    },
+    {
+     "id": "falcon",
+     "behavior": "homing",
+     "projectileRadius": 4,
+     "windPct": 0,
+     "maxSpeed": 2048,
+     "damage": 50,
+     "explosionRadius": 50,
+     "knockbackPct": 100,
+     "bouncePct": 0,
+     "defaultFuse": 0,
+     "ammo": 1,
+     "homing": {
+      "speed": 2048,
+      "turn": 80,
+      "rise": 16,
+      "windDrift": 24,
+      "ticks": 360,
+      "reach": 1200
+     }
+    },
+    {
+     "id": "trebuchet",
+     "behavior": "strike",
+     "projectileRadius": 6,
+     "windPct": 0,
+     "maxSpeed": 0,
+     "damage": 30,
+     "explosionRadius": 45,
+     "knockbackPct": 100,
+     "bouncePct": 0,
+     "defaultFuse": 0,
+     "ammo": 1,
+     "strike": {
+      "count": 5,
+      "spacing": 28,
+      "speed": 768,
+      "range": 1600,
+      "height": 300
+     }
+    },
+    {
+     "id": "arrowRain",
+     "behavior": "strike",
+     "projectileRadius": 0,
+     "windPct": 100,
+     "maxSpeed": 0,
+     "damage": 10,
+     "explosionRadius": 0,
+     "knockbackPct": 30,
+     "bouncePct": 0,
+     "defaultFuse": 0,
+     "chipRadius": 3,
+     "ammo": 1,
+     "strike": {
+      "count": 12,
+      "spacing": 14,
+      "speed": 512,
+      "range": 1600,
+      "height": 300
      }
     },
     {
@@ -199,6 +300,61 @@
      "charge": {
       "distance": 120,
       "speed": 1536
+     }
+    },
+    {
+     "id": "grapple",
+     "behavior": "rope",
+     "projectileRadius": 0,
+     "windPct": 0,
+     "maxSpeed": 0,
+     "damage": 0,
+     "explosionRadius": 0,
+     "knockbackPct": 0,
+     "bouncePct": 0,
+     "defaultFuse": 0,
+     "ammo": 5,
+     "free": true,
+     "rope": {
+      "length": 400,
+      "minLength": 30,
+      "climbSpeed": 768,
+      "pump": 12
+     }
+    },
+    {
+     "id": "ladder",
+     "behavior": "ladder",
+     "projectileRadius": 0,
+     "windPct": 0,
+     "maxSpeed": 0,
+     "damage": 0,
+     "explosionRadius": 0,
+     "knockbackPct": 0,
+     "bouncePct": 0,
+     "defaultFuse": 0,
+     "ammo": 2,
+     "free": true,
+     "ladder": {
+      "height": 200
+     }
+    },
+    {
+     "id": "banner",
+     "behavior": "banner",
+     "projectileRadius": 0,
+     "windPct": 0,
+     "maxSpeed": 0,
+     "damage": 0,
+     "explosionRadius": 0,
+     "knockbackPct": 0,
+     "bouncePct": 0,
+     "defaultFuse": 0,
+     "ammo": 3,
+     "free": true,
+     "banner": {
+      "fallSpeed": 512,
+      "windDrift": 40
      }
     },
     {
@@ -280,107 +436,6 @@
      }
     },
     {
-     "id": "trebuchet",
-     "behavior": "strike",
-     "projectileRadius": 6,
-     "windPct": 0,
-     "maxSpeed": 0,
-     "damage": 30,
-     "explosionRadius": 45,
-     "knockbackPct": 100,
-     "bouncePct": 0,
-     "defaultFuse": 0,
-     "ammo": 1,
-     "strike": {
-      "count": 5,
-      "spacing": 28,
-      "speed": 768,
-      "range": 1600,
-      "height": 300
-     }
-    },
-    {
-     "id": "arrowRain",
-     "behavior": "strike",
-     "projectileRadius": 0,
-     "windPct": 100,
-     "maxSpeed": 0,
-     "damage": 10,
-     "explosionRadius": 0,
-     "knockbackPct": 30,
-     "bouncePct": 0,
-     "defaultFuse": 0,
-     "chipRadius": 3,
-     "ammo": 1,
-     "strike": {
-      "count": 12,
-      "spacing": 14,
-      "speed": 512,
-      "range": 1600,
-      "height": 300
-     }
-    },
-    {
-     "id": "flamingPig",
-     "behavior": "walker",
-     "projectileRadius": 0,
-     "windPct": 0,
-     "maxSpeed": 0,
-     "damage": 70,
-     "explosionRadius": 90,
-     "knockbackPct": 100,
-     "bouncePct": 0,
-     "defaultFuse": 0,
-     "ammo": 1,
-     "walker": {
-      "speed": 512,
-      "fuse": 480,
-      "hop": 1792,
-      "maxStep": 8
-     }
-    },
-    {
-     "id": "beehive",
-     "behavior": "hive",
-     "thrown": true,
-     "projectileRadius": 4,
-     "windPct": 100,
-     "maxSpeed": 4608,
-     "damage": 5,
-     "explosionRadius": 0,
-     "knockbackPct": 0,
-     "bouncePct": 0,
-     "defaultFuse": 0,
-     "ammo": 1,
-     "hive": {
-      "ticks": 240,
-      "speed": 768,
-      "reach": 10,
-      "every": 30
-     }
-    },
-    {
-     "id": "falcon",
-     "behavior": "homing",
-     "projectileRadius": 4,
-     "windPct": 0,
-     "maxSpeed": 2048,
-     "damage": 50,
-     "explosionRadius": 50,
-     "knockbackPct": 100,
-     "bouncePct": 0,
-     "defaultFuse": 0,
-     "ammo": 1,
-     "homing": {
-      "speed": 2048,
-      "turn": 80,
-      "rise": 16,
-      "windDrift": 24,
-      "ticks": 360,
-      "reach": 1200
-     }
-    },
-    {
      "id": "miracle",
      "behavior": "teleport",
      "projectileRadius": 0,
@@ -395,41 +450,6 @@
      "endsTurn": true,
      "teleport": {
       "reach": 900
-     }
-    },
-    {
-     "id": "ladder",
-     "behavior": "ladder",
-     "projectileRadius": 0,
-     "windPct": 0,
-     "maxSpeed": 0,
-     "damage": 0,
-     "explosionRadius": 0,
-     "knockbackPct": 0,
-     "bouncePct": 0,
-     "defaultFuse": 0,
-     "ammo": 2,
-     "free": true,
-     "ladder": {
-      "height": 200
-     }
-    },
-    {
-     "id": "banner",
-     "behavior": "banner",
-     "projectileRadius": 0,
-     "windPct": 0,
-     "maxSpeed": 0,
-     "damage": 0,
-     "explosionRadius": 0,
-     "knockbackPct": 0,
-     "bouncePct": 0,
-     "defaultFuse": 0,
-     "ammo": 3,
-     "free": true,
-     "banner": {
-      "fallSpeed": 512,
-      "windDrift": 40
      }
     }
    ],
@@ -720,5 +740,5 @@
  ],
  "endTick": 9549,
  "description": "Ruche et faucon (GDD §4.1): a hive lobbed by the enemy, whose swarm stings him for 4 s; then a falcon sent at him over a wall, bent by the wind.",
- "expectedHash": "cf33426f"
+ "expectedHash": "a8eed750"
 }

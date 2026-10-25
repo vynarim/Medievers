@@ -366,6 +366,21 @@ describe('falcon (GDD §4.1)', () => {
     expect(unit(sim, 2)?.hp ?? 100).toBeLessThan(70);
   });
 
+  it('veers up and over a tall wall in its way', () => {
+    const mask = flatMask();
+    for (let y = 200; y < 500; y++) mask.data.fill(Material.Rock, y * 1200 + 500, y * 1200 + 530);
+    const sim = match(CALM, 300, [800], mask);
+    run(
+      sim,
+      [
+        { t: 'selectWeapon', id: 'falcon' },
+        { t: 'fireAt', x: 800, y: 460 },
+      ],
+      400,
+    );
+    expect(unit(sim, 2)?.hp ?? 100).toBeLessThan(70);
+  });
+
   it('is pushed aside by the wind', () => {
     const land = (wind: number): number => {
       const sim = match(CALM, 300, [1100]);

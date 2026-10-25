@@ -423,6 +423,33 @@ function burst(state: SimState, shot: FlyingShot, def: WeaponDef, queue: FlyingS
   }
 }
 
+/** turns of its turn rate the falcon may veer by at once to fly round the ground */
+const VEER_STEPS = 12;
+/** px ahead the falcon looks for the ground */
+const LOOK_AHEAD = [16, 32, 48];
+/** px from its point within which the falcon no longer veers */
+const LOOK_AHEAD_NEAR = 64;
+
+/** No solid ground along BAM `a` from (x, y) sub-px, within the falcon's look ahead. */
+function clearAhead(state: SimState, x: number, y: number, a: number): boolean {
+  for (const d of LOOK_AHEAD) {
+    const px = subToPx(x + mulQ14(d * SUBPX, cosQ14(a)));
+    const py = subToPx(y + mulQ14(d * SUBPX, sinQ14(a)));
+    // With room for its wings round the line.
+    for (const [ox, oy] of CLEARANCE) if (isSolid(state.terrain, px + ox, py + oy)) return false;
+  }
+  return true;
+}
+
+/** px around a point of the falcon's way that must be free too */
+const CLEARANCE = [
+  [0, 0],
+  [0, -8],
+  [0, 8],
+  [-8, 0],
+  [8, 0],
+] as const;
+
 /**
  * The falcon turns towards its point by at most its turn rate, flies on at its speed, and the
  * wind pushes it sideways.
@@ -434,7 +461,25 @@ function steer(state: SimState, shot: FlyingShot, h: HomingDef): void {
   const want = atan2Bam(to.y * SUBPX + SUBPX / 2 - p.y, to.x * SUBPX + SUBPX / 2 - p.x);
   const now = atan2Bam(p.vy, p.vx);
   const d = angleDelta(now, want);
-  const a = (now + Math.max(-h.turn, Math.min(h.turn, d))) & ANGLE_MASK;
+  let a = (now + Math.max(-h.turn, Math.min(h.turn, d))) & ANGLE_MASK;
+  // Ground ahead: it veers off, the higher way first, to fly round it; not when it is upon its
+  // point, which may be on the ground.
+  const near =
+    Math.abs(subToPx(p.x) - to.x) < LOOK_AHEAD_NEAR &&
+    Math.abs(subToPx(p.y) - to.y) < LOOK_AHEAD_NEAR;
+  if (!near && !clearAhead(state, p.x, p.y, a)) {
+    const upward = sinQ14((a - h.turn) & ANGLE_MASK) <= sinQ14((a + h.turn) & ANGLE_MASK) ? -1 : 1;
+    let veered = false;
+    for (const side of [upward, -upward]) {
+      for (let k = 1; k <= VEER_STEPS && !veered; k++) {
+        const b = (a + side * k * h.turn) & ANGLE_MASK;
+        if (clearAhead(state, p.x, p.y, b)) {
+          a = b;
+          veered = true;
+        }
+      }
+    }
+  }
   p.vx = mulQ14(h.speed, cosQ14(a)) + state.turn.wind * h.windDrift;
   p.vy = mulQ14(h.speed, sinQ14(a));
 }
@@ -521,9 +566,12 @@ export function stepShots(state: SimState, events: SimEvent[]): void {
         Math.abs(subToPx(p.y) - shot.homing.y) <= 6;
       const spent = h !== undefined && p.age >= h.ticks;
       if ((impact && impact.kind !== 'outOfMap') || there || spent) {
+        // On a unit it strikes home: the blast is at the middle of its prey.
+        const prey =
+          impact?.kind === 'unit' ? state.units.find((x) => x.id === impact.unitId) : null;
         queueExplosion(state.explosions, state.tick, {
-          x: p.x,
-          y: p.y,
+          x: prey ? prey.x : p.x,
+          y: prey ? prey.y - (UNIT_HEIGHT * SUBPX) / 2 : p.y,
           radius: def.explosionRadius,
           carveRadius: def.explosionRadius,
           maxDamage: scaled(def.damage, shot.damagePct),

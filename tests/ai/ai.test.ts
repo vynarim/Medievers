@@ -276,7 +276,13 @@ describe('the AI rope', () => {
     const pit = new Sim({ rules: RULES, teams: [{ spawns: [400] }, { spawns: [1400] }] }, 3, deep);
     for (let i = 0; i < 1000 && pit.view().turn.phase !== 'action'; i++) pit.step();
     expect(px(pit, 1, 'y')).toBe(900);
-    const out = planTurn({ state: pit.snapshot(), team: 0, level: STILL, seed: 1 });
+    // With the bow only: the falcon would fly up out of the pit and strike first.
+    const out = planTurn({
+      state: pit.snapshot(),
+      team: 0,
+      level: { ...STILL, weapons: ['bow'] },
+      seed: 1,
+    });
     expect(out.plan.move.kind).toBe('grapple');
     playOut(pit, out.plan);
     expect(px(pit, 1, 'y')).toBe(600);

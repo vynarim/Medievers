@@ -170,7 +170,8 @@ describe('LocalControls', () => {
   it('cycles weapons and sets fuses', () => {
     const { sim, tick } = setup();
     tick({ nextWeaponPressed: true });
-    expect(sim.view().turn.weapon).toBe('sling');
+    expect(sim.view().turn.weapon).toBe('crossbow');
+    tick({ nextWeaponPressed: true });
     tick({ nextWeaponPressed: true });
     tick({ fusePressed: 2 });
     expect([sim.view().turn.weapon, sim.view().turn.fuse]).toEqual(['greekFire', 120]);
