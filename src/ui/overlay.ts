@@ -243,14 +243,20 @@ html.phone #game { height: calc(100% - var(--bar-h, 0px)); }
 #ui.phone .hud-weapon { right: 50%; bottom: calc(var(--bar-h, 0px) + 8px); transform: translateX(50%);
   width: min(var(--col), calc(100vw - 24px)); }
 #ui.phone .hud-weapon .hint { display: none; }
-#ui.phone .chronicles { top: 290px; left: 12px; right: 12px; transform: none; }
-#ui.phone .chronicle { max-width: 100%; min-width: 0; }
+/* The commentary keeps out of the way: its newest line only, small, in the sky under the HUD. */
+#ui.phone .chronicles { top: 250px; left: 12px; right: 12px; transform: none; }
+#ui.phone .chronicle { max-width: 100%; min-width: 0; padding: 4px 18px; font-size: 17px; opacity: 0.92; }
+#ui.phone .chronicle:not(:last-child) { display: none; }
 #ui.phone .card, #ui.phone .card.left { left: 12px; right: 12px; width: auto; top: auto;
   bottom: calc(var(--bar-h, 0px) + 80px);
   max-height: 40vh; }
 #ui.phone .pause { min-width: 0; width: calc(100vw - 32px); }
-#ui.phone .banner { top: 40%; }
-#ui.phone .banner .big { font-size: 44px; }
+/* The turn's announcement: a small cartouche, its title and who plays, without the quip. */
+#ui.phone .banner { top: 150px; transform: translateX(-50%); padding: 8px 18px 10px;
+  max-width: calc(100vw - 24px); }
+#ui.phone .banner .big { font-size: 36px; }
+#ui.phone .banner .sub { font-size: 18px; }
+#ui.phone .banner .quip { display: none; }
 `;
 
 /** Unscaled rules: touch targets stay 48 px whatever the overlay scale (rules/render.md). */
