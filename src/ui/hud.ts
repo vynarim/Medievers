@@ -6,7 +6,7 @@ import { MAX_POWER } from '../sim/commands.ts';
 import type { SimView } from '../sim/sim.ts';
 import { houseShortName } from './house-names.ts';
 import { t } from './i18n.ts';
-import { button, el, shield } from './overlay.ts';
+import { button, el, shield, watchBar } from './overlay.ts';
 import { withIcons } from './icons.ts';
 import { COLORS, css } from './tokens.ts';
 
@@ -74,6 +74,7 @@ export class Hud {
     this.chronicle = el('div', 'chronicles');
     this.banner = el('div', 'banner panel faded');
     root.append(this.teams, wind, this.timer, weapon, this.chronicle, this.banner);
+    watchBar(weapon);
     // A click or tap anywhere dismisses a turn announcement (not the end-of-match one).
     window.addEventListener('pointerdown', this.dismiss, true);
   }

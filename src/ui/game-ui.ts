@@ -314,6 +314,10 @@ export class GameUi {
         this.show(null);
         this.opts.newMatch();
       }),
+    );
+    // Help, settings and the title screen: one row, a third each.
+    const pauseMore = el('div', 'thirds');
+    pauseMore.append(
       this.click(setIcon(button(''), 'help', t('ui.help')), () => this.show(this.help)),
       this.click(setIcon(button(''), 'settings', t('ui.settings')), () => this.openSettings()),
       this.click(setIcon(button(''), 'home', t('pause.title.screen')), () => {
@@ -321,6 +325,7 @@ export class GameUi {
         this.opts.title();
       }),
     );
+    pauseActions.append(pauseMore);
     this.pause.append(el('h2', '', t('pause.title')), el('p', '', t('pause.body')));
     // Online: the match's code, to give again to the other player, copied in one click.
     const code = opts.onlineCode;
