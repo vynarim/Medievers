@@ -294,9 +294,9 @@ L'IA joue avec les mêmes règles et les mêmes commandes que vous : elle choisi
 | **Chevalier** | Vise à 3° près, prend aussi l'arbalète, la poix, la masse et le trébuchet, choisit entre deux combattants |
 | **Connétable** | Vise à 1° près, cherche plus d'endroits d'où tirer et essaie plus de coups |
 
-### La musique {{st:jeu}}
+### La musique et les bruitages {{st:jeu}}
 
-Une ritournelle de ménestrels (flûte, luth, vielle, tambourin) accompagne la partie dès votre premier clic. Le bouton à la note de musique, en haut à droite, la coupe ou la remet ; son volume se règle dans ⚙ Réglages (menu Pause), onglet **Musique**. Le réglage vaut tout de suite et reste sur votre appareil.
+Une ritournelle de ménestrels (flûte, luth, vielle, tambourin) accompagne la partie dès votre premier clic, et chaque tir, explosion, coup de tonnerre, plouf ou chute a son bruit, venant du côté de l'écran où il se produit. Le bouton du son, en haut à droite, passe à chaque appui de **musique et bruitages** à **musique seule**, **bruitages seuls**, puis **tout coupé**. Les deux volumes se règlent dans ⚙ Réglages (menu Pause), onglet **Son**. Tout vaut aussitôt et reste sur votre appareil.
 
 ## 7. Les commandes
 
@@ -342,7 +342,7 @@ En bas à droite, les armes :
 - **Passer** (le sablier) : finir son tour sans tirer ; après le tir, il devient **Fin du tour** ;
 - **Tirer** est aux couleurs de la maison qui joue : on sait toujours à qui c'est le tour. Maintenir pour charger la puissance, relâcher pour tirer. Une jauge pleine repart de zéro : rien ne part tout seul, il faut lâcher au bon moment.
 
-Pendant la charge, c'est le bouton Tirer lui-même qui se remplit d'or. En haut à droite : **plein écran** (quatre flèches vers les coins, comme F11 ; un second appui en sort ; absent sur téléphone), **recentrer** (revenir au zoom par défaut et recentrer ; il n'apparaît que lorsque vous avez zoomé ou déplacé la vue), **?** (l'aide : neuf pages illustrées pour l'essentiel, puis une **aide avancée** en douze sujets, ouverte depuis n'importe quelle page), **la note de musique** (coupe ou remet la musique) et **Pause** (trois traits ; sur téléphone, il donne aussi l'aide et les réglages). En haut au centre, la bannière du titre montre le vent et le numéro du tour ; en haut à gauche, les bandeaux des maisons, celui de la maison qui joue brillant à sa couleur. La souris posée contre un bord de l'écran fait défiler la carte. Le menu de pause (aussi sur Échap) propose de reprendre, de recommencer la partie, de lire l'aide ou d'ouvrir les réglages ; le temps est arrêté tant qu'il est ouvert, comme pendant l'aide et les réglages.
+Pendant la charge, c'est le bouton Tirer lui-même qui se remplit d'or. En haut à droite : **plein écran** (quatre flèches vers les coins, comme F11 ; un second appui en sort ; absent sur téléphone), **recentrer** (revenir au zoom par défaut et recentrer ; il n'apparaît que lorsque vous avez zoomé ou déplacé la vue), **?** (l'aide : neuf pages illustrées pour l'essentiel, puis une **aide avancée** en douze sujets, ouverte depuis n'importe quelle page), **le bouton du son** (musique et bruitages, musique seule, bruitages seuls, tout coupé) et **Pause** (trois traits ; sur téléphone, il donne aussi l'aide et les réglages). En haut au centre, la bannière du titre montre le vent et le numéro du tour ; en haut à gauche, les bandeaux des maisons, celui de la maison qui joue brillant à sa couleur. La souris posée contre un bord de l'écran fait défiler la carte. Le menu de pause (aussi sur Échap) propose de reprendre, de recommencer la partie, de lire l'aide ou d'ouvrir les réglages ; le temps est arrêté tant qu'il est ouvert, comme pendant l'aide et les réglages.
 
 On peut aussi viser « à la fronde » : appuyer sur son combattant, tirer franchement en arrière (le trait devient rouge quand le tir est armé), relâcher. Un simple clic sur le combattant ne tire jamais, et revenir près de lui avant de relâcher annule le tir.
 

@@ -53,6 +53,9 @@ const STYLE = `
   border: 6px solid transparent; border-top: 9px solid var(--encre); border-bottom: 0; }
 #ui .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 12px; }
 #ui .tabs button { min-height: 40px; font-size: 16px; }
+#ui .sound-modes { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 12px; }
+#ui .sound-modes button { font-size: 15px; }
+#ui .music-row label { min-width: 90px; }
 #ui .music-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 4px 0 10px; }
 #ui .music-row input[type=range] { flex: 1 1 160px; accent-color: var(--vermillon); pointer-events: auto; }
 #ui .music-row .level { min-width: 48px; font-family: var(--caps); }

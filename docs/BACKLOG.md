@@ -118,7 +118,7 @@ La priorité est le moteur : simulation, règles, réseau, IA. Jusqu'au lot 9, t
 | 6.5 **[art]** | Bord « vélin déchiré » sur les carves | Validé visuellement |
 | 6.6 **[art]** | VFX P0 (explosion M, débris, poussière, étoiles, trajectoire) | — |
 | 6.7 **[tech]** | HUD P0 (vent, timer, phylactères, cartouches) | — |
-| 6.8 **[son]** | Audio P0 (8 SFX d'armes, 5 SFX d'unités, 1 piste de musique, cf. 7.8) | — |
+| 6.8 **[son]** | Audio P0 (8 SFX d'armes, 5 SFX d'unités, 1 piste de musique, cf. 7.8) | — Première version synthétisée le 2026-10-25 (`src/render/sfx.ts`, une quarantaine de bruitages), bouton du son à quatre états |
 | 6.9 **[art]** | **Vertical slice** : Jéricho, 2 maisons, 3 Chevaliers chacune, arc/fronde/pot/épée/mur, hotseat et IA | Démo jouable sur PC et tablette à 60 fps |
 
 ## M7 — Contenu V1

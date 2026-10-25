@@ -53,6 +53,16 @@ const ICONS = {
   musicOn: `<path d="M10 17.5 V5 L19 3.5 V15.5" fill="none"/>
     <ellipse cx="7.5" cy="17.5" rx="2.8" ry="2.2" fill="currentColor" stroke="none"/>
     <ellipse cx="16.5" cy="15.5" rx="2.8" ry="2.2" fill="currentColor" stroke="none"/>`,
+  // A speaker and its waves, with a note beside (all), alone (effects), or struck out (none).
+  soundAll: `<path d="M3 9.5 H6 L10 6 V18 L6 14.5 H3 Z" fill="currentColor" stroke="none"/>
+    <path d="M12.5 9.5 Q14 12 12.5 14.5" fill="none"/>
+    <path d="M16.5 15 V5.5 L21.5 4.5 V13.5" fill="none" stroke-width="1.8"/>
+    <ellipse cx="15.3" cy="15.4" rx="1.9" ry="1.5" fill="currentColor" stroke="none"/>
+    <ellipse cx="20.3" cy="13.9" rx="1.9" ry="1.5" fill="currentColor" stroke="none"/>`,
+  sfxOnly: `<path d="M3 9.5 H6.5 L11 6 V18 L6.5 14.5 H3 Z" fill="currentColor" stroke="none"/>
+    <path d="M14 9 Q15.8 12 14 15 M17 7 Q20 12 17 17" fill="none"/>`,
+  soundOff: `<path d="M3 9.5 H6.5 L11 6 V18 L6.5 14.5 H3 Z" fill="currentColor" stroke="none"/>
+    <path d="M14.5 9.5 L20 15 M20 9.5 L14.5 15" fill="none"/>`,
   musicOff: `<path d="M10 17.5 V5 L19 3.5 V15.5" fill="none"/>
     <ellipse cx="7.5" cy="17.5" rx="2.8" ry="2.2" fill="currentColor" stroke="none"/>
     <ellipse cx="16.5" cy="15.5" rx="2.8" ry="2.2" fill="currentColor" stroke="none"/>

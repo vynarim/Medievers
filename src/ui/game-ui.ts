@@ -26,7 +26,16 @@ import {
 } from './tuning-model.ts';
 import { weaponLines } from './weapon-info.ts';
 import { weaponArt } from './weapon-art.ts';
-import { music } from '../render/music.ts';
+import { audio, SOUND_MODES, type SoundMode } from '../render/audio.ts';
+import type { IconName } from './icons.ts';
+
+/** The ♪ button's face for each sound mode. */
+const SOUND_ICON: Readonly<Record<SoundMode, IconName>> = {
+  all: 'soundAll',
+  music: 'musicOn',
+  sfx: 'sfxOnly',
+  none: 'soundOff',
+};
 
 const STORAGE_KEY = 'medieverse.tuning.v1';
 
@@ -143,8 +152,8 @@ export class GameUi {
   private readonly prepared = new Map<number, { unitId: number; weapon: WeaponId }>();
   /** the unit whose weapon the arsenal prepares (null: the arsenal of the playing unit) */
   private preparing: number | null = null;
-  /** redraws the music button after a change made in the settings */
-  private showMusic: () => void = () => undefined;
+  /** redraws the sound button after a change made in the settings */
+  private showSound: () => void = () => undefined;
   /** settings tab last shown, kept while the page lives */
   private settingsTab = 0;
   private cardSignature = '';
@@ -305,23 +314,24 @@ export class GameUi {
       this.toggle(this.help),
     );
     helpButton.title = t('ui.help');
-    const musicButton = button('', 'icon sys-music');
-    const showMusic = (): void => {
-      const on = music.current.on;
-      setIcon(musicButton, on ? 'musicOn' : 'musicOff');
-      musicButton.title = t(on ? 'music.tip.on' : 'music.tip.off');
+    // The sound's round: music and effects, music alone, effects alone, silence.
+    const soundButton = button('', 'icon sys-music');
+    const showSound = (): void => {
+      const mode = audio.current.mode;
+      setIcon(soundButton, SOUND_ICON[mode]);
+      soundButton.title = t('sound.tip', { now: t(`sound.mode.${mode}`) });
     };
-    this.click(musicButton, () => {
-      music.set({ on: !music.current.on });
-      showMusic();
+    this.click(soundButton, () => {
+      audio.cycle();
+      showSound();
     });
-    showMusic();
-    this.showMusic = showMusic;
+    showSound();
+    this.showSound = showSound;
     const pauseButton = this.click(setIcon(button('', 'menu'), 'menu', t('ui.pause')), () =>
       this.toggle(this.pause),
     );
     pauseButton.title = t('ui.pause');
-    sys.append(this.resetView, helpButton, musicButton, pauseButton);
+    sys.append(this.resetView, helpButton, soundButton, pauseButton);
 
     this.veil = el('div', 'veil hidden');
     this.veil.addEventListener('pointerdown', () => this.show(null));
@@ -881,38 +891,58 @@ export class GameUi {
       tabs.querySelectorAll('button').forEach((b, k) => b.classList.toggle('on', k === n));
     };
     this.settings.append(tabs);
-    // The music first: it changes at once, without starting the match again.
-    tabs.append(this.click(button(t('music.tab')), () => showTab(0)));
+    // The sound first: it changes at once, without starting the match again.
+    tabs.append(this.click(button(t('sound.tab')), () => showTab(0)));
     const sound = el('div', 'music-page');
     pages.push(sound);
-    const toggle = button('');
-    const slider = el('input');
-    slider.type = 'range';
-    slider.min = '0';
-    slider.max = '100';
-    slider.step = '5';
-    const level = el('span', 'level');
-    const show = (): void => {
-      const s = music.current;
-      toggle.textContent = t(s.on ? 'music.on' : 'music.off');
-      toggle.classList.toggle('on', s.on);
-      slider.value = String(s.volume);
-      slider.disabled = !s.on;
-      level.textContent = `${s.volume} %`;
+    const modes = el('div', 'sound-modes');
+    const modeButtons = SOUND_MODES.map((m) => {
+      const b = setIcon(button(''), SOUND_ICON[m], t(`sound.mode.${m}`));
+      b.addEventListener('click', () => {
+        audio.set({ mode: m });
+        show();
+        this.showSound();
+      });
+      modes.append(b);
+      return b;
+    });
+    const slider = (
+      key: 'musicVolume' | 'sfxVolume',
+    ): {
+      row: HTMLElement;
+      refresh: (enabled: boolean) => void;
+    } => {
+      const input = el('input');
+      input.type = 'range';
+      input.min = '0';
+      input.max = '100';
+      input.step = '5';
+      const level = el('span', 'level');
+      input.addEventListener('keydown', (e) => e.stopPropagation());
+      input.addEventListener('input', () => {
+        audio.set({ [key]: Number(input.value) });
+        level.textContent = `${input.value} %`;
+      });
+      const row = el('div', 'music-row');
+      row.append(el('label', '', t(`sound.${key}`)), input, level);
+      return {
+        row,
+        refresh: (enabled) => {
+          input.value = String(audio.current[key]);
+          input.disabled = !enabled;
+          level.textContent = `${audio.current[key]} %`;
+        },
+      };
     };
-    toggle.addEventListener('click', () => {
-      music.set({ on: !music.current.on });
-      show();
-      this.showMusic();
-    });
-    slider.addEventListener('keydown', (e) => e.stopPropagation());
-    slider.addEventListener('input', () => {
-      music.set({ volume: Number(slider.value) });
-      show();
-    });
-    const row = el('div', 'music-row');
-    row.append(toggle, el('label', '', t('music.volume')), slider, level);
-    sound.append(row, el('p', 'note', t('music.note')));
+    const musicSlider = slider('musicVolume');
+    const sfxSlider = slider('sfxVolume');
+    const show = (): void => {
+      const mode = audio.current.mode;
+      modeButtons.forEach((b, k) => b.classList.toggle('on', SOUND_MODES[k] === mode));
+      musicSlider.refresh(mode === 'all' || mode === 'music');
+      sfxSlider.refresh(mode === 'all' || mode === 'sfx');
+    };
+    sound.append(modes, musicSlider.row, sfxSlider.row, el('p', 'note', t('music.note')));
     show();
     this.settings.append(sound);
     for (const group of tuningGroups(base)) {

@@ -60,7 +60,7 @@ import {
   wallRefusal,
   wallSize,
 } from '../sim/tools.ts';
-import { isProjectile, isTargeted, type WeaponDef } from '../content/weapons.ts';
+import { isProjectile, isTargeted, type WeaponDef, type WeaponId } from '../content/weapons.ts';
 import { aiHouses, matchConfig, rulesFor, saveSetup, type MatchSetup } from '../app/match-setup.ts';
 import { AIInputSource } from '../input/ai-input.ts';
 import { showSetupScreen } from '../ui/setup-screen.ts';
@@ -73,6 +73,7 @@ import { buildMap, type BuiltMap } from '../app/map-build.ts';
 import { leaveMatch, type OnlineMatch } from '../app/online.ts';
 import { joinFlow, setupLobby } from '../app/online-flow.ts';
 import { RemoteInputSource } from '../input/remote-input.ts';
+import { sfx, type SfxId } from './sfx.ts';
 
 /** The map fields of the battle data, from a built map. */
 export function battleMap(
@@ -178,6 +179,31 @@ const ZOOM_DEFAULT = 0.75;
 const ZOOM_MAX = 1.6;
 /** screen px per second of edge scrolling */
 const EDGE_SCROLL_SPEED = 900;
+/** The sound of each weapon's shot; tools whose own event sounds (wall, ladder…) have none. */
+const SHOT_SFX: Readonly<Partial<Record<WeaponId, SfxId>>> = {
+  bow: 'bow',
+  fireArrow: 'bow',
+  crossbow: 'crossbow',
+  sling: 'sling',
+  greekFire: 'throw',
+  pitchPot: 'throw',
+  beehive: 'throw',
+  flamingPig: 'pig',
+  falcon: 'falcon',
+  trebuchet: 'volley',
+  arrowRain: 'volley',
+  sword: 'sword',
+  mace: 'mace',
+  shieldCharge: 'charge',
+  pick: 'dig',
+  sap: 'dig',
+  ballista: 'crossbow',
+  scorpion: 'crossbow',
+  catapult: 'creak',
+  greatTrebuchet: 'creak',
+  siegeRam: 'mace',
+};
+
 /** ms an explosion burst lasts */
 const BURST_MS = 520;
 /** ms a lightning bolt stays on screen, ms it holds full before fading, ms it strikes again */
@@ -535,6 +561,7 @@ export class BattleScene extends Phaser.Scene {
     window.addEventListener('pagehide', onHide);
     this.events.once('shutdown', () => {
       window.removeEventListener('pagehide', onHide);
+      sfx.setRain(false);
       this.input_.dispose();
       this.ai?.dispose();
       this.ai = null;
@@ -1131,8 +1158,139 @@ export class BattleScene extends Phaser.Scene {
     return !aiHouses(this.data_.setup).has(team) || this.replaying;
   }
 
+  /** -1 to 1: where world column `x` (px) is across the screen, for the effects' panning. */
+  private panAt(x: number): number {
+    const v = this.cameras.main.worldView;
+    return v.width > 0 ? ((x - v.x) / v.width) * 2 - 1 : 0;
+  }
+
+  /** The sound of an event of the sim, if it has one (render/sfx.ts). */
+  private soundOf(e: SimEvent): void {
+    const view = this.sim.view();
+    const unitPan = (id: number): number => {
+      const u = view.units.find((x) => x.id === id);
+      return u ? this.panAt(u.x / 256) : 0;
+    };
+    const activePan = (): number => unitPan(view.turn.activeUnitId);
+    switch (e.e) {
+      case 'shotFired': {
+        const id = SHOT_SFX[e.weapon];
+        if (id) sfx.play(id, activePan());
+        return;
+      }
+      case 'explosion':
+        sfx.play(
+          e.radius < 40 ? 'explosionS' : e.radius < 75 ? 'explosionM' : 'explosionL',
+          this.panAt(e.x / 256),
+        );
+        return;
+      // An arrow or a stone biting the ground (blasts carve more, and boom on their own).
+      case 'terrainCarved':
+        if (e.radius <= 8) sfx.play('thud', this.panAt(e.x));
+        return;
+      case 'unitDamaged':
+      case 'crushed':
+        sfx.play('hurt', unitPan(e.unitId));
+        return;
+      case 'unitDied':
+        sfx.play(e.cause === 'drowned' ? 'splash' : 'death', unitPan(e.unitId));
+        return;
+      case 'washedUp':
+        sfx.play('splash', this.panAt(e.x));
+        return;
+      case 'lightning':
+        sfx.play('thunder', this.panAt(e.x));
+        return;
+      case 'rainStarted':
+        sfx.setRain(true);
+        return;
+      case 'rainStopped':
+        sfx.setRain(false);
+        return;
+      case 'structureHit':
+      case 'wallBuilt':
+        sfx.play('stone');
+        return;
+      case 'structureFell':
+      case 'structureUndermined':
+      case 'engineDestroyed':
+        sfx.play('collapse');
+        return;
+      case 'engineHit':
+      case 'ladderPlaced':
+        sfx.play('wood');
+        return;
+      case 'towerAlight':
+      case 'burnSpread':
+        sfx.play('fire');
+        return;
+      case 'dragonAppeared':
+      case 'dragonEnraged':
+        sfx.play('roar');
+        return;
+      case 'dragonBit':
+      case 'dragonAte':
+        sfx.play('chomp', unitPan(e.unitId));
+        return;
+      case 'unicornAppeared':
+        sfx.play('sparkle');
+        return;
+      case 'unicornTouched':
+      case 'unitHealed':
+      case 'kitchenUsed':
+        sfx.play('heal');
+        return;
+      case 'angelDropped':
+      case 'crateDropped':
+        sfx.play('chime');
+        return;
+      case 'crateTaken':
+        sfx.play('pickup', unitPan(e.unitId));
+        return;
+      case 'turnStarted':
+        sfx.play('bell');
+        return;
+      case 'delugeStarted':
+        sfx.play('horn');
+        return;
+      case 'gameOver':
+        sfx.play('fanfare');
+        return;
+      case 'minePlaced':
+        sfx.play('click', activePan());
+        return;
+      case 'bannerRaised':
+        sfx.play('flap', activePan());
+        return;
+      case 'hooked':
+        sfx.play('clink', activePan());
+        return;
+      case 'ropeThrown':
+        sfx.play('throw', activePan());
+        return;
+      case 'teleported':
+        sfx.play('choir', unitPan(e.unitId));
+        return;
+      case 'swarmOut':
+        sfx.play('swarm');
+        return;
+      case 'beastAppeared':
+      case 'beastStruck':
+        sfx.play('squeak');
+        return;
+      case 'jumpRefused':
+      case 'toolRefused':
+      case 'placeRefused':
+        sfx.play('refused');
+        return;
+      default:
+        return;
+    }
+  }
+
   private handleEvents(events: readonly SimEvent[]): void {
     for (const e of events) {
+      this.soundOf(e);
       // Ice breaks beyond the blast's radius: repaint as far as the carve could reach.
       if (e.e === 'terrainCarved') {
         const reach = this.sim.view().terrain.reachPct;

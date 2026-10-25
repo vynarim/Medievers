@@ -1,56 +1,10 @@
 // Ambient music (BACKLOG 7.8): the ritornello of content/music.ts played by a small band
 // synthesised with the Web Audio API, no audio file: a recorder, a lute, a drone of fifths, a
 // round bass, a tabor and a tambourine. Bars are scheduled a little ahead of the audio clock, so
-// the loop runs on without a seam. It starts at the player's first gesture (browsers keep audio
-// silent until then), keeps quiet while the page is hidden, and its settings are kept per device.
-import {
-  DEFAULT_MUSIC_VOLUME,
-  EIGHTH_SECONDS,
-  EIGHTHS_PER_BAR,
-  RITORNELLO,
-  type Chord,
-} from '../content/music.ts';
-
-const KEY = 'medieverse.music.v2';
-/** The first settings (2026-10-25): their volume was the old default, only on/off is kept. */
-const OLD_KEY = 'medieverse.music.v1';
-
-export interface MusicSettings {
-  /** the music plays */
-  readonly on: boolean;
-  /** 0 to 100 */
-  readonly volume: number;
-}
-
-export function loadMusicSettings(): MusicSettings {
-  try {
-    const old: unknown = JSON.parse(localStorage.getItem(OLD_KEY) ?? 'null');
-    const raw: unknown =
-      JSON.parse(localStorage.getItem(KEY) ?? 'null') ??
-      (old && typeof old === 'object' ? { on: (old as { on?: unknown }).on } : null);
-    if (raw && typeof raw === 'object') {
-      const r = raw as { on?: unknown; volume?: unknown };
-      return {
-        on: r.on !== false,
-        volume:
-          typeof r.volume === 'number'
-            ? Math.max(0, Math.min(100, Math.round(r.volume)))
-            : DEFAULT_MUSIC_VOLUME,
-      };
-    }
-  } catch {
-    // Blocked storage: the defaults.
-  }
-  return { on: true, volume: DEFAULT_MUSIC_VOLUME };
-}
-
-function saveMusicSettings(s: MusicSettings): void {
-  try {
-    localStorage.setItem(KEY, JSON.stringify(s));
-  } catch {
-    // Blocked storage: the choice lasts for this page only.
-  }
-}
+// the loop runs on without a seam. It plays on the music bus of render/audio.ts, whenever the
+// sound mode lets it.
+import { EIGHTH_SECONDS, EIGHTHS_PER_BAR, RITORNELLO, type Chord } from '../content/music.ts';
+import { audio } from './audio.ts';
 
 /** Hz of MIDI note m. */
 const hz = (m: number): number => 440 * 2 ** ((m - 69) / 12);
@@ -222,11 +176,8 @@ class Band {
 
 const third = (c: Chord): number => c.root + (c.minor ? 3 : 4);
 
-/** The music of the whole page: one, started at the first gesture. */
+/** The music of the whole page: it follows the sound settings (render/audio.ts). */
 class Music {
-  private settings = loadMusicSettings();
-  private ctx: AudioContext | null = null;
-  private master: GainNode | null = null;
   private band: Band | null = null;
   private timer: number | null = null;
   /** bar of the loop to schedule next, and when it starts on the audio clock */
@@ -235,72 +186,20 @@ class Music {
   /** bars played since the start: the very first four have no drums, an intro */
   private played = 0;
 
-  get current(): MusicSettings {
-    return this.settings;
-  }
-
-  /** Waits for the first gesture, which browsers ask for before any sound. */
   install(): void {
-    const unlock = (): void => {
-      window.removeEventListener('pointerdown', unlock, true);
-      window.removeEventListener('keydown', unlock, true);
-      this.apply();
-    };
-    window.addEventListener('pointerdown', unlock, true);
-    window.addEventListener('keydown', unlock, true);
-    // Hidden, the page keeps quiet; back, the music goes on where it was.
-    document.addEventListener('visibilitychange', () => {
-      if (!this.ctx) return;
-      if (document.hidden) {
-        this.stopTimer();
-        void this.ctx.suspend();
-      } else {
-        this.apply();
-      }
-    });
-  }
-
-  set(next: Partial<MusicSettings>): void {
-    this.settings = { ...this.settings, ...next };
-    saveMusicSettings(this.settings);
-    this.apply();
-  }
-
-  private gainOf(volume: number): number {
-    // Loudness grows faster than the slider: its low end stays usable. At 25, peaks near 0.07.
-    return 0.9 * (volume / 100) ** 1.5;
+    audio.onChange(() => this.apply());
   }
 
   private apply(): void {
-    if (!this.settings.on || this.settings.volume === 0) {
+    const ctx = audio.ctx;
+    if (!ctx || !audio.musicOn || !audio.music) {
       this.stopTimer();
-      if (this.ctx) {
-        this.master?.gain.setTargetAtTime(0, this.ctx.currentTime, 0.15);
-        const ctx = this.ctx;
-        window.setTimeout(() => {
-          if (!this.timer) {
-            this.band?.stopDrone();
-            void ctx.suspend();
-          }
-        }, 600);
-      }
+      // The drone goes once the bus has faded out.
+      if (!audio.musicOn) window.setTimeout(() => !this.timer && this.band?.stopDrone(), 600);
       return;
     }
-    if (!this.ctx) {
-      const Ctx =
-        window.AudioContext ??
-        (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-      if (!Ctx) return;
-      this.ctx = new Ctx();
-      this.master = this.ctx.createGain();
-      this.master.gain.value = 0;
-      this.master.connect(this.ctx.destination);
-      this.band = new Band(this.ctx, this.master);
-    }
-    const ctx = this.ctx;
-    void ctx.resume();
-    this.master?.gain.setTargetAtTime(this.gainOf(this.settings.volume), ctx.currentTime, 0.3);
-    this.band?.startDrone();
+    this.band ??= new Band(ctx, audio.music);
+    this.band.startDrone();
     if (this.timer !== null) return;
     // Back from a pause: the next bar starts now, where the tune was.
     if (this.barTime < ctx.currentTime + 0.05) this.barTime = ctx.currentTime + 0.1;
@@ -314,7 +213,7 @@ class Music {
   }
 
   private schedule(): void {
-    const ctx = this.ctx;
+    const ctx = audio.ctx;
     const band = this.band;
     if (!ctx || !band) return;
     while (this.barTime < ctx.currentTime + AHEAD) {

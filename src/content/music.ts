@@ -136,3 +136,6 @@ export const EIGHTH_SECONDS = 0.2;
 
 /** Default loudness of the music, 0 to 100: discreet, under the sound effects. */
 export const DEFAULT_MUSIC_VOLUME = 25;
+
+/** Default loudness of the sound effects, 0 to 100 (render/sfx.ts). */
+export const DEFAULT_SFX_VOLUME = 60;

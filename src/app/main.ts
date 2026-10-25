@@ -10,6 +10,7 @@ import { loadSetup, rulesFor, saveSetup, type MatchSetup } from './match-setup.t
 import { loadSave } from './autosave.ts';
 import { loadFonts } from '../ui/fonts.ts';
 import { watchInstall } from './install.ts';
+import { audio } from '../render/audio.ts';
 import { music } from '../render/music.ts';
 import { loadOverrides } from '../ui/game-ui.ts';
 import { decodeMaskPng } from './loaders/mask-png.ts';
@@ -100,7 +101,8 @@ async function boot(): Promise<void> {
 }
 
 watchInstall();
-// The ambient music, from the player's first gesture (BACKLOG 7.8).
+// The sound: music and effects, from the player's first gesture (BACKLOG 7.8, GDD §11).
+audio.install();
 music.install();
 void boot();
 
