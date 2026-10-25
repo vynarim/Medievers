@@ -1,25 +1,35 @@
-// Online play (TECH_SPEC §8.3): the messages two peers exchange, JSON over a Transport. Any
-// change to a message bumps PROTOCOL_VERSION.
+// Online play (TECH_SPEC §8.3): the messages the peers of a match exchange, JSON over a
+// Transport. Any change to a message bumps PROTOCOL_VERSION.
 import type { MatchSetup } from '../app/match-setup.ts';
 import type { MatchRules } from '../content/rules.ts';
 import type { GameCommand } from '../sim/commands.ts';
 
-export const PROTOCOL_VERSION = 1;
+export const PROTOCOL_VERSION = 2;
 
-/** The creator of the match plays the even houses, the one who joined the odd ones. */
-export type Role = 'host' | 'guest';
+/** Seat 0 is the match's creator; the friends who joined it take seats 1 to MAX_SEAT. */
+export type Seat = number;
+export const HOST_SEAT: Seat = 0;
+export const MAX_SEAT: Seat = 4;
 
-export const otherRole = (r: Role): Role => (r === 'host' ? 'guest' : 'host');
+/**
+ * The seat that plays each house (GDD §6): the k-th house marked « Un copain » is seat k's; the
+ * creator's house and the AI's houses are seat 0's (the creator's device runs the AI).
+ */
+export function houseSeats(setup: Pick<MatchSetup, 'lineups' | 'players'>): Seat[] {
+  let next = 0;
+  return setup.lineups.map((_, h) => (setup.players?.[h] === 'friend' ? ++next : HOST_SEAT));
+}
 
-/** The peer that controls house `team` (GDD §6). */
-export const roleOfTeam = (team: number): Role => (team % 2 === 0 ? 'host' : 'guest');
+/** How many friends the match waits for: one per house marked « Un copain ». */
+export const friendCount = (setup: Pick<MatchSetup, 'lineups' | 'players'>): number =>
+  Math.max(0, ...houseSeats(setup));
 
-/** What both peers need to build the same match: the map, the rules, the seed, the delay. */
+/** What every peer needs to build the same match: the map, the rules, the seed, the delay. */
 export interface MatchStart {
   readonly setup: MatchSetup;
   readonly rules: MatchRules;
   readonly seed: number;
-  /** ticks between the decision of a tick's commands and their application, on both peers */
+  /** ticks between the decision of a tick's commands and their application, on every peer */
   readonly delay: number;
 }
 

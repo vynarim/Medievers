@@ -1,5 +1,6 @@
 // Online play over Firebase (TECH_SPEC §8.1, §8.2): anonymous sign-in, the match's room in the
-// Realtime Database found by its code, and a mailbox per peer. The only module that knows the SDK.
+// Realtime Database found by its code, and a mailbox per seat. The friends write to the creator
+// only, who passes on what is for the others. The only module that knows the SDK.
 import { initializeApp } from 'firebase/app';
 import { connectAuthEmulator, getAuth, signInAnonymously } from 'firebase/auth';
 import {
@@ -18,11 +19,12 @@ import {
   type Database,
 } from 'firebase/database';
 import {
-  otherRole,
+  HOST_SEAT,
+  MAX_SEAT,
   parseMessage,
   PROTOCOL_VERSION,
   type NetMessage,
-  type Role,
+  type Seat,
 } from './protocol.ts';
 import type { Transport } from './transport.ts';
 
@@ -93,19 +95,25 @@ export async function createRoom(): Promise<string> {
 }
 
 /**
- * Takes a seat in room `code`: the free guest seat, or the seat this device already had (a
- * reloaded page). Returns the role, or throws 'unknown' / 'full'.
+ * Takes a seat in room `code`: the seat this device already had (a reloaded page), else the first
+ * free one. Returns the seat (0 for the creator), or throws 'unknown' / 'full'.
  */
-export async function joinRoom(code: string): Promise<Role> {
+export async function joinRoom(code: string): Promise<Seat> {
   const { db, uid } = await connectFirebase();
-  const host = await get(ref(db, `${ROOT}/${code}/host`));
+  const room = `${ROOT}/${code}`;
+  const host = await get(ref(db, `${room}/host`));
   if (!host.exists()) throw new Error('unknown' satisfies RoomError);
-  if (host.val() === uid) return 'host';
-  const seat = await runTransaction(ref(db, `${ROOT}/${code}/guest`), (guest: unknown) =>
-    guest === null || guest === uid ? uid : undefined,
-  );
-  if (!seat.committed) throw new Error('full' satisfies RoomError);
-  return 'guest';
+  if (host.val() === uid) return HOST_SEAT;
+  for (let seat = 1; seat <= MAX_SEAT; seat++) {
+    if ((await get(ref(db, `${room}/seats/${seat}`))).val() === uid) return seat;
+  }
+  for (let seat = 1; seat <= MAX_SEAT; seat++) {
+    const taken = await runTransaction(ref(db, `${room}/seats/${seat}`), (cur: unknown) =>
+      cur === null || cur === uid ? uid : undefined,
+    );
+    if (taken.committed) return seat;
+  }
+  throw new Error('full' satisfies RoomError);
 }
 
 /** Removes the room (the host, once the match is over or left). */
@@ -114,66 +122,122 @@ export async function deleteRoom(code: string): Promise<void> {
   await remove(ref(db, `${ROOT}/${code}`)).catch(() => undefined);
 }
 
+/** What lies in a mailbox: the message, who sent it, and for whom (absent: everyone). */
+interface Envelope {
+  readonly f: Seat;
+  readonly t?: Seat;
+  readonly d: unknown;
+}
+
 /**
- * The mailboxes of room `code`: what this peer sends lands in the other's box; what lands in
- * its own box is handed over in order, then erased. Presence says whether the other is there.
+ * The mailboxes of room `code`: what lands in this seat's box is handed over in order, then
+ * erased. A friend posts everything in the creator's box; the creator reads it and passes on to
+ * the other friends what is for them. Presence says whose page is open.
  */
 export class FirebaseTransport implements Transport {
   readonly code: string;
-  readonly role: Role;
+  readonly seat: Seat;
   private readonly db: Database;
-  private handler: ((msg: NetMessage) => void) | null = null;
-  private readonly early: NetMessage[] = [];
+  private handler: ((msg: NetMessage, from: Seat) => void) | null = null;
+  private readonly early: { msg: NetMessage; from: Seat }[] = [];
   private readonly unsubscribe: (() => void)[] = [];
-  /** the other peer's presence: true while its page is open */
-  otherOnline = false;
+  /** the creator: the friends seated in the room */
+  private friends: Seat[] = [];
+  /** whose page is open, by seat */
+  private present: Record<string, boolean> = {};
+  /** the creator: a friend's page closed */
+  onLeave: ((seat: Seat) => void) | null = null;
 
-  private constructor(db: Database, code: string, role: Role) {
+  private constructor(db: Database, code: string, seat: Seat) {
     this.db = db;
     this.code = code;
-    this.role = role;
+    this.seat = seat;
   }
 
-  static async open(code: string, role: Role): Promise<FirebaseTransport> {
+  static async open(code: string, seat: Seat): Promise<FirebaseTransport> {
     const { db } = await connectFirebase();
-    const tr = new FirebaseTransport(db, code, role);
+    const tr = new FirebaseTransport(db, code, seat);
     const room = `${ROOT}/${code}`;
-    const me = ref(db, `${room}/online/${role}`);
+    const me = ref(db, `${room}/online/${seat}`);
     await set(me, true);
     await onDisconnect(me).set(false);
     tr.unsubscribe.push(
-      onValue(ref(db, `${room}/online/${otherRole(role)}`), (s) => {
-        tr.otherOnline = s.val() === true;
+      onValue(ref(db, `${room}/online`), (s) => {
+        const was = tr.present;
+        tr.present = (s.val() as Record<string, boolean> | null) ?? {};
+        for (const k of Object.keys(was)) {
+          if (was[k] && !tr.present[k]) tr.onLeave?.(Number(k));
+        }
       }),
-      onChildAdded(ref(db, `${room}/to/${role}`), (snap) => {
-        let msg: NetMessage | null;
+      onChildAdded(ref(db, `${room}/to/${seat}`), (snap) => {
+        let env: Envelope | null;
         try {
-          msg = parseMessage(JSON.parse(String(snap.val())));
+          env = JSON.parse(String(snap.val())) as Envelope;
         } catch {
-          msg = null;
+          env = null;
         }
         void remove(snap.ref);
-        if (!msg) return;
-        if (tr.handler) tr.handler(msg);
-        else tr.early.push(msg);
+        const msg = env ? parseMessage(env.d) : null;
+        if (!env || !msg) return;
+        // The creator passes on what a friend sent to the others.
+        if (tr.seat === HOST_SEAT && env.t !== HOST_SEAT) {
+          for (const k of tr.friends) {
+            if (k !== env.f && (env.t === undefined || env.t === k)) tr.post(k, env);
+          }
+          if (env.t !== undefined) return;
+        }
+        if (tr.handler) tr.handler(msg, env.f);
+        else tr.early.push({ msg, from: env.f });
       }),
     );
+    if (seat === HOST_SEAT) {
+      tr.unsubscribe.push(
+        onValue(ref(db, `${room}/seats`), (s) => {
+          // Numbered keys may come back as an array, holes included.
+          const seats = (s.val() as Record<string, string | null> | null) ?? {};
+          const was = tr.friends;
+          tr.friends = Object.entries(seats)
+            .filter(([, uid]) => typeof uid === 'string')
+            .map(([k]) => Number(k));
+          // A seat given back: its friend has left.
+          for (const k of was) if (!tr.friends.includes(k)) tr.onLeave?.(k);
+        }),
+      );
+    }
     return tr;
   }
 
-  send(msg: NetMessage): void {
-    void push(ref(this.db, `${ROOT}/${this.code}/to/${otherRole(this.role)}`), JSON.stringify(msg));
+  /** Gives seat `seat` back (one's own, or the creator's lobby forgetting a friend gone). */
+  freeSeat(seat: Seat): void {
+    void remove(ref(this.db, `${ROOT}/${this.code}/seats/${seat}`)).catch(() => undefined);
   }
 
-  onMessage(handler: (msg: NetMessage) => void): void {
+  /** The page of seat `seat` is open. */
+  online(seat: Seat): boolean {
+    return this.present[seat] === true;
+  }
+
+  private post(to: Seat, env: Envelope): void {
+    void push(ref(this.db, `${ROOT}/${this.code}/to/${to}`), JSON.stringify(env));
+  }
+
+  send(msg: NetMessage, to?: Seat): void {
+    const env: Envelope = to === undefined ? { f: this.seat, d: msg } : { f: this.seat, t: to, d: msg };
+    if (this.seat !== HOST_SEAT) this.post(HOST_SEAT, env);
+    else if (to !== undefined) this.post(to, env);
+    else for (const k of this.friends) this.post(k, env);
+  }
+
+  onMessage(handler: (msg: NetMessage, from: Seat) => void): void {
     this.handler = handler;
-    for (const msg of this.early.splice(0)) handler(msg);
+    for (const q of this.early.splice(0)) handler(q.msg, q.from);
   }
 
   close(): void {
     for (const off of this.unsubscribe.splice(0)) off();
     this.handler = null;
-    void set(ref(this.db, `${ROOT}/${this.code}/online/${this.role}`), false).catch(
+    this.onLeave = null;
+    void set(ref(this.db, `${ROOT}/${this.code}/online/${this.seat}`), false).catch(
       () => undefined,
     );
   }

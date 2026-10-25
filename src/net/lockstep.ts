@@ -1,45 +1,60 @@
 // Lockstep by turn (TECH_SPEC §8.4). Each tick t has one producer: the peer of the house that
-// is active once tick t - D - 1 has been played. It decides the commands of tick t then, keeps
-// them and sends them; both peers apply them at tick t. A peer plays a tick only once it knows
-// its commands. The turn hashes are compared; a desync is reported, never mended.
+// is active once tick t - D - 1 has been played (the creator for the AI's houses). It decides
+// the commands of tick t then, keeps them and sends them; every peer applies them at tick t. A
+// peer plays a tick only once it knows its commands. The turn hashes are compared; a desync is
+// reported, never mended.
 import type { GameCommand } from '../sim/commands.ts';
 import type { SimView } from '../sim/sim.ts';
-import { roleOfTeam, type MatchStart, type NetMessage, type Role } from './protocol.ts';
+import { houseSeats, type MatchStart, type NetMessage, type Seat } from './protocol.ts';
 import type { Transport } from './transport.ts';
 
 /** ticks of commands a batch gathers at most before it leaves (100 ms) */
 export const BATCH_TICKS = 6;
 
 export class Lockstep {
-  readonly role: Role;
+  readonly seat: Seat;
   readonly start: MatchStart;
+  /** the seat that plays each house */
+  readonly seats: readonly Seat[];
   private readonly transport: Transport;
   /** the commands of each tick (index = tick), once known */
   private readonly frames: (readonly GameCommand[] | undefined)[] = [];
   private out: { from: number; cmds: (readonly GameCommand[])[] } | null = null;
-  private readonly localHashes = new Map<number, number>();
-  private readonly remoteHashes = new Map<number, number>();
+  /** each turn's state hash, from each seat that sent it (this one's included) */
+  private readonly hashes = new Map<number, Map<Seat, number>>();
   /** the first turn whose hashes differ, once seen */
   desyncTurn: number | null = null;
-  remotePaused = false;
+  /** the seats whose menu stops the clock */
+  private readonly pausedBy = new Set<Seat>();
   private localPaused = false;
-  /** the other peer gave up the match */
+  /** a peer gave up the match */
   remoteResigned = false;
 
   constructor(
-    role: Role,
+    seat: Seat,
     start: MatchStart,
     transport: Transport,
     known: readonly (readonly GameCommand[])[] = [],
   ) {
-    this.role = role;
+    this.seat = seat;
     this.start = start;
+    this.seats = houseSeats(start.setup);
     this.transport = transport;
     // Ticks 1..D: nobody could decide them, they are empty.
     for (let t = 1; t <= start.delay; t++) this.frames[t] = [];
     known.forEach((cmds, i) => {
       if (this.frames[i + 1] === undefined) this.frames[i + 1] = cmds;
     });
+  }
+
+  /** Another peer's menu stops the clock. */
+  get remotePaused(): boolean {
+    return this.pausedBy.size > 0;
+  }
+
+  /** The seat whose peer decides the commands while house `team` plays. */
+  seatOf(team: number): Seat {
+    return this.seats[team] ?? 0;
   }
 
   /** The commands of `tick` are known: the tick can be played. */
@@ -66,8 +81,8 @@ export class Lockstep {
   produceAfter(view: SimView, input: (tick: number) => readonly GameCommand[]): void {
     const t = view.tick + this.start.delay + 1;
     if (this.frames[t] !== undefined) return;
-    if (roleOfTeam(view.turn.activeTeam) !== this.role) {
-      // The other peer owns the next ticks: what is queued must not wait for a full batch.
+    if (this.seatOf(view.turn.activeTeam) !== this.seat) {
+      // Another peer owns the next ticks: what is queued must not wait for a full batch.
       this.flush(true);
       return;
     }
@@ -88,14 +103,13 @@ export class Lockstep {
     this.out = null;
   }
 
-  /** A turn began at this tick: both peers send and compare the state hash. */
+  /** A turn began at this tick: every peer sends and compares the state hash. */
   turnStarted(turn: number, hash: number): void {
-    this.localHashes.set(turn, hash);
     this.transport.send({ m: 'turnEnd', turn, hash });
-    this.compare(turn);
+    this.compare(turn, this.seat, hash);
   }
 
-  /** A menu that stops the clock opened or closed here: both peers stop. */
+  /** A menu that stops the clock opened or closed here: every peer stops. */
   setPaused(on: boolean): void {
     if (on === this.localPaused) return;
     this.localPaused = on;
@@ -106,8 +120,8 @@ export class Lockstep {
     this.transport.send({ m: 'resign' });
   }
 
-  /** A message from the other peer. */
-  receive(msg: NetMessage): void {
+  /** A message from the peer at seat `from`. */
+  receive(msg: NetMessage, from: Seat): void {
     switch (msg.m) {
       case 'frames':
         msg.cmds.forEach((cmds, i) => {
@@ -115,25 +129,28 @@ export class Lockstep {
         });
         break;
       case 'turnEnd':
-        this.remoteHashes.set(msg.turn, msg.hash);
-        this.compare(msg.turn);
+        this.compare(msg.turn, from, msg.hash);
         break;
       case 'pause':
-        this.remotePaused = msg.on;
+        if (msg.on) this.pausedBy.add(from);
+        else this.pausedBy.delete(from);
         break;
       case 'resign':
         this.remoteResigned = true;
         break;
       case 'hello':
-        // The other peer is back without its state (its page reloaded): the match so far.
+        // A peer comes without its state (late, or its page reloaded): the match so far.
         if (msg.tick === 0) {
           const until = this.knownUntil();
-          this.transport.send({
-            m: 'resume',
-            start: this.start,
-            frames: this.frames.slice(1, until + 1).map((c) => c ?? []),
-          });
-          if (this.localPaused) this.transport.send({ m: 'pause', on: true });
+          this.transport.send(
+            {
+              m: 'resume',
+              start: this.start,
+              frames: this.frames.slice(1, until + 1).map((c) => c ?? []),
+            },
+            from,
+          );
+          if (this.localPaused) this.transport.send({ m: 'pause', on: true }, from);
         }
         break;
       case 'start':
@@ -142,10 +159,13 @@ export class Lockstep {
     }
   }
 
-  private compare(turn: number): void {
-    const a = this.localHashes.get(turn);
-    const b = this.remoteHashes.get(turn);
-    if (a === undefined || b === undefined) return;
-    if (a !== b && (this.desyncTurn === null || turn < this.desyncTurn)) this.desyncTurn = turn;
+  private compare(turn: number, seat: Seat, hash: number): void {
+    let seen = this.hashes.get(turn);
+    if (!seen) this.hashes.set(turn, (seen = new Map()));
+    seen.set(seat, hash);
+    const all = [...seen.values()];
+    if (all.some((h) => h !== all[0]) && (this.desyncTurn === null || turn < this.desyncTurn)) {
+      this.desyncTurn = turn;
+    }
   }
 }

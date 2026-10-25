@@ -6,7 +6,8 @@ import { FACTIONS, unitName } from '../content/factions.ts';
 import type { MapDef } from '../content/maps.ts';
 import { TICKS_PER_SECOND, type MatchRules } from '../content/rules.ts';
 import { PhaserLocalInput } from '../input/phaser-local-input.ts';
-import { MAX_POWER } from '../sim/commands.ts';
+import { MAX_POWER, type GameCommand } from '../sim/commands.ts';
+import { HOST_SEAT } from '../net/protocol.ts';
 import type { SimEvent } from '../sim/events.ts';
 import { cosQ14, sinQ14 } from '../sim/math/angle.ts';
 import { SUBPX } from '../sim/math/fixed.ts';
@@ -70,8 +71,7 @@ import { showTitleScreen } from '../ui/title-screen.ts';
 import { StructureState, type StructurePlacement } from '../content/structures.ts';
 import { buildMap, type BuiltMap } from '../app/map-build.ts';
 import { leaveMatch, type OnlineMatch } from '../app/online.ts';
-import { hostFlow, joinFlow } from '../app/online-flow.ts';
-import { roleOfTeam } from '../net/protocol.ts';
+import { joinFlow, setupLobby } from '../app/online-flow.ts';
 import { RemoteInputSource } from '../input/remote-input.ts';
 
 /** The map fields of the battle data, from a built map. */
@@ -332,9 +332,12 @@ export class BattleScene extends Phaser.Scene {
     if (this.online) this.saver.persist = false;
     this.watch = watch ? new ReplayInput(watch) : null;
     this.watchLog = watch ?? null;
-    // The AI plays its houses in a match on this device, not online nor in a replay.
+    // The AI plays its houses on this device; online, on the creator's only; never in a replay.
     this.ai?.dispose();
-    const levels = this.online || watch ? new Map() : aiHouses(this.data_.setup);
+    const levels =
+      watch || (this.online && this.online.seat !== HOST_SEAT)
+        ? new Map()
+        : aiHouses(this.data_.setup);
     this.ai = levels.size > 0 ? new AIInputSource(levels, from?.seed ?? seed) : null;
     this.speed = 1;
 
@@ -449,9 +452,7 @@ export class BattleScene extends Phaser.Scene {
     }
     if (this.online && this.remote) {
       // The first ticks this peer owns, then, for a match under way, the catch-up at full speed.
-      this.online.lockstep.produceAfter(this.sim.view(), (tk) =>
-        this.input_.poll(tk, this.sim.view()),
-      );
+      this.online.lockstep.produceAfter(this.sim.view(), (tk) => this.decide(tk));
       if (this.online.resumed) {
         while (this.remote.ready(this.sim.view().tick + 1)) {
           this.playOnline(this.sim.view().tick + 1, false);
@@ -653,11 +654,12 @@ export class BattleScene extends Phaser.Scene {
       },
       () => (this.paused = false),
       {
-        host: (setup) => {
-          saveSetup(setup);
-          const seed = (this.data_.seed + 0x9e3779b9) >>> 0;
-          hostFlow(setup, rulesFor(setup, loadOverrides()), seed, play, back);
-        },
+        lobby: () =>
+          setupLobby(
+            (setup) => rulesFor(setup, loadOverrides()),
+            (this.data_.seed + 0x9e3779b9) >>> 0,
+            play,
+          ),
         join: () => joinFlow(play, back),
       },
     );
@@ -849,7 +851,11 @@ export class BattleScene extends Phaser.Scene {
       ls.remotePaused
         ? t('online.paused')
         : waiting
-          ? t(online.transport.otherOnline ? 'online.waitingPeer' : 'online.peerAway')
+          ? t(
+              online.transport.online(ls.seatOf(this.sim.view().turn.activeTeam))
+                ? 'online.waitingPeer'
+                : 'online.peerAway',
+            )
           : null,
     );
   }
@@ -1056,11 +1062,16 @@ export class BattleScene extends Phaser.Scene {
     for (const e of events) {
       if (e.e === 'turnStarted') online.lockstep.turnStarted(e.turn, this.sim.hash());
     }
-    online.lockstep.produceAfter(this.sim.view(), (t) =>
-      live ? this.input_.poll(t, this.sim.view()) : [],
-    );
+    online.lockstep.produceAfter(this.sim.view(), (t) => (live ? this.decide(t) : []));
     if (events.some((e) => e.e === 'gameOver')) leaveMatch(online, false);
     if (live) this.handleEvents(events);
+  }
+
+  /** Online: the commands of tick `t` this peer owns, from the AI's houses or the player. */
+  private decide(t: number): GameCommand[] {
+    const view = this.sim.view();
+    const local = this.input_.poll(t, view);
+    return this.ai?.plays(view) ? this.ai.poll(t, view) : local;
   }
 
   /**
@@ -1068,7 +1079,12 @@ export class BattleScene extends Phaser.Scene {
    * but the AI's.
    */
   private mine(team: number): boolean {
-    if (this.online) return roleOfTeam(team) === this.online.role;
+    if (this.online) {
+      return (
+        this.online.lockstep.seatOf(team) === this.online.seat &&
+        !aiHouses(this.data_.setup).has(team)
+      );
+    }
     return !aiHouses(this.data_.setup).has(team) || this.replaying;
   }
 

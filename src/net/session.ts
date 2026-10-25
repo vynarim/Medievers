@@ -1,7 +1,14 @@
-// Meeting before the match (TECH_SPEC §8.3): the peers say hello and check they run the same
-// game, then the creator sends the match; a peer back without its state gets it resumed.
+// Meeting before the match (TECH_SPEC §8.3): the creator opens a lobby where friends say hello
+// and are checked to run the same game; it starts the match when it chooses, and every peer
+// gets it. A peer that comes later, or back without its state, gets the match resumed.
 import { Lockstep } from './lockstep.ts';
-import { PROTOCOL_VERSION, type MatchStart, type NetMessage, type Role } from './protocol.ts';
+import {
+  HOST_SEAT,
+  PROTOCOL_VERSION,
+  type MatchStart,
+  type NetMessage,
+  type Seat,
+} from './protocol.ts';
 import type { Transport } from './transport.ts';
 
 export interface Joined {
@@ -12,57 +19,98 @@ export interface Joined {
 
 export type JoinError = 'version';
 
+const helloOf = (buildHash: string): NetMessage => ({
+  m: 'hello',
+  protocolVersion: PROTOCOL_VERSION,
+  buildHash,
+  tick: 0,
+});
+
+/** The creator's side of the meeting, before the match starts. */
+export class Lobby {
+  private readonly transport: Transport;
+  private readonly buildHash: string;
+  /** the friends who said hello with the same game, by seat */
+  readonly joined = new Set<Seat>();
+  private lockstep: Lockstep | null = null;
+  private listener: ((joined: ReadonlySet<Seat>) => void) | null = null;
+
+  constructor(transport: Transport, buildHash: string) {
+    this.transport = transport;
+    this.buildHash = buildHash;
+    transport.onMessage((msg, from) => {
+      if (this.lockstep) {
+        this.lockstep.receive(msg, from);
+        return;
+      }
+      if (msg.m !== 'hello') return;
+      if (msg.protocolVersion !== PROTOCOL_VERSION || msg.buildHash !== buildHash) {
+        // Its answer tells the friend it cannot play this match.
+        transport.send(helloOf(buildHash), from);
+        return;
+      }
+      this.joined.add(from);
+      this.listener?.(this.joined);
+    });
+  }
+
+  /** `fn` hears of each friend that joins (and is called at once). */
+  onJoin(fn: (joined: ReadonlySet<Seat>) => void): void {
+    this.listener = fn;
+    fn(this.joined);
+  }
+
+  /** A friend left the lobby before the match started. */
+  forget(seat: Seat): void {
+    if (this.lockstep || !this.joined.delete(seat)) return;
+    this.listener?.(this.joined);
+  }
+
+  /** Starts the match: every friend who joined gets it; one who comes later gets it resumed. */
+  start(start: MatchStart): Lockstep {
+    if (this.lockstep) return this.lockstep;
+    this.listener = null;
+    const ls = new Lockstep(HOST_SEAT, start, this.transport);
+    this.lockstep = ls;
+    for (const seat of this.joined) {
+      this.transport.send(helloOf(this.buildHash), seat);
+      this.transport.send({ m: 'start', start }, seat);
+    }
+    return ls;
+  }
+}
+
 /**
- * Connects over `transport`. A new match's creator passes `start`: it waits for the other peer
- * and sends the match. Otherwise (the one who joins, or a creator whose page reloaded) the peer
- * asks for the match and gets it new or resumed. Messages after that go to the lockstep.
+ * Connects to a match over `transport`: a friend who joins, or any peer whose page reloaded. It
+ * says hello and gets the match, new (from the creator's lobby) or resumed (from any peer).
+ * Messages after that go to the lockstep.
  */
-export function connect(
-  transport: Transport,
-  role: Role,
-  buildHash: string,
-  start: MatchStart | null,
-): Promise<Joined> {
+export function connect(transport: Transport, seat: Seat, buildHash: string): Promise<Joined> {
   return new Promise((resolve, reject) => {
     let lockstep: Lockstep | null = null;
     let failed = false;
-    const hello: NetMessage = { m: 'hello', protocolVersion: PROTOCOL_VERSION, buildHash, tick: 0 };
-    const done = (ls: Lockstep, resumed: boolean): void => {
-      lockstep = ls;
-      resolve({ lockstep: ls, resumed });
-    };
-    transport.onMessage((msg) => {
+    transport.onMessage((msg, from) => {
       if (failed) return;
       if (
         msg.m === 'hello' &&
         (msg.protocolVersion !== PROTOCOL_VERSION || msg.buildHash !== buildHash)
       ) {
         failed = true;
-        // The creator has not spoken yet: it answers, so the other side learns it too.
-        if (start) transport.send(hello);
         reject(new Error('version' satisfies JoinError));
         return;
       }
       if (lockstep) {
-        lockstep.receive(msg);
+        lockstep.receive(msg, from);
         return;
       }
-      if (start) {
-        // The creator: the other peer said hello, here is the match.
-        if (msg.m === 'hello') {
-          transport.send(hello);
-          transport.send({ m: 'start', start });
-          done(new Lockstep(role, start, transport), false);
-        }
-        return;
+      if (msg.m === 'start') {
+        lockstep = new Lockstep(seat, msg.start, transport);
+        resolve({ lockstep, resumed: false });
+      } else if (msg.m === 'resume') {
+        lockstep = new Lockstep(seat, msg.start, transport, msg.frames);
+        resolve({ lockstep, resumed: msg.frames.length > msg.start.delay });
       }
-      if (msg.m === 'start') done(new Lockstep(role, msg.start, transport), false);
-      else if (msg.m === 'resume')
-        done(
-          new Lockstep(role, msg.start, transport, msg.frames),
-          msg.frames.length > msg.start.delay,
-        );
     });
-    if (!start) transport.send(hello);
+    transport.send(helloOf(buildHash));
   });
 }

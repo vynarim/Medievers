@@ -32,15 +32,18 @@ export interface MatchSetup {
   /** seconds to play a turn, one of TURN_SECONDS (2026-10-25); absent from older saves: 45 */
   readonly turnSeconds?: number;
   /**
-   * who plays each house (GDD §6): the player, or the AI at a level; one house at most is the
-   * player's, never two humans on one device. Absent from older saves: the player has the first
-   * house, the AI (Chevalier) the others.
+   * who plays each house (GDD §6): the player, a friend online, or the AI at a level; one house
+   * at most is the player's, never two humans on one device. Absent from older saves: the player
+   * has the first house, the AI (Chevalier) the others.
    */
   readonly players?: readonly Player[];
 }
 
-/** Who plays a house: the person at this device, or the AI at one of its levels. */
-export type Player = 'human' | AiLevelId;
+/**
+ * Who plays a house: the person at this device, a friend on another device who joins by the
+ * match's code (« Un copain », 2026-10-25), or the AI at one of its levels.
+ */
+export type Player = 'human' | 'friend' | AiLevelId;
 
 /** The level the AI plays at when nobody chose one. */
 export const DEFAULT_AI_LEVEL: AiLevelId = 'knight';
@@ -49,7 +52,7 @@ export const DEFAULT_AI_LEVEL: AiLevelId = 'knight';
 export function playersOf(s: MatchSetup): Player[] {
   const out: Player[] = s.lineups.map((_, h) => {
     const p = s.players?.[h];
-    if (p === 'human' || (p !== undefined && AI_LEVEL_IDS.includes(p))) return p;
+    if (p === 'human' || p === 'friend' || (p !== undefined && AI_LEVEL_IDS.includes(p))) return p;
     return s.players ? DEFAULT_AI_LEVEL : h === 0 ? 'human' : DEFAULT_AI_LEVEL;
   });
   let human = false;
@@ -61,14 +64,17 @@ export function playersOf(s: MatchSetup): Player[] {
   return out;
 }
 
-/** The AI's houses and their levels, for a match played on this device. */
+/** The AI's houses and their levels (run by this device, or online by the creator's). */
 export function aiHouses(s: MatchSetup): Map<number, AiLevelId> {
   const out = new Map<number, AiLevelId>();
   playersOf(s).forEach((p, h) => {
-    if (p !== 'human') out.set(h, p);
+    if (p !== 'human' && p !== 'friend') out.set(h, p);
   });
   return out;
 }
+
+/** A house is a friend's: the match is played online, and waits for them to join. */
+export const hasFriends = (s: MatchSetup): boolean => playersOf(s).includes('friend');
 
 /** The turn lengths offered on the setup screen, in seconds; the default one first. */
 export const TURN_SECONDS: readonly number[] = [45, 60, 90, 30];

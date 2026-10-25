@@ -14,7 +14,7 @@ import { loadOverrides } from '../ui/game-ui.ts';
 import { decodeMaskPng } from './loaders/mask-png.ts';
 import { buildMap, legacyMap, mapForLog, type BuiltMap } from './map-build.ts';
 import { loadOnlineCode, type OnlineMatch } from './online.ts';
-import { hostFlow, joinFlow, rejoinFlow } from './online-flow.ts';
+import { joinFlow, rejoinFlow, setupLobby } from './online-flow.ts';
 
 /** The map a log was played on: drawn again, or for the old greybox logs, loaded. */
 async function mapOfLog(log: GameLog): Promise<BuiltMap | null> {
@@ -68,10 +68,7 @@ async function boot(): Promise<void> {
       },
       title,
       {
-        host: (chosen) => {
-          saveSetup(chosen);
-          hostFlow(chosen, rulesFor(chosen, overrides), seed, play, choose);
-        },
+        lobby: () => setupLobby((chosen) => rulesFor(chosen, overrides), seed, play),
         join: () => joinFlow(play, choose),
       },
       'setup.toTitle',

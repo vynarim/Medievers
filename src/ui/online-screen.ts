@@ -1,5 +1,6 @@
-// Online match screens (GDD §6): the creator's code while the other player comes, the code to
-// type to join, and the wait while a reloaded page takes its seat again. DOM over the canvas.
+// Online match screens (GDD §6): the code to type to join, the wait until the creator starts the
+// match, and the wait while a reloaded page takes its seat again. DOM over the canvas. (The
+// creator's code shows on the setup screen.)
 import { t } from './i18n.ts';
 import { button, el, uiRoot } from './overlay.ts';
 
@@ -12,6 +13,7 @@ const STYLE = `
   width: 9em; max-width: 100%; padding: 6px; border: 2px solid var(--encre); border-radius: 4px;
   background: var(--ceruse); color: var(--encre); pointer-events: auto; text-transform: uppercase; }
 #ui .online .error { color: var(--vermillon); min-height: 1.4em; }
+#ui .online .error.ok { color: var(--encre); }
 #ui .online .actions { justify-content: center; }
 `;
 
@@ -47,60 +49,23 @@ export function onlineError(e: unknown): string {
 }
 
 export interface WaitScreen {
-  setCode(code: string): void;
   fail(message: string): void;
   close(): void;
 }
 
-/** The creator's screen: the code to give, then the wait. Cancel calls `onCancel`. */
-export function showHostWait(onCancel: (code: string | null) => void): WaitScreen {
-  const { box, close } = panel();
-  let code: string | null = null;
-  const shown = el('div', 'code', '…');
-  const status = el('p', '', t('online.creating'));
-  const error = el('p', 'error');
-  const copy = button(t('online.copy'));
-  copy.disabled = true;
-  copy.addEventListener('click', () => {
-    if (code) void navigator.clipboard?.writeText(shown.textContent ?? code);
-  });
-  const cancel = button(t('online.cancel'));
-  cancel.addEventListener('click', () => {
-    close();
-    onCancel(code);
-  });
-  const actions = el('div', 'actions');
-  actions.append(copy, cancel);
-  box.append(
-    el('h2', '', t('online.hostTitle')),
-    el('p', '', t('online.hostBody')),
-    shown,
-    status,
-    error,
-    actions,
-  );
-  return {
-    setCode: (c) => {
-      code = c;
-      shown.textContent = `${c.slice(0, 3)}-${c.slice(3)}`;
-      status.textContent = t('online.waiting');
-      copy.disabled = false;
-    },
-    fail: (message) => {
-      error.textContent = message;
-      status.textContent = '';
-    },
-    close,
-  };
-}
-
-/** The joining player's screen: a code to type; `onJoin` resolves or throws (message shown). */
+/**
+ * The joining player's screen: a code to type; `onJoin` resolves once the match starts, or
+ * throws (message shown). Seated, the player waits for the creator to start it.
+ */
 export function showJoin(
   normalize: (typed: string) => string | null,
-  onJoin: (code: string) => Promise<void>,
+  onJoin: (code: string, seated: (leave: () => void) => void) => Promise<void>,
   onCancel: () => void,
 ): () => void {
   const { box, close } = panel();
+  let leave: (() => void) | null = null;
+  let gone = false;
+  const body = el('p', '', t('online.joinBody'));
   const input = el('input');
   input.type = 'text';
   input.maxLength = 7;
@@ -122,13 +87,31 @@ export function showJoin(
     }
     go.disabled = true;
     error.textContent = t('online.joining');
-    onJoin(code).then(close, (e: unknown) => {
+    const seated = (l: () => void): void => {
+      // Cancelled while the seat was being taken: it is given back at once.
+      if (gone) {
+        l();
+        return;
+      }
+      leave = l;
+      body.textContent = t('online.seatedBody');
+      input.disabled = true;
+      error.classList.add('ok');
+      error.textContent = t('online.seated');
+    };
+    onJoin(code, seated).then(close, (e: unknown) => {
+      leave = null;
+      error.classList.remove('ok');
       go.disabled = false;
+      input.disabled = false;
+      body.textContent = t('online.joinBody');
       error.textContent = onlineError(e);
     });
   });
   const cancel = button(t('online.cancel'));
   cancel.addEventListener('click', () => {
+    gone = true;
+    leave?.();
     close();
     onCancel();
   });
@@ -136,7 +119,7 @@ export function showJoin(
   actions.append(cancel, go);
   box.append(
     el('h2', '', t('online.joinTitle')),
-    el('p', '', t('online.joinBody')),
+    body,
     input,
     error,
     actions,
@@ -164,7 +147,6 @@ export function showConnecting(code: string, onCancel: () => void): WaitScreen {
     actions,
   );
   return {
-    setCode: () => undefined,
     fail: (message) => (error.textContent = message),
     close,
   };
