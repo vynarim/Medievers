@@ -5,7 +5,7 @@ import type { ClassId } from '../content/classes.ts';
 import type { MatchRules } from '../content/rules.ts';
 import type { GameCommand } from '../sim/commands.ts';
 
-export const PROTOCOL_VERSION = 3;
+export const PROTOCOL_VERSION = 4;
 
 /** Seat 0 is the match's creator; the friends who joined it take seats 1 to MAX_SEAT. */
 export type Seat = number;
@@ -25,6 +25,31 @@ export function houseSeats(setup: Pick<MatchSetup, 'lineups' | 'players'>): Seat
 export const friendCount = (setup: Pick<MatchSetup, 'lineups' | 'players'>): number =>
   Math.max(0, ...houseSeats(setup));
 
+/** Where a friend's house stands before the start: awaited, choosing its units, or ready. */
+export type SeatStatus = 'absent' | 'choosing' | 'ready';
+
+/** A house at the creator's table, without its units: nobody sees another's choice. */
+export interface LobbyHouse {
+  readonly player: 'host' | 'friend' | 'ai';
+  /** the friend's seat (player 'friend') */
+  readonly seat?: number;
+  /** the AI's level (player 'ai') */
+  readonly level?: string;
+  /** a friend's house: where it stands */
+  readonly status?: SeatStatus;
+}
+
+/** What the friends see of the match being prepared: the field, the rules, the houses. */
+export interface LobbyTable {
+  readonly map: string;
+  readonly scheme: string;
+  readonly regicide: boolean;
+  readonly turnSeconds: number;
+  /** units each house fields: the friends choose exactly this many */
+  readonly units: number;
+  readonly houses: readonly LobbyHouse[];
+}
+
 /** What every peer needs to build the same match: the map, the rules, the seed, the delay. */
 export interface MatchStart {
   readonly setup: MatchSetup;
@@ -42,8 +67,10 @@ export type NetMessage =
       /** the last tick this peer has played; 0 when it has nothing (new, or the page reloaded) */
       readonly tick: number;
     }
-  /** a friend's own choice of units for its house, before the start (protocol 3) */
-  | { readonly m: 'lineup'; readonly classes: readonly ClassId[] }
+  /** a friend's own choice of units for its house, before the start, and whether it stands */
+  | { readonly m: 'lineup'; readonly classes: readonly ClassId[]; readonly ready: boolean }
+  /** the creator's table as the friends may see it, before the start (protocol 4) */
+  | { readonly m: 'lobby'; readonly table: LobbyTable }
   | { readonly m: 'start'; readonly start: MatchStart }
   /** the commands of ticks from, from + 1, … (one list per tick) */
   | {
@@ -66,7 +93,7 @@ export function parseMessage(raw: unknown): NetMessage | null {
   if (!raw || typeof raw !== 'object') return null;
   const m = (raw as { m?: unknown }).m;
   return typeof m === 'string' &&
-    ['hello', 'lineup', 'start', 'frames', 'turnEnd', 'resume', 'pause', 'resign'].includes(m)
+    ['hello', 'lineup', 'lobby', 'start', 'frames', 'turnEnd', 'resume', 'pause', 'resign'].includes(m)
     ? (raw as NetMessage)
     : null;
 }

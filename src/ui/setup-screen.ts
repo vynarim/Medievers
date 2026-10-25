@@ -18,6 +18,8 @@ import { t } from './i18n.ts';
 import { button, el, infoButton, shield, uiRoot } from './overlay.ts';
 import { copyButton } from './copy-button.ts';
 import { onlineError } from './online-screen.ts';
+import type { LobbyHouse, LobbyTable, SeatStatus } from '../net/protocol.ts';
+import type { FriendLineup } from '../net/session.ts';
 import { soundButton } from './sound-button.ts';
 import { playerArt } from './player-art.ts';
 import { icon, setIcon } from './icons.ts';
@@ -79,6 +81,7 @@ const STYLE = `
 @media (pointer: coarse) { #ui .setup .title .code button { min-height: 48px; } }
 #ui .error { color: var(--vermillon); font-weight: bold; }
 /* A friend's house: what it is at, in place of its units. */
+#ui .setup .house .units.friend .ready { color: var(--vert); font-style: normal; }
 #ui .setup .house .units.friend { align-items: center; min-height: 48px; font-style: italic;
   font-size: 16px; }
 #ui .setup .start .waiting { align-self: center; margin-right: auto; font-size: 15px; }
@@ -165,8 +168,10 @@ export interface SetupLobby {
   readonly code: Promise<string>;
   /** `fn` hears of the seats taken (1 = the first friend's house, and so on) */
   onJoin(fn: (seats: ReadonlySet<number>) => void): void;
-  /** `fn` hears of the units each friend chose for its house, by seat */
-  onLineup(fn: (lineups: ReadonlyMap<number, readonly ClassId[]>) => void): void;
+  /** `fn` hears of the units each friend chose for its house, by seat, and if they stand */
+  onLineup(fn: (lineups: ReadonlyMap<number, FriendLineup>) => void): void;
+  /** shows the friends the table as it is now, without anybody's units */
+  publish(table: LobbyTable): void;
   /** starts the match with this setup */
   launch(setup: MatchSetup): void;
   /** the match will not be played here: the room goes */
@@ -199,7 +204,7 @@ export function showSetupScreen(
   let codeFailed = false;
   let codeError = '';
   let seated: ReadonlySet<number> = new Set();
-  let friendLineups: ReadonlyMap<number, readonly ClassId[]> = new Map();
+  let friendLineups: ReadonlyMap<number, FriendLineup> = new Map();
   const openLobby = (): void => {
     if (lobby || !online) return;
     const l = online.lobby();
@@ -243,16 +248,44 @@ export function showSetupScreen(
       render();
     });
   };
-  /** The setup with each friend's house given the units its friend chose. */
+  /**
+   * The setup with each friend's house given the units its friend chose, as many as the other
+   * houses field (unitsOf).
+   */
   const withFriendLineups = (s: MatchSetup): MatchSetup => {
     // The k-th friend's house is seat k's (net/protocol.ts houseSeats).
     let seat = 0;
+    const units = unitsOf(s);
     const players = playersOf(s);
     const lineups = s.lineups.map((l, h) => {
-      const chosen = players[h] === 'friend' ? friendLineups.get(++seat) : undefined;
-      return chosen ? [...chosen] : [...l];
+      if (players[h] !== 'friend') return [...l];
+      const chosen = friendLineups.get(++seat)?.classes ?? l;
+      return Array.from({ length: units }, (_, k): ClassId => chosen[k] ?? 'knight');
     });
     return fixSetup({ ...s, lineups });
+  };
+  /** Where friend seat `seat` stands: awaited, choosing, or ready with the right count. */
+  const statusOf = (seat: number): SeatStatus => {
+    if (!seated.has(seat)) return 'absent';
+    const l = friendLineups.get(seat);
+    return l?.ready && l.classes.length === unitsOf(setup) ? 'ready' : 'choosing';
+  };
+  /** The table the friends see: the field, the rules, who plays each house, nobody's units. */
+  const tableOf = (s: MatchSetup): LobbyTable => {
+    let seat = 0;
+    return {
+      map: s.map,
+      scheme: s.scheme,
+      regicide: s.regicide,
+      turnSeconds: s.turnSeconds ?? TURN_SECONDS[0] ?? 45,
+      units: unitsOf(s),
+      houses: playersOf(s).map((p): LobbyHouse => {
+        if (p === 'human') return { player: 'host' };
+        if (p !== 'friend') return { player: 'ai', level: p };
+        const k = ++seat;
+        return { player: 'friend', seat: k, status: statusOf(k) };
+      }),
+    };
   };
   const close = (): void => {
     veil.remove();
@@ -271,6 +304,7 @@ export function showSetupScreen(
   const render = (): void => {
     const friends = hasFriends(setup);
     openLobby();
+    lobby?.publish(tableOf(setup));
     // The match's code, top right, always: whoever has it can join.
     const title = el('div', 'title');
     title.append(el('h2', '', t('setup.title')), sound);
@@ -382,10 +416,15 @@ export function showSetupScreen(
       const person = players[h] === 'human' || players[h] === 'friend';
       face.innerHTML = playerArt(person ? 'human' : 'ai');
       if (players[h] === 'friend') {
-        // A friend's house: an hourglass until they have joined, then a tick.
-        const isIn = seated.has(++friend);
-        const mark = el('span', isIn ? 'seat in' : 'seat', isIn ? '✓' : '⌛');
-        face.title = t(isIn ? 'setup.friendIn' : 'setup.friendWaited');
+        // A friend's house: an hourglass until they have joined, a quill while they choose, a
+        // tick once their units stand.
+        const status = statusOf(++friend);
+        const mark = el(
+          'span',
+          status === 'ready' ? 'seat in' : 'seat',
+          status === 'ready' ? '✓' : status === 'choosing' ? '✎' : '⌛',
+        );
+        face.title = t(`setup.friend.${status}`);
         face.append(mark);
       }
       const pick = el('div', 'player-pick');
@@ -397,9 +436,7 @@ export function showSetupScreen(
       };
       if (players[h] === 'friend') {
         // A friend's house: the friend chooses its units on its own device.
-        row.append(
-          friendUnits(friendLineups.get(friend) ?? null, seated.has(friend), code, codeFailed),
-        );
+        row.append(friendUnits(statusOf(friend), unitsOf(setup), code, codeFailed));
       } else {
         row.append(lineupPicker(lineup, setLineup));
       }
@@ -409,6 +446,10 @@ export function showSetupScreen(
       drop.append(el('i'));
       drop.title = t('setup.houseDrop');
       drop.addEventListener('click', () => {
+        // A friend's house goes only once asked twice: its friend is put out of the match.
+        if (playersOf(setup)[h] === 'friend' && !window.confirm(t('setup.houseDrop.friend'))) {
+          return;
+        }
         const players = playersOf(setup).filter((_, k) => k !== h);
         const lineups = setup.lineups.filter((_, k) => k !== h);
         update({ ...setup, lineups, players });
@@ -450,7 +491,7 @@ export function showSetupScreen(
     const start = el('div', 'start');
     const go = button(t('setup.start'), 'fire');
     // With friends, the battle waits until each has joined.
-    const awaited = friends ? Math.max(0, friendCountOf(setup) - countSeated(seated, setup)) : 0;
+    const awaited = friends ? friendCountOf(setup) - countReady(setup, statusOf) : 0;
     go.disabled = friends && (!code || awaited > 0);
     if (friends && code && awaited > 0) {
       start.append(el('span', 'waiting', t('setup.awaiting', { n: awaited })));
@@ -497,17 +538,25 @@ export function showSetupScreen(
 /** The houses given to friends. */
 const friendCountOf = (s: MatchSetup): number => playersOf(s).filter((p) => p === 'friend').length;
 
-/** The friends' houses whose friend has joined: seats 1 to their number. */
-function countSeated(seated: ReadonlySet<number>, s: MatchSetup): number {
+/** The friends' houses whose friend stands by its units: seats 1 to their number. */
+function countReady(s: MatchSetup, statusOf: (seat: number) => SeatStatus): number {
   let n = 0;
-  for (let k = 1; k <= friendCountOf(s); k++) if (seated.has(k)) n++;
+  for (let k = 1; k <= friendCountOf(s); k++) if (statusOf(k) === 'ready') n++;
   return n;
+}
+
+/** Units every house fields: as many as the creator's own house (or the first). */
+export function unitsOf(s: MatchSetup): number {
+  const own = playersOf(s).indexOf('human');
+  return (s.lineups[own >= 0 ? own : 0] ?? []).length || 1;
 }
 
 /** The units of a house, each chosen in a list; a cross takes one out, a dashed slot adds one. */
 export function lineupPicker(
   lineup: readonly ClassId[],
   setLineup: (next: ClassId[]) => void,
+  /** the count is set (a friend fields as many as the others): no cross, no dashed slot */
+  fixed = false,
 ): HTMLElement {
   const units = el('div', 'units');
   lineup.forEach((cls, u) => {
@@ -528,7 +577,7 @@ export function lineupPicker(
     });
     slot.append(select);
     // This one leaves the house: a small cross on its corner, while it is not alone.
-    if (lineup.length > 1) {
+    if (lineup.length > 1 && !fixed) {
       const out = setIcon(button('', 'unit-out'), 'close');
       out.title = t('setup.unitOut', { n: u + 1 });
       out.addEventListener('click', () => setLineup(lineup.filter((_, k) => k !== u)));
@@ -537,7 +586,7 @@ export function lineupPicker(
     units.append(slot);
   });
   // One more: an empty dashed slot, while the house has room.
-  if (lineup.length < MAX_UNITS) {
+  if (lineup.length < MAX_UNITS && !fixed) {
     const more = setIcon(button('', 'unit-add'), 'newMatch');
     more.title = t('setup.unitMore');
     more.addEventListener('click', () => setLineup([...lineup, 'knight']));
@@ -547,19 +596,19 @@ export function lineupPicker(
 }
 
 /**
- * A friend's house: not its units, which the friend chooses on its device, but where it is at:
- * the code to pass on while the friend is awaited, then the units it chose.
+ * A friend's house: not its units, which the friend chooses on its device and nobody else sees,
+ * but where it is at: the code to pass on while the friend is awaited, then its choosing.
  */
 function friendUnits(
-  chosen: readonly ClassId[] | null,
-  isIn: boolean,
+  status: SeatStatus,
+  units: number,
   code: string | null,
   failed: boolean,
 ): HTMLElement {
   const box = el('div', 'units friend');
-  if (!isIn && failed) {
+  if (status === 'absent' && failed) {
     box.append(el('span', 'error', t('setup.friendNoRoom')));
-  } else if (!isIn) {
+  } else if (status === 'absent') {
     box.append(
       el(
         'span',
@@ -567,10 +616,9 @@ function friendUnits(
         code ? t('setup.friendCode', { code: formatCode(code) }) : t('online.creating'),
       ),
     );
-  } else if (!chosen) {
-    box.append(el('span', '', t('setup.friendChoosing')));
   } else {
-    box.append(el('span', '', chosen.map((c) => t(`classes.${c}`)).join(' · ')));
+    const line = t(`setup.friend.${status}.line`, { n: units });
+    box.append(el('span', status === 'ready' ? 'ready' : '', line));
   }
   return box;
 }

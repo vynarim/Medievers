@@ -34,6 +34,7 @@ export function setupLobby(
     code: opening.then((h: HostLobby) => h.code),
     onJoin: (fn) => void opening.then((h) => h.lobby.onJoin(fn), () => undefined),
     onLineup: (fn) => void opening.then((h) => h.lobby.onLineup(fn), () => undefined),
+    publish: (table) => void opening.then((h) => h.lobby.publish(table), () => undefined),
     launch: (setup) => {
       saveSetup(setup);
       void opening.then((h) =>
@@ -51,8 +52,8 @@ export function joinFlow(onReady: (m: OnlineMatch) => void, onBack: () => void):
   showJoin(
     normalizeCode,
     ALPHABET,
-    async (code, seated) => {
-      onReady(await joinMatch(code, seated));
+    async (code, seated, onTable) => {
+      onReady(await joinMatch(code, seated, onTable));
     },
     onBack,
   );

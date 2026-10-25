@@ -122,11 +122,18 @@ async function main(): Promise<void> {
   await clickText(b, 'Rejoindre une partie');
   await b.locator('#ui .online input').fill(code);
   await clickText(b, 'Rejoindre');
-  // Seated, the friend chooses its own units: its first one becomes the king.
+  // Seated, the friend chooses its own units (its first one becomes the king) and confirms.
   await b.locator('#ui .online .units select').first().selectOption('king', { timeout: 30000 });
-  // The creator's screen gave the friend a house, and shows the units it chose.
+  await clickText(b, 'Valider mes combattants');
+  // The creator's screen gave the friend a house, and says it is ready, its units unseen.
   await a.waitForFunction(
-    () => /Roi/.test(document.querySelector('#ui .setup .units.friend')?.textContent ?? ''),
+    () => document.querySelector('#ui .setup .units.friend .ready') !== null,
+    null,
+    { timeout: 30000 },
+  );
+  // The friend sees the table: the creator's house first.
+  await b.waitForFunction(
+    () => /créé la partie/.test(document.querySelector('#ui .online .table')?.textContent ?? ''),
     null,
     { timeout: 30000 },
   );

@@ -6,11 +6,18 @@ import { Lockstep } from './lockstep.ts';
 import {
   HOST_SEAT,
   PROTOCOL_VERSION,
+  type LobbyTable,
   type MatchStart,
   type NetMessage,
   type Seat,
 } from './protocol.ts';
 import type { Transport } from './transport.ts';
+
+/** A friend's units, and whether it has confirmed them. */
+export interface FriendLineup {
+  readonly classes: readonly ClassId[];
+  readonly ready: boolean;
+}
 
 export interface Joined {
   readonly lockstep: Lockstep;
@@ -33,11 +40,11 @@ export class Lobby {
   private readonly buildHash: string;
   /** the friends who said hello with the same game, by seat */
   readonly joined = new Set<Seat>();
-  /** the units each friend chose for its house, by seat */
-  readonly lineups = new Map<Seat, readonly ClassId[]>();
+  /** the units each friend chose for its house, by seat, and whether it stands by them */
+  readonly lineups = new Map<Seat, FriendLineup>();
   private lockstep: Lockstep | null = null;
   private listener: ((joined: ReadonlySet<Seat>) => void) | null = null;
-  private lineupListener: ((lineups: ReadonlyMap<Seat, readonly ClassId[]>) => void) | null = null;
+  private lineupListener: ((lineups: ReadonlyMap<Seat, FriendLineup>) => void) | null = null;
 
   constructor(transport: Transport, buildHash: string) {
     this.transport = transport;
@@ -50,7 +57,7 @@ export class Lobby {
       // Kept even ahead of its hello: the friend may choose before the hello is through.
       if (msg.m === 'lineup') {
         if (!Array.isArray(msg.classes)) return;
-        this.lineups.set(from, msg.classes);
+        this.lineups.set(from, { classes: msg.classes, ready: msg.ready === true });
         this.lineupListener?.(this.lineups);
         return;
       }
@@ -72,9 +79,15 @@ export class Lobby {
   }
 
   /** `fn` hears of the units each friend chooses (and is called at once). */
-  onLineup(fn: (lineups: ReadonlyMap<Seat, readonly ClassId[]>) => void): void {
+  onLineup(fn: (lineups: ReadonlyMap<Seat, FriendLineup>) => void): void {
     this.lineupListener = fn;
     fn(this.lineups);
+  }
+
+  /** Tells the friends who joined what the table looks like now (before the start). */
+  publish(table: LobbyTable): void {
+    if (this.lockstep) return;
+    for (const seat of this.joined) this.transport.send({ m: 'lobby', table }, seat);
   }
 
   /** A friend left the lobby before the match started. */
@@ -104,7 +117,13 @@ export class Lobby {
  * says hello and gets the match, new (from the creator's lobby) or resumed (from any peer).
  * Messages after that go to the lockstep.
  */
-export function connect(transport: Transport, seat: Seat, buildHash: string): Promise<Joined> {
+export function connect(
+  transport: Transport,
+  seat: Seat,
+  buildHash: string,
+  /** hears the creator's table while the match is being prepared */
+  onTable?: (table: LobbyTable) => void,
+): Promise<Joined> {
   return new Promise((resolve, reject) => {
     let lockstep: Lockstep | null = null;
     let failed = false;
@@ -122,7 +141,9 @@ export function connect(transport: Transport, seat: Seat, buildHash: string): Pr
         lockstep.receive(msg, from);
         return;
       }
-      if (msg.m === 'start') {
+      if (msg.m === 'lobby') {
+        onTable?.(msg.table);
+      } else if (msg.m === 'start') {
         lockstep = new Lockstep(seat, msg.start, transport);
         resolve({ lockstep, resumed: false });
       } else if (msg.m === 'resume') {

@@ -5,7 +5,12 @@ import { defaultLineup, type ClassId } from '../content/classes.ts';
 import { DEFAULT_UNITS } from '../content/schemes.ts';
 import { t } from './i18n.ts';
 import { button, el, uiRoot } from './overlay.ts';
+import { FACTIONS } from '../content/factions.ts';
+import type { LobbyTable } from '../net/protocol.ts';
 import { lineupPicker, setupStyles } from './setup-screen.ts';
+import { shield } from './overlay.ts';
+import { soundButton } from './sound-button.ts';
+import { COLORS, css } from './tokens.ts';
 
 const STYLE = `
 #ui .online { width: min(520px, calc(100vw - 32px)); text-align: center; }
@@ -20,6 +25,13 @@ const STYLE = `
 #ui .online .actions { justify-content: center; }
 #ui .online.seated { width: min(980px, calc(100vw - 32px)); }
 #ui .online .setup .house { justify-content: center; border: 0; margin: 0 0 10px; }
+#ui .online .sound-corner { position: absolute; top: 14px; right: 16px; }
+#ui .online .table { text-align: left; margin: 14px 0 4px; }
+#ui .online .table .rules { font-size: 15px; margin: 0 0 6px; }
+#ui .online .table-house { display: flex; align-items: center; gap: 8px; padding: 3px 0;
+  border-bottom: 1px solid var(--gilt); font-size: 16px; }
+#ui .online .table-house .name { font-family: var(--caps); flex: 1 1 auto; }
+#ui .online .table-house .who.ready { color: var(--vert); }
 `;
 
 let styled = false;
@@ -35,6 +47,8 @@ function panel(): { box: HTMLElement; close: () => void } {
   }
   const veil = el('div', 'veil');
   const box = el('div', 'modal panel online');
+  // The sound, at hand while waiting too.
+  box.append(soundButton('icon sound-corner'));
   root.append(veil, box);
   return {
     box,
@@ -75,7 +89,12 @@ export function showJoin(
   alphabet: string,
   onJoin: (
     code: string,
-    seated: (leave: () => void, chooseLineup: (classes: readonly ClassId[]) => void) => void,
+    seated: (
+      leave: () => void,
+      chooseLineup: (classes: readonly ClassId[], ready: boolean) => void,
+      seat: number,
+    ) => void,
+    onTable: (table: LobbyTable) => void,
   ) => Promise<void>,
   onCancel: () => void,
 ): () => void {
@@ -118,39 +137,81 @@ export function showJoin(
     }
     go.disabled = true;
     error.textContent = t('online.joining');
-    const seated = (l: () => void, chooseLineup: (classes: readonly ClassId[]) => void): void => {
+    // Seated: the friend's own units, as many as the others field, kept secret from them, then
+    // confirmed; and the table as the creator prepares it, nobody's units shown.
+    let table: LobbyTable | null = null;
+    let lineup: ClassId[] = defaultLineup(DEFAULT_UNITS, false);
+    let ready = false;
+    let mySeat = 0;
+    let send: (classes: readonly ClassId[], ready: boolean) => void = () => undefined;
+    const units = el('div', 'setup');
+    units.style.display = 'contents';
+    const renderSeated = (): void => {
+      const count = table?.units ?? lineup.length;
+      if (lineup.length !== count) {
+        lineup = Array.from({ length: count }, (_, k): ClassId => lineup[k] ?? 'knight');
+        ready = false;
+        send(lineup, ready);
+      }
+      const row = el('div', 'house');
+      row.append(
+        lineupPicker(
+          lineup,
+          (next) => {
+            lineup = next;
+            ready = false;
+            send(lineup, ready);
+            renderSeated();
+          },
+          true,
+        ),
+      );
+      const confirm = button(
+        t(ready ? 'online.unitsChange' : 'online.unitsReady'),
+        ready ? '' : 'fire',
+      );
+      confirm.addEventListener('click', () => {
+        ready = !ready;
+        send(lineup, ready);
+        renderSeated();
+      });
+      row.querySelectorAll('select').forEach((sel) => (sel.disabled = ready));
+      const parts: HTMLElement[] = [
+        el('h3', '', t('online.yourUnits', { n: count })),
+        row,
+        confirm,
+      ];
+      if (table) parts.push(tableView(table, mySeat));
+      units.replaceChildren(...parts);
+      error.classList.add('ok');
+      error.textContent = t(ready ? 'online.seatedReady' : 'online.seated');
+    };
+    const seated = (
+      l: () => void,
+      chooseLineup: (classes: readonly ClassId[], ready: boolean) => void,
+      seat: number,
+    ): void => {
       // Cancelled while the seat was being taken: it is given back at once.
       if (gone) {
         l();
         return;
       }
       leave = l;
+      mySeat = seat;
+      send = chooseLineup;
       body.textContent = t('online.seatedBody');
       input.remove();
-      error.classList.add('ok');
-      error.textContent = t('online.seated');
-      // The friend's own units, sent to the creator at once and on each change.
       setupStyles();
       box.classList.add('seated');
-      const units = el('div', 'setup');
-      units.style.display = 'contents';
-      let lineup: ClassId[] = defaultLineup(DEFAULT_UNITS, false);
-      const renderUnits = (): void => {
-        const row = el('div', 'house');
-        row.append(
-          lineupPicker(lineup, (next) => {
-            lineup = next;
-            chooseLineup(lineup);
-            renderUnits();
-          }),
-        );
-        units.replaceChildren(el('h3', '', t('online.yourUnits')), row);
-      };
-      renderUnits();
-      chooseLineup(lineup);
+      renderSeated();
+      send(lineup, ready);
       error.before(units);
     };
-    onJoin(code, seated).then(close, (e: unknown) => {
+    const onTable = (next: LobbyTable): void => {
+      table = next;
+      if (leave) renderSeated();
+    };
+    onJoin(code, seated, onTable).then(close, (e: unknown) => {
       leave = null;
       error.classList.remove('ok');
       go.disabled = false;
@@ -196,4 +257,50 @@ export function showConnecting(code: string, onCancel: () => void): WaitScreen {
     fail: (message) => (error.textContent = message),
     close,
   };
+}
+
+/**
+ * The creator's table as a friend sees it: the field and the rules, then each house and who
+ * plays it (the creator, you, a friend and where it stands, the AI), nobody's units.
+ */
+function tableView(table: LobbyTable, mySeat: number): HTMLElement {
+  const view = el('div', 'table');
+  const rules = [
+    t(`maps.${table.map}`),
+    t(`setup.scheme.${table.scheme}`),
+    ...(table.regicide ? [t('setup.regicide')] : []),
+    t('setup.turnSeconds', { s: table.turnSeconds }),
+  ];
+  view.append(el('h3', '', t('online.table')), el('p', 'rules', rules.join(' · ')));
+  const mine = table.houses.some((h) => h.player === 'friend' && h.seat === mySeat);
+  if (!mine) view.append(el('p', 'error', t('online.table.dropped')));
+  table.houses.forEach((h, k) => {
+    const f = FACTIONS[k];
+    const row = el('div', 'table-house');
+    const name = el('span', 'name', f ? t(f.nameKey) : '');
+    name.style.color = css(f?.ink ?? COLORS.encre);
+    const who =
+      h.player === 'host'
+        ? t('online.table.host')
+        : h.player === 'ai'
+          ? t(`setup.player.${h.level ?? 'knight'}`)
+          : h.seat === mySeat
+            ? t('online.table.you')
+            : t(`online.table.friend.${h.status ?? 'absent'}`);
+    const mark =
+      h.player === 'friend'
+        ? h.status === 'ready'
+          ? ' ✓'
+          : h.status === 'choosing'
+            ? ' ✎'
+            : ' ⌛'
+        : '';
+    row.append(
+      shield(f?.primary ?? COLORS.encre, f?.secondary ?? COLORS.or, true),
+      name,
+      el('span', h.status === 'ready' ? 'who ready' : 'who', who + mark),
+    );
+    view.append(row);
+  });
+  return view;
 }

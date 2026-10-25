@@ -4,7 +4,7 @@
 import type { ClassId } from '../content/classes.ts';
 import { FirebaseTransport, createRoom, deleteRoom, joinRoom } from '../net/firebase-transport.ts';
 import type { Lockstep } from '../net/lockstep.ts';
-import { HOST_SEAT, type MatchStart, type Seat } from '../net/protocol.ts';
+import { HOST_SEAT, type LobbyTable, type MatchStart, type Seat } from '../net/protocol.ts';
 import { Lobby, connect } from '../net/session.ts';
 
 const KEY = 'medieverse.online.v1';
@@ -87,23 +87,32 @@ export function closeLobby(h: HostLobby): void {
 /**
  * Joins match `code`, or takes this device's seat in it again. `onSeated` hears when the seat is
  * taken, the match maybe not started yet, with the way to give the seat back and stop waiting,
- * and the way to tell the creator the units chosen for this friend's house.
- * Resolves with the match.
+ * and the way to tell the creator the units chosen for this friend's house (and whether they
+ * stand). `onTable` hears the creator's table until the start. Resolves with the match.
  */
 export async function joinMatch(
   code: string,
-  onSeated?: (leave: () => void, chooseLineup: (classes: readonly ClassId[]) => void) => void,
+  onSeated?: (
+    leave: () => void,
+    chooseLineup: (classes: readonly ClassId[], ready: boolean) => void,
+    seat: Seat,
+  ) => void,
+  onTable?: (table: LobbyTable) => void,
 ): Promise<OnlineMatch> {
   const seat = await joinRoom(code);
   saveOnlineCode(code);
   const transport = await FirebaseTransport.open(code, seat);
-  onSeated?.(() => {
-    clearOnlineCode();
-    // Gone from the room first, so the creator sees it, then the seat given back.
-    transport.close();
-    transport.freeSeat(seat);
-  }, (classes) => transport.send({ m: 'lineup', classes: [...classes] }, HOST_SEAT));
-  const joined = await connect(transport, seat, BUILD_HASH);
+  onSeated?.(
+    () => {
+      clearOnlineCode();
+      // Gone from the room first, so the creator sees it, then the seat given back.
+      transport.close();
+      transport.freeSeat(seat);
+    },
+    (classes, ready) => transport.send({ m: 'lineup', classes: [...classes], ready }, HOST_SEAT),
+    seat,
+  );
+  const joined = await connect(transport, seat, BUILD_HASH, onTable);
   return { code, seat, transport, ...joined };
 }
 

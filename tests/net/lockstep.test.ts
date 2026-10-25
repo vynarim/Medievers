@@ -257,11 +257,11 @@ describe('online lockstep (TECH_SPEC §8.4)', () => {
     const heard: string[] = [];
     lobby.onLineup((l) => heard.push(JSON.stringify([...l])));
     void connect(link.b, 1, 'build');
-    link.b.send({ m: 'lineup', classes: ['king', 'archer'] }, 0);
+    link.b.send({ m: 'lineup', classes: ['king', 'archer'], ready: true }, 0);
     for (let i = 0; i < 10; i++) link.tick();
     expect(lobby.joined.has(1)).toBe(true);
-    expect(lobby.lineups.get(1)).toEqual(['king', 'archer']);
-    expect(heard.at(-1)).toBe(JSON.stringify([[1, ['king', 'archer']]]));
+    expect(lobby.lineups.get(1)).toEqual({ classes: ['king', 'archer'], ready: true });
+    expect(heard.at(-1)).toBe(JSON.stringify([[1, { classes: ['king', 'archer'], ready: true }]]));
   });
 
   it('gives the match so far to a friend who joins after the start', async () => {

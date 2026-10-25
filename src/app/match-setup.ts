@@ -118,6 +118,12 @@ export function fixSetup(s: MatchSetup): MatchSetup {
     ? (s.turnSeconds ?? DEFAULT_TURN_SECONDS)
     : DEFAULT_TURN_SECONDS;
   const players = playersOf({ ...s, lineups });
+  // The player's own house comes first, whatever row it was given (2026-10-25).
+  const own = players.indexOf('human');
+  if (own > 0) {
+    lineups.unshift(...lineups.splice(own, 1));
+    players.unshift(...players.splice(own, 1));
+  }
   return { map, scheme, regicide: s.regicide, lineups, turnSeconds, players };
 }
 
