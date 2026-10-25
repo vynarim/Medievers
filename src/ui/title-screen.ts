@@ -43,6 +43,7 @@ const AUTHOR = 'vynarim';
 const AUTHOR_URL = 'https://github.com/vynarim';
 const YEAR = 2026;
 const BIBLE_URL = 'https://fr.wikipedia.org/wiki/Bible_de_Maciejowski';
+const BAYEUX_URL = 'https://fr.wikipedia.org/wiki/Tapisserie_de_Bayeux';
 
 export interface TitleChoices {
   /** a match in progress (saved, online, or the one paused behind): take it up again */
@@ -96,12 +97,23 @@ export function showTitleScreen(choices: TitleChoices): void {
   window.addEventListener('keydown', onKey, true);
   // The manuscript named in the colophon links to its Wikipedia article.
   const colophon = el('div', 'colophon');
-  const [before = '', after = ''] = t('title.colophon').split('{bible}');
-  const bible = el('a', '', t('title.bible'));
-  bible.href = BIBLE_URL;
-  bible.target = '_blank';
-  bible.rel = 'noopener';
-  colophon.append(before, bible, after);
+  // The two works the art follows, each linked to its Wikipedia page.
+  const links: Record<string, [string, string]> = {
+    bible: [t('title.bible'), BIBLE_URL],
+    bayeux: [t('title.bayeux'), BAYEUX_URL],
+  };
+  for (const part of t('title.colophon').split(/(\{\w+\})/)) {
+    const link = links[part.slice(1, -1)];
+    if (!link) {
+      colophon.append(part);
+      continue;
+    }
+    const a = el('a', '', link[0]);
+    a.href = link[1];
+    a.target = '_blank';
+    a.rel = 'noopener';
+    colophon.append(a);
+  }
   // « Un jeu de vynarim », the name linking to the author's GitHub.
   const author = el('div', 'author');
   const link = el('a', '', AUTHOR);
