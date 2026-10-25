@@ -12,7 +12,7 @@ import { Hud } from './hud.ts';
 import { renderTutorial } from './tutorial.ts';
 import { houseShortName } from './house-names.ts';
 import { t } from './i18n.ts';
-import { button, el, holdButton, shield, uiRoot } from './overlay.ts';
+import { button, el, holdButton, measureBars, shield, uiRoot, watchBar } from './overlay.ts';
 import { COLORS, css } from './tokens.ts';
 import {
   readValue,
@@ -244,6 +244,7 @@ export class GameUi {
     // Shown only away from the default view (showResetView).
     this.resetView = this.click(button(t('ui.resetView'), 'icon hidden'), () => opts.resetView());
     this.resetView.title = t('tip.resetView');
+    // Not on a phone held upright (overlay.ts): the page already fills it.
     if (document.fullscreenEnabled) sys.append(this.fullscreenButton());
     const helpButton = this.click(button('?', 'icon'), () => this.toggle(this.help));
     helpButton.title = t('ui.help');
@@ -319,11 +320,12 @@ export class GameUi {
       this.netStatus,
       this.netError,
     );
+    watchBar(bar);
   }
 
   /** Toggles the browser's full screen, like F11; the tooltip follows the state. */
   private fullscreenButton(): HTMLButtonElement {
-    const b = this.click(button(t('ui.fullscreen'), 'icon'), () => {
+    const b = this.click(button(t('ui.fullscreen'), 'icon fullscreen'), () => {
       if (document.fullscreenElement) void document.exitFullscreen();
       else void document.documentElement.requestFullscreen().catch(() => undefined);
     });
@@ -372,6 +374,7 @@ export class GameUi {
       quit,
     );
     this.root.append(bar);
+    watchBar(bar);
   }
 
   /** The ◎ button appears once the camera has left the default view (zoom or pan). */
@@ -787,5 +790,6 @@ export class GameUi {
   destroy(): void {
     this.hud.destroy();
     this.root.replaceChildren();
+    measureBars();
   }
 }

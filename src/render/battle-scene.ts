@@ -157,8 +157,8 @@ const DIAPER = 160;
 const SKY_EXTRA = 2000;
 /** Screen px kept clear of units by the default view, before the overlay scale: HUD and bar. */
 const FRAME_MARGINS = { top: 130, bottom: 110, side: 30 } as const;
-/** The same on a phone held upright, where the HUD stacks on top and the bar wraps (overlay.ts). */
-const PHONE_FRAME_MARGINS = { top: 290, bottom: 210, side: 20 } as const;
+/** The same on a phone held upright: the HUD stacks on top, the game stops above the bar (overlay.ts). */
+const PHONE_FRAME_MARGINS = { top: 290, bottom: 90, side: 20 } as const;
 /**
  * World px a phone held upright shows across at least, by default: past it, the field cannot
  * be framed whole at a size worth seeing, and the default view follows the playing unit.

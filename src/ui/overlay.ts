@@ -215,7 +215,9 @@ const STYLE = `
   border-radius: 14px; }
 #ui .info-bubble a { color: var(--lapis); }
 
-/* A phone held upright: one column, the flavour folded, the HUD packed into the corners. */
+/* A phone held upright: one column, the flavour folded, the HUD packed into the corners, and
+   the battlefield above the action bar (--bar-h, set by watchBar), never under it. */
+html.phone #game { height: calc(100% - var(--bar-h, 0px)); }
 #ui.phone .modal { max-height: calc(100vh - 24px); padding: 16px 18px 18px; }
 #ui.phone .actions { justify-content: center; }
 #ui.phone .hud-teams { top: 76px; max-width: calc(100vw - 190px); }
@@ -228,14 +230,16 @@ const STYLE = `
 #ui.phone .hud-wind .turn-row { min-width: 0; }
 #ui.phone .hud-wind .turn { font-size: 28px; text-align: center; }
 #ui.phone .hud-timer { top: 196px; width: 80px; height: 80px; }
-#ui.phone .hud-weapon { right: 50%; bottom: 222px; transform: translateX(50%);
+#ui.phone .sys .fullscreen { display: none; }
+#ui.phone .hud-weapon { right: 50%; bottom: calc(var(--bar-h, 0px) + 8px); transform: translateX(50%);
   width: min(var(--col), calc(100vw - 24px)); }
 #ui.phone .hud-weapon .hint { display: none; }
 #ui.phone .chronicles { top: 290px; left: 12px; right: 12px; transform: none; }
 #ui.phone .chronicle { max-width: 100%; min-width: 0; }
-#ui.phone .card, #ui.phone .card.left { left: 12px; right: 12px; width: auto; top: auto; bottom: 280px;
+#ui.phone .card, #ui.phone .card.left { left: 12px; right: 12px; width: auto; top: auto;
+  bottom: calc(var(--bar-h, 0px) + 80px);
   max-height: 40vh; }
-#ui.phone .pause { min-width: 0; }
+#ui.phone .pause { min-width: 0; width: calc(100vw - 32px); }
 #ui.phone .banner { top: 40%; }
 #ui.phone .banner .big { font-size: 44px; }
 `;
@@ -259,7 +263,10 @@ export function uiRoot(): HTMLElement {
   const fit = (): void => {
     const u = uiScale(window.innerWidth, window.innerHeight);
     document.documentElement.style.setProperty('--u', `${u}px`);
-    root?.classList.toggle('phone', isPhonePortrait(window.innerWidth, window.innerHeight));
+    const phone = isPhonePortrait(window.innerWidth, window.innerHeight);
+    root?.classList.toggle('phone', phone);
+    document.documentElement.classList.toggle('phone', phone);
+    measureBars();
   };
   fit();
   window.addEventListener('resize', fit);
@@ -314,6 +321,28 @@ export function holdButton(
   b.addEventListener('pointercancel', release);
   b.addEventListener('lostpointercapture', release);
   return b;
+}
+
+const barObserver =
+  typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(() => measureBars());
+
+/** Keeps --bar-h up to date with this bar's height: on a phone the game stops above it. */
+export function watchBar(bar: HTMLElement): void {
+  barObserver?.observe(bar);
+}
+
+/** --bar-h: CSS px from the top of the highest action bar shown to the bottom of the window. */
+export function measureBars(): void {
+  let h = 0;
+  for (const b of root?.querySelectorAll<HTMLElement>('.bar') ?? []) {
+    if (b.offsetHeight > 0) h = Math.max(h, window.innerHeight - b.getBoundingClientRect().top);
+  }
+  const value = `${Math.ceil(h)}px`;
+  const style = document.documentElement.style;
+  if (style.getPropertyValue('--bar-h') === value) return;
+  style.setProperty('--bar-h', value);
+  // The game's canvas follows its parent's size on window resizes only (Phaser.Scale.RESIZE).
+  if (document.documentElement.classList.contains('phone')) window.dispatchEvent(new Event('resize'));
 }
 
 let bubble: { readonly el: HTMLElement; readonly anchor: HTMLElement } | null = null;
