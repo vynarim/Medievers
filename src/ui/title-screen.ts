@@ -37,7 +37,10 @@ const STYLE = `
 #ui .title-screen .version { left: 34px; user-select: text; pointer-events: auto; }
 #ui .title-screen .colophon a, #ui .title-screen .author a { color: var(--lapis); pointer-events: auto; user-select: text; }
 /* On a phone held upright: one button per row, the quip and the colophon behind a « ? ». */
-#ui.phone .title-screen .folio { padding: 32px 22px 24px; }
+#ui.phone .title-screen .folio { width: 100%; height: 100%; padding: 28px 22px 24px; display: flex;
+  flex-direction: column; justify-content: center; overflow-y: auto; }
+#ui.phone .title-screen .name { font-size: min(54px, 12vw); }
+#ui.phone .title-screen .initial { flex: none; width: 1.5em; }
 #ui.phone .title-screen .actions { margin-top: 22px; }
 #ui.phone .title-screen .actions-row { flex-direction: column; }
 #ui.phone .title-screen .actions button { width: min(260px, calc(100vw - 96px)); }
