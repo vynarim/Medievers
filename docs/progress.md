@@ -19,7 +19,6 @@
 
 ## À reprendre en premier
 0. **Mettre l'IA en production** (`/deploy`, confirmation de l'utilisateur) : le site sert encore `bbc2f64`, sans l'IA.
-0. **Décision en attente** : sauter encore après une courte marche, ou après une marche bloquée par un obstacle ? (règle actuelle : marcher **ou** sauter).
 1. **Clore M2** : quand l'utilisateur aura fait les deux vérifications humaines du rapport, consigner le résultat et passer la gate à PASS.
 2. **M3** : gate PASS. **M9** : gate du 2026-10-25 = NOT ASSESSED ([rapport](reports/gates/2026-10-25-M9.md)) : tout est vert sauf 9.6 (partie entre deux appareils sur deux réseaux) et 9.7 (Blaze), qui attendent l'utilisateur. **M5** : voir [rapport](reports/gates/2026-10-25-M5.md). Suite recommandée : lot 6 (arsenal complet, M4), chaque arme avec son support IA.
 3. **Passer le projet Firebase `videogames-06` en Blaze** (action de l'utilisateur, dans la console : roue dentée › Utilisation et facturation). Ensuite : instance Realtime Database dédiée à Medieverse, nettoyage planifié des salles abandonnées, alerte de budget à 1 € (BACKLOG 9.7, TECH_SPEC §8.5). Blaze servira aussi aux mails.
