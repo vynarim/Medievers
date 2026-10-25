@@ -103,6 +103,8 @@ async function main(): Promise<void> {
   await a.goto(URL_);
   await b.goto(URL_);
   const t0 = Date.now();
+  // The title page opens first: « Entrer en lice » leads to the setup screen.
+  await clickText(a, 'Entrer en lice');
   await clickText(a, 'Créer une partie en ligne');
   await a.waitForFunction(
     () =>
@@ -169,6 +171,8 @@ async function main(): Promise<void> {
       reloaded = true;
       log('reloading B at A tick', sa.tick);
       await b.reload();
+      // The title page opens on every launch; the match is taken up again from it.
+      await clickText(b, 'Reprendre la partie');
       await b.waitForFunction(() => !document.querySelector('#ui .online'), null, {
         timeout: 60000,
       });
