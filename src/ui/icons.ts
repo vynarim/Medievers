@@ -50,6 +50,13 @@ const ICONS = {
   settings: `<circle cx="12" cy="12" r="6.6" fill="none"/><circle cx="12" cy="12" r="2.6" fill="none"/>
     <path d="${GEAR_TEETH}" fill="none" stroke-width="3"/>`,
   menu: `<path d="M4 6.5 H20 M4 12 H20 M4 17.5 H20" fill="none"/>`,
+  musicOn: `<path d="M10 17.5 V5 L19 3.5 V15.5" fill="none"/>
+    <ellipse cx="7.5" cy="17.5" rx="2.8" ry="2.2" fill="currentColor" stroke="none"/>
+    <ellipse cx="16.5" cy="15.5" rx="2.8" ry="2.2" fill="currentColor" stroke="none"/>`,
+  musicOff: `<path d="M10 17.5 V5 L19 3.5 V15.5" fill="none"/>
+    <ellipse cx="7.5" cy="17.5" rx="2.8" ry="2.2" fill="currentColor" stroke="none"/>
+    <ellipse cx="16.5" cy="15.5" rx="2.8" ry="2.2" fill="currentColor" stroke="none"/>
+    <path d="M3.5 3.5 L20.5 20.5" fill="none" stroke-width="2.6"/>`,
   play: `<path d="M7.5 4.5 L19 12 L7.5 19.5 Z" fill="currentColor"/>`,
   pause: `<rect x="6.5" y="5" width="3.6" height="14" fill="currentColor" stroke="none"/>
     <rect x="13.9" y="5" width="3.6" height="14" fill="currentColor" stroke="none"/>`,

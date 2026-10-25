@@ -135,7 +135,7 @@ La priorité est le moteur : simulation, règles, réseau, IA. Jusqu'au lot 9, t
 | 7.4 **[tech]** | Menus complets, écran titre, victoire, « passez la main », « tournez l'appareil » | — |
 | 7.5 **[tech]** | Éditeur de blason et gestion des équipes (persistance) | — |
 | 7.6 **[son]** | Audio P1 complet | — |
-| 7.8 **[son]** | Musique d'ambiance (demandée le 2026-10-25) : au moins une ritournelle médiévale discrète, un peu modernisée et enjouée, jouée en boucle sous la partie ; volume réglable et coupure dans ⚙ Réglages | La boucle s'enchaîne sans couture ; elle reste sous les bruitages ; coupée, elle le reste après un rechargement |
+| 7.8 **[son]** | Musique d'ambiance (demandée le 2026-10-25) : au moins une ritournelle médiévale discrète, un peu modernisée et enjouée, jouée en boucle sous la partie ; volume réglable et coupure dans ⚙ Réglages | La boucle s'enchaîne sans couture ; elle reste sous les bruitages ; coupée, elle le reste après un rechargement — première version le 2026-10-25 : ritournelle de 32 mesures en ré dorien, à 6/8, synthétisée en Web Audio (`src/content/music.ts`, `src/render/music.ts`), onglet Musique des Réglages |
 | 7.7 **[tech]** | Replays : revoir la dernière partie, export et import JSON | Un replay importé est identique bit à bit |
 
 ## M8 — Finition et plateforme

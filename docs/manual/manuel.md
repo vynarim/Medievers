@@ -294,6 +294,10 @@ L'IA joue avec les mêmes règles et les mêmes commandes que vous : elle choisi
 | **Chevalier** | Vise à 3° près, prend aussi l'arbalète, la poix, la masse et le trébuchet, choisit entre deux combattants |
 | **Connétable** | Vise à 1° près, cherche plus d'endroits d'où tirer et essaie plus de coups |
 
+### La musique {{st:jeu}}
+
+Une ritournelle de ménestrels (flûte, luth, vielle, tambourin) accompagne la partie dès votre premier clic. Le bouton à la note de musique, en haut à droite, la coupe ou la remet ; son volume se règle dans ⚙ Réglages (menu Pause), onglet **Musique**. Le réglage vaut tout de suite et reste sur votre appareil.
+
 ## 7. Les commandes
 
 ### Au clavier et à la souris {{st:jeu}}

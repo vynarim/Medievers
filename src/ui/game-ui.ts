@@ -26,6 +26,7 @@ import {
 } from './tuning-model.ts';
 import { weaponLines } from './weapon-info.ts';
 import { weaponArt } from './weapon-art.ts';
+import { music } from '../render/music.ts';
 
 const STORAGE_KEY = 'medieverse.tuning.v1';
 
@@ -142,6 +143,8 @@ export class GameUi {
   private readonly prepared = new Map<number, { unitId: number; weapon: WeaponId }>();
   /** the unit whose weapon the arsenal prepares (null: the arsenal of the playing unit) */
   private preparing: number | null = null;
+  /** redraws the music button after a change made in the settings */
+  private showMusic: () => void = () => undefined;
   /** settings tab last shown, kept while the page lives */
   private settingsTab = 0;
   private cardSignature = '';
@@ -296,21 +299,29 @@ export class GameUi {
     this.resetView.title = t('tip.resetView');
     // Not on a phone held upright (overlay.ts): the page already fills it.
     if (document.fullscreenEnabled) sys.append(this.fullscreenButton());
-    // On a phone held upright, help and settings are reached from the pause menu, which shows
-    // as its three strokes alone (overlay.ts).
+    // On a phone held upright, help is reached from the pause menu, which shows as its three
+    // strokes alone (overlay.ts). Settings are always in the pause menu; here, the music.
     const helpButton = this.click(setIcon(button('', 'icon sys-help'), 'help'), () =>
       this.toggle(this.help),
     );
     helpButton.title = t('ui.help');
-    const settingsButton = this.click(setIcon(button('', 'icon sys-settings'), 'settings'), () =>
-      this.openSettings(),
-    );
-    settingsButton.title = t('ui.settings');
+    const musicButton = button('', 'icon sys-music');
+    const showMusic = (): void => {
+      const on = music.current.on;
+      setIcon(musicButton, on ? 'musicOn' : 'musicOff');
+      musicButton.title = t(on ? 'music.tip.on' : 'music.tip.off');
+    };
+    this.click(musicButton, () => {
+      music.set({ on: !music.current.on });
+      showMusic();
+    });
+    showMusic();
+    this.showMusic = showMusic;
     const pauseButton = this.click(setIcon(button('', 'menu'), 'menu', t('ui.pause')), () =>
       this.toggle(this.pause),
     );
     pauseButton.title = t('ui.pause');
-    sys.append(this.resetView, helpButton, settingsButton, pauseButton);
+    sys.append(this.resetView, helpButton, musicButton, pauseButton);
 
     this.veil = el('div', 'veil hidden');
     this.veil.addEventListener('pointerdown', () => this.show(null));
@@ -870,6 +881,40 @@ export class GameUi {
       tabs.querySelectorAll('button').forEach((b, k) => b.classList.toggle('on', k === n));
     };
     this.settings.append(tabs);
+    // The music first: it changes at once, without starting the match again.
+    tabs.append(this.click(button(t('music.tab')), () => showTab(0)));
+    const sound = el('div', 'music-page');
+    pages.push(sound);
+    const toggle = button('');
+    const slider = el('input');
+    slider.type = 'range';
+    slider.min = '0';
+    slider.max = '100';
+    slider.step = '5';
+    const level = el('span', 'level');
+    const show = (): void => {
+      const s = music.current;
+      toggle.textContent = t(s.on ? 'music.on' : 'music.off');
+      toggle.classList.toggle('on', s.on);
+      slider.value = String(s.volume);
+      slider.disabled = !s.on;
+      level.textContent = `${s.volume} %`;
+    };
+    toggle.addEventListener('click', () => {
+      music.set({ on: !music.current.on });
+      show();
+      this.showMusic();
+    });
+    slider.addEventListener('keydown', (e) => e.stopPropagation());
+    slider.addEventListener('input', () => {
+      music.set({ volume: Number(slider.value) });
+      show();
+    });
+    const row = el('div', 'music-row');
+    row.append(toggle, el('label', '', t('music.volume')), slider, level);
+    sound.append(row, el('p', 'note', t('music.note')));
+    show();
+    this.settings.append(sound);
     for (const group of tuningGroups(base)) {
       const n = pages.length;
       tabs.append(this.click(button(t(group.titleKey)), () => showTab(n)));

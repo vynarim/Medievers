@@ -10,6 +10,7 @@ import { loadSetup, rulesFor, saveSetup, type MatchSetup } from './match-setup.t
 import { loadSave } from './autosave.ts';
 import { loadFonts } from '../ui/fonts.ts';
 import { watchInstall } from './install.ts';
+import { music } from '../render/music.ts';
 import { loadOverrides } from '../ui/game-ui.ts';
 import { decodeMaskPng } from './loaders/mask-png.ts';
 import { buildMap, legacyMap, mapForLog, type BuiltMap } from './map-build.ts';
@@ -99,6 +100,8 @@ async function boot(): Promise<void> {
 }
 
 watchInstall();
+// The ambient music, from the player's first gesture (BACKLOG 7.8).
+music.install();
 void boot();
 
 // The installed app (PWA): its service worker, on the published site only.

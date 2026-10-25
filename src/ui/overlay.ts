@@ -53,6 +53,9 @@ const STYLE = `
   border: 6px solid transparent; border-top: 9px solid var(--encre); border-bottom: 0; }
 #ui .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 12px; }
 #ui .tabs button { min-height: 40px; font-size: 16px; }
+#ui .music-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 4px 0 10px; }
+#ui .music-row input[type=range] { flex: 1 1 160px; accent-color: var(--vermillon); pointer-events: auto; }
+#ui .music-row .level { min-width: 48px; font-family: var(--caps); }
 #ui button.icon { font-family: var(--text); font-size: 26px; min-width: 52px; padding: 2px 8px; }
 #ui button.fire { background: var(--vermillon); color: var(--ceruse); min-width: 96px; font-size: 20px; }
 #ui button.fire:hover, #ui button.fire.on { background: var(--vermillon); filter: brightness(1.15); }
@@ -246,7 +249,7 @@ html.phone #game { height: calc(100% - var(--bar-h, 0px)); }
 #ui.phone .modal { max-height: calc(100vh - 24px); padding: 16px 18px 18px; }
 #ui.phone .actions { justify-content: center; }
 #ui.phone .sys { flex-direction: column; align-items: flex-end; }
-#ui.phone .sys .fullscreen, #ui.phone .sys .sys-help, #ui.phone .sys .sys-settings,
+#ui.phone .sys .fullscreen, #ui.phone .sys .sys-help, #ui.phone .sys .sys-music,
   #ui.phone .sys .menu .label { display: none; }
 #ui.phone .sys .menu { min-width: 64px; min-height: 64px; padding: 0; }
 #ui.phone .sys .menu .ico { width: 34px; height: 34px; }
