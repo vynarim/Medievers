@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { houseName, houseShortName, nameHouses } from '../../src/ui/house-names.ts';
+import { t, variantCount } from '../../src/ui/i18n.ts';
 
 describe('house names', () => {
   it('are drawn from the seed: the same for the same match, different from one to the next', () => {
@@ -9,7 +10,19 @@ describe('house names', () => {
     expect([0, 1, 2, 3].map(houseName)).toEqual(a);
     expect(new Set(a).size).toBe(4);
     for (const n of a) expect(n).toMatch(/^Maison (du |de la |de l'|des Trois )/);
-    for (const n of [0, 1, 2, 3].map(houseShortName)) expect(n).not.toMatch(/^(Maison|du |de |des )/);
+    for (const n of [0, 1, 2, 3].map(houseShortName))
+      expect(n).not.toMatch(/^(Maison|du |de |des )/);
+    // No two houses share a beast, a tincture or an attitude.
+    const shorts = [0, 1, 2, 3].map(houseShortName);
+    const has = (name: string, w: string): boolean =>
+      name === w || name.startsWith(`${w} `) || name.endsWith(` ${w}`) || name.includes(` ${w} `);
+    for (const prefix of ['house.beast', 'house.tincture', 'house.pose']) {
+      for (let i = 1; i <= variantCount(prefix); i++) {
+        const raw = t(`${prefix}.${i}`).split('|');
+        const forms = prefix === 'house.beast' ? raw.slice(1, 2) : raw;
+        expect(shorts.filter((n) => forms.some((w) => has(n, w))).length).toBeLessThanOrEqual(1);
+      }
+    }
     nameHouses(43);
     expect([0, 1, 2, 3].map(houseName)).not.toEqual(a);
   });

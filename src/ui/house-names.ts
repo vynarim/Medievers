@@ -47,21 +47,34 @@ interface Name {
   readonly short: string;
 }
 
+/** Words already given to a house of this match, by list: no two houses share one. */
+type Taken = Record<'house.beast' | 'house.tincture' | 'house.pose', Set<number>>;
+
+/** A variant of `prefix` not taken yet (any, once all are), drawn with `roll`; now taken. */
+function pick(roll: () => number, prefix: keyof Taken, taken: Taken): number {
+  const all = variantCount(prefix);
+  const free: number[] = [];
+  for (let i = 1; i <= all; i++) if (!taken[prefix].has(i)) free.push(i);
+  const from = free.length > 0 ? free : Array.from({ length: all }, (_, i) => i + 1);
+  const n = from[Math.floor(roll() * from.length)] ?? 1;
+  taken[prefix].add(n);
+  return n;
+}
+
 /**
  * One name, drawn with `roll`: a beast, a tincture and an attitude (decided 2026-10-25: never two
- * beasts in one name), « Maison du Hareng d'Or Enrhumé », short « Hareng d'Or Enrhumé ».
+ * beasts in one name, and no two houses with the same beast, tincture or attitude),
+ * « Maison du Hareng d'Or Enrhumé », short « Hareng d'Or Enrhumé ».
  */
-function draw(roll: () => number): Name & { readonly beast: string } {
-  const n = (prefix: string): number => 1 + Math.floor(roll() * variantCount(prefix));
-  const b = beast(n('house.beast'));
+function draw(roll: () => number, taken: Taken): Name {
+  const b = beast(pick(roll, 'house.beast', taken));
   const more = t('house.trait', {
-    tincture: t(`house.tincture.${n('house.tincture')}`),
-    pose: pose(n('house.pose'), b),
+    tincture: t(`house.tincture.${pick(roll, 'house.tincture', taken)}`),
+    pose: pose(pick(roll, 'house.pose', taken), b),
   });
   return {
     full: t('house.name', { of: of(b), more }),
     short: t('house.short.name', { beast: b.one, more }),
-    beast: b.one,
   };
 }
 
@@ -72,14 +85,12 @@ export function nameHouses(seed: number | null): void {
   names = [];
   if (seed === null || variantCount('house.beast') === 0) return;
   const roll = dice(seed ^ 0x9e3779b9);
-  const taken = new Set<string>();
-  for (let team = 0; team < FACTIONS.length; team++) {
-    let name = draw(roll);
-    // Each house its own beast.
-    for (let k = 0; k < 16 && taken.has(name.beast); k++) name = draw(roll);
-    taken.add(name.beast);
-    names.push(name);
-  }
+  const taken: Taken = {
+    'house.beast': new Set(),
+    'house.tincture': new Set(),
+    'house.pose': new Set(),
+  };
+  for (let team = 0; team < FACTIONS.length; team++) names.push(draw(roll, taken));
 }
 
 /** The name of house `team` in this match, in full: for sentences (« la Maison du Hareng »). */

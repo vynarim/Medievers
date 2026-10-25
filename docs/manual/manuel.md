@@ -88,7 +88,7 @@ Chaque maison compose son armée sur l'écran de préparation de la partie. On r
 
 Chaque équipe est une **maison héraldique** : un nom, un blason et deux couleurs, que l'on retrouve sur les écus, les bannières, la tente de départ et l'écran. Huit maisons sont prêtes à jouer : *le Lion d'Or*, *les Trois Tours*, *la Clef*, *le Croissant d'Argent*, *l'Aigle*, *l'Ancre*, *le Sanglier* et *l'Étoile*. Les combattants reçoivent des prénoms médiévaux (Godefroy, Aubri, Ermengarde…) que vous pouvez changer.
 
-**À chaque partie, les maisons reçoivent un nom nouveau** {{st:jeu}}, tiré d'une héraldique un peu dérangée : un animal, une couleur et un trait de caractère, jamais deux animaux (*Maison du Hareng d'Or Enrhumé*, *Maison de la Limace d'Azur Vexée*, *Maison de l'Oie de Gueules Accroupie*…). Les bandeaux et les fiches n'en gardent que l'essentiel : *Hareng d'Or Enrhumé*. Leur couleur, elle, ne change pas.
+**À chaque partie, les maisons reçoivent un nom nouveau** {{st:jeu}}, tiré d'une héraldique un peu dérangée : un animal, une couleur et un trait de caractère, jamais deux animaux, et jamais le même animal, la même couleur ni le même trait pour deux maisons (*Maison du Hareng d'Or Enrhumé*, *Maison de la Limace d'Azur Vexée*, *Maison de l'Oie de Gueules Accroupie*…). Les bandeaux et les fiches n'en gardent que l'essentiel : *Hareng d'Or Enrhumé*. Leur couleur, elle, ne change pas.
 
 ## 4. L'arsenal {{st:prevu}}
 
