@@ -53,11 +53,31 @@ export function sapAngle(aim: number): number {
   return right ? 0 : 2048;
 }
 
-/** The unit starts digging with the pick (straight down) or the sap (along the aim). */
-export function startDig(s: SimState, u: Unit, def: WeaponDef, id: number): void {
+/**
+ * Whether there is anything to cut in the sap's tunnel front at column x: some solid pixel
+ * between the tunnel's floor and its roof (every 4 px).
+ */
+function frontHasMatter(t: Terrain, x: number, floor: number, r: number): boolean {
+  for (let y = floor - 1; y >= floor - UNIT_HEIGHT - 6; y -= 4) {
+    if (materialOf(t, x, y) !== Material.Air) return true;
+  }
+  return materialOf(t, x, floor - r - 1) !== Material.Air;
+}
+
+/**
+ * The unit starts digging with the pick (straight down) or the sap (along the aim). False when
+ * the sap is aimed at open air (rules: dig.needsMatter): nothing is dug, the action is kept.
+ */
+export function startDig(s: SimState, u: Unit, def: WeaponDef, id: number): boolean {
   const d = def.dig;
-  if (!d) return;
+  if (!d) return false;
   const angle = d.along === 'down' ? 1024 : sapAngle(s.turn.aim);
+  if (d.needsMatter) {
+    const r = d.radius;
+    const fx = subToPx(u.x) + subToPx(mulQ14((r + 4) * SUBPX, cosQ14(angle)));
+    const floor = subToPx(u.y) + subToPx(mulQ14((r + 4) * SUBPX, sinQ14(angle)));
+    if (!frontHasMatter(s.terrain, fx, floor, r)) return false;
+  }
   s.dig = {
     id,
     unitId: u.id,
@@ -69,6 +89,7 @@ export function startDig(s: SimState, u: Unit, def: WeaponDef, id: number): void
     speed: idiv(d.speed * digPctOf(s, u), 100),
     ticksLeft: d.ticks,
   };
+  return true;
 }
 
 /** percent the cut slows down in material m: earth 100; 0 when it cannot be cut at all */
@@ -100,6 +121,11 @@ export function stepDig(s: SimState, events: SimEvent[]): void {
   // The material at the front of the lowest disc sets the pace.
   const fx = subToPx(g.x) + subToPx(mulQ14(r * SUBPX, g.dx));
   const fy = subToPx(g.y) - r - 1 + subToPx(mulQ14(r * SUBPX, g.dy));
+  // Out of the hill into the open: the sap stops there (rules: dig.needsMatter).
+  if (d.needsMatter && !frontHasMatter(t, fx, subToPx(g.y) + subToPx(mulQ14(r * SUBPX, g.dy)), r)) {
+    g.ticksLeft = 0;
+    return;
+  }
   const res = digResistance(t, materialOf(t, fx, fy));
   if (res > 0) {
     const step = idiv(g.speed * 100, res);

@@ -78,7 +78,7 @@ export function fire(
     return true;
   }
   if (def.behavior === 'dig') {
-    startDig(state, u, def, id);
+    if (!startDig(state, u, def, id)) return false;
     events.push({ e: 'shotFired', shotId: id, weapon: def.id });
     return true;
   }

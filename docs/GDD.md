@@ -127,7 +127,7 @@ Toutes les valeurs sont des défauts dans `src/content/weapons.ts`, ajustables p
 | **Mur de pierres** | Pose d'un bloc de pierre taillée (3 longueurs, rotation par pas de 22,5°) | 2 |
 | **Bannière** | Parachute : chute lente, sensible au vent | 3 |
 | **Pioche** | Creuse verticalement vers le bas, 3 s (programmée le 2026-10-25) | 2 |
-| **Sape** | Creuse un tunnel horizontal ou diagonal, 4 s (programmée le 2026-10-25) | 2 |
+| **Sape** | Creuse un tunnel horizontal ou diagonal, 4 s (programmée le 2026-10-25). Ne mord que dans la matière (décidé le 2026-10-25, `dig.needsMatter`, absent des vieux logs) : visée vers l'air libre (à plat ou vers le haut sur un sol plat), elle est refusée et le tour garde son action ; elle s'arrête là où son tunnel débouche à l'air libre | 2 |
 | **Échelle** | Pose une échelle de 200 px, praticable par toutes les unités | 2 |
 | **Chausse-trape** | Mine : invisible pour l'ennemi, s'arme en 2 s, 40 dégâts / 50 px | 2 |
 | **Miracle** | Téléportation vers un point libre désigné ; fin de tour | 1 |

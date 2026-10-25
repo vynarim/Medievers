@@ -155,6 +155,38 @@ describe('sap (GDD §4.4)', () => {
     expect(Math.abs(px(u?.y) - y0)).toBeLessThanOrEqual(4);
   });
 
+  it('is refused when aimed at open air, and stops where it comes out into the open', () => {
+    // On flat ground, level or up: nothing to cut; the action is kept, the unit stays.
+    for (const angle of [0, 3584]) {
+      const sim = duel(300, 1100);
+      const events = run(
+        sim,
+        [
+          { t: 'selectWeapon', id: 'sap' },
+          { t: 'aim', angle },
+          { t: 'fire', power: 0 },
+        ],
+        60,
+      );
+      expect(events).toContainEqual({ e: 'toolRefused', weapon: 'sap' });
+      expect(px(unit(sim)?.x)).toBe(300);
+      expect(sim.view().turn.phase).toBe('action');
+    }
+    // Down into the ground: it digs.
+    const sim = duel(300, 1100);
+    const events = run(
+      sim,
+      [
+        { t: 'selectWeapon', id: 'sap' },
+        { t: 'aim', angle: 512 },
+        { t: 'fire', power: 0 },
+      ],
+      300,
+    );
+    expect(events.some((e) => e.e === 'terrainCarved')).toBe(true);
+    expect(px(unit(sim)?.y)).toBeGreaterThan(560);
+  });
+
   it('cuts level, or 45° up or down, on the aimed side', () => {
     expect(sapAngle(0)).toBe(0);
     expect(sapAngle(3700)).toBe(3584);

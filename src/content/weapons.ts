@@ -35,6 +35,12 @@ export interface DigDef {
   readonly radius: number;
   /** down: straight down (pick); aim: level or 45° up or down, on the aimed side (sap) */
   readonly along: 'down' | 'aim';
+  /**
+   * the sap only cuts through matter: aimed at open air it is refused (the turn keeps its
+   * action), and it stops where its tunnel comes out into the open (2026-10-25). Absent from
+   * older logs: it went on through the air, the unit walking after it.
+   */
+  readonly needsMatter?: boolean;
 }
 
 /** Chausse-trape (GDD §4.4): a mine left on the ground, seen only by its own house. */
@@ -269,7 +275,7 @@ export const WEAPONS: readonly WeaponDef[] = [
     behavior: 'dig',
     ...TOOL,
     ammo: 2,
-    dig: { ticks: 4 * 60, speed: 192, radius: 17, along: 'aim' },
+    dig: { ticks: 4 * 60, speed: 192, radius: 17, along: 'aim', needsMatter: true },
   },
   {
     id: 'caltrop',

@@ -1535,6 +1535,7 @@
   "quip.strike.1": "Une volée de trébuchet ! Levez les yeux, puis courez.",
   "quip.strike.2": "Il pleut des pierres. Le curé n'avait pas prévu ça.",
   "quip.strike.3": "Le trébuchet envoie ses compliments, en granit.",
+  "quip.sapRefused": "Rien à creuser par là : la sape ne mord que dans la terre. Visez le sol, de niveau, ou à 45° vers le haut ou le bas.",
   "quip.toolRefused": "Pas là : trop loin, sur un combattant, ou en pleine terre.",
   "quip.strikeRefused": "Rien à frapper à portée de masse : approchez-vous, ou visez de l'autre côté.",
   "quip.burnMet.1": "Les deux feux se rejoignent : il ne reste plus de parchemin. On compte les survivants.",
