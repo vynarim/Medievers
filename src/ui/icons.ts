@@ -53,6 +53,9 @@ const ICONS = {
   musicOn: `<path d="M10 17.5 V5 L19 3.5 V15.5" fill="none"/>
     <ellipse cx="7.5" cy="17.5" rx="2.8" ry="2.2" fill="currentColor" stroke="none"/>
     <ellipse cx="16.5" cy="15.5" rx="2.8" ry="2.2" fill="currentColor" stroke="none"/>`,
+  copy: `<rect x="8.5" y="8.5" width="11" height="12.5" rx="1.5" fill="none"/>
+    <path d="M15.5 5.5 V4.5 A1.5 1.5 0 0 0 14 3 H6 A1.5 1.5 0 0 0 4.5 4.5 V14.5 A1.5 1.5 0 0 0 6 16 H6.5" fill="none"/>`,
+  check: `<path d="M4.5 12.5 L9.5 17.5 L19.5 6.5" fill="none" stroke-width="3"/>`,
   // A speaker and its waves, with a note beside (all), alone (effects), or struck out (none).
   soundAll: `<path d="M3 9.5 H6 L10 6 V18 L6 14.5 H3 Z" fill="currentColor" stroke="none"/>
     <path d="M12.5 9.5 Q14 12 12.5 14.5" fill="none"/>

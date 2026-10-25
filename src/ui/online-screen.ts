@@ -47,10 +47,17 @@ function panel(): { box: HTMLElement; close: () => void } {
 
 /** The message for an error thrown while meeting (room, network, version). */
 export function onlineError(e: unknown): string {
-  const key = e instanceof Error ? e.message : '';
-  return ['unknown', 'full', 'version', 'offline'].includes(key)
-    ? t(`online.error.${key}`)
-    : t('online.error.offline');
+  // Firebase's own refusals, told for what they are rather than as a lost connection.
+  const code = String((e as { code?: unknown } | null)?.code ?? '');
+  const text = e instanceof Error ? e.message : '';
+  if (/referer|unauthorized-domain|api-key/i.test(code + text)) {
+    return t('online.error.address', { host: location.host });
+  }
+  if (/permission[_ ]denied/i.test(code + text)) return t('online.error.denied');
+  const key = text;
+  if (['unknown', 'full', 'version', 'offline'].includes(key)) return t(`online.error.${key}`);
+  // Anything else: the lost connection, with the server's own word for it, to look up.
+  return code ? `${t('online.error.offline')} (${code})` : t('online.error.offline');
 }
 
 export interface WaitScreen {

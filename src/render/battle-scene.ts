@@ -709,7 +709,6 @@ export class BattleScene extends Phaser.Scene {
       this.online = null;
       this.remote = null;
     }
-    const back = (): void => this.newMatch();
     const play = (m: OnlineMatch): void => {
       this.scene.restart(onlineBattle(m));
     };
@@ -727,7 +726,6 @@ export class BattleScene extends Phaser.Scene {
             (this.data_.seed + 0x9e3779b9) >>> 0,
             play,
           ),
-        join: () => joinFlow(play, back),
       },
     );
   }

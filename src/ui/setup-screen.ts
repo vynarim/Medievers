@@ -16,6 +16,8 @@ import {
 import { AI_LEVEL_IDS, type AiLevelId } from '../content/ai.ts';
 import { t } from './i18n.ts';
 import { button, el, infoButton, shield, uiRoot } from './overlay.ts';
+import { copyButton } from './copy-button.ts';
+import { onlineError } from './online-screen.ts';
 import { soundButton } from './sound-button.ts';
 import { playerArt } from './player-art.ts';
 import { icon, setIcon } from './icons.ts';
@@ -180,7 +182,7 @@ export function showSetupScreen(
   onStart: (setup: MatchSetup) => void,
   onCancel?: () => void,
   /** online matches (GDD §6): open a room for friends, or join one by its code */
-  online?: { lobby: () => SetupLobby; join: () => void },
+  online?: { lobby: () => SetupLobby },
   /** i18n key of the button that calls onCancel: back to the match, or to the title */
   cancelKey = 'setup.cancel',
 ): () => void {
@@ -195,6 +197,7 @@ export function showSetupScreen(
   let lobby: SetupLobby | null = null;
   let code: string | null = null;
   let codeFailed = false;
+  let codeError = '';
   let seated: ReadonlySet<number> = new Set();
   let friendLineups: ReadonlyMap<number, readonly ClassId[]> = new Map();
   const openLobby = (): void => {
@@ -206,8 +209,9 @@ export function showSetupScreen(
         code = c;
         render();
       },
-      () => {
+      (e: unknown) => {
         codeFailed = true;
+        codeError = onlineError(e);
         render();
       },
     );
@@ -274,12 +278,7 @@ export function showSetupScreen(
       const box = el('div', 'code');
       if (code) {
         const shown = formatCode(code);
-        const copy = button(t('online.copy'));
-        copy.addEventListener('click', () => {
-          void navigator.clipboard?.writeText(shown).then(() => {
-            copy.textContent = t('pause.copied');
-          });
-        });
+        const copy = copyButton(shown);
         box.append(el('span', '', t('setup.code')), el('b', '', shown), copy);
       } else if (codeFailed) {
         // Tried again on demand: a room opened afresh, a sign-in made again.
@@ -289,7 +288,7 @@ export function showSetupScreen(
           codeFailed = false;
           render();
         });
-        box.append(el('span', 'error', t('online.error.offline')), retry);
+        box.append(el('span', 'error', codeError || t('online.error.offline')), retry);
       } else {
         box.append(el('span', '', t('online.creating')));
       }
@@ -448,21 +447,6 @@ export function showSetupScreen(
     );
     panel.append(options);
 
-    // The other way to play: online.
-    // The other way in: a friend's match, by its code. (Inviting friends is done above, by
-    // giving them a house.)
-    const others = el('div', 'start others');
-    if (online) {
-      const join = button(t('setup.onlineJoin'));
-      join.title = t('setup.onlineJoinTip');
-      join.addEventListener('click', () => {
-        dropLobby();
-        close();
-        online.join();
-      });
-      others.append(join, el('p', 'note ambient', t('setup.note.friends')));
-    }
-    if (others.childElementCount > 0) panel.append(el('h3', '', t('setup.others')), others);
     const start = el('div', 'start');
     const go = button(t('setup.start'), 'fire');
     // With friends, the battle waits until each has joined.

@@ -27,6 +27,7 @@ import {
 import { weaponLines } from './weapon-info.ts';
 import { weaponArt } from './weapon-art.ts';
 import { audio, SOUND_MODES } from '../render/audio.ts';
+import { copyButton } from './copy-button.ts';
 import { soundButton as makeSoundButton, SOUND_ICON } from './sound-button.ts';
 
 const STORAGE_KEY = 'medieverse.tuning.v1';
@@ -64,9 +65,6 @@ export interface GameUiOptions {
   /** the match, recalled in the pause menu: its map, its rules and what wins it */
   readonly match?: { readonly map: string; readonly scheme: string; readonly regicide: boolean };
 }
-
-/** ms the copy button says it copied */
-const COPIED_MS = 1500;
 
 /** What the replay viewer's bar drives (the battle scene). */
 export interface ReplayControls {
@@ -367,13 +365,7 @@ export class GameUi {
     const code = opts.onlineCode;
     if (code) {
       const shown = code.length === 6 ? `${code.slice(0, 3)}-${code.slice(3)}` : code;
-      const copy = button(t('online.copy'));
-      copy.addEventListener('click', () => {
-        void navigator.clipboard?.writeText(shown).then(() => {
-          copy.textContent = t('pause.copied');
-          window.setTimeout(() => (copy.textContent = t('online.copy')), COPIED_MS);
-        });
-      });
+      const copy = copyButton(shown);
       const row = el('div', 'pause-code');
       row.append(el('span', '', t('pause.code')), el('b', '', shown), copy);
       this.pause.append(row);

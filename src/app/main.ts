@@ -71,7 +71,6 @@ async function boot(): Promise<void> {
       title,
       {
         lobby: () => setupLobby((chosen) => rulesFor(chosen, overrides), seed, play),
-        join: () => joinFlow(play, choose),
       },
       'setup.toTitle',
     );

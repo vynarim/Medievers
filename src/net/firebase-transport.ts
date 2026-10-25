@@ -2,7 +2,7 @@
 // Realtime Database found by its code, and a mailbox per seat. The friends write to the creator
 // only, who passes on what is for the others. The only module that knows the SDK.
 import { initializeApp } from 'firebase/app';
-import { connectAuthEmulator, getAuth, signInAnonymously, type Auth } from 'firebase/auth';
+import { connectAuthEmulator, getAuth, signInAnonymously, signOut, type Auth } from 'firebase/auth';
 import {
   connectDatabaseEmulator,
   get,
@@ -79,8 +79,17 @@ function firebaseServices(): { auth: Auth; db: Database } {
 function connectFirebase(): Promise<{ db: Database; uid: string }> {
   signedIn ??= (async () => {
     const { auth, db } = firebaseServices();
-    const cred = await signInAnonymously(auth);
-    return { db, uid: cred.user.uid };
+    try {
+      const cred = await signInAnonymously(auth);
+      return { db, uid: cred.user.uid };
+    } catch (e) {
+      // A user kept by this browser whose token no longer holds: forgotten, and a new one made.
+      if (!auth.currentUser) throw e;
+      console.warn('[medieverse] the kept Firebase user failed, signing in afresh', e);
+      await signOut(auth);
+      const cred = await signInAnonymously(auth);
+      return { db, uid: cred.user.uid };
+    }
   })();
   // A failed sign-in (offline for a moment, a blocked request) is tried again next time,
   // instead of failing every room until the page is reloaded.
