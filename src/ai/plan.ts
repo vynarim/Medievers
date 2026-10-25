@@ -13,7 +13,7 @@ import { SUBPX, mulQ14, subToPx } from '../sim/math/fixed.ts';
 import { createPrng, nextRange, type PrngState } from '../sim/math/prng.ts';
 import { createProjectile, stepProjectile } from '../sim/projectiles/projectile.ts';
 import { DRAGON_HALF_HEIGHT, DRAGON_HALF_WIDTH } from '../content/dragon.ts';
-import { canSwitchUnit, type Sim, type SimView } from '../sim/sim.ts';
+import { canPlace, canSwitchUnit, type Sim, type SimView } from '../sim/sim.ts';
 import type { SimState } from '../sim/state.ts';
 import type { Terrain } from '../sim/terrain/terrain.ts';
 import { ropeTarget } from '../sim/units/climb.ts';
@@ -24,6 +24,8 @@ import { SANDBOX_PACE, TurnScript, type AiMove, type AiPlan, type AiShot } from 
 
 /** px from the muzzle to the body centre, as the sim fires (weapons.ts) */
 const MUZZLE = 20;
+/** px between two columns tried for a placement, outwards from the one the match proposes */
+const PLACE_STEP = 8;
 /** ticks a sweep follows a throw at most */
 const FLIGHT_MAX = 480;
 /** ticks of stillness after which a play with only the dragon moving is over */
@@ -579,7 +581,15 @@ function shaken(plan: AiPlan, level: AiLevel, prng: PrngState): AiPlan {
   return { ...plan, shot: { ...shot, angle, power } };
 }
 
-/** Where the AI puts its next unit during the placement: where the match proposes. */
+/**
+ * Where the AI puts its next unit during the placement: where the match proposes, or the
+ * nearest column allowed (a unit already stands there, say), as the sim does when time runs out.
+ */
 export function planPlacement(v: SimView): number | null {
-  return v.placing[0]?.x ?? null;
+  const next = v.placing[0];
+  if (!next) return null;
+  for (let d = 0; d < v.terrain.width; d += PLACE_STEP) {
+    for (const x of d === 0 ? [next.x] : [next.x + d, next.x - d]) if (canPlace(v, x)) return x;
+  }
+  return null;
 }

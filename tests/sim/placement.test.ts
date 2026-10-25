@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { CLASSIC_RULES as REAL_CLASSIC } from '../../src/content/rules.ts';
-import { Material, Sim, type Mask, type SimEvent } from '../../src/sim/index.ts';
+import { planPlacement } from '../../src/ai/plan.ts';
+import { Material, Sim, canPlace, type Mask, type SimEvent } from '../../src/sim/index.ts';
 
 function flatMask(): Mask {
   const width = 1200;
@@ -61,5 +62,22 @@ describe('placement at the start of the match', () => {
     for (let i = 0; i < (RULES.turn.placementTicks ?? 0); i++) sim.step();
     expect(sim.view().units.map((u) => Math.trunc(u.x / 256))).toEqual([100]);
     expect(sim.view().turn.activeTeam).toBe(1);
+  });
+});
+
+describe('the AI at the placement', () => {
+  it('moves off its proposed column when a unit already stands there, instead of being refused', () => {
+    const sim = newMatch();
+    // The first house puts its unit on the column proposed to the second.
+    sim.step([{ t: 'place', x: 900 }]);
+    const v = sim.view();
+    expect(v.placing[0]?.x).toBe(900);
+    expect(canPlace(v, 900)).toBe(false);
+    const x = planPlacement(v);
+    expect(x).not.toBeNull();
+    expect(Math.abs((x ?? 0) - 900)).toBeGreaterThanOrEqual(36);
+    const events = sim.step([{ t: 'place', x: x ?? 0 }]);
+    expect(events.some((e) => e.e === 'placeRefused')).toBe(false);
+    expect(sim.view().units).toHaveLength(2);
   });
 });

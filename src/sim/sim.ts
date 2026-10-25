@@ -314,19 +314,8 @@ const PLACE_CLEARANCE = 36;
  * false (nothing done) when the column is not allowed. The last one starts the first turn.
  */
 function placeUnit(s: SimState, x: number, events: SimEvent[]): boolean {
-  const next = s.placing[0];
-  if (!next) return false;
-  const w = s.terrain.width;
-  if (x < PLACE_CLEARANCE || x >= w - PLACE_CLEARANCE) return false;
-  if (s.units.some((u) => Math.abs(subToPx(u.x) - x) < PLACE_CLEARANCE)) return false;
-  const u = createUnit(
-    next.unitId,
-    next.team,
-    x,
-    0,
-    maxHpOf(s, { id: next.unitId, team: next.team }),
-  );
-  if (!settle(u, s.terrain) || underWater(s, subToPx(u.y))) return false;
+  const u = placed(s, x);
+  if (!u) return false;
   s.placing.shift();
   s.units.push(u);
   s.units.sort((a, b) => a.id - b.id);
@@ -337,6 +326,29 @@ function placeUnit(s: SimState, x: number, events: SimEvent[]): boolean {
     startTurn(s, events);
   }
   return true;
+}
+
+/** The next unit of the placement as it would stand at column x, or null if not allowed there. */
+function placed(s: SimState, x: number): Unit | null {
+  const next = s.placing[0];
+  if (!next) return null;
+  const w = s.terrain.width;
+  if (x < PLACE_CLEARANCE || x >= w - PLACE_CLEARANCE) return null;
+  if (s.units.some((u) => Math.abs(subToPx(u.x) - x) < PLACE_CLEARANCE)) return null;
+  const u = createUnit(
+    next.unitId,
+    next.team,
+    x,
+    0,
+    maxHpOf(s, { id: next.unitId, team: next.team }),
+  );
+  if (!settle(u, s.terrain) || underWater(s, subToPx(u.y))) return null;
+  return u;
+}
+
+/** The next unit of the placement may be put down at column x (for the AI: nothing changes). */
+export function canPlace(v: SimView, x: number): boolean {
+  return placed(v as SimState, x) !== null;
 }
 
 /** Time is up: the unit goes to its default column, or the nearest allowed one. */
