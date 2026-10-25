@@ -43,11 +43,16 @@ const STYLE = `
 #ui .setup .start { margin-top: 12px; display: flex; justify-content: flex-end; gap: 8px; }
 #ui .setup .start.others { margin-top: 4px; justify-content: flex-start; flex-wrap: wrap; }
 /* A house leaves the match: a small round « − », at the end of its row. */
-#ui .setup .house button.drop { margin-left: auto; width: 36px; height: 36px; min-width: 36px;
-  min-height: 36px; padding: 0; border-radius: 50%; font-family: var(--text); font-size: 22px;
-  line-height: 1; color: var(--vermillon); background: var(--ceruse); border: 2px solid var(--vermillon);
-  box-shadow: none; }
-#ui .setup .house button.drop:hover { background: var(--velin); }
+#ui .setup .house button.drop { margin-left: auto; width: 40px; height: 40px; min-width: 40px;
+  min-height: 40px; padding: 0; display: flex; align-items: center; justify-content: center;
+  background: none; border: 0; box-shadow: none; }
+#ui .setup .house button.drop i { display: block; width: 22px; height: 22px; border-radius: 50%;
+  border: 2px solid var(--vermillon); position: relative; }
+#ui .setup .house button.drop i::after { content: ''; position: absolute; left: 4px; right: 4px; top: 50%;
+  height: 2px; margin-top: -1px; background: var(--vermillon); }
+#ui .setup .house button.drop:hover i { background: var(--velin); }
+#ui .setup .house button.drop.hidden { display: flex !important; visibility: hidden; }
+@media (pointer: coarse) { #ui .setup .house button.drop { width: 48px; height: 48px; } }
 /* On a phone held upright: the choices wrap, their descriptions behind a « ? ». */
 #ui.phone .setup { padding-left: 14px; padding-right: 14px; }
 #ui.phone .setup .row { flex-wrap: wrap; gap: 6px; }
@@ -193,9 +198,10 @@ export function showSetupScreen(
       more.addEventListener('click', () => setLineup([...lineup, 'knight']));
       row.append(less, more);
       // This house leaves the match: a small round « − » at the end of its row.
-      const drop = button('−', 'drop');
+      // Hidden, its place kept, while the match has no house to spare.
+      const drop = button('', setup.lineups.length <= MIN_HOUSES ? 'drop hidden' : 'drop');
+      drop.append(el('i'));
       drop.title = t('setup.houseDrop');
-      drop.disabled = setup.lineups.length <= MIN_HOUSES;
       drop.addEventListener('click', () => {
         const players = playersOf(setup).filter((_, k) => k !== h);
         const lineups = setup.lineups.filter((_, k) => k !== h);
@@ -224,17 +230,13 @@ export function showSetupScreen(
     addHouse.addEventListener('click', () =>
       update({ ...setup, lineups: [...setup.lineups, setup.lineups[0] ?? ['knight']] }),
     );
-    houses.append(
-      addHouse,
-      el('p', 'note ambient', t('setup.note')),
-      infoButton(() => [t('setup.note')]),
-    );
+    houses.append(addHouse, el('p', 'note ambient', t('setup.note')));
     panel.append(houses);
 
     // How the match runs, apart from who fights it.
     panel.append(el('h3', '', t('setup.options')));
     const options = el('div', 'tools');
-    options.append(regicide, turnLength);
+    options.append(regicide, turnLength, infoButton(() => [t('setup.note')]));
     panel.append(options);
 
     // The other ways to play: watch a replay, or play online.
