@@ -1,8 +1,11 @@
 // Online match screens (GDD §6): the code to type to join, the wait until the creator starts the
 // match, and the wait while a reloaded page takes its seat again. DOM over the canvas. (The
 // creator's code shows on the setup screen.)
+import { defaultLineup, type ClassId } from '../content/classes.ts';
+import { DEFAULT_UNITS } from '../content/schemes.ts';
 import { t } from './i18n.ts';
 import { button, el, uiRoot } from './overlay.ts';
+import { lineupPicker, setupStyles } from './setup-screen.ts';
 
 const STYLE = `
 #ui .online { width: min(520px, calc(100vw - 32px)); text-align: center; }
@@ -15,6 +18,8 @@ const STYLE = `
 #ui .online .error { color: var(--vermillon); min-height: 1.4em; }
 #ui .online .error.ok { color: var(--encre); }
 #ui .online .actions { justify-content: center; }
+#ui .online.seated { width: min(980px, calc(100vw - 32px)); }
+#ui .online .setup .house { justify-content: center; border: 0; margin: 0 0 10px; }
 `;
 
 let styled = false;
@@ -59,7 +64,10 @@ export interface WaitScreen {
  */
 export function showJoin(
   normalize: (typed: string) => string | null,
-  onJoin: (code: string, seated: (leave: () => void) => void) => Promise<void>,
+  onJoin: (
+    code: string,
+    seated: (leave: () => void, chooseLineup: (classes: readonly ClassId[]) => void) => void,
+  ) => Promise<void>,
   onCancel: () => void,
 ): () => void {
   const { box, close } = panel();
@@ -87,7 +95,7 @@ export function showJoin(
     }
     go.disabled = true;
     error.textContent = t('online.joining');
-    const seated = (l: () => void): void => {
+    const seated = (l: () => void, chooseLineup: (classes: readonly ClassId[]) => void): void => {
       // Cancelled while the seat was being taken: it is given back at once.
       if (gone) {
         l();
@@ -95,9 +103,29 @@ export function showJoin(
       }
       leave = l;
       body.textContent = t('online.seatedBody');
-      input.disabled = true;
+      input.remove();
       error.classList.add('ok');
       error.textContent = t('online.seated');
+      // The friend's own units, sent to the creator at once and on each change.
+      setupStyles();
+      box.classList.add('seated');
+      const units = el('div', 'setup');
+      units.style.display = 'contents';
+      let lineup: ClassId[] = defaultLineup(DEFAULT_UNITS, false);
+      const renderUnits = (): void => {
+        const row = el('div', 'house');
+        row.append(
+          lineupPicker(lineup, (next) => {
+            lineup = next;
+            chooseLineup(lineup);
+            renderUnits();
+          }),
+        );
+        units.replaceChildren(el('h3', '', t('online.yourUnits')), row);
+      };
+      renderUnits();
+      chooseLineup(lineup);
+      error.before(units);
     };
     onJoin(code, seated).then(close, (e: unknown) => {
       leave = null;
@@ -105,6 +133,7 @@ export function showJoin(
       go.disabled = false;
       input.disabled = false;
       body.textContent = t('online.joinBody');
+      if (!input.isConnected) body.after(input);
       error.textContent = onlineError(e);
     });
   });

@@ -1,6 +1,7 @@
 // Meeting before the match (TECH_SPEC §8.3): the creator opens a lobby where friends say hello
 // and are checked to run the same game; it starts the match when it chooses, and every peer
 // gets it. A peer that comes later, or back without its state, gets the match resumed.
+import type { ClassId } from '../content/classes.ts';
 import { Lockstep } from './lockstep.ts';
 import {
   HOST_SEAT,
@@ -32,8 +33,11 @@ export class Lobby {
   private readonly buildHash: string;
   /** the friends who said hello with the same game, by seat */
   readonly joined = new Set<Seat>();
+  /** the units each friend chose for its house, by seat */
+  readonly lineups = new Map<Seat, readonly ClassId[]>();
   private lockstep: Lockstep | null = null;
   private listener: ((joined: ReadonlySet<Seat>) => void) | null = null;
+  private lineupListener: ((lineups: ReadonlyMap<Seat, readonly ClassId[]>) => void) | null = null;
 
   constructor(transport: Transport, buildHash: string) {
     this.transport = transport;
@@ -41,6 +45,13 @@ export class Lobby {
     transport.onMessage((msg, from) => {
       if (this.lockstep) {
         this.lockstep.receive(msg, from);
+        return;
+      }
+      // Kept even ahead of its hello: the friend may choose before the hello is through.
+      if (msg.m === 'lineup') {
+        if (!Array.isArray(msg.classes)) return;
+        this.lineups.set(from, msg.classes);
+        this.lineupListener?.(this.lineups);
         return;
       }
       if (msg.m !== 'hello') return;
@@ -60,8 +71,15 @@ export class Lobby {
     fn(this.joined);
   }
 
+  /** `fn` hears of the units each friend chooses (and is called at once). */
+  onLineup(fn: (lineups: ReadonlyMap<Seat, readonly ClassId[]>) => void): void {
+    this.lineupListener = fn;
+    fn(this.lineups);
+  }
+
   /** A friend left the lobby before the match started. */
   forget(seat: Seat): void {
+    this.lineups.delete(seat);
     if (this.lockstep || !this.joined.delete(seat)) return;
     this.listener?.(this.joined);
   }
@@ -70,6 +88,7 @@ export class Lobby {
   start(start: MatchStart): Lockstep {
     if (this.lockstep) return this.lockstep;
     this.listener = null;
+    this.lineupListener = null;
     const ls = new Lockstep(HOST_SEAT, start, this.transport);
     this.lockstep = ls;
     for (const seat of this.joined) {

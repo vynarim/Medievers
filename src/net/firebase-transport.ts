@@ -16,6 +16,7 @@ import {
   runTransaction,
   serverTimestamp,
   set,
+  update,
   type Database,
 } from 'firebase/database';
 import {
@@ -38,6 +39,20 @@ const CONFIG = {
 
 /** Medieverse's corner of the shared project's database (TECH_SPEC §8.1). */
 const ROOT = 'medieverse/rooms';
+/**
+ * The rooms by the half-day they were opened in, `expiry/{start of the half-day, ms, 13 digits}/
+ * {code}`: what finds the abandoned rooms without reading anybody's room (database.rules.json).
+ */
+const EXPIRY = 'medieverse/expiry';
+const BUCKET_MS = 12 * 3600 * 1000;
+/** ms after which a room is abandoned and any player may wipe it */
+const ROOM_LIFETIME_MS = 48 * 3600 * 1000;
+/** half-days looked back over by a sweep: a month */
+const SWEEP_BUCKETS = 60;
+
+/** The half-day bucket of time `ms`, as its key. */
+const bucketOf = (ms: number): string =>
+  String(Math.floor(ms / BUCKET_MS) * BUCKET_MS).padStart(13, '0');
 
 /** No 0/O, 1/I/L: a code read aloud or copied by hand stays right. */
 const ALPHABET = '23456789ABCDEFGHJKMNPQRSTUVWXYZ';
@@ -89,9 +104,45 @@ export async function createRoom(): Promise<string> {
       host: uid,
       createdAt: serverTimestamp(),
     });
+    // Filed by the half-day it was opened in, then the rooms left behind are wiped, unawaited.
+    const at = (await get(ref(db, `${ROOT}/${code}/createdAt`))).val() as number | null;
+    if (typeof at === 'number') {
+      await set(ref(db, `${EXPIRY}/${bucketOf(at)}/${code}`), true).catch(() => undefined);
+    }
+    void sweepRooms(db, at ?? Date.now());
     return code;
   }
   throw new Error('offline' satisfies RoomError);
+}
+
+/**
+ * Wipes the rooms opened more than 48 h before `now` (server time, ms), which matches nobody
+ * ended left behind: each new room sweeps them (no scheduled task on the free plan). A half-day
+ * is swept once its last room is 48 h old. Best effort: failures are ignored.
+ */
+async function sweepRooms(db: Database, now: number): Promise<void> {
+  const newest = Math.floor((now - ROOM_LIFETIME_MS) / BUCKET_MS) * BUCKET_MS - BUCKET_MS;
+  const buckets: string[] = [];
+  for (let k = 0; k < SWEEP_BUCKETS; k++) buckets.push(bucketOf(newest - k * BUCKET_MS));
+  await Promise.all(
+    buckets.map(async (bucket) => {
+      try {
+        const rooms = await get(ref(db, `${EXPIRY}/${bucket}`));
+        const codes: string[] = [];
+        rooms.forEach((room) => {
+          if (room.key) codes.push(room.key);
+        });
+        for (const code of codes) {
+          await update(ref(db), {
+            [`${ROOT}/${code}`]: null,
+            [`${EXPIRY}/${bucket}/${code}`]: null,
+          }).catch(() => remove(ref(db, `${EXPIRY}/${bucket}/${code}`)));
+        }
+      } catch {
+        // Not yet old enough by the server's clock, or offline: the next room will see to it.
+      }
+    }),
+  );
 }
 
 /**
@@ -119,6 +170,13 @@ export async function joinRoom(code: string): Promise<Seat> {
 /** Removes the room (the host, once the match is over or left). */
 export async function deleteRoom(code: string): Promise<void> {
   const { db } = await connectFirebase();
+  const at = (await get(ref(db, `${ROOT}/${code}/createdAt`)).catch(() => null))?.val() as
+    | number
+    | null
+    | undefined;
+  if (typeof at === 'number') {
+    await remove(ref(db, `${EXPIRY}/${bucketOf(at)}/${code}`)).catch(() => undefined);
+  }
   await remove(ref(db, `${ROOT}/${code}`)).catch(() => undefined);
 }
 

@@ -251,6 +251,19 @@ describe('online lockstep (TECH_SPEC §8.4)', () => {
     expect(host.lockstep.desyncTurn).toBeNull();
   });
 
+  it("hears each friend's own choice of units before the start", () => {
+    const link = new MemoryLink(() => 1);
+    const lobby = new Lobby(link.a, 'build');
+    const heard: string[] = [];
+    lobby.onLineup((l) => heard.push(JSON.stringify([...l])));
+    void connect(link.b, 1, 'build');
+    link.b.send({ m: 'lineup', classes: ['king', 'archer'] }, 0);
+    for (let i = 0; i < 10; i++) link.tick();
+    expect(lobby.joined.has(1)).toBe(true);
+    expect(lobby.lineups.get(1)).toEqual(['king', 'archer']);
+    expect(heard.at(-1)).toBe(JSON.stringify([[1, ['king', 'archer']]]));
+  });
+
   it('gives the match so far to a friend who joins after the start', async () => {
     const rnd = mulberry(21);
     const { start, config } = startOf(['human', 'friend']);

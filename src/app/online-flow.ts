@@ -33,6 +33,7 @@ export function setupLobby(
   return {
     code: opening.then((h: HostLobby) => h.code),
     onJoin: (fn) => void opening.then((h) => h.lobby.onJoin(fn), () => undefined),
+    onLineup: (fn) => void opening.then((h) => h.lobby.onLineup(fn), () => undefined),
     launch: (setup) => {
       saveSetup(setup);
       void opening.then((h) =>

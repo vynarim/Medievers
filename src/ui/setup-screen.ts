@@ -30,6 +30,11 @@ const STYLE = `
   line-height: 1.25; }
 #ui .setup .scheme b { display: block; font-family: var(--caps); font-weight: normal; font-size: 18px;
   color: var(--lapis); }
+/* The chosen one: a pale gilt and a vermilion frame, its text still easy to read. */
+#ui .setup .scheme.on, #ui .setup .scheme.on:hover {
+  background: color-mix(in srgb, var(--or) 35%, var(--ceruse));
+  box-shadow: inset 0 0 0 2px var(--ceruse), inset 0 0 0 4px var(--vermillon); }
+#ui .setup .scheme:hover { background: color-mix(in srgb, var(--or) 20%, var(--velin)); }
 #ui .setup .scheme b .date { margin-left: 8px; font-family: var(--text); font-size: 14px;
   color: var(--vermillon); }
 /* A heading with a small action beside it: « + Une maison ». */
@@ -59,13 +64,19 @@ const STYLE = `
   height: 20px; border-radius: 50%; border: 2px solid var(--encre); background: var(--ceruse);
   display: flex; align-items: center; justify-content: center; font-size: 12px; line-height: 1; }
 #ui .setup .player-pick .face .seat.in { background: var(--vert); color: var(--ceruse); }
-/* The match's code, by the houses' heading, while a house is a friend's. */
-#ui .setup .head .code { margin-left: auto; display: flex; align-items: center; gap: 8px;
-  font-size: 15px; }
-#ui .setup .head .code b { font-family: var(--caps); font-weight: normal; font-size: 24px;
+/* The match's code, top right, beside the title: whoever has it can join. */
+#ui .setup .title { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 4px 16px; }
+#ui .setup .title h2 { flex: 1 1 auto; }
+#ui .setup .title .code { display: flex; align-items: center; gap: 8px; font-size: 15px;
+  padding-top: 6px; }
+#ui .setup .title .code b { font-family: var(--caps); font-weight: normal; font-size: 24px;
   letter-spacing: 3px; color: var(--lapis); user-select: text; -webkit-user-select: text; }
-#ui .setup .head .code button { min-height: 32px; padding: 2px 10px; font-size: 14px; }
-@media (pointer: coarse) { #ui .setup .head .code button { min-height: 48px; } }
+#ui .setup .title .code button { min-height: 32px; padding: 2px 10px; font-size: 14px; }
+@media (pointer: coarse) { #ui .setup .title .code button { min-height: 48px; } }
+#ui .error { color: var(--vermillon); font-weight: bold; }
+/* A friend's house: what it is at, in place of its units. */
+#ui .setup .house .units.friend { align-items: center; min-height: 48px; font-style: italic;
+  font-size: 16px; }
 #ui .setup .start .waiting { align-self: center; margin-right: auto; font-size: 15px; }
 /* A unit: its class, and a small cross on the corner that takes it out. */
 #ui .setup .unit { position: relative; flex: none; display: flex; }
@@ -125,7 +136,7 @@ const STYLE = `
 #ui.phone .setup .player-pick { flex: 1 1 100%; }
 #ui.phone .setup select.player { flex: 1 1 auto; min-width: 0; width: auto; }
 #ui.phone .setup .head { flex-wrap: wrap; }
-#ui.phone .setup .head .code { margin-left: 0; flex: 1 1 100%; }
+#ui.phone .setup .title .code { flex: 1 1 100%; }
 #ui.phone .setup .tools { flex-wrap: wrap; justify-content: center; }
 #ui.phone .setup .tools button { flex: 1 1 40%; }
 #ui.phone .setup .start { flex-wrap: wrap; justify-content: center; }
@@ -142,14 +153,16 @@ const STYLE = `
 let styled = false;
 
 /**
- * The room of a match played with friends (GDD §6), opened as soon as a house is a friend's:
- * its code to pass on, the friends' seats as they join, then the start.
+ * The room of a match (GDD §6), opened with the setup screen: its code to pass on to whoever
+ * wants to join, the friends' seats and units as they come, then the start.
  */
 export interface SetupLobby {
   /** the code to pass on; rejects when the room cannot be opened */
   readonly code: Promise<string>;
   /** `fn` hears of the seats taken (1 = the first friend's house, and so on) */
   onJoin(fn: (seats: ReadonlySet<number>) => void): void;
+  /** `fn` hears of the units each friend chose for its house, by seat */
+  onLineup(fn: (lineups: ReadonlyMap<number, readonly ClassId[]>) => void): void;
   /** starts the match with this setup */
   launch(setup: MatchSetup): void;
   /** the match will not be played here: the room goes */
@@ -170,20 +183,16 @@ export function showSetupScreen(
   cancelKey = 'setup.cancel',
 ): () => void {
   const root = uiRoot();
-  if (!styled) {
-    const style = document.createElement('style');
-    style.textContent = STYLE;
-    document.head.appendChild(style);
-    styled = true;
-  }
+  setupStyles();
   let setup = fixSetup(initial);
   const veil = el('div', 'veil');
   const panel = el('div', 'modal panel setup');
-  // The room for friends: opened with the first friend's house, kept while the screen is open.
+  // The room for friends: opened with the screen, kept while it is open; unused, it goes.
   let lobby: SetupLobby | null = null;
   let code: string | null = null;
   let codeFailed = false;
   let seated: ReadonlySet<number> = new Set();
+  let friendLineups: ReadonlyMap<number, readonly ClassId[]> = new Map();
   const openLobby = (): void => {
     if (lobby || !online) return;
     const l = online.lobby();
@@ -200,8 +209,42 @@ export function showSetupScreen(
     );
     l.onJoin((seats) => {
       seated = new Set(seats);
+      // A friend who came with the code gets a house: the first of the AI's, else a new one.
+      let next = setup;
+      while (friendCountOf(next) < Math.max(0, ...seated)) {
+        const players = playersOf(next);
+        const ai = players.findIndex((p) => p !== 'human' && p !== 'friend');
+        if (ai >= 0) {
+          next = { ...next, players: players.map((p, k) => (k === ai ? 'friend' : p)) };
+        } else if (next.lineups.length < MAX_HOUSES) {
+          next = {
+            ...next,
+            lineups: [...next.lineups, next.lineups[0] ?? ['knight']],
+            players: [...players, 'friend'],
+          };
+        } else {
+          break;
+        }
+      }
+      if (next !== setup) setup = withFriendLineups(fixSetup(next));
       render();
     });
+    l.onLineup((chosen) => {
+      friendLineups = new Map(chosen);
+      setup = withFriendLineups(setup);
+      render();
+    });
+  };
+  /** The setup with each friend's house given the units its friend chose. */
+  const withFriendLineups = (s: MatchSetup): MatchSetup => {
+    // The k-th friend's house is seat k's (net/protocol.ts houseSeats).
+    let seat = 0;
+    const players = playersOf(s);
+    const lineups = s.lineups.map((l, h) => {
+      const chosen = players[h] === 'friend' ? friendLineups.get(++seat) : undefined;
+      return chosen ? [...chosen] : [...l];
+    });
+    return fixSetup({ ...s, lineups });
   };
   const close = (): void => {
     veil.remove();
@@ -213,14 +256,35 @@ export function showSetupScreen(
     lobby = null;
   };
   const update = (next: MatchSetup): void => {
-    setup = fixSetup(next);
+    setup = withFriendLineups(fixSetup(next));
     render();
   };
 
   const render = (): void => {
     const friends = hasFriends(setup);
-    if (friends) openLobby();
-    panel.replaceChildren(el('h2', '', t('setup.title')));
+    openLobby();
+    // The match's code, top right, always: whoever has it can join.
+    const title = el('div', 'title');
+    title.append(el('h2', '', t('setup.title')));
+    if (online) {
+      const box = el('div', 'code');
+      if (code) {
+        const shown = formatCode(code);
+        const copy = button(t('online.copy'));
+        copy.addEventListener('click', () => {
+          void navigator.clipboard?.writeText(shown).then(() => {
+            copy.textContent = t('pause.copied');
+          });
+        });
+        box.append(el('span', '', t('setup.code')), el('b', '', shown), copy);
+      } else if (codeFailed) {
+        box.append(el('span', 'error', t('online.error.offline')));
+      } else {
+        box.append(el('span', '', t('online.creating')));
+      }
+      title.append(box);
+    }
+    panel.replaceChildren(title);
 
     // The map: a theme; its land, towers and rocks are drawn anew for each match.
     panel.append(el('h3', '', t('setup.map')));
@@ -266,23 +330,6 @@ export function showSetupScreen(
       addHouse,
       infoButton(() => [t('setup.note.houses')]),
     );
-    // Playing with friends: the code to pass on them, copied in one click.
-    if (friends) {
-      const box = el('div', 'code');
-      if (code) {
-        const shown = `${code.slice(0, 3)}-${code.slice(3)}`;
-        const copy = button(t('online.copy'));
-        copy.addEventListener('click', () => {
-          void navigator.clipboard?.writeText(shown).then(() => {
-            copy.textContent = t('pause.copied');
-          });
-        });
-        box.append(el('span', '', t('setup.code')), el('b', '', shown), copy);
-      } else {
-        box.append(el('span', '', t(codeFailed ? 'online.error.offline' : 'online.creating')));
-      }
-      head.append(box);
-    }
     panel.append(head);
     let friend = 0;
     setup.lineups.forEach((lineup, h) => {
@@ -336,41 +383,12 @@ export function showSetupScreen(
         const lineups = setup.lineups.map((l, k) => (k === h ? next : [...l]));
         update({ ...setup, lineups });
       };
-      const units = el('div', 'units');
-      lineup.forEach((cls, u) => {
-        const slot = el('div', 'unit');
-        const select = el('select');
-        select.title = t('setup.unit', { n: u + 1 });
-        for (const id of CLASS_IDS) {
-          const o = el('option', '', t(`classes.${id}`));
-          o.value = id;
-          o.selected = id === cls;
-          select.append(o);
-        }
-        select.addEventListener('keydown', (e) => e.stopPropagation());
-        select.addEventListener('change', () => {
-          const next = [...lineup];
-          next[u] = select.value as ClassId;
-          setLineup(next);
-        });
-        slot.append(select);
-        // This one leaves the house: a small cross on its corner, while it is not alone.
-        if (lineup.length > 1) {
-          const out = setIcon(button('', 'unit-out'), 'close');
-          out.title = t('setup.unitOut', { n: u + 1 });
-          out.addEventListener('click', () => setLineup(lineup.filter((_, k) => k !== u)));
-          slot.append(out);
-        }
-        units.append(slot);
-      });
-      // One more: an empty dashed slot, while the house has room.
-      if (lineup.length < MAX_UNITS) {
-        const more = setIcon(button('', 'unit-add'), 'newMatch');
-        more.title = t('setup.unitMore');
-        more.addEventListener('click', () => setLineup([...lineup, 'knight']));
-        units.append(more);
+      if (players[h] === 'friend') {
+        // A friend's house: the friend chooses its units on its own device.
+        row.append(friendUnits(friendLineups.get(friend) ?? null, seated.has(friend), code));
+      } else {
+        row.append(lineupPicker(lineup, setLineup));
       }
-      row.append(units);
       // This house leaves the match: a small round « − » at the end of its row.
       // Hidden, its place kept, while the match has no house to spare.
       const drop = button('', setup.lineups.length <= MIN_HOUSES ? 'drop hidden' : 'drop');
@@ -485,4 +503,80 @@ function countSeated(seated: ReadonlySet<number>, s: MatchSetup): number {
   let n = 0;
   for (let k = 1; k <= friendCountOf(s); k++) if (seated.has(k)) n++;
   return n;
+}
+
+/** The units of a house, each chosen in a list; a cross takes one out, a dashed slot adds one. */
+export function lineupPicker(
+  lineup: readonly ClassId[],
+  setLineup: (next: ClassId[]) => void,
+): HTMLElement {
+  const units = el('div', 'units');
+  lineup.forEach((cls, u) => {
+    const slot = el('div', 'unit');
+    const select = el('select');
+    select.title = t('setup.unit', { n: u + 1 });
+    for (const id of CLASS_IDS) {
+      const o = el('option', '', t(`classes.${id}`));
+      o.value = id;
+      o.selected = id === cls;
+      select.append(o);
+    }
+    select.addEventListener('keydown', (e) => e.stopPropagation());
+    select.addEventListener('change', () => {
+      const next = [...lineup];
+      next[u] = select.value as ClassId;
+      setLineup(next);
+    });
+    slot.append(select);
+    // This one leaves the house: a small cross on its corner, while it is not alone.
+    if (lineup.length > 1) {
+      const out = setIcon(button('', 'unit-out'), 'close');
+      out.title = t('setup.unitOut', { n: u + 1 });
+      out.addEventListener('click', () => setLineup(lineup.filter((_, k) => k !== u)));
+      slot.append(out);
+    }
+    units.append(slot);
+  });
+  // One more: an empty dashed slot, while the house has room.
+  if (lineup.length < MAX_UNITS) {
+    const more = setIcon(button('', 'unit-add'), 'newMatch');
+    more.title = t('setup.unitMore');
+    more.addEventListener('click', () => setLineup([...lineup, 'knight']));
+    units.append(more);
+  }
+  return units;
+}
+
+/**
+ * A friend's house: not its units, which the friend chooses on its device, but where it is at:
+ * the code to pass on while the friend is awaited, then the units it chose.
+ */
+function friendUnits(
+  chosen: readonly ClassId[] | null,
+  isIn: boolean,
+  code: string | null,
+): HTMLElement {
+  const box = el('div', 'units friend');
+  if (!isIn) {
+    box.append(
+      el('span', '', code ? t('setup.friendCode', { code: formatCode(code) }) : t('online.creating')),
+    );
+  } else if (!chosen) {
+    box.append(el('span', '', t('setup.friendChoosing')));
+  } else {
+    box.append(el('span', '', chosen.map((c) => t(`classes.${c}`)).join(' · ')));
+  }
+  return box;
+}
+
+/** The code as shown: XXX-XXX. */
+const formatCode = (code: string): string => `${code.slice(0, 3)}-${code.slice(3)}`;
+
+/** Injects the setup screen's styles, also used by the friend's own choice of units. */
+export function setupStyles(): void {
+  if (styled) return;
+  const style = document.createElement('style');
+  style.textContent = STYLE;
+  document.head.appendChild(style);
+  styled = true;
 }

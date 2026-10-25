@@ -36,8 +36,8 @@ async function state(p: Page): Promise<State | null> {
             lockstep: {
               desyncTurn: number | null;
               knownUntil(): number;
-              localHashes: Map<number, number>;
-              remoteHashes: Map<number, number>;
+              /** each turn's hashes, by seat (private in lockstep.ts) */
+              hashes: Map<number, Map<number, number>>;
             };
           };
         }
@@ -53,8 +53,11 @@ async function state(p: Page): Promise<State | null> {
       team: v.turn.activeTeam,
       desync: ls.desyncTurn,
       known: ls.knownUntil(),
-      local: [...ls.localHashes],
-      remote: [...ls.remoteHashes],
+      // A turn's hash (the first seat's), and the turns where two seats' hashes were compared.
+      local: [...ls.hashes].map(([turn, by]): [number, number] => [turn, [...by.values()][0] ?? 0]),
+      remote: [...ls.hashes]
+        .filter(([, by]) => by.size > 1)
+        .map(([turn, by]): [number, number] => [turn, by.size]),
       status: st?.textContent ?? null,
     };
   });
@@ -103,23 +106,32 @@ async function main(): Promise<void> {
   await a.goto(URL_);
   await b.goto(URL_);
   const t0 = Date.now();
-  // The title page opens first: « Entrer en lice » leads to the setup screen.
+  // The title page opens first: « Entrer en lice » leads to the setup screen, which shows the
+  // match's code at once.
   await clickText(a, 'Entrer en lice');
-  await clickText(a, 'Créer une partie en ligne');
   await a.waitForFunction(
     () =>
       /^[0-9A-Z]{3}-[0-9A-Z]{3}$/.test(
-        document.querySelector('#ui .online .code')?.textContent ?? '',
+        document.querySelector('#ui .setup .title .code b')?.textContent ?? '',
       ),
     null,
     { timeout: 20000 },
   );
-  const code = (await a.locator('#ui .online .code').textContent()) ?? '';
+  const code = (await a.locator('#ui .setup .title .code b').textContent()) ?? '';
   log('code', code, Date.now() - t0, 'ms');
   await clickText(b, 'Rejoindre une partie');
   await b.locator('#ui .online input').fill(code);
   await clickText(b, 'Rejoindre');
-  await a.waitForFunction(() => !document.querySelector('#ui .online'), null, { timeout: 30000 });
+  // Seated, the friend chooses its own units: its first one becomes the king.
+  await b.locator('#ui .online .units select').first().selectOption('king', { timeout: 30000 });
+  // The creator's screen gave the friend a house, and shows the units it chose.
+  await a.waitForFunction(
+    () => /Roi/.test(document.querySelector('#ui .setup .units.friend')?.textContent ?? ''),
+    null,
+    { timeout: 30000 },
+  );
+  log('friend seated with its units', Date.now() - t0, 'ms');
+  await clickText(a, 'À la bataille');
   await b.waitForFunction(() => !document.querySelector('#ui .online'), null, { timeout: 30000 });
   log('met in', Date.now() - t0, 'ms');
 
@@ -132,24 +144,6 @@ async function main(): Promise<void> {
     log('online probe OK (meeting only)');
     return;
   }
-
-  // A third device is refused.
-  const cc = await browser.newContext();
-  const c = await cc.newPage();
-  await c.goto(URL_);
-  await clickText(c, 'Rejoindre une partie');
-  await c.locator('#ui .online input').fill(code);
-  await clickText(c, 'Rejoindre');
-  await c.waitForFunction(
-    () =>
-      /deux joueurs|ce code|serveur/.test(
-        document.querySelector('#ui .online .error')?.textContent ?? '',
-      ),
-    null,
-    { timeout: 20000 },
-  );
-  log('third:', await c.locator('#ui .online .error').textContent());
-  await cc.close();
 
   const players: [Page, string][] = [
     [a, 'host'],

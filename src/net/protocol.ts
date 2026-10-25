@@ -1,10 +1,11 @@
 // Online play (TECH_SPEC §8.3): the messages the peers of a match exchange, JSON over a
 // Transport. Any change to a message bumps PROTOCOL_VERSION.
 import type { MatchSetup } from '../app/match-setup.ts';
+import type { ClassId } from '../content/classes.ts';
 import type { MatchRules } from '../content/rules.ts';
 import type { GameCommand } from '../sim/commands.ts';
 
-export const PROTOCOL_VERSION = 2;
+export const PROTOCOL_VERSION = 3;
 
 /** Seat 0 is the match's creator; the friends who joined it take seats 1 to MAX_SEAT. */
 export type Seat = number;
@@ -41,6 +42,8 @@ export type NetMessage =
       /** the last tick this peer has played; 0 when it has nothing (new, or the page reloaded) */
       readonly tick: number;
     }
+  /** a friend's own choice of units for its house, before the start (protocol 3) */
+  | { readonly m: 'lineup'; readonly classes: readonly ClassId[] }
   | { readonly m: 'start'; readonly start: MatchStart }
   /** the commands of ticks from, from + 1, … (one list per tick) */
   | {
@@ -63,7 +66,7 @@ export function parseMessage(raw: unknown): NetMessage | null {
   if (!raw || typeof raw !== 'object') return null;
   const m = (raw as { m?: unknown }).m;
   return typeof m === 'string' &&
-    ['hello', 'start', 'frames', 'turnEnd', 'resume', 'pause', 'resign'].includes(m)
+    ['hello', 'lineup', 'start', 'frames', 'turnEnd', 'resume', 'pause', 'resign'].includes(m)
     ? (raw as NetMessage)
     : null;
 }
