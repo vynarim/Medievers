@@ -4,6 +4,7 @@ import { AI_LEVEL_IDS, type AiLevelId } from '../content/ai.ts';
 import { CLASS_IDS, defaultLineup, type ClassId } from '../content/classes.ts';
 import { CLASSIC_RULES, TICKS_PER_SECOND, type MatchRules } from '../content/rules.ts';
 import {
+  DEFAULT_UNITS,
   MAX_HOUSES,
   MAX_UNITS,
   MIN_HOUSES,
@@ -78,8 +79,8 @@ export function defaultSetup(custom: boolean): MatchSetup {
     map: 'valley',
     scheme: custom ? 'custom' : 'classic',
     regicide: false,
-    // One unit of each class per house (2026-10-24).
-    lineups: [defaultLineup(6, false), defaultLineup(6, false)],
+    // Four units per house: knight, archer, slinger, cleric (2026-10-25).
+    lineups: [defaultLineup(DEFAULT_UNITS, false), defaultLineup(DEFAULT_UNITS, false)],
     turnSeconds: DEFAULT_TURN_SECONDS,
   };
 }
@@ -105,7 +106,7 @@ export function fixLineup(lineup: readonly ClassId[], regicide: boolean): ClassI
 export function fixSetup(s: MatchSetup): MatchSetup {
   const scheme = SCHEME_IDS.includes(s.scheme) ? s.scheme : 'classic';
   const lineups = s.lineups.slice(0, MAX_HOUSES).map((l) => fixLineup(l, s.regicide));
-  while (lineups.length < MIN_HOUSES) lineups.push(defaultLineup(6, s.regicide));
+  while (lineups.length < MIN_HOUSES) lineups.push(defaultLineup(DEFAULT_UNITS, s.regicide));
   const map = MAP_THEMES.includes(s.map) ? s.map : 'valley';
   const turnSeconds = TURN_SECONDS.includes(s.turnSeconds ?? 0)
     ? (s.turnSeconds ?? DEFAULT_TURN_SECONDS)

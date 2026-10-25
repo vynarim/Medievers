@@ -29,10 +29,22 @@ const STYLE = `
   line-height: 1.25; }
 #ui .setup .scheme b { display: block; font-family: var(--caps); font-weight: normal; font-size: 18px;
   color: var(--lapis); }
-#ui .setup .house { display: flex; gap: 6px; align-items: center; padding: 5px 0;
+/* A heading with a small action beside it: « + Une maison ». */
+#ui .setup .head { display: flex; align-items: center; gap: 12px; margin: 10px 0 4px; }
+#ui .setup .head h3 { margin: 0; }
+#ui .setup button.add-house { min-height: 32px; padding: 2px 10px; font-size: 14px; background: none;
+  border: 2px dashed var(--brun); box-shadow: none; color: var(--brun); white-space: nowrap; }
+#ui .setup button.add-house:hover:not(:disabled) { background: var(--velin); color: var(--encre); }
+@media (pointer: coarse) { #ui .setup button.add-house { min-height: 48px; } }
+/* A house: its name and who leads it, then its units, wrapping onto a second line when the
+   screen is too narrow to hold them all. */
+#ui .setup .house { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 5px 0;
   border-bottom: 1px solid var(--gilt); }
-#ui .setup .house .name { font-family: var(--caps); font-size: 18px; flex: 0 0 270px; display: flex;
-  gap: 8px; align-items: center; white-space: nowrap; overflow: hidden; }
+#ui .setup .house .name { font-family: var(--caps); font-size: 18px; flex: 0 1 230px; min-width: 0;
+  display: flex; gap: 8px; align-items: center; white-space: nowrap; overflow: hidden; }
+#ui .setup .house .units { display: flex; flex-wrap: wrap; gap: 6px; flex: 1 1 600px; min-width: 0; }
+#ui .setup .house .unit { flex: 1 1 0; min-width: 88px; }
+#ui .setup .house .unit select { width: 100%; min-width: 0; }
 #ui .setup select { font: inherit; font-size: 16px; min-height: 48px; padding: 4px; pointer-events: auto;
   width: 118px; border: 2px solid var(--encre); border-radius: 4px; background: var(--ceruse);
   color: var(--encre); }
@@ -48,7 +60,7 @@ const STYLE = `
 #ui .setup button.unit-out::before { content: ''; position: absolute; inset: -12px; }
 #ui .setup button.unit-out:hover { background: var(--vermillon); color: var(--ceruse); }
 /* One more unit: an empty dashed slot. */
-#ui .setup button.unit-add { width: 48px; min-height: 48px; padding: 0; background: none;
+#ui .setup button.unit-add { flex: none; width: 48px; min-height: 48px; padding: 0; background: none;
   border: 2px dashed var(--brun); box-shadow: none; color: var(--brun); }
 #ui .setup button.unit-add:hover { background: var(--velin); color: var(--encre); }
 /* Régicide: a switch, its knob on the right when it is on. */
@@ -66,6 +78,7 @@ const STYLE = `
 #ui .setup .tools { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
 #ui .setup .tools button, #ui .setup .start button { white-space: nowrap; flex: none; }
 #ui .setup .tools .note { flex: 1 1 auto; margin: 0 0 0 8px; font-size: 15px; }
+#ui .setup > .note { margin: 6px 0 0; font-size: 15px; }
 #ui .setup .start { margin-top: 12px; display: flex; justify-content: flex-end; gap: 8px; }
 #ui .setup .start.others { margin-top: 4px; justify-content: flex-start; flex-wrap: wrap; }
 /* A house leaves the match: a small round « − », at the end of its row. */
@@ -89,6 +102,7 @@ const STYLE = `
 #ui.phone .setup .house > * { order: 2; }
 #ui.phone .setup .house .name { order: 0; flex: 1 1 calc(100% - 60px); min-width: 0; }
 #ui.phone .setup .house button.drop { order: 1; }
+#ui.phone .setup .house .units { flex: 1 1 100%; flex-wrap: wrap; }
 #ui.phone .setup .unit, #ui.phone .setup button.unit-add { flex: 1 1 30%; min-width: 0; }
 #ui.phone .setup .unit select { flex: 1 1 auto; }
 #ui.phone .setup select { flex: 1 1 30%; min-width: 0; width: auto; }
@@ -173,7 +187,19 @@ export function showSetupScreen(
     }
     panel.append(schemes);
 
-    panel.append(el('h3', '', t('setup.houses')));
+    // The houses, and beside their heading, a small « + Une maison ».
+    const head = el('div', 'head');
+    const addHouse = button(t('setup.houseMore'), 'add-house');
+    addHouse.disabled = setup.lineups.length >= MAX_HOUSES;
+    addHouse.addEventListener('click', () =>
+      update({ ...setup, lineups: [...setup.lineups, setup.lineups[0] ?? ['knight']] }),
+    );
+    head.append(
+      el('h3', '', t('setup.houses')),
+      addHouse,
+      infoButton(() => [t('setup.note.houses')]),
+    );
+    panel.append(head);
     setup.lineups.forEach((lineup, h) => {
       const f = FACTIONS[h];
       const row = el('div', 'house');
@@ -215,6 +241,7 @@ export function showSetupScreen(
         const lineups = setup.lineups.map((l, k) => (k === h ? next : [...l]));
         update({ ...setup, lineups });
       };
+      const units = el('div', 'units');
       lineup.forEach((cls, u) => {
         const slot = el('div', 'unit');
         const select = el('select');
@@ -239,15 +266,16 @@ export function showSetupScreen(
           out.addEventListener('click', () => setLineup(lineup.filter((_, k) => k !== u)));
           slot.append(out);
         }
-        row.append(slot);
+        units.append(slot);
       });
       // One more: an empty dashed slot, while the house has room.
       if (lineup.length < MAX_UNITS) {
         const more = setIcon(button('', 'unit-add'), 'newMatch');
         more.title = t('setup.unitMore');
         more.addEventListener('click', () => setLineup([...lineup, 'knight']));
-        row.append(more);
+        units.append(more);
       }
+      row.append(units);
       // This house leaves the match: a small round « − » at the end of its row.
       // Hidden, its place kept, while the match has no house to spare.
       const drop = button('', setup.lineups.length <= MIN_HOUSES ? 'drop hidden' : 'drop');
@@ -279,14 +307,7 @@ export function showSetupScreen(
       const i = TURN_SECONDS.indexOf(seconds);
       update({ ...setup, turnSeconds: TURN_SECONDS[(i + 1) % TURN_SECONDS.length] ?? seconds });
     });
-    const houses = el('div', 'tools');
-    const addHouse = button(t('setup.houseMore'));
-    addHouse.disabled = setup.lineups.length >= MAX_HOUSES;
-    addHouse.addEventListener('click', () =>
-      update({ ...setup, lineups: [...setup.lineups, setup.lineups[0] ?? ['knight']] }),
-    );
-    houses.append(addHouse, el('p', 'note ambient', t('setup.note')));
-    panel.append(houses);
+    panel.append(el('p', 'note ambient', t('setup.note.houses')));
 
     // How the match runs, apart from who fights it.
     panel.append(el('h3', '', t('setup.options')));
@@ -294,7 +315,8 @@ export function showSetupScreen(
     options.append(
       regicide,
       turnLength,
-      infoButton(() => [t('setup.note')]),
+      el('p', 'note ambient', t('setup.note.regicide')),
+      infoButton(() => [t('setup.note.regicide')]),
     );
     panel.append(options);
 

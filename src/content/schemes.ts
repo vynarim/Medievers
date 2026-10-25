@@ -53,3 +53,5 @@ export const MIN_HOUSES = 2;
 export const MAX_HOUSES = 4;
 /** units per house (GDD §2.1: 1 to 6) */
 export const MAX_UNITS = 6;
+/** units a house starts with on the setup screen (2026-10-25: four, the screen stays readable) */
+export const DEFAULT_UNITS = 4;
