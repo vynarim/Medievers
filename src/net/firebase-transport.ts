@@ -2,7 +2,7 @@
 // Realtime Database found by its code, and a mailbox per seat. The friends write to the creator
 // only, who passes on what is for the others. The only module that knows the SDK.
 import { initializeApp } from 'firebase/app';
-import { connectAuthEmulator, getAuth, signInAnonymously } from 'firebase/auth';
+import { connectAuthEmulator, getAuth, signInAnonymously, type Auth } from 'firebase/auth';
 import {
   connectDatabaseEmulator,
   get,
@@ -58,21 +58,36 @@ const bucketOf = (ms: number): string =>
 const ALPHABET = '23456789ABCDEFGHJKMNPQRSTUVWXYZ';
 
 let signedIn: Promise<{ db: Database; uid: string }> | null = null;
+let services: { auth: Auth; db: Database } | null = null;
+
+/** The app, its sign-in and its database, made once for the page. */
+function firebaseServices(): { auth: Auth; db: Database } {
+  if (services) return services;
+  const app = initializeApp(CONFIG, 'medieverse');
+  const auth = getAuth(app);
+  const db = getDatabase(app);
+  // `pnpm run dev:emulators`: the local Firebase emulators instead of the real project.
+  if (import.meta.env?.VITE_FIREBASE_EMULATOR === '1') {
+    connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
+    connectDatabaseEmulator(db, '127.0.0.1', 9000);
+  }
+  services = { auth, db };
+  return services;
+}
 
 /** The database and this device's anonymous user id (kept by the SDK across reloads). */
 function connectFirebase(): Promise<{ db: Database; uid: string }> {
   signedIn ??= (async () => {
-    const app = initializeApp(CONFIG, 'medieverse');
-    const auth = getAuth(app);
-    const db = getDatabase(app);
-    // `pnpm run dev:emulators`: the local Firebase emulators instead of the real project.
-    if (import.meta.env?.VITE_FIREBASE_EMULATOR === '1') {
-      connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
-      connectDatabaseEmulator(db, '127.0.0.1', 9000);
-    }
+    const { auth, db } = firebaseServices();
     const cred = await signInAnonymously(auth);
     return { db, uid: cred.user.uid };
   })();
+  // A failed sign-in (offline for a moment, a blocked request) is tried again next time,
+  // instead of failing every room until the page is reloaded.
+  signedIn.catch((e: unknown) => {
+    console.error('[medieverse] Firebase sign-in failed', e);
+    signedIn = null;
+  });
   return signedIn;
 }
 
@@ -95,6 +110,15 @@ export type RoomError = 'unknown' | 'full' | 'offline';
 /** Creates a room for a new match; this device is its host. */
 export async function createRoom(): Promise<string> {
   const { db, uid } = await connectFirebase();
+  try {
+    return await openRoom(db, uid);
+  } catch (e) {
+    console.error('[medieverse] the room could not be opened', e);
+    throw e;
+  }
+}
+
+async function openRoom(db: Database, uid: string): Promise<string> {
   for (let i = 0; i < 5; i++) {
     const code = newCode();
     const host = await get(ref(db, `${ROOT}/${code}/host`));
@@ -171,9 +195,7 @@ export async function joinRoom(code: string): Promise<Seat> {
 export async function deleteRoom(code: string): Promise<void> {
   const { db } = await connectFirebase();
   const at = (await get(ref(db, `${ROOT}/${code}/createdAt`)).catch(() => null))?.val() as
-    | number
-    | null
-    | undefined;
+    number | null | undefined;
   if (typeof at === 'number') {
     await remove(ref(db, `${EXPIRY}/${bucketOf(at)}/${code}`)).catch(() => undefined);
   }
@@ -280,7 +302,8 @@ export class FirebaseTransport implements Transport {
   }
 
   send(msg: NetMessage, to?: Seat): void {
-    const env: Envelope = to === undefined ? { f: this.seat, d: msg } : { f: this.seat, t: to, d: msg };
+    const env: Envelope =
+      to === undefined ? { f: this.seat, d: msg } : { f: this.seat, t: to, d: msg };
     if (this.seat !== HOST_SEAT) this.post(HOST_SEAT, env);
     else if (to !== undefined) this.post(to, env);
     else for (const k of this.friends) this.post(k, env);

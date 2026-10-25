@@ -278,7 +278,14 @@ export function showSetupScreen(
         });
         box.append(el('span', '', t('setup.code')), el('b', '', shown), copy);
       } else if (codeFailed) {
-        box.append(el('span', 'error', t('online.error.offline')));
+        // Tried again on demand: a room opened afresh, a sign-in made again.
+        const retry = button(t('online.retry'));
+        retry.addEventListener('click', () => {
+          dropLobby();
+          codeFailed = false;
+          render();
+        });
+        box.append(el('span', 'error', t('online.error.offline')), retry);
       } else {
         box.append(el('span', '', t('online.creating')));
       }
@@ -345,7 +352,9 @@ export function showSetupScreen(
       const who = el('select', 'player');
       who.title = t('setup.player');
       // A friend only where online play is offered.
-      const choices: Player[] = online ? ['human', 'friend', ...AI_LEVEL_IDS] : ['human', ...AI_LEVEL_IDS];
+      const choices: Player[] = online
+        ? ['human', 'friend', ...AI_LEVEL_IDS]
+        : ['human', ...AI_LEVEL_IDS];
       for (const id of choices) {
         // The AI's levels go from the easiest to the hardest: one to three stars.
         const k = AI_LEVEL_IDS.indexOf(id as AiLevelId);
@@ -385,7 +394,9 @@ export function showSetupScreen(
       };
       if (players[h] === 'friend') {
         // A friend's house: the friend chooses its units on its own device.
-        row.append(friendUnits(friendLineups.get(friend) ?? null, seated.has(friend), code));
+        row.append(
+          friendUnits(friendLineups.get(friend) ?? null, seated.has(friend), code, codeFailed),
+        );
       } else {
         row.append(lineupPicker(lineup, setLineup));
       }
@@ -555,11 +566,18 @@ function friendUnits(
   chosen: readonly ClassId[] | null,
   isIn: boolean,
   code: string | null,
+  failed: boolean,
 ): HTMLElement {
   const box = el('div', 'units friend');
-  if (!isIn) {
+  if (!isIn && failed) {
+    box.append(el('span', 'error', t('setup.friendNoRoom')));
+  } else if (!isIn) {
     box.append(
-      el('span', '', code ? t('setup.friendCode', { code: formatCode(code) }) : t('online.creating')),
+      el(
+        'span',
+        '',
+        code ? t('setup.friendCode', { code: formatCode(code) }) : t('online.creating'),
+      ),
     );
   } else if (!chosen) {
     box.append(el('span', '', t('setup.friendChoosing')));
