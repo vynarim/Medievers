@@ -4,7 +4,15 @@ import { CLASS_IDS, type ClassId } from '../content/classes.ts';
 import { FACTIONS } from '../content/factions.ts';
 import { MAX_HOUSES, MAX_UNITS, MIN_HOUSES, SCHEME_IDS } from '../content/schemes.ts';
 import { MAP_THEMES } from '../content/maps.ts';
-import { TURN_SECONDS, fixSetup, type MatchSetup } from '../app/match-setup.ts';
+import {
+  TURN_SECONDS,
+  fixSetup,
+  playersOf,
+  DEFAULT_AI_LEVEL,
+  type MatchSetup,
+  type Player,
+} from '../app/match-setup.ts';
+import { AI_LEVEL_IDS } from '../content/ai.ts';
 import { loadLastReplay, parseLog } from '../app/autosave.ts';
 import type { GameLog } from '../sim/log.ts';
 import { t } from './i18n.ts';
@@ -28,6 +36,7 @@ const STYLE = `
 #ui .setup select { font: inherit; font-size: 16px; min-height: 48px; padding: 4px; pointer-events: auto;
   width: 118px; border: 2px solid var(--encre); border-radius: 4px; background: var(--ceruse);
   color: var(--encre); }
+#ui .setup select.player { width: 168px; font-family: var(--caps); }
 #ui .setup .tools { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
 #ui .setup .tools button, #ui .setup .start button { white-space: nowrap; flex: none; }
 #ui .setup .tools .note { flex: 1 1 auto; margin: 0 0 0 8px; font-size: 15px; }
@@ -102,6 +111,26 @@ export function showSetupScreen(
       name.append(el('span', '', f ? t(f.nameKey) : ''));
       name.style.color = css(f?.ink ?? 0);
       row.append(name);
+      // Who plays it: you, or the AI at a level (one house at most is yours).
+      const players = playersOf(setup);
+      const who = el('select', 'player');
+      who.title = t('setup.player');
+      for (const id of ['human', ...AI_LEVEL_IDS] as Player[]) {
+        const o = el('option', '', t(`setup.player.${id}`));
+        o.value = id;
+        o.selected = id === players[h];
+        who.append(o);
+      }
+      who.addEventListener('keydown', (e) => e.stopPropagation());
+      who.addEventListener('change', () => {
+        const chosen = who.value as Player;
+        const next = players.map((p, k): Player => {
+          if (k === h) return chosen;
+          return chosen === 'human' && p === 'human' ? DEFAULT_AI_LEVEL : p;
+        });
+        update({ ...setup, players: next });
+      });
+      row.append(who);
       const setLineup = (next: ClassId[]): void => {
         const lineups = setup.lineups.map((l, k) => (k === h ? next : [...l]));
         update({ ...setup, lineups });

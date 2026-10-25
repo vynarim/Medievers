@@ -21,7 +21,8 @@ Ce manuel décrit le jeu tel qu'on le joue. Il grandit avec le jeu : chaque règ
 | Première version jouable | Formes simples à l'écran, clavier, souris et tactile, arc, fronde et pot | jouable (reste à essayer sur une vraie tablette) |
 | Règles complètes | Classes, Régicide, Déluge, flammes, tours qui s'effondrent, schémas de règles, écran de préparation | jouable |
 | Jeu en ligne | Créer une partie, la rejoindre par un code, reprise après rechargement | jouable |
-| IA, arsenal complet | — | à venir |
+| IA | Trois niveaux, Écuyer, Chevalier et Connétable, qui marchent, sautent et tirent | jouable |
+| Arsenal complet | — | à venir |
 | Graphismes et musique | Le style enluminé et la musique | à venir |
 
 <div class="page-break"></div>
@@ -234,7 +235,7 @@ Pour que les parties ne s'éternisent pas, **le Déluge** arrive après 20 tours
 
 | Mode | Joueurs | État |
 |---|---|---|
-| **Escarmouche contre l'IA** | 1 humain contre 1 à 3 maisons de l'IA | {{st:prevu}} |
+| **Escarmouche contre l'IA** | 1 humain contre 1 à 3 maisons de l'IA | {{st:jeu}} |
 | **Mixte** | Joueurs en ligne et maisons de l'IA dans la même partie | {{st:prevu}} |
 | **En ligne** | 2 joueurs à distance, chacun sur son appareil : l'un crée la partie et donne le code, l'autre la rejoint | {{st:jeu}} |
 | **Replays** | « Revoir la partie » sur la tapisserie de fin (ou à tout moment, depuis le début) ; « Revoir la dernière partie » et « Importer un replay… » sur l'écran de préparation ; pendant le replay : pause, vitesse ×1, ×2, ×4, depuis le début, **Exporter** (fichier JSON) et Quitter. Tous les pièges y sont visibles | {{st:jeu}} |
@@ -243,7 +244,7 @@ Pour que les parties ne s'éternisent pas, **le Déluge** arrive après 20 tours
 
 **Jouer en ligne** {{st:jeu}} : le jeu se joue sur https://medieverse-06.web.app. Sur l'écran de préparation, l'un choisit la carte, les règles et les maisons, puis touche **Créer une partie en ligne** : un code de six signes s'affiche (par exemple `K7M-2QX`). Il le donne à son adversaire, qui touche **Rejoindre une partie…** et le saisit. Celui qui a créé la partie joue la 1ʳᵉ maison (et la 3ᵉ), l'autre la 2ᵉ (et la 4ᵉ). Pendant le tour adverse, on regarde : les gestes de l'adversaire arrivent avec une demi-seconde de retard. Chacun ne voit que ses propres chausse-trapes. La pause, l'aide et les réglages arrêtent le jeu des deux côtés. Si la page se recharge, le jeu retrouve la partie tout seul et rattrape ce qui s'est passé. Quitter une partie en cours la laisse à l'adversaire.
 
-On ne joue jamais à deux sur le même appareil : c'est en ligne, ou contre l'IA (à venir). En attendant l'IA, **À la bataille !** lance une partie d'essai sur un seul appareil.
+On ne joue jamais à deux sur le même appareil : c'est en ligne, ou contre l'IA. Sur l'écran de préparation, chaque maison a son menu **Vous / IA Écuyer / IA Chevalier / IA Connétable** : vous menez une maison au plus, l'IA les autres (par défaut, vous la première, l'IA Chevalier la suivante). On peut aussi confier toutes les maisons à l'IA et regarder la bataille.
 
 **Régicide** (option) {{st:jeu}} : chaque maison a un Roi, et sa mort élimine toute la maison : ses autres combattants quittent aussitôt le champ.
 
@@ -258,15 +259,15 @@ On ne joue jamais à deux sur le même appareil : c'est en ligne, ou contre l'IA
 - *Fortune* : aucune munition au départ hormis l'arc, la fronde et la masse ; les reliquaires tombent bien plus souvent.
 - *Personnalisé* : vous réglez tout, et le jeu s'en souvient.
 
-### Les adversaires de l'IA {{st:prevu}}
+### Les adversaires de l'IA {{st:jeu}}
 
-L'IA joue avec les mêmes règles et les mêmes commandes que vous. Elle ne voit pas vos chausse-trapes, sauf si elle a un Sapeur.
+L'IA joue avec les mêmes règles et les mêmes commandes que vous : elle choisit son combattant, marche ou saute, choisit une arme, vise et tire, puis passe la main. Pendant son tour, vos boutons sont grisés. Elle réfléchit quelques secondes, essaie en secret de nombreux tirs depuis plusieurs endroits, et garde celui qui fait le plus de mal à l'ennemi sans blesser les siens ; sans rien de bon à tirer, elle se rapproche. Elle ne voit pas vos chausse-trapes, sauf si elle a un Sapeur.
 
 | Niveau | Style |
 |---|---|
-| **Écuyer** | Vise approximativement, s'en tient à l'arc, la fronde et les pots |
-| **Chevalier** | Précis, utilise presque tout l'arsenal |
-| **Connétable** | Redoutable : grappin, combinaisons, tirs au millimètre |
+| **Écuyer** | Vise à 8° près, s'en tient à l'arc, la fronde et le feu grégeois, ne regarde que le combattant qu'on lui donne |
+| **Chevalier** | Vise à 3° près, prend aussi l'arbalète, la poix, la masse et le trébuchet, choisit entre deux combattants |
+| **Connétable** | Vise à 1° près, cherche plus d'endroits d'où tirer et essaie plus de coups |
 
 ## 7. Les commandes
 

@@ -523,8 +523,10 @@ export class GameUi {
     const ours = this.mine(view.turn.activeTeam);
     for (const b of this.actionButtons) {
       const when = b.dataset.when;
+      // Not the player's house (the AI's, or online the other player's): nothing to press.
       b.disabled =
-        !ours || when === 'switch'
+        !ours ||
+        (when === 'switch'
           ? !canSwitch
           : when === 'walk'
             ? !canMove || !moveLeft
@@ -538,7 +540,7 @@ export class GameUi {
                     ? phase !== 'action'
                     : when === 'end'
                       ? !canMove
-                      : phase !== 'action' || (b === this.fire && this.strikeRefused);
+                      : phase !== 'action' || (b === this.fire && this.strikeRefused));
     }
     // Before the shot it passes the turn; after it, it ends the turn.
     const skipLabel = phase === 'retreat' ? t('ui.endTurn') : t('ui.skip');

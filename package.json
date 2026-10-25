@@ -18,6 +18,7 @@
     "sim:headless": "node tools/sim-headless.ts",
     "replays:record": "node tools/record-reference-replays.ts",
     "maps:test": "node tools/gen-test-maps.ts",
+    "maps:soak": "node tools/maps-soak.ts",
     "lint": "eslint . --max-warnings 0",
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",

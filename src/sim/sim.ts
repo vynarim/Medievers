@@ -89,6 +89,13 @@ export class Sim {
     else startTurn(this.s, events);
   }
 
+  /** A simulation that goes on from `state`, which it takes over as it is (the AI's sandboxes). */
+  static fromState(state: SimState): Sim {
+    const sim = Object.create(Sim.prototype) as Sim;
+    sim.s = state;
+    return sim;
+  }
+
   /** Advances exactly one tick, applying `cmds` to the active unit first. */
   step(cmds: readonly GameCommand[] = []): SimEvent[] {
     const s = this.s;

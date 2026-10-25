@@ -1,0 +1,183 @@
+// How the AI plays a turn it has planned, tick by tick: the same script runs in its sandboxes,
+// to score a plan, and on the real match, through AIInputSource, so what was scored is what is
+// played. It reads the view and returns the commands of the tick, like a player's hands.
+import type { WeaponId } from '../content/weapons.ts';
+import type { GameCommand } from '../sim/commands.ts';
+import { ANGLE_MASK, angleDelta } from '../sim/math/angle.ts';
+import { subToPx } from '../sim/math/fixed.ts';
+import type { SimView } from '../sim/sim.ts';
+
+/** Where the unit goes before shooting. */
+export type AiMove =
+  | { readonly kind: 'stay' }
+  /** walks towards x (px) until there, stopped, or out of breath */
+  | { readonly kind: 'walk'; readonly x: number }
+  | { readonly kind: 'jump'; readonly jump: 'forward' | 'back'; readonly dir: -1 | 1 };
+
+export interface AiShot {
+  readonly weapon: WeaponId;
+  /** BAM */
+  readonly angle: number;
+  /** 0..1024 */
+  readonly power: number;
+  /** a weapon aimed at a point (the trebuchet volley): that point, px */
+  readonly at?: { readonly x: number; readonly y: number };
+}
+
+/** A turn of the AI: which unit, where it goes, what it shoots; no shot passes the turn. */
+export interface AiPlan {
+  readonly unitId: number;
+  readonly move: AiMove;
+  readonly shot: AiShot | null;
+}
+
+export interface ScriptPace {
+  /** BAM the aim turns by per tick; Infinity: at once */
+  readonly aimPerTick: number;
+  /** ticks between the shot and « Fin du tour » */
+  readonly afterShot: number;
+  /** ticks of rest before acting, once the unit stands still */
+  readonly settle: number;
+}
+
+/** In the sandboxes: everything at once. */
+export const SANDBOX_PACE: ScriptPace = { aimPerTick: Infinity, afterShot: 1, settle: 4 };
+
+type Stage = 'select' | 'move' | 'walking' | 'settle' | 'weapon' | 'aim' | 'after' | 'done';
+
+/** px from the target at which a walk stops */
+const WALK_CLOSE = 3;
+/** ticks without moving after which a walk is given up (blocked; turning round takes 12) */
+const WALK_STUCK = 24;
+/** ticks a stage may last at most, so that a plan never hangs the turn */
+const STAGE_MAX = 600;
+
+export class TurnScript {
+  private stage: Stage = 'select';
+  private ticks = 0;
+  private lastX = 0;
+  private still = 0;
+  private readonly plan: AiPlan;
+  private readonly pace: ScriptPace;
+
+  constructor(plan: AiPlan, pace: ScriptPace) {
+    this.plan = plan;
+    this.pace = pace;
+  }
+
+  /** The unit has moved and stands still: the shot is next (the sandboxes look around here). */
+  get moved(): boolean {
+    return this.stage === 'weapon' || this.stage === 'aim' || this.stage === 'after' || this.done;
+  }
+
+  get done(): boolean {
+    return this.stage === 'done';
+  }
+
+  private go(stage: Stage): void {
+    this.stage = stage;
+    this.ticks = 0;
+  }
+
+  /** The commands of the next tick, given the match as it stands. */
+  next(v: SimView): GameCommand[] {
+    const t = v.turn;
+    if (t.phase !== 'action' && t.phase !== 'transition' && t.phase !== 'retreat') return [];
+    const u = v.units.find((x) => x.id === t.activeUnitId);
+    if (!u?.alive) return [];
+    this.ticks++;
+    if (this.ticks > STAGE_MAX && this.stage !== 'done') {
+      // Something kept the plan from going on: end the turn rather than wait.
+      this.go('done');
+      return [{ t: 'move', dir: 0 }, { t: 'skip' }];
+    }
+    const plan = this.plan;
+    switch (this.stage) {
+      case 'select':
+        if (t.phase !== 'action') {
+          // The unit may be chosen during the transition already.
+          return plan.unitId !== t.activeUnitId ? [{ t: 'selectUnit', unitId: plan.unitId }] : [];
+        }
+        this.go('move');
+        return plan.unitId !== t.activeUnitId ? [{ t: 'selectUnit', unitId: plan.unitId }] : [];
+      case 'move': {
+        const m = plan.move;
+        if (m.kind === 'walk') {
+          const dir = m.x > subToPx(u.x) ? 1 : -1;
+          if (Math.abs(m.x - subToPx(u.x)) <= WALK_CLOSE) {
+            this.go('settle');
+            return [];
+          }
+          this.lastX = u.x;
+          this.still = 0;
+          this.go('walking');
+          return [{ t: 'move', dir }];
+        }
+        this.go('settle');
+        if (m.kind === 'jump') return [{ t: 'jump', kind: m.jump, dir: m.dir }];
+        return [];
+      }
+      case 'walking': {
+        const m = plan.move;
+        const x = subToPx(u.x);
+        const target = m.kind === 'walk' ? m.x : x;
+        this.still = u.x === this.lastX ? this.still + 1 : 0;
+        this.lastX = u.x;
+        const passed = (t.walkDir > 0 && x >= target) || (t.walkDir < 0 && x <= target);
+        if (
+          Math.abs(target - x) <= WALK_CLOSE ||
+          passed ||
+          this.still >= WALK_STUCK ||
+          t.walkDir === 0 ||
+          !u.grounded
+        ) {
+          this.go('settle');
+          return [{ t: 'move', dir: 0 }];
+        }
+        return [];
+      }
+      case 'settle':
+        if (!u.grounded || u.vx !== 0 || u.vy !== 0) this.ticks = Math.min(this.ticks, 0);
+        if (this.ticks < this.pace.settle) return [];
+        if (t.phase !== 'action') {
+          // Hurt or out of time on the way: the turn is over anyway.
+          this.go('done');
+          return [];
+        }
+        this.go('weapon');
+        return [];
+      case 'weapon': {
+        const shot = plan.shot;
+        if (!shot) {
+          this.go('done');
+          return [{ t: 'skip' }];
+        }
+        this.go('aim');
+        return t.weapon !== shot.weapon ? [{ t: 'selectWeapon', id: shot.weapon }] : [];
+      }
+      case 'aim': {
+        const shot = plan.shot;
+        if (!shot || t.phase !== 'action') {
+          this.go('done');
+          return [];
+        }
+        const d = angleDelta(t.aim, shot.angle);
+        if (d !== 0) {
+          const step = Math.min(Math.abs(d), this.pace.aimPerTick);
+          const angle = (t.aim + Math.sign(d) * step) & ANGLE_MASK;
+          return [{ t: 'aim', angle }];
+        }
+        this.go('after');
+        return [
+          shot.at ? { t: 'fireAt', x: shot.at.x, y: shot.at.y } : { t: 'fire', power: shot.power },
+        ];
+      }
+      case 'after':
+        if (this.ticks < this.pace.afterShot) return [];
+        this.go('done');
+        return [{ t: 'skip' }];
+      case 'done':
+        return [];
+    }
+  }
+}

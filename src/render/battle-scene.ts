@@ -28,7 +28,6 @@ import { COLORS, css, cssAlpha } from '../ui/tokens.ts';
 import { uiScale } from '../ui/ui-scale.ts';
 import { AutoSaver, clearSave, downloadLog, saveLastReplay } from '../app/autosave.ts';
 import { ReplayInput } from '../input/replay-input.ts';
-import { spawnColumns } from '../app/spawns.ts';
 import { replay, type GameLog } from '../sim/log.ts';
 import { frame, type Point } from './framing.ts';
 import {
@@ -57,7 +56,8 @@ import {
   wallSize,
 } from '../sim/tools.ts';
 import { isProjectile, isTargeted, type WeaponDef } from '../content/weapons.ts';
-import { rulesFor, saveSetup, type MatchSetup } from '../app/match-setup.ts';
+import { aiHouses, matchConfig, rulesFor, saveSetup, type MatchSetup } from '../app/match-setup.ts';
+import { AIInputSource } from '../input/ai-input.ts';
 import { showSetupScreen } from '../ui/setup-screen.ts';
 import { nameHouses } from '../ui/house-names.ts';
 import { UNICORN_TEX_SCALE, unicornTextures } from './unicorn-art.ts';
@@ -238,6 +238,8 @@ export class BattleScene extends Phaser.Scene {
   /** the online match being played, and the commands it hands over */
   private online: OnlineMatch | null = null;
   private remote: RemoteInputSource | null = null;
+  /** the AI's houses, in a match played on this device (GDD §6) */
+  private ai: AIInputSource | null = null;
   /** ms since the commands of the next tick were last missing (the other player is slow) */
   private stalledSince: number | null = null;
   /** an online match error already shown (desync, the other player left) */
@@ -271,21 +273,15 @@ export class BattleScene extends Phaser.Scene {
   create(): void {
     const { map, mask, seed, rules, setup, waterLevel } = this.data_;
     const structures = this.data_.structures ?? map.structures;
-    const lineups = setup.lineups;
-    const perTeam = Math.max(...lineups.map((l) => l.length));
-    const config: MatchConfig = {
+    const config: MatchConfig = matchConfig(
+      {
+        mask,
+        ...(structures ? { structures } : {}),
+        ...(waterLevel !== undefined ? { waterLevel } : {}),
+      },
+      setup,
       rules,
-      ...(structures ? { structures } : {}),
-      ...(waterLevel !== undefined ? { waterLevel } : {}),
-      // Each house takes as many of its spawn columns as it has units.
-      teams: spawnColumns(mask, lineups.length, perTeam).map((columns, h) => {
-        const lineup = lineups[h] ?? [];
-        return {
-          spawns: columns.slice(0, lineup.length),
-          ...(rules.classes ? { classes: [...lineup] } : {}),
-        };
-      }),
-    };
+    );
     const resume = this.data_.resume;
     const watch = this.data_.replay;
     // A saved match replays to where it was left: same seed, same commands, same state. A
@@ -310,6 +306,10 @@ export class BattleScene extends Phaser.Scene {
     if (this.online) this.saver.persist = false;
     this.watch = watch ? new ReplayInput(watch) : null;
     this.watchLog = watch ?? null;
+    // The AI plays its houses in a match on this device, not online nor in a replay.
+    this.ai?.dispose();
+    const levels = this.online || watch ? new Map() : aiHouses(this.data_.setup);
+    this.ai = levels.size > 0 ? new AIInputSource(levels, from?.seed ?? seed) : null;
     this.speed = 1;
 
     const cam = this.cameras.main;
@@ -434,8 +434,8 @@ export class BattleScene extends Phaser.Scene {
           this.playOnline(this.sim.view().tick + 1, false);
         }
       }
-      this.ui.setLocalTeams((team) => this.mine(team));
     }
+    this.ui.setLocalTeams((team) => this.mine(team));
     const turn = this.sim.view().turn;
     if (watch) {
       this.ui.hud.announce(
@@ -472,6 +472,8 @@ export class BattleScene extends Phaser.Scene {
     this.events.once('shutdown', () => {
       window.removeEventListener('pagehide', onHide);
       this.input_.dispose();
+      this.ai?.dispose();
+      this.ai = null;
       this.ui.destroy();
     });
 
@@ -955,7 +957,9 @@ export class BattleScene extends Phaser.Scene {
       this.handleEvents(this.sim.step(this.watch.poll(view.tick + 1)));
       return true;
     }
-    const cmds = this.input_.poll(view.tick + 1, view);
+    // The player's hands are read every tick, but only count on the player's own turns.
+    const local = this.input_.poll(view.tick + 1, view);
+    const cmds = this.ai?.plays(view) ? this.ai.poll(view.tick + 1, view) : local;
     this.saver.record(view.tick + 1, cmds, this.time.now);
     const events = this.sim.step(cmds);
     if (events.some((e) => e.e === 'gameOver')) {
@@ -991,9 +995,13 @@ export class BattleScene extends Phaser.Scene {
     if (live) this.handleEvents(events);
   }
 
-  /** The houses this device plays: all of them, or online the creator's or the other's. */
+  /**
+   * The houses this device's player plays: online the creator's or the other's; otherwise all
+   * but the AI's.
+   */
   private mine(team: number): boolean {
-    return !this.online || roleOfTeam(team) === this.online.role;
+    if (this.online) return roleOfTeam(team) === this.online.role;
+    return !aiHouses(this.data_.setup).has(team) || this.replaying;
   }
 
   private handleEvents(events: readonly SimEvent[]): void {

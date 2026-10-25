@@ -1,5 +1,6 @@
 // The match chosen on the setup screen (GDD §2.1, §6): scheme, houses, their line-ups and
 // Régicide, saved locally, and the match rules and config it gives. Pure but for the storage.
+import { AI_LEVEL_IDS, type AiLevelId } from '../content/ai.ts';
 import { CLASS_IDS, defaultLineup, type ClassId } from '../content/classes.ts';
 import { CLASSIC_RULES, TICKS_PER_SECOND, type MatchRules } from '../content/rules.ts';
 import {
@@ -12,6 +13,10 @@ import {
 } from '../content/schemes.ts';
 import { applyOverrides, type TuningOverrides } from '../ui/tuning-model.ts';
 import { MAP_THEMES, type MapTheme } from '../content/maps.ts';
+import type { StructurePlacement } from '../content/structures.ts';
+import type { MatchConfig } from '../sim/state.ts';
+import type { Mask } from '../sim/terrain/mask.ts';
+import { spawnColumns } from './spawns.ts';
 
 const KEY = 'medieverse.setup.v1';
 
@@ -24,6 +29,43 @@ export interface MatchSetup {
   readonly lineups: readonly (readonly ClassId[])[];
   /** seconds to play a turn, one of TURN_SECONDS (2026-10-25); absent from older saves: 45 */
   readonly turnSeconds?: number;
+  /**
+   * who plays each house (GDD §6): the player, or the AI at a level; one house at most is the
+   * player's, never two humans on one device. Absent from older saves: the player has the first
+   * house, the AI (Chevalier) the others.
+   */
+  readonly players?: readonly Player[];
+}
+
+/** Who plays a house: the person at this device, or the AI at one of its levels. */
+export type Player = 'human' | AiLevelId;
+
+/** The level the AI plays at when nobody chose one. */
+export const DEFAULT_AI_LEVEL: AiLevelId = 'knight';
+
+/** Who plays each house of `s`: one entry per house, the player's house at most once. */
+export function playersOf(s: MatchSetup): Player[] {
+  const out: Player[] = s.lineups.map((_, h) => {
+    const p = s.players?.[h];
+    if (p === 'human' || (p !== undefined && AI_LEVEL_IDS.includes(p))) return p;
+    return s.players ? DEFAULT_AI_LEVEL : h === 0 ? 'human' : DEFAULT_AI_LEVEL;
+  });
+  let human = false;
+  for (let h = 0; h < out.length; h++) {
+    if (out[h] !== 'human') continue;
+    if (human) out[h] = DEFAULT_AI_LEVEL;
+    human = true;
+  }
+  return out;
+}
+
+/** The AI's houses and their levels, for a match played on this device. */
+export function aiHouses(s: MatchSetup): Map<number, AiLevelId> {
+  const out = new Map<number, AiLevelId>();
+  playersOf(s).forEach((p, h) => {
+    if (p !== 'human') out.set(h, p);
+  });
+  return out;
 }
 
 /** The turn lengths offered on the setup screen, in seconds; the default one first. */
@@ -67,7 +109,8 @@ export function fixSetup(s: MatchSetup): MatchSetup {
   const turnSeconds = TURN_SECONDS.includes(s.turnSeconds ?? 0)
     ? (s.turnSeconds ?? DEFAULT_TURN_SECONDS)
     : DEFAULT_TURN_SECONDS;
-  return { map, scheme, regicide: s.regicide, lineups, turnSeconds };
+  const players = playersOf({ ...s, lineups });
+  return { map, scheme, regicide: s.regicide, lineups, turnSeconds, players };
 }
 
 export function loadSetup(custom: boolean): MatchSetup {
@@ -104,5 +147,32 @@ export function rulesFor(s: MatchSetup, custom: TuningOverrides): MatchRules {
     turn: { ...base.turn, actionTicks: turn, retreatMaxTicks: turn },
     regicide: s.regicide,
     unitsPerTeam: Math.max(...s.lineups.map((l) => l.length)),
+  };
+}
+
+/** The sim's config for a match of `setup` on a map: each house on its spawn columns. */
+export function matchConfig(
+  map: {
+    readonly mask: Mask;
+    readonly structures?: readonly StructurePlacement[];
+    readonly waterLevel?: number;
+  },
+  setup: MatchSetup,
+  rules: MatchRules,
+): MatchConfig {
+  const lineups = setup.lineups;
+  const perTeam = Math.max(...lineups.map((l) => l.length));
+  return {
+    rules,
+    ...(map.structures ? { structures: map.structures } : {}),
+    ...(map.waterLevel !== undefined ? { waterLevel: map.waterLevel } : {}),
+    // Each house takes as many of its spawn columns as it has units.
+    teams: spawnColumns(map.mask, lineups.length, perTeam).map((columns, h) => {
+      const lineup = lineups[h] ?? [];
+      return {
+        spawns: columns.slice(0, lineup.length),
+        ...(rules.classes ? { classes: [...lineup] } : {}),
+      };
+    }),
   };
 }
