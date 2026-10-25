@@ -160,6 +160,10 @@ const FRAME_MARGINS = { top: 130, bottom: 110, side: 30 } as const;
 /** px above the feet and either side of a unit where a click still picks it: its name label */
 const LABEL_REACH = 44;
 const LABEL_HALF_WIDTH = 34;
+/** px a name label goes up when it would cover another one: a label, its life bar and a gap */
+const LABEL_STACK = 36;
+/** px apart two labels must be sideways not to overlap */
+const LABEL_APART = 76;
 /** ms the tiny help bubble over a unit that cannot play stays up */
 const TIP_MS = 2600;
 
@@ -218,6 +222,8 @@ export class BattleScene extends Phaser.Scene {
   private waterShown = Infinity;
   private debugGfx!: Phaser.GameObjects.Graphics;
   private labels = new Map<number, Phaser.GameObjects.Text>();
+  /** px each unit's label is raised, so that labels of units standing together do not overlap */
+  private labelLift = new Map<number, number>();
   private debugText!: Phaser.GameObjects.Text;
   private hudCam!: Phaser.Cameras.Scene2D.Camera;
   private ui!: GameUi;
@@ -845,7 +851,7 @@ export class BattleScene extends Phaser.Scene {
       if (!p.wasTouch && p.x > 0 && p.y > 0) {
         const at = this.cameras.main.getWorldPoint(p.x, p.y);
         const hover = this.unitAt(at.x, at.y);
-        if (hover) info = unitInfo(v, hover.id, LABEL_REACH);
+        if (hover) info = unitInfo(v, hover.id, LABEL_REACH + (this.labelLift.get(hover.id) ?? 0));
         else {
           // A tombstone says who lies there, and for which house.
           const grave = graveAt(v, at.x, at.y, 4 / this.cameras.main.zoom);
@@ -923,17 +929,62 @@ export class BattleScene extends Phaser.Scene {
     return def && isTargeted(def) && ammo !== 0 ? def : null;
   }
 
-  /** The living unit under world point (x, y): its figure or its name label. */
+  /**
+   * The living unit under world point (x, y): its name label first (raised when it would cover
+   * another one, so each of two units standing together can be picked by its label), else its
+   * figure.
+   */
   private unitAt(x: number, y: number): Readonly<Unit> | undefined {
-    return this.sim
-      .view()
-      .units.find(
-        (u) =>
-          u.alive &&
-          Math.abs(x - u.x / SUBPX) <= Math.max(UNIT_HALF_WIDTH + 8, LABEL_HALF_WIDTH) &&
-          y <= u.y / SUBPX + 8 &&
-          y >= u.y / SUBPX - UNIT_HEIGHT - LABEL_REACH,
+    const units = this.sim.view().units.filter((u) => u.alive);
+    const byLabel = units.find((u) => {
+      const bottom = u.y / SUBPX - UNIT_HEIGHT - 18 - (this.labelLift.get(u.id) ?? 0);
+      return (
+        Math.abs(x - u.x / SUBPX) <= LABEL_HALF_WIDTH &&
+        y <= bottom + 6 &&
+        y >= bottom - LABEL_STACK
       );
+    });
+    return (
+      byLabel ??
+      units.find(
+        (u) =>
+          Math.abs(x - u.x / SUBPX) <= UNIT_HALF_WIDTH + 8 &&
+          y <= u.y / SUBPX + 8 &&
+          y >= u.y / SUBPX - UNIT_HEIGHT - 18,
+      )
+    );
+  }
+
+  /**
+   * Raises the labels of units standing together so that none covers another: the first keeps
+   * its place, the next one goes up a label's height, and so on; the playing unit's comes last,
+   * on top, its pointer above it all.
+   */
+  private stackLabels(alpha: number): void {
+    this.labelLift.clear();
+    const placed: { x: number; bottom: number }[] = [];
+    const v = this.sim.view();
+    const active = v.turn.activeUnitId;
+    const order = [
+      ...v.units.filter((u) => u.id !== active),
+      ...v.units.filter((u) => u.id === active),
+    ];
+    for (const u of order) {
+      if (!u.alive) continue;
+      const [x, y] = this.pos(`u${u.id}`, alpha, u.x, u.y);
+      const base = y - UNIT_HEIGHT - 18;
+      let lift = 0;
+      for (let k = 0; k < 6; k++) {
+        const bottom = base - lift;
+        const clash = placed.some(
+          (p) => Math.abs(p.x - x) < LABEL_APART && Math.abs(p.bottom - bottom) < LABEL_STACK,
+        );
+        if (!clash) break;
+        lift += LABEL_STACK;
+      }
+      placed.push({ x, bottom: base - lift });
+      if (lift > 0) this.labelLift.set(u.id, lift);
+    }
   }
 
   /** Plays one tick; false when an online match waits for the other player's commands. */
@@ -1185,8 +1236,10 @@ export class BattleScene extends Phaser.Scene {
     this.drawFlames(g, time);
     this.drawStructures(g);
     this.drawPlacementGhost(g, time);
+    this.stackLabels(alpha);
     for (const u of v.units) {
       const label = this.labelFor(u.id);
+      const lift = this.labelLift.get(u.id) ?? 0;
       const [x, y] = this.pos(`u${u.id}`, alpha, u.x, u.y);
       if (!u.alive) {
         label?.setVisible(false);
@@ -1208,7 +1261,7 @@ export class BattleScene extends Phaser.Scene {
       if (label) {
         // A small phylactery with the name and a thin life bar under it; the figures are in the
         // card (click) and in the bubble shown on hover.
-        const bottom = y - UNIT_HEIGHT - 18;
+        const bottom = y - UNIT_HEIGHT - 18 - lift;
         label.setVisible(true);
         label.setPosition(x, bottom);
         if (label.text !== unitName(u.id)) label.setText(unitName(u.id));
@@ -1219,7 +1272,8 @@ export class BattleScene extends Phaser.Scene {
       }
       if (isActive) {
         // Bobbing pointer above the name: who plays is never in doubt.
-        const top = y - UNIT_HEIGHT - 18 - (label?.height ?? 28) - 12 + Math.sin(time / 180) * 7;
+        const top =
+          y - UNIT_HEIGHT - 18 - lift - (label?.height ?? 28) - 12 + Math.sin(time / 180) * 7;
         g.fillStyle(COLORS.or, 1);
         g.lineStyle(4, COLORS.encre, 1);
         g.fillTriangle(x - 20, top - 30, x + 20, top - 30, x, top);
