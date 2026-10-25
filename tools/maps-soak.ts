@@ -10,7 +10,7 @@ import { buildMap } from '../src/app/map-build.ts';
 import { defaultSetup, matchConfig, rulesFor } from '../src/app/match-setup.ts';
 import { AI_LEVELS, AI_LEVEL_IDS, type AiLevelId } from '../src/content/ai.ts';
 import { MAP_THEMES, generatedMapId, type MapTheme } from '../src/content/maps.ts';
-import type { TimedCommand } from '../src/sim/commands.ts';
+import type { GameCommand, TimedCommand } from '../src/sim/commands.ts';
 import { LOG_VERSION, replay, type GameLog } from '../src/sim/log.ts';
 import { Sim } from '../src/sim/sim.ts';
 
@@ -52,6 +52,26 @@ interface GameReport {
   readonly replayOk?: boolean;
 }
 
+/** The active unit can get somewhere: a walk or a jump either way moves it at least 4 px. */
+function canMove(sim: Sim): boolean {
+  const v = sim.view();
+  const id = v.turn.activeUnitId;
+  const x0 = v.units.find((u) => u.id === id)?.x ?? 0;
+  const tries: GameCommand[] = [
+    { t: 'move', dir: 1 },
+    { t: 'move', dir: -1 },
+    { t: 'jump', kind: 'forward', dir: 1 },
+    { t: 'jump', kind: 'forward', dir: -1 },
+  ];
+  return tries.some((cmd) => {
+    const s = Sim.fromState(sim.snapshot());
+    s.step([cmd]);
+    for (let i = 0; i < 90; i++) s.step();
+    const x = s.view().units.find((u) => u.id === id)?.x ?? x0;
+    return Math.abs(x - x0) >= 4 * 256;
+  });
+}
+
 function playGame(theme: MapTheme, seed: number, gameLevels: readonly AiLevelId[]): GameReport {
   const setup = defaultSetup(false);
   const rules = rulesFor(setup, {});
@@ -78,9 +98,9 @@ function playGame(theme: MapTheme, seed: number, gameLevels: readonly AiLevelId[
   let weapon = '';
   // Damage counts as the AI's own doing between its shot and the end of its turn.
   let shooting = false;
-  // Turns in a row each unit meant to walk and could not move, to find the ones stuck (GDD §10).
+  // Turns in a row each unit could neither walk nor jump anywhere: stuck (GDD §10).
   const blocked = new Map<number, number>();
-  let turnX = 0;
+  let probed = -1;
   const stuck: { unitId: number; x: number; turn: number }[] = [];
   let error: string | undefined;
   try {
@@ -90,7 +110,13 @@ function playGame(theme: MapTheme, seed: number, gameLevels: readonly AiLevelId[
       const active = v.turn.activeUnitId;
       const team = v.turn.activeTeam;
       const turn = v.turn.number;
-      if (v.turn.phase === 'transition') turnX = v.units.find((u) => u.id === active)?.x ?? 0;
+      if (v.turn.phase === 'action' && probed !== turn) {
+        probed = turn;
+        const n = canMove(sim) ? 0 : (blocked.get(active) ?? 0) + 1;
+        blocked.set(active, n);
+        const u = v.units.find((x) => x.id === active);
+        if (n === 3 && u) stuck.push({ unitId: active, x: u.x >> 8, turn });
+      }
       const cmds = ctrl.poll(tick, v);
       for (const c of cmds) commands.push([tick, c]);
       const events = sim.step(cmds);
@@ -111,13 +137,6 @@ function playGame(theme: MapTheme, seed: number, gameLevels: readonly AiLevelId[
         if (e.e === 'turnStarted') {
           weapon = '';
           shooting = false;
-          const u = sim.view().units.find((x) => x.id === active);
-          const plan = ctrl.last?.plan;
-          if (u?.alive && plan?.unitId === active && plan.move.kind === 'walk') {
-            const n = Math.abs(u.x - turnX) < 2 * 256 ? (blocked.get(active) ?? 0) + 1 : 0;
-            blocked.set(active, n);
-            if (n === 3) stuck.push({ unitId: active, x: u.x >> 8, turn });
-          }
         }
       }
     }
