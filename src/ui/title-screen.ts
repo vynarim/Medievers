@@ -3,6 +3,7 @@
 import { t } from './i18n.ts';
 import { button, el, infoButton, uiRoot } from './overlay.ts';
 import { renderTutorial } from './tutorial.ts';
+import { declineInstall, installOffer, onInstallable, promptInstall } from '../app/install.ts';
 
 /** share of the window's width the title page takes, and how far it may grow */
 const TITLE_SHARE = 0.42;
@@ -38,6 +39,13 @@ const STYLE = `
 #ui .title-screen .colophon a, #ui .title-screen .author a { color: var(--lapis); pointer-events: auto; user-select: text; }
 /* On a phone held upright: one button per row, the quip and the colophon behind a « ? ». */
 /* The name on top, the buttons in the middle, the credits at the foot. */
+#ui .title-screen .install { margin: 8px auto 0; padding: 12px 16px 14px; max-width: 420px;
+  text-align: center; }
+#ui .title-screen .install b { font-family: var(--caps); font-weight: normal; font-size: 20px;
+  color: var(--lapis); }
+#ui .title-screen .install p { margin: 6px 0 0; font-size: 16px; line-height: 1.35; }
+#ui .title-screen .install .actions { margin-top: 10px; flex-direction: row; gap: 8px; }
+#ui .title-screen .install .actions button { width: auto; min-width: 120px; min-height: 48px; }
 #ui.phone .title-screen .folio { width: 100%; height: 100%; padding: 56px 26px 34px; display: flex;
   flex-direction: column; overflow-y: auto; }
 #ui.phone .title-screen .name { font-size: min(54px, 12vw); }
@@ -94,6 +102,7 @@ export function showTitleScreen(choices: TitleChoices): void {
     folio.style.transform = k > 1 ? `scale(${k.toFixed(3)})` : '';
   };
   const close = (then: () => void): void => {
+    stopInstall();
     window.removeEventListener('resize', fit);
     window.removeEventListener('keydown', onKey, true);
     screen.remove();
@@ -190,6 +199,47 @@ export function showTitleScreen(choices: TitleChoices): void {
     author,
     version,
   );
+  // The first time on a phone: install the game as an app (PWA).
+  let card: HTMLElement | null = null;
+  const offer = (): void => {
+    const kind = installOffer();
+    if (!kind || card) return;
+    card = el('div', 'install panel');
+    const shut = (): void => {
+      card?.remove();
+      fit();
+    };
+    const buttons = el('div', 'actions');
+    if (kind === 'prompt') {
+      const yes = button(t('install.yes'), 'fire');
+      yes.addEventListener('click', () => {
+        shut();
+        void promptInstall();
+      });
+      const later = button(t('install.later'));
+      later.addEventListener('click', () => {
+        declineInstall();
+        shut();
+      });
+      buttons.append(yes, later);
+    } else {
+      const ok = button(t('install.ok'));
+      ok.addEventListener('click', () => {
+        declineInstall();
+        shut();
+      });
+      buttons.append(ok);
+    }
+    card.append(
+      el('b', '', t('install.title')),
+      el('p', '', t(kind === 'prompt' ? 'install.text' : 'install.ios')),
+      buttons,
+    );
+    actions.after(card);
+    fit();
+  };
+  const stopInstall = onInstallable(offer);
+  offer();
   screen.append(folio);
   root.append(screen);
   fit();
