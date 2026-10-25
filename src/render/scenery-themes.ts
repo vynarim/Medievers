@@ -18,7 +18,9 @@ import {
   scallops,
   shape,
   sheep,
+  goat,
   type Ctx,
+  type FarBeast,
   type FarHerd,
 } from './scenery.ts';
 
@@ -51,12 +53,21 @@ export function coastHerd(): FarHerd {
   return {
     ground: COAST_GROUND,
     alpha: 0.82,
-    beasts: [300, 330, 362, 1700, 1735, 2980, 3012].map((x) => ({
-      draw: sheep,
-      x,
-      f: pick([-1, 1] as const),
-      s: rnd(1.25, 1.4),
-    })),
+    beasts: [
+      ...[300, 330, 362, 1700, 1735, 2980, 3012].map((x) => ({
+        draw: sheep,
+        x,
+        f: pick([-1, 1] as const),
+        s: rnd(1.25, 1.4),
+      })),
+      // Goats on the cliff top, where the sheep do not go.
+      ...[1180, 1206, 2310].map((x) => ({
+        draw: goat,
+        x,
+        f: pick([-1, 1] as const),
+        s: rnd(1.2, 1.35),
+      })),
+    ],
   };
 }
 
@@ -73,7 +84,18 @@ export function holyLandHerd(): FarHerd {
         [2650, -1],
         [2900, -1],
       ] as const
-    ).map(([x, f]) => ({ draw: camel, x, f, s: rnd(1.1, 1.25) })),
+    )
+      .map(([x, f]): FarBeast => ({ draw: camel, x, f, s: rnd(1.1, 1.25) }))
+      // Black goats of the hill country, between the camels.
+      .concat(
+        (
+          [
+            [1500, -1],
+            [1528, 1],
+            [3300, 1],
+          ] as const
+        ).map(([x, f]): FarBeast => ({ draw: goat, x, f, s: rnd(1.2, 1.35) })),
+      ),
   };
 }
 

@@ -744,6 +744,98 @@ function cow(ctx: Ctx, x: number, feet: number, f: number, s: number): void {
 }
 
 /**
+ * A goat (2026-10-25): slender, its short tail cocked, a beard, horns swept back; brown, black,
+ * white or piebald.
+ */
+export function goat(ctx: Ctx, x: number, feet: number, f: number, s: number): void {
+  const bw = 30 * s;
+  const bh = 14 * s;
+  const bx = x - bw / 2;
+  const by = feet - 14 * s - bh;
+  const coat = pick([COLORS.terreOmbre, COLORS.encre, COLORS.ceruse, COLORS.ocre]);
+  const dark = coat === COLORS.encre || coat === COLORS.terreOmbre;
+  // Thin legs, the hooves black.
+  for (const lx of [0.12, 0.26, 0.72, 0.86]) {
+    const legX = bx + lx * bw - 1.6 * s;
+    shape(
+      ctx,
+      () => ctx.rect(legX, by + bh - 4, 3.2 * s, feet - by - bh + 4),
+      coat,
+      undefined,
+      1.5,
+    );
+    ctx.fillStyle = css(COLORS.encre);
+    ctx.fillRect(legX, feet - 2.5 * s, 3.2 * s, 2.5 * s);
+  }
+  // The short tail, cocked up.
+  const tx = x - (f * bw) / 2;
+  shape(
+    ctx,
+    () => {
+      ctx.moveTo(tx + f * 1 * s, by + 2 * s);
+      ctx.lineTo(tx - f * 3 * s, by - 3 * s);
+      ctx.lineTo(tx - f * 0.5 * s, by + 5 * s);
+      ctx.closePath();
+    },
+    coat,
+    undefined,
+    1.5,
+  );
+  shape(
+    ctx,
+    () => ctx.roundRect(bx, by, bw, bh, 7 * s),
+    coat,
+    () => {
+      // A piebald coat: a white patch on the dark ones.
+      if (!dark || Math.random() < 0.5) return;
+      ctx.fillStyle = css(COLORS.ceruse);
+      ctx.beginPath();
+      ctx.ellipse(x + rnd(-0.2, 0.2) * bw, by + bh * 0.45, 6 * s, 4 * s, 0, 0, Math.PI * 2);
+      ctx.fill();
+    },
+  );
+  const grazing = Math.random() < 0.4;
+  const head = beastHead(
+    ctx,
+    x + f * bw * 0.3,
+    by + 1 * s,
+    x + f * bw * 0.46,
+    by + bh * 0.7,
+    x + f * (bw / 2 + 5 * s),
+    grazing ? feet - 7 * s : by - 9 * s,
+    f,
+    s,
+    grazing ? 1.2 : 0.5,
+    5.5,
+    3.6,
+    coat,
+  );
+  // The beard under the chin.
+  shape(
+    ctx,
+    () => {
+      ctx.moveTo(head.mx - f * 2 * s, head.my + 1 * s);
+      ctx.lineTo(head.mx - f * 1 * s, head.my + 7 * s);
+      ctx.lineTo(head.mx - f * 4 * s, head.my + 2 * s);
+      ctx.closePath();
+    },
+    dark ? COLORS.encre : COLORS.terreOmbre,
+    undefined,
+    1,
+  );
+  // Horns swept back from the poll.
+  ctx.strokeStyle = css(COLORS.encre);
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(head.px, head.py);
+  ctx.quadraticCurveTo(head.px - f * 2 * s, head.py - 8 * s, head.px - f * 8 * s, head.py - 6 * s);
+  ctx.stroke();
+  ctx.strokeStyle = css(COLORS.roche);
+  ctx.lineWidth = 1.4;
+  ctx.stroke();
+}
+
+/**
  * A neck from the withers and chest up to a long head, an ear and an eye. Returns the muzzle
  * and the poll, where horns or a mane attach.
  */
@@ -921,12 +1013,17 @@ function valleyHerd(): FarHerd {
     [sheep, 350, 1],
     [sheep, 378, 1],
     [cow, 860, -1],
+    [goat, 1010, 1],
+    [goat, 1036, -1],
     [horse, 1240, 1],
     [sheep, 1580, -1],
     [sheep, 1612, 1],
     [cow, 2040, 1],
     [cow, 2110, -1],
     [horse, 2480, -1],
+    [goat, 2620, -1],
+    [goat, 2648, 1],
+    [goat, 2671, 1],
     [sheep, 2810, 1],
     [sheep, 2842, 1],
     [sheep, 2868, -1],
