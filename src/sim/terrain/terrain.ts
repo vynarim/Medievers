@@ -29,6 +29,25 @@ export interface Terrain {
   /** XOR of all valid chunk hashes */
   maskHash: number;
   readonly rules: MaterialRules;
+  /**
+   * percent of its radius a carve may reach: 100, or more when the map holds a material that
+   * breaks easier than earth (the ice of a frozen lake: 250)
+   */
+  readonly reachPct: number;
+}
+
+/** How far a carve may reach on a mask, in percent of its radius (see Terrain.reachPct). */
+function reachOf(data: Uint8Array, rules: MaterialRules): number {
+  const present = new Uint8Array(rules.solid.length);
+  for (const m of data) present[m] = 1;
+  let reach = 100;
+  present.forEach((p, m) => {
+    const res = rules.resistancePct[m] ?? 100;
+    if (p && rules.destructible[m] && res > 0 && res < 100) {
+      reach = Math.max(reach, Math.ceil(10000 / res));
+    }
+  });
+  return reach;
 }
 
 export function createTerrain(mask: Mask, rules: MaterialRules): Terrain {
@@ -44,6 +63,7 @@ export function createTerrain(mask: Mask, rules: MaterialRules): Terrain {
     hashDirty: new Uint8Array(chunkCols * chunkRows).fill(1),
     maskHash: 0,
     rules,
+    reachPct: reachOf(mask.data, rules),
   };
   terrainHash(t);
   return t;
@@ -128,10 +148,12 @@ export function carveCircle(
   ignoreResistance = false,
 ): number {
   if (r <= 0) return 0;
-  const x0 = Math.max(0, cx - r);
-  const y0 = Math.max(0, cy - r);
-  const x1 = Math.min(t.width - 1, cx + r);
-  const y1 = Math.min(t.height - 1, cy + r);
+  // A weak material (ice) breaks beyond the radius: the scan reaches as far as it can break.
+  const reach = ignoreResistance ? r : Math.trunc((r * t.reachPct) / 100);
+  const x0 = Math.max(0, cx - reach);
+  const y0 = Math.max(0, cy - reach);
+  const x1 = Math.min(t.width - 1, cx + reach);
+  const y1 = Math.min(t.height - 1, cy + reach);
   if (x0 > x1 || y0 > y1) return 0;
   const r2x10k = r * r * 10000;
   let carved = 0;
@@ -140,7 +162,7 @@ export function carveCircle(
     for (let x = x0; x <= x1; x++) {
       const dx = x - cx;
       const d2 = dx * dx + dy * dy;
-      if (d2 > r * r) continue;
+      if (d2 > reach * reach) continue;
       const i = y * t.width + x;
       const m = t.data[i] ?? Material.Air;
       if (m === Material.Air || !t.rules.destructible[m]) continue;

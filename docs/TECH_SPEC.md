@@ -99,6 +99,8 @@ export interface Sim {
   - `4` bois (destructible)
   - `5` échelle (praticable, non solide pour les projectiles)
   - `6` maçonnerie de fond (corps des tours, 2026-10-25 : dessinée, destructible, résistance ×1,5, ni les unités ni les projectiles ne s'y arrêtent)
+  - `7` charpente de fond (corps des tours de bois, 2026-10-25 : comme la maçonnerie de fond, résistance ×1)
+  - `8` glace (lac gelé du col enneigé, 2026-10-25 : solide, destructible, résistance 40 % : une explosion la brise jusqu'à 2,5 fois son rayon). Pour que le cratère puisse dépasser le rayon, un terrain garde `reachPct`, calculé à la création d'après les matériaux présents (250 s'il y a de la glace, 100 sinon : les cartes sans glace creusent exactement comme avant), et le rendu repeint jusque-là.
 - Le masque est découpé en **chunks de 256 × 256**, chacun avec un flag `dirty` et un hash.
 - Le masque source est un PNG dont les couleurs sont fixes par matériau (table dans `content/materials.ts`). Il est converti en `Uint8Array` au chargement, avec un cache possible en `.bin` lors du build (P1).
 

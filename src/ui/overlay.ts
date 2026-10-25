@@ -91,6 +91,7 @@ const STYLE = `
 #ui .team .name { flex: 1 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 #ui .team .hp { flex: none; width: 64px; height: 10px; border: 2px solid var(--encre); background: var(--velin); }
 #ui .team .hp i { display: block; height: 100%; background: var(--p); }
+#ui .team .who { flex: none; line-height: 0; margin-left: 2px; }
 #ui .team.out { opacity: 0.45; text-decoration: line-through; }
 /* The house whose turn it is: its frame glows in its colour, pulsing. */
 #ui .team.playing { border-color: var(--p); animation: team-glow 1.6s ease-in-out infinite; }
@@ -215,6 +216,11 @@ const STYLE = `
 #ui .pause { min-width: 360px; text-align: center; }
 #ui .pause .actions { flex-direction: column; align-items: stretch; }
 #ui .pause .thirds { display: flex; gap: 8px; }
+/* The match recalled: map, rules, goal, on a band of vellum. */
+#ui .pause .pause-match { text-align: left; background: var(--velin); border: 2px solid var(--gilt);
+  border-radius: 4px; padding: 8px 14px 2px; margin: 4px 0 6px; }
+#ui .pause .pause-match h3 { margin: 0 0 4px; }
+#ui .pause .pause-match p { font-size: 15px; line-height: 1.4; margin: 0 0 6px; }
 #ui .pause .thirds button { flex: 1 1 0; min-width: 0; }
 #ui .net-status { position: absolute; left: 50%; bottom: 96px; transform: translateX(-50%);
   padding: 6px 16px; font-family: var(--caps); font-size: 18px; color: var(--lapis); pointer-events: none; }

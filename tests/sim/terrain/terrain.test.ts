@@ -40,6 +40,27 @@ describe('material table', () => {
   it('is indexed by material id', () => {
     MATERIALS.forEach((m, i) => expect(m.id).toBe(i));
   });
+
+  it('lets an explosion break ice far wider than earth (the frozen lake, 2026-10-25)', () => {
+    // A crust of ice 20 px thick over the air, beside a slab of earth as thick.
+    const width = 400;
+    const height = 100;
+    const data = new Uint8Array(width * height);
+    for (let y = 40; y < 60; y++) {
+      for (let x = 0; x < width; x++) data[y * width + x] = x < 200 ? Material.Ice : Material.Earth;
+    }
+    const t = createTerrain({ width, height, data }, MATERIAL_RULES);
+    const hole = (x0: number, x1: number): number => {
+      let n = 0;
+      for (let x = x0; x < x1; x++) if (materialOf(t, x, 50) === Material.Air) n++;
+      return n;
+    };
+    carveCircle(t, 100, 50, 30);
+    carveCircle(t, 300, 50, 30);
+    expect(hole(200, 400)).toBe(61);
+    // Ice resists at 40 %: the same blast opens a hole 2.5 times as wide.
+    expect(hole(0, 200)).toBeGreaterThanOrEqual(150);
+  });
 });
 
 describe('terrain chunks and hash', () => {

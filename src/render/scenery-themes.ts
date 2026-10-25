@@ -34,7 +34,7 @@ export interface ThemeProps {
 }
 
 /** A periodic crest (seamless over FAR_W): y of the top at x. */
-const crest =
+export const crest =
   (y0: number, amp: number, period: number, phase = 0) =>
   (x: number): number => {
     const k = (x / FAR_W) * Math.PI * 2;
@@ -100,7 +100,7 @@ export function holyLandHerd(): FarHerd {
 }
 
 /** A filled band under a crest, inked along the crest only (the sides would show as seams). */
-function band(l: Ctx, top: (x: number) => number, color: number, alpha: number): void {
+export function band(l: Ctx, top: (x: number) => number, color: number, alpha: number): void {
   l.globalAlpha = alpha;
   l.fillStyle = css(color);
   l.beginPath();
@@ -118,7 +118,7 @@ function band(l: Ctx, top: (x: number) => number, color: number, alpha: number):
 }
 
 /** The lowest point of a crest over a span, so a building never floats. */
-const groundOf = (top: (x: number) => number, x0: number, x1: number): number => {
+export const groundOf = (top: (x: number) => number, x0: number, x1: number): number => {
   let y = 0;
   for (let x = x0; x <= x1; x += 6) y = Math.max(y, top(x));
   return y;

@@ -58,6 +58,8 @@ export interface GameUiOptions {
   readonly title: () => void;
   /** online: the match's code, shown in the pause menu with a button to copy it */
   readonly onlineCode?: string;
+  /** the match, recalled in the pause menu: its map, its rules and what wins it */
+  readonly match?: { readonly map: string; readonly scheme: string; readonly regicide: boolean };
 }
 
 /** ms the copy button says it copied */
@@ -327,6 +329,20 @@ export class GameUi {
     );
     pauseActions.append(pauseMore);
     this.pause.append(el('h2', '', t('pause.title')), el('p', '', t('pause.body')));
+    // Where the battle is, under which rules, and what wins it.
+    const match = opts.match;
+    if (match) {
+      const about = el('div', 'pause-match');
+      const rules =
+        t(`setup.scheme.${match.scheme}`) + (match.regicide ? ` · ${t('setup.regicide')}` : '');
+      about.append(
+        el('h3', '', t(`maps.${match.map}`)),
+        el('p', 'ambient', t(`maps.${match.map}.text`)),
+        el('p', '', t('pause.rules', { rules })),
+        el('p', '', t(match.regicide ? 'pause.goal.regicide' : 'pause.goal')),
+      );
+      this.pause.append(about);
+    }
     // Online: the match's code, to give again to the other player, copied in one click.
     const code = opts.onlineCode;
     if (code) {

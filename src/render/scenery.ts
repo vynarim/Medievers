@@ -19,6 +19,7 @@ import {
   holyLandProps,
   type ThemeProps,
 } from './scenery-themes.ts';
+import { PASS_GROUND, drawFarPass, passHerd, passProps } from './scenery-pass.ts';
 
 export const FAR_W = 3200;
 /** tall enough for the lower hill to reach below the terrain everywhere */
@@ -1248,20 +1249,38 @@ export class Scenery {
           `far_${theme}`,
           FAR_W,
           FAR_H,
-          theme === 'coast' ? drawFarCoast : theme === 'holyLand' ? drawFarHolyLand : drawFar,
+          theme === 'coast'
+            ? drawFarCoast
+            : theme === 'holyLand'
+              ? drawFarHolyLand
+              : theme === 'pass'
+                ? drawFarPass
+                : drawFar,
         ),
       )
       .setOrigin(0, 0)
       .setScrollFactor(FAR_SCROLL, 0.8)
       .setDepth(1);
     const farCrestOf =
-      theme === 'coast' ? COAST_GROUND : theme === 'holyLand' ? HOLY_LAND_GROUND : VALLEY_GROUND;
+      theme === 'coast'
+        ? COAST_GROUND
+        : theme === 'holyLand'
+          ? HOLY_LAND_GROUND
+          : theme === 'pass'
+            ? PASS_GROUND
+            : VALLEY_GROUND;
 
     // The beasts of the far fields, one image per repeat of the tile, with the same parallax.
     this.farX = farX;
     this.farY = farY;
     this.herd =
-      theme === 'coast' ? coastHerd() : theme === 'holyLand' ? holyLandHerd() : valleyHerd();
+      theme === 'coast'
+        ? coastHerd()
+        : theme === 'holyLand'
+          ? holyLandHerd()
+          : theme === 'pass'
+            ? passHerd()
+            : valleyHerd();
     const repeats = Math.ceil((mask.width * 3) / FAR_W);
     this.herd.beasts.forEach((b, i) => {
       const key = tex(`far_beast_${theme}_${i}`, BEAST_TEX_W, BEAST_TEX_H, (ctx) => {
@@ -1310,7 +1329,13 @@ export class Scenery {
 
     // Trees and flowers on the terrain surface (palms and shrubs, pines and dune grass).
     const themed: ThemeProps | null =
-      theme === 'coast' ? coastProps() : theme === 'holyLand' ? holyLandProps() : null;
+      theme === 'coast'
+        ? coastProps()
+        : theme === 'holyLand'
+          ? holyLandProps()
+          : theme === 'pass'
+            ? passProps()
+            : null;
     const treeKey = themed
       ? tex(`tree_${theme}`, 110, 120, themed.tall)
       : tex('tree', 70, 110, (ctx) => lollipop(ctx, 35, 108, 22, COLORS.vertDeGris));

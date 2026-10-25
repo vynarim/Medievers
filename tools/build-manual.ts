@@ -35,6 +35,10 @@ const MATERIAL_NAMES: Record<MaterialId, [string, string]> = {
     'Charpente de fond',
     'Le corps des tours de bois : on passe devant, comme pour la maçonnerie de fond.',
   ],
+  [Material.Ice]: [
+    'Glace',
+    "La croûte d'un lac gelé : on y marche, mais une explosion y ouvre un trou bien plus large que dans la terre, et l'eau est dessous.",
+  ],
 };
 
 function materialsTable(): string {

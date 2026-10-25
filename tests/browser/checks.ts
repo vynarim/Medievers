@@ -11,15 +11,15 @@ import {
 } from '../../src/sim/math/index.ts';
 import { SIN_Q14 } from '../../src/sim/math/trig-lut.ts';
 import { generateMap, replay, type ReplayFile } from '../../src/sim/index.ts';
-import { MAP_THEMES } from '../../src/content/maps.ts';
+import { MAP_THEMES, parseMapId } from '../../src/content/maps.ts';
 
 export type CheckResults = Record<string, number>;
 
 export interface CheckInput {
   /** tests/fixtures/maps/test-mask.png */
   readonly maskPng: Uint8Array;
-  /** reference replays by file name, with the mask PNG of their map */
-  readonly replays: readonly { name: string; file: ReplayFile; mapPng: Uint8Array }[];
+  /** reference replays by file name, with the mask PNG of their map (none: a generated map) */
+  readonly replays: readonly { name: string; file: ReplayFile; mapPng?: Uint8Array }[];
 }
 
 /** Each probe returns a 32-bit hash summarising its outputs. */
@@ -42,7 +42,10 @@ export function runChecks({ maskPng, replays }: CheckInput): CheckResults {
     results[`map-${theme}`] = hashBytes(FNV_OFFSET, generateMap(theme, 20261025).mask.data) >>> 0;
   }
   for (const r of replays) {
-    results[r.name] = replay(r.file, decodeMaskPng(r.mapPng)).hash() >>> 0;
+    const gen = parseMapId(r.file.mapId);
+    const map = gen ? generateMap(gen.theme, gen.seed).mask : r.mapPng && decodeMaskPng(r.mapPng);
+    if (!map) throw new Error(`no map ${r.file.mapId} for ${r.name}`);
+    results[r.name] = replay(r.file, map).hash() >>> 0;
   }
   return results;
 }

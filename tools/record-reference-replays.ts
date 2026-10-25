@@ -21,6 +21,23 @@ import { loadMask } from './lib/maps-node.ts';
 import { hookPoint, ledgeBeside } from '../src/sim/rope.ts';
 import type { Terrain } from '../src/sim/terrain/terrain.ts';
 import { Recorder } from './lib/recorder.ts';
+import { generateMap } from '../src/sim/terrain/generate.ts';
+import { Material } from '../src/sim/terrain/material.ts';
+
+/** The snowy pass of seed 11 (GDD §10): its water, and the columns its ice spans. */
+const PASS = generateMap('pass', 11);
+const PASS_ICE = ((): { first: number; last: number } => {
+  const { width, data } = PASS.mask;
+  const row = (PASS.waterLevel ?? 0) - 1;
+  let first = -1;
+  let last = -1;
+  for (let x = 0; x < width; x++) {
+    if (data[row * width + x] !== Material.Ice) continue;
+    if (first < 0) first = x;
+    last = x;
+  }
+  return { first, last };
+})();
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const { placementTicks, ...TURN_NOW } = CLASSIC_RULES.turn;
@@ -1061,6 +1078,43 @@ const SCRIPTS: readonly Script[] = [
       ]);
       r.until('transition');
       rain();
+    },
+  },
+  {
+    name: 'frozen-lake',
+    description:
+      'The snowy pass (GDD §10): a fighter on the frozen lake breaks the ice under their own ' +
+      'feet with a pot, opening a hole far wider than in earth, falls into the water and is ' +
+      'washed ashore 20 HP lighter; the other, on the shore, shoots at the ice from afar.',
+    mapId: 'pass@b',
+    seed: 1515,
+    config: {
+      rules: { ...NO_PLACEMENT, wind: { ...NO_PLACEMENT.wind, max: 0 } },
+      teams: [
+        { spawns: [(PASS_ICE.first + PASS_ICE.last) >> 1] },
+        { spawns: [PASS_ICE.first - 160] },
+      ],
+      ...(PASS.waterLevel !== undefined ? { waterLevel: PASS.waterLevel } : {}),
+    },
+    play: (r) => {
+      r.until('action');
+      r.step([
+        { t: 'selectWeapon', id: 'greekFire' },
+        { t: 'setFuse', seconds: 1 },
+        { t: 'aim', angle: 1024 },
+        { t: 'fire', power: 60 },
+      ]);
+      r.until('transition');
+      for (let turn = 0; turn < 3; turn++) {
+        r.until('action');
+        const team = r.sim.view().turn.activeTeam;
+        r.step([
+          { t: 'selectWeapon', id: 'sling' },
+          { t: 'aim', angle: team === 0 ? 2300 : 3900 },
+          { t: 'fire', power: 700 },
+        ]);
+        r.until('transition');
+      }
     },
   },
 ];

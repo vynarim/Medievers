@@ -10,6 +10,7 @@ export const MASK_PALETTE: readonly MaskColor[] = [
   { material: Material.Ladder, r: 255, g: 0, b: 255 }, // #ff00ff
   { material: Material.Backdrop, r: 160, g: 154, b: 140 }, // #a09a8c
   { material: Material.Timber, r: 128, g: 84, b: 40 }, // #805428
+  { material: Material.Ice, r: 168, g: 216, b: 240 }, // #a8d8f0
 ];
 
 export interface MaterialDef {
@@ -39,6 +40,8 @@ export const MATERIALS: readonly MaterialDef[] = [
   { id: Material.Ladder, solid: false, climbable: true, destructible: true, resistancePct: 100 },
   { id: Material.Backdrop, solid: false, climbable: false, destructible: true, resistancePct: 150 },
   { id: Material.Timber, solid: false, climbable: false, destructible: true, resistancePct: 100 },
+  // Ice breaks two and a half times as far as earth: a pot opens a wide hole in a frozen lake.
+  { id: Material.Ice, solid: true, climbable: false, destructible: true, resistancePct: 40 },
 ];
 
 /** MATERIALS reshaped for the terrain, indexed by material id. */

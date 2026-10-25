@@ -6,9 +6,9 @@ import type { StructurePlacement } from './structures.ts';
 import type { EngineType } from './engines.ts';
 
 /** Map themes: the lie of the land, its colours, its scenery and its beasts. */
-export type MapTheme = 'valley' | 'coast' | 'holyLand';
+export type MapTheme = 'valley' | 'coast' | 'holyLand' | 'pass';
 
-export const MAP_THEMES: readonly MapTheme[] = ['valley', 'coast', 'holyLand'];
+export const MAP_THEMES: readonly MapTheme[] = ['valley', 'coast', 'holyLand', 'pass'];
 
 export interface MapDef {
   readonly id: string;
@@ -37,6 +37,8 @@ export interface MapGen {
   readonly bumps: readonly [number, number];
   readonly bumpHalfWidth: readonly [number, number];
   readonly bumpHeight: number;
+  /** hills only, no dips (dunes, peaks) */
+  readonly upOnly?: boolean;
   /** dunes: a gentle slope windward, a steep one leeward (percent of the half width) */
   readonly leePct?: number;
   /** px the ground rises over the last edgePx of each end, so the sides make a bowl */
@@ -64,6 +66,16 @@ export interface MapGen {
   readonly cliff?: number;
   /** the end opposite the cliff slopes down into the sea, as a beach (coast) */
   readonly beach?: boolean;
+  /**
+   * a frozen lake in the middle of the map (the snowy pass, 2026-10-25): a basin of half width
+   * in `halfWidth` and `depth` px below `waterLevel`, under a crust of `ice` px of ice. The rest
+   * of the land stays above the water (`maxGround` below `waterLevel`).
+   */
+  readonly lake?: {
+    readonly halfWidth: readonly [number, number];
+    readonly depth: number;
+    readonly ice: number;
+  };
   /** two towers with a curtain wall between them, in the middle third (Saracen fortress) */
   readonly fortress?: boolean;
   /**
@@ -128,6 +140,7 @@ export const MAP_GEN: Readonly<Record<MapTheme, MapGen>> = {
     bumps: [11, 15],
     bumpHalfWidth: [140, 360],
     bumpHeight: 260,
+    upOnly: true,
     leePct: 35,
     edgePx: 460,
     edgeRise: 200,
@@ -140,6 +153,29 @@ export const MAP_GEN: Readonly<Record<MapTheme, MapGen>> = {
     pockets: [2, 3],
     fortress: true,
     engines: { pair: ['catapult', 'ram'], middle: ['trebuchet'] },
+  },
+  // Le col enneigé: steep snowy slopes rising to both ends, rocky spurs, a stone watchtower, and
+  // a frozen lake in the hollow of the pass.
+  pass: {
+    width: 3840,
+    height: 1600,
+    base: 1040,
+    bumps: [7, 10],
+    bumpHalfWidth: [150, 400],
+    bumpHeight: 360,
+    upOnly: true,
+    edgePx: 560,
+    edgeRise: 320,
+    ripple: 10,
+    minGround: 540,
+    maxGround: 1150,
+    towers: [1, 2],
+    walls: [0, 1],
+    outcrops: [3, 5],
+    pockets: [2, 3],
+    waterLevel: 1370,
+    lake: { halfWidth: [340, 440], depth: 150, ice: 22 },
+    engines: { pair: ['catapult', 'ballista'] },
   },
 };
 

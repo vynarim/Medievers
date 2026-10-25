@@ -3,7 +3,7 @@
 // overlay. The HUD and menus are DOM (src/ui).
 import Phaser from 'phaser';
 import { FACTIONS, unitName } from '../content/factions.ts';
-import type { MapDef } from '../content/maps.ts';
+import { MAP_GEN, type MapDef, type MapTheme } from '../content/maps.ts';
 import { TICKS_PER_SECOND, type MatchRules } from '../content/rules.ts';
 import { PhaserLocalInput } from '../input/phaser-local-input.ts';
 import { MAX_POWER, type GameCommand } from '../sim/commands.ts';
@@ -122,6 +122,37 @@ export function onlineBattle(m: OnlineMatch): BattleData {
     online: m,
   };
 }
+
+/** Mixes colour a towards colour b by k (0..1), for the tinted grounds of the pages. */
+const mix = (a: number, b: number, k: number): number => {
+  const ch = (shift: number): number => {
+    const x = (a >> shift) & 255;
+    return Math.round(x + (((b >> shift) & 255) - x) * k) << shift;
+  };
+  return ch(16) | ch(8) | ch(0);
+};
+
+/** The ground of the page behind each map: its leaf, the shade across it, the punch marks. */
+const DIAPER_TINTS: Readonly<
+  Record<MapTheme, { readonly leaf: number; readonly shade: number; readonly punch: number }>
+> = {
+  valley: {
+    leaf: mix(COLORS.vertTendre, COLORS.ceruse, 0.55),
+    shade: mix(COLORS.vertDeGris, COLORS.ceruse, 0.5),
+    punch: COLORS.vertDeGris,
+  },
+  coast: {
+    leaf: mix(COLORS.azur, COLORS.ceruse, 0.5),
+    shade: mix(COLORS.azur, COLORS.ceruse, 0.3),
+    punch: COLORS.lapis,
+  },
+  holyLand: { leaf: COLORS.feuilleOr, shade: COLORS.feuilleOrOmbre, punch: COLORS.poincon },
+  pass: {
+    leaf: mix(COLORS.ceruse, COLORS.roche, 0.08),
+    shade: mix(COLORS.ceruse, COLORS.roche, 0.3),
+    punch: COLORS.roche,
+  },
+};
 
 /** ms per wing beat of the angels bringing reliquaries down */
 const ANGEL_FLAP = 260;
@@ -346,7 +377,7 @@ export class BattleScene extends Phaser.Scene {
     cam.setBounds(0, -SKY_EXTRA, map.width, map.height + SKY_EXTRA);
 
     const page = this.add
-      .tileSprite(0, -SKY_EXTRA, map.width, map.height + SKY_EXTRA, this.diaperTexture())
+      .tileSprite(0, -SKY_EXTRA, map.width, map.height + SKY_EXTRA, this.diaperTexture(map.theme))
       .setOrigin(0, 0)
       .setDepth(0);
     this.scenery = new Scenery(this, this.sim.view().terrain, map.theme);
@@ -368,7 +399,8 @@ export class BattleScene extends Phaser.Scene {
       .setDepth(5.9)
       .setVisible(false);
     this.burnGfx = this.add.graphics().setDepth(5.5);
-    this.waterGfx = this.add.graphics().setDepth(6.5);
+    // A lake in a hollow shows only where there is no ground: its water behind the terrain.
+    this.waterGfx = this.add.graphics().setDepth(MAP_GEN[map.theme].lake ? 3.9 : 6.5);
     this.weatherGfx = this.add.graphics().setDepth(11);
     this.bolts = [];
     this.waterShown = this.sim.view().waterY;
@@ -428,6 +460,11 @@ export class BattleScene extends Phaser.Scene {
       resetView: () => this.resetView(),
       title: () => this.showTitle(),
       ...(this.online ? { onlineCode: this.online.code } : {}),
+      match: {
+        map: map.theme,
+        scheme: this.data_.setup.scheme,
+        regicide: this.data_.setup.regicide,
+      },
     });
     // A resized window keeps the map filling the screen (the default view reframes itself).
     const onResize = (): void => {
@@ -460,6 +497,9 @@ export class BattleScene extends Phaser.Scene {
       }
     }
     this.ui.setLocalTeams((team) => this.mine(team));
+    // With the AI in the match, each band shows who leads its house.
+    const ai = aiHouses(this.data_.setup);
+    this.ui.hud.setPlayers(this.data_.setup.lineups.map((_, h) => (ai.has(h) ? 'ai' : 'human')));
     const turn = this.sim.view().turn;
     if (watch) {
       this.ui.hud.announce(
@@ -666,23 +706,26 @@ export class BattleScene extends Phaser.Scene {
   }
 
   /** Fond diapré (ASSETS §1.1): lozenges on vellum, faint enough to keep the play readable. */
-  private diaperTexture(): string {
+  private diaperTexture(theme: MapTheme): string {
     // Fond d'or (ASSETS §1.1): burnished gold leaf, tooled in lozenges with punched dots and a
-    // small fleuron in each, lightly crazed. Kept pale so the figures read against it.
-    const key = 'page_gold';
+    // small fleuron in each, lightly crazed. Kept pale so the figures read against it. Each map
+    // has its own ground (2026-10-25): gold for the Holy Land, green for the valley, a sea blue
+    // for the coast, a snowy grey-white for the pass, as the illuminators varied their grounds.
+    const tint = DIAPER_TINTS[theme];
+    const key = `page_${theme}`;
     if (this.textures.exists(key)) return key;
     const tex = this.textures.createCanvas(key, DIAPER, DIAPER);
     if (!tex) throw new Error('cannot create the page texture');
     const ctx = tex.getContext();
     const h = DIAPER / 2;
     const grad = ctx.createLinearGradient(0, 0, DIAPER, DIAPER);
-    grad.addColorStop(0, css(COLORS.feuilleOr));
-    grad.addColorStop(0.5, css(COLORS.feuilleOrOmbre));
-    grad.addColorStop(1, css(COLORS.feuilleOr));
+    grad.addColorStop(0, css(tint.leaf));
+    grad.addColorStop(0.5, css(tint.shade));
+    grad.addColorStop(1, css(tint.leaf));
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, DIAPER, DIAPER);
     // Craquelure of the leaf: a few fine broken lines.
-    ctx.strokeStyle = cssAlpha(COLORS.poincon, 0.12);
+    ctx.strokeStyle = cssAlpha(tint.punch, 0.12);
     ctx.lineWidth = 1;
     for (const [x0, y0, x1, y1] of [
       [12, 30, 44, 38],
@@ -698,7 +741,7 @@ export class BattleScene extends Phaser.Scene {
       ctx.stroke();
     }
     // Tooled lozenges: an incised line doubled by punched dots.
-    ctx.strokeStyle = cssAlpha(COLORS.poincon, 0.45);
+    ctx.strokeStyle = cssAlpha(tint.punch, 0.45);
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(0, h);
@@ -707,7 +750,7 @@ export class BattleScene extends Phaser.Scene {
     ctx.lineTo(h, DIAPER);
     ctx.closePath();
     ctx.stroke();
-    ctx.fillStyle = cssAlpha(COLORS.poincon, 0.4);
+    ctx.fillStyle = cssAlpha(tint.punch, 0.4);
     for (let k = 0; k <= 16; k++) {
       const t = k / 16;
       for (const [x, y] of [
@@ -723,7 +766,7 @@ export class BattleScene extends Phaser.Scene {
     }
     // A punched fleuron in each lozenge: four petals and a centre.
     const fleuron = (x: number, y: number): void => {
-      ctx.fillStyle = cssAlpha(COLORS.poincon, 0.35);
+      ctx.fillStyle = cssAlpha(tint.punch, 0.35);
       for (const [dx, dy] of [
         [0, -7],
         [7, 0],
@@ -1090,7 +1133,11 @@ export class BattleScene extends Phaser.Scene {
 
   private handleEvents(events: readonly SimEvent[]): void {
     for (const e of events) {
-      if (e.e === 'terrainCarved') this.terrain.invalidate(e.x, e.y, e.radius);
+      // Ice breaks beyond the blast's radius: repaint as far as the carve could reach.
+      if (e.e === 'terrainCarved') {
+        const reach = this.sim.view().terrain.reachPct;
+        this.terrain.invalidate(e.x, e.y, Math.ceil((e.radius * reach) / 100));
+      }
       if (e.e === 'terrainChanged') {
         const half = Math.ceil(Math.max(e.w, e.h) / 2);
         this.terrain.invalidate(e.x + Math.floor(e.w / 2), e.y + Math.floor(e.h / 2), half);

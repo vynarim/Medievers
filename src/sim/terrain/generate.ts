@@ -105,6 +105,11 @@ function freeColumn(
   return null;
 }
 
+/** px over which the land eases down into a frozen lake's hollow */
+const LAKE_SLOPE = 320;
+/** px of rock lining a frozen lake's floor */
+const LAKE_BED = 40;
+
 /** first id of the siege engines, apart from the structures' */
 const ENGINE_ID = 200;
 /** where the pair of siege engines stands, in percent of the width from each end */
@@ -169,7 +174,7 @@ export function generateMap(theme: MapTheme, seed: number): GeneratedMap {
     const c = nextRange(prng, 0, width - 1);
     const half = nextRange(prng, g.bumpHalfWidth[0], g.bumpHalfWidth[1]);
     const h = nextRange(prng, -g.bumpHeight, g.bumpHeight);
-    bump(ground, c, half, theme === 'holyLand' ? Math.abs(h) : h, g.leePct ?? 0);
+    bump(ground, c, half, g.upOnly ? Math.abs(h) : h, g.leePct ?? 0);
   }
   const west = nextRange(prng, 0, 1) === 0;
   if (g.cliff !== undefined) {
@@ -212,6 +217,27 @@ export function generateMap(theme: MapTheme, seed: number): GeneratedMap {
   const walls: Wall[] = [];
   const taken: [number, number][] = [];
   let id = 1;
+  // A frozen lake in the hollow of the pass: a basin sinking below the water, kept free of
+  // towers and walls.
+  let lake: { readonly x0: number; readonly x1: number } | null = null;
+  if (g.lake && g.waterLevel !== undefined) {
+    const half = nextRange(prng, g.lake.halfWidth[0], g.lake.halfWidth[1]);
+    const c = nextRange(prng, Math.trunc((width * 38) / 100), Math.trunc((width * 62) / 100));
+    const rim = g.waterLevel - 30;
+    // The land eases down into the hollow over LAKE_SLOPE px on each side, then the basin sinks.
+    const span = half + LAKE_SLOPE;
+    for (let x = Math.max(0, c - span); x < Math.min(width, c + span); x++) {
+      const d = Math.abs(x - c);
+      // A broad bed: full depth over the inner half, rising to the rim over the outer half.
+      const bed = Math.min(ONE, 2 * (ONE - Math.trunc((d * ONE) / half)));
+      const floor = d < half ? rim + Math.trunc(((g.lake.depth + 30) * smooth(bed)) / ONE) : rim;
+      const k = smooth(ONE - Math.trunc((d * ONE) / span));
+      const gy = ground[x] ?? g.base;
+      ground[x] = Math.max(gy, gy + Math.trunc(((floor - gy) * k) / ONE));
+    }
+    lake = { x0: Math.max(0, c - half), x1: Math.min(width, c + half) };
+    taken.push([lake.x0, lake.x1]);
+  }
   if (g.fortress) {
     const tw = nextRange(prng, 110, 130);
     const curtain = nextRange(prng, 200, 280);
@@ -305,6 +331,21 @@ export function generateMap(theme: MapTheme, seed: number): GeneratedMap {
   for (const w of walls) {
     for (let y = Math.max(0, w.top); y < Math.min(height, w.bottom); y++) {
       for (let x = w.x; x < w.x + w.w; x++) data[y * width + x] = Material.BuiltStone;
+    }
+  }
+  if (lake && g.lake && g.waterLevel !== undefined) {
+    // The ice: a crust just above the water, from shore to shore; under the water, a bed of
+    // rock, so the lake keeps its water and no snow lies on its floor.
+    for (let x = lake.x0; x < lake.x1; x++) {
+      const floor = ground[x] ?? height;
+      if (floor > g.waterLevel) {
+        for (let y = floor; y < Math.min(height, floor + LAKE_BED); y++) {
+          data[y * width + x] = Material.Rock;
+        }
+      }
+      for (let y = g.waterLevel - g.lake.ice; y < g.waterLevel; y++) {
+        if (data[y * width + x] === Material.Air) data[y * width + x] = Material.Ice;
+      }
     }
   }
   return {

@@ -46,6 +46,8 @@ const MATERIAL_RGB: Record<number, readonly Rgb[]> = {
   [Material.Backdrop]: [pale(COLORS.roche, 0.55), pale(COLORS.velin, 0.05)],
   // Timber behind the play: planks of oak, a shade lighter than the wood one stands on.
   [Material.Timber]: [pale(COLORS.terreOmbre, 0.3), pale(COLORS.ocre, 0.35)],
+  // The ice of a frozen lake: pale azure, with whiter streaks.
+  [Material.Ice]: [pale(COLORS.azur, 0.3), pale(COLORS.azur, 0.5)],
 };
 const FALLBACK: readonly Rgb[] = [rgb(COLORS.roseGarance)];
 const HIGHLIGHT = rgb(COLORS.ceruse);
@@ -77,6 +79,13 @@ const WAVE_DROP = Array.from({ length: STEP }, (_, u) =>
 const RIPPLE_DROP = Array.from({ length: STEP }, (_, u) => {
   const p = u % (STEP / 2);
   return Math.round((Math.abs(p - STEP / 4) * 18) / (STEP / 4));
+});
+
+/** Sharp crags (the snowy pass): a steep zigzag, twice as tall on one side. */
+const CRAG_DROP = Array.from({ length: STEP }, (_, u) => {
+  const p = u % (STEP / 2);
+  const rise = STEP / 2 - 12;
+  return Math.round(p < rise ? (p * 18) / rise : ((STEP / 2 - p) * 18) / 12);
 });
 
 /** How a map theme paints its ground: strata, top band (grass or sand), stone. */
@@ -145,7 +154,31 @@ const STYLES: Readonly<Record<MapTheme, TerrainStyle>> = {
     },
     top: [pale(COLORS.or, 0.25), pale(COLORS.ceruse, 0.35)],
   },
+  // The snowy pass: grey and blue scree under a thick coat of snow, slate-blue rock.
+  pass: {
+    drop: CRAG_DROP,
+    // Flecks of snow caught in the scree.
+    grain: (x, y, band) => ((x + band * 29) * 7 + y * 13) % 89 === 0,
+    grainRgb: rgb(COLORS.ceruse),
+    tints: {
+      ...MATERIAL_RGB,
+      [Material.Earth]: [
+        pale(COLORS.roche, 0.45),
+        pale(COLORS.azur, 0.6),
+        pale(COLORS.terreOmbre, 0.62),
+        pale(COLORS.roche, 0.25),
+        pale(COLORS.lapis, 0.7),
+      ],
+      // Slate, darker than the scree, so a boulder never reads as water.
+      [Material.Rock]: [pale(COLORS.roche, 0), pale(COLORS.terreOmbre, 0.45)],
+    },
+    top: [rgb(COLORS.ceruse), pale(COLORS.azur, 0.8)],
+  },
 };
+
+/** px: the cracks of the ice: their spacing along the lake, and how far they lean */
+const ICE_CRACK = 70;
+const ICE_LEAN = 3;
 
 const INK = rgb(COLORS.encre);
 /** Mask PNG colours per material, for the debug view of the raw collision mask. */
@@ -154,6 +187,8 @@ const MASK_RGB: Record<number, Rgb> = Object.fromEntries(
 );
 /** px: ink outline (cerne) along every edge with the air, ASSETS §1.1 */
 const CERNE = 3;
+/** px: ink outline of rock against other ground */
+const ROCK_RIM = 2;
 /** px: depth of the grass on top of earth */
 const GRASS_DEPTH = 22;
 
@@ -294,6 +329,19 @@ export class TerrainLayer {
     const solidAt = (x: number, y: number): boolean =>
       x >= 0 && y >= 0 && x < m.width && y < m.height && (m.data[y * m.width + x] ?? 0) !== 0;
     const airAt = (x: number, y: number): boolean => !solidAt(x, y);
+    /** Rock meets other ground within ROCK_RIM px: its outline, so a boulder reads as one. */
+    const otherAt = (x: number, y: number): boolean => {
+      const o =
+        x >= 0 && y >= 0 && x < m.width && y < m.height ? (m.data[y * m.width + x] ?? 0) : 0;
+      return o !== Material.Air && o !== Material.Rock;
+    };
+    const rockRim = (x: number, y: number): boolean => {
+      for (let d = 1; d <= ROCK_RIM; d++) {
+        if (otherAt(x - d, y) || otherAt(x + d, y) || otherAt(x, y - d) || otherAt(x, y + d))
+          return true;
+      }
+      return false;
+    };
     for (let ly = 0; ly < h; ly++) {
       const wy = tile.y + ly0 + ly;
       for (let lx = 0; lx < w; lx++) {
@@ -304,6 +352,7 @@ export class TerrainLayer {
         let c: Rgb;
         if (this.maskView) c = MASK_RGB[mat] ?? INK;
         else if (nearAir(airAt, wx, wy)) c = INK;
+        else if (mat === Material.Rock && rockRim(wx, wy)) c = INK;
         else if (mat === Material.Earth && !solidAt(wx, wy - GRASS_DEPTH)) {
           // Grass in tufts: lighter blades every few px.
           c = (wx + (wy >> 2)) % 7 < 2 ? this.style.top[1] : this.style.top[0];
@@ -323,6 +372,13 @@ export class TerrainLayer {
           const tints = this.style.tints[mat] ?? FALLBACK;
           const log = Math.floor(wx / STAKE);
           c = wx % STAKE < 2 ? INK_WOOD : (tints[log % tints.length] ?? HIGHLIGHT);
+        } else if (mat === Material.Ice) {
+          // Ice: pale bands lying flat, a white glint along its top, slanting cracks in ink.
+          const tints = this.style.tints[mat] ?? FALLBACK;
+          const u = (((wx + wy * ICE_LEAN) % ICE_CRACK) + ICE_CRACK) % ICE_CRACK;
+          if (!solidAt(wx, wy - 5)) c = HIGHLIGHT;
+          else if (u < 2 && (wx >> 6) % 3 !== 1) c = INK;
+          else c = tints[(wy >> 2) % tints.length] ?? HIGHLIGHT;
         } else if (mat === Material.Timber) {
           // Timber framing, as the wooden keeps and hoardings were built: square panels of
           // planks between dark posts and beams, each braced by a Saint Andrew's cross.

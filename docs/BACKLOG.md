@@ -126,6 +126,11 @@ La priorité est le moteur : simulation, règles, réseau, IA. Jusqu'au lot 9, t
 | 7.1 **[art]** | Rigs et animations des 5 autres classes | — |
 | 7.2 **[art]** | Assets de toutes les armes et VFX P1 | — |
 | 7.3 **[art]** | Cartes du GDD §10, dont les grandes batailles (Hastings, Azincourt, Pavie…) | Chacune passe `maps:build` et `maps:soak` |
+| 7.3a **[tech]** | Le col enneigé, lot 1 : thème généré, lac gelé et glace (matériau 8), décor du fond et accessoires (GDD §10) | Fait le 2026-10-25 : tests du générateur et de la glace, replay `frozen-lake`, déterminisme vert dans les 4 moteurs |
+| 7.3b **[tech]** | Le col enneigé, lot 2 : avalanche, chien de l'hospice et son tonnelet, neige meuble, neige qui tombe | Replay de référence par mécanique ; `maps:soak` sur le col |
+| 7.3c **[tech]** | Le Pont des Tourelles (Orléans, 1429) : rivière au milieu, pont généré à arches de bois destructibles | `maps:soak` ; un replay où l'arche brûle et jette un combattant à l'eau |
+| 7.3d **[tech]** | Le Chantier de la cathédrale : échafaudages étagés, toits praticables, grue à roue qui lâche son bloc | `maps:soak` ; un replay de la grue |
+| 7.3e **[tech]** | La Boue d'Azincourt (1415) : matériau boue (marche ralentie, chutes amorties), pieux | `maps:soak` ; un replay de la boue et des pieux |
 | 7.4 **[tech]** | Menus complets, écran titre, victoire, « passez la main », « tournez l'appareil » | — |
 | 7.5 **[tech]** | Éditeur de blason et gestion des équipes (persistance) | — |
 | 7.6 **[art]** | Audio P1 complet | — |

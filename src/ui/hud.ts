@@ -7,6 +7,7 @@ import type { SimView } from '../sim/sim.ts';
 import { houseShortName } from './house-names.ts';
 import { t } from './i18n.ts';
 import { button, el, shield, watchBar } from './overlay.ts';
+import { playerArt } from './player-art.ts';
 import { withIcons } from './icons.ts';
 import { COLORS, css } from './tokens.ts';
 
@@ -23,6 +24,8 @@ const GLOW_MS = 1600;
 export class Hud {
   private readonly turnTitle: HTMLElement;
   private readonly teams: HTMLElement;
+  /** who leads each house, shown on its band when the AI plays one (null: not shown) */
+  private players: readonly ('human' | 'ai')[] | null = null;
   private readonly windLabel: HTMLElement;
   private readonly windFill: HTMLElement;
   private readonly timer: HTMLElement;
@@ -148,6 +151,12 @@ export class Hud {
     return parts.filter((p) => p !== '');
   }
 
+  /** Who leads each house, shown on the bands when one of them is the AI's. */
+  setPlayers(players: readonly ('human' | 'ai')[]): void {
+    this.players = players.includes('ai') ? players : null;
+    this.signature = '';
+  }
+
   update(v: SimView, power: number, now: number): void {
     if (this.inks.length !== v.units.length) {
       this.inks = v.units
@@ -226,6 +235,14 @@ export class Hud {
           el('span', '', String(hp[i] ?? 0)),
           bar,
         );
+        // Who leads the house: the village idiot (a person) or the helm of rivets (the AI).
+        const who = this.players?.[team.id];
+        if (who) {
+          const face = el('span', 'who');
+          face.innerHTML = playerArt(who, 24);
+          face.title = t(who === 'ai' ? 'hud.who.ai' : 'hud.who.human');
+          row.append(face);
+        }
         return row;
       }),
     );

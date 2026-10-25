@@ -1,7 +1,7 @@
 // AI against AI, headless (BACKLOG 5.7, skill map-soak): plays N matches on a map theme and
 // reports winners by side, match lengths, units stuck, kills by weapon, friendly fire, the time
 // the AI took to plan, and whether the logs of three matches replay to the same hash.
-// Usage: pnpm run maps:soak <valley|coast|holyLand|all> [--games N] [--levels a,b] [--seed S]
+// Usage: pnpm run maps:soak <valley|coast|holyLand|pass|all> [--games N] [--levels a,b] [--seed S]
 //        [--turns T] [--quiet]
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { AI_LEVEL_IDS, type AiLevelId } from '../src/content/ai.ts';

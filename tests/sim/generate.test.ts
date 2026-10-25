@@ -60,6 +60,36 @@ describe('generated maps (GDD §10)', () => {
     expect(holy.structures.map((s) => s.type)).toEqual(['tower', 'wall', 'tower']);
   });
 
+  it('give the snowy pass a frozen lake in its hollow, and no water anywhere else', () => {
+    for (const seed of [1, 2, 3, 4, 5, 6]) {
+      const { mask, waterLevel, structures } = generateMap('pass', seed);
+      expect(waterLevel).toBeDefined();
+      const level = waterLevel ?? 0;
+      const w = mask.width;
+      const at = (x: number, y: number): number => mask.data[y * w + x] ?? -1;
+      // The ice lies just above the water, over a stretch of the middle of the map.
+      const iced: number[] = [];
+      for (let x = 0; x < w; x++) if (at(x, level - 1) === Material.Ice) iced.push(x);
+      expect(iced.length).toBeGreaterThan(300);
+      const [first = 0] = iced;
+      const last = iced[iced.length - 1] ?? 0;
+      expect(first).toBeGreaterThan(w / 4);
+      expect(last).toBeLessThan((3 * w) / 4);
+      // Under the ice, open water; beyond the lake, the ground stands above the water.
+      expect(at((first + last) >> 1, level + 4)).toBe(Material.Air);
+      for (let x = 0; x < w; x += 16) {
+        if (x >= first - 40 && x <= last + 40) continue;
+        expect(at(x, level)).not.toBe(Material.Air);
+      }
+      // Nothing is built on the ice.
+      for (const s of structures) {
+        const x = 'build' in s ? s.build.x : s.rect[0];
+        const sw = 'build' in s ? s.build.width : s.rect[2];
+        expect(x + sw < first || x > last).toBe(true);
+      }
+    }
+  });
+
   it('are named by theme and seed in the logs', () => {
     const id = generatedMapId('holyLand', 0xdeadbeef);
     expect(id).toBe('holyLand@deadbeef');

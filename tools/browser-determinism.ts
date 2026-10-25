@@ -7,6 +7,7 @@ import { createServer } from 'vite';
 import type { ReplayFile } from '../src/sim/index.ts';
 import { runChecks, type CheckResults } from '../tests/browser/checks.ts';
 import { maskPathFor } from './lib/maps-node.ts';
+import { parseMapId } from '../src/content/maps.ts';
 
 const root = new URL('..', import.meta.url);
 const maskPng = new Uint8Array(readFileSync(new URL('tests/fixtures/maps/test-mask.png', root)));
@@ -18,6 +19,8 @@ const replays = readdirSync(replayDir)
   .sort()
   .map((name) => {
     const file = JSON.parse(readFileSync(new URL(name, replayDir), 'utf8')) as ReplayFile;
+    // A generated map is drawn again from its id by the checks themselves.
+    if (parseMapId(file.mapId)) return { name, file };
     return { name, file, mapPng: new Uint8Array(readFileSync(maskPathFor(file.mapId))) };
   });
 
