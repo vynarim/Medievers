@@ -572,6 +572,28 @@ describe('siege engines (GDD §4.8)', () => {
     expect(sim.view().engines[0]?.hp ?? 0).toBeLessThan(before);
   });
 
+  it('a machine at 0 HP is gone, leaving a heap of rubble (BACKLOG 4.9)', () => {
+    const sim = siege([{ id: 50, type: 'scorpion', x: 700 }], 300, [1000]);
+    const scorpion = sim.view().engines[0];
+    if (!scorpion) throw new Error('no machine');
+    // Worn down to its last HP, then one more arrow.
+    (scorpion as { hp: number }).hp = 5;
+    const events = run(
+      sim,
+      [
+        { t: 'selectWeapon', id: 'arrowRain' },
+        { t: 'aim', angle: 0 },
+        { t: 'fireAt', x: 700, y: 0 },
+      ],
+      400,
+    );
+    expect(events.some((e) => e.e === 'engineDestroyed')).toBe(true);
+    expect(sim.view().engines).toHaveLength(0);
+    // The rubble: earth where the machine stood, 24 px high.
+    const t = sim.view().terrain;
+    expect(t.data[(500 - 10) * t.width + 700]).not.toBe(Material.Air);
+  });
+
   it('a ram crushes a wall four times as hard, and spares the units', () => {
     const sim = new Sim(
       {

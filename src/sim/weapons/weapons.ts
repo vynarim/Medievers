@@ -295,7 +295,10 @@ export function blowAngle(def: WeaponDef, u: Pick<Unit, 'facing'>, aim: number):
   return u.facing > 0 ? 0 : 2048;
 }
 
-/** px: the first solid pixel from (x0, y0) to (x1, y1), sub-px, or null. */
+/**
+ * px: the first pixel from (x0, y0) to (x1, y1), sub-px, that is solid or built (the body of a
+ * tower, seen behind the play, counts), or null.
+ */
 function firstSolid(
   state: SimState,
   x0: number,
@@ -308,6 +311,11 @@ function firstSolid(
     const x = subToPx(x0 + idiv((x1 - x0) * i, steps));
     const y = subToPx(y0 + idiv((y1 - y0) * i, steps));
     if (isSolid(state.terrain, x, y)) return { x, y };
+    const o = state.owners;
+    const t = state.terrain;
+    if (o && x >= 0 && y >= 0 && x < t.width && y < t.height && (o[y * t.width + x] ?? 0) !== 0) {
+      return { x, y };
+    }
   }
   return null;
 }

@@ -1011,6 +1011,58 @@ const SCRIPTS: readonly Script[] = [
       ]);
     },
   },
+  {
+    name: 'siege-scorpion-ram',
+    description:
+      'Machines de siège (GDD §4.8): a scorpion volley at two enemies, a ram struck at the stone ' +
+      'tower an enemy stands on, and the enemy’s rains of arrows wearing the scorpion down.',
+    mapId: 'flat',
+    seed: 1453,
+    config: {
+      rules: {
+        ...NO_PLACEMENT,
+        wind: { ...NO_PLACEMENT.wind, max: 0 },
+        structures: STRUCTURE_RULES,
+        weapons: NO_PLACEMENT.weapons.map((w) => (w.id === 'arrowRain' ? { ...w, ammo: 3 } : w)),
+      },
+      teams: [{ spawns: [300, 860] }, { spawns: [700, 760, 1000] }],
+      engines: [
+        { id: 200, type: 'scorpion', x: 340 },
+        { id: 201, type: 'ram', x: 820 },
+      ],
+      structures: [{ id: 1, type: 'tower', build: { x: 940, width: 120, ladder: -1 } }],
+    },
+    play: (r) => {
+      r.until('action');
+      r.step([
+        { t: 'selectUnit', unitId: 1 },
+        { t: 'selectWeapon', id: 'scorpion' },
+        { t: 'aim', angle: 4060 },
+        { t: 'fire', power: 0 },
+      ]);
+      r.until('transition');
+      // The enemy rains arrows on the scorpion, three turns running.
+      const rain = (): void => {
+        r.until('action');
+        r.step([
+          { t: 'selectWeapon', id: 'arrowRain' },
+          { t: 'aim', angle: 2048 },
+          { t: 'fireAt', x: 340, y: 0 },
+        ]);
+        r.until('transition');
+      };
+      rain();
+      r.until('action');
+      r.step([
+        { t: 'selectUnit', unitId: 2 },
+        { t: 'selectWeapon', id: 'siegeRam' },
+        { t: 'aim', angle: 0 },
+        { t: 'fire', power: 0 },
+      ]);
+      r.until('transition');
+      rain();
+    },
+  },
 ];
 
 const force = process.argv.includes('--force');
