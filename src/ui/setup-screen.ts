@@ -13,8 +13,6 @@ import {
   type Player,
 } from '../app/match-setup.ts';
 import { AI_LEVEL_IDS, type AiLevelId } from '../content/ai.ts';
-import { loadLastReplay, parseLog } from '../app/autosave.ts';
-import type { GameLog } from '../sim/log.ts';
 import { t } from './i18n.ts';
 import { button, el, infoButton, shield, uiRoot } from './overlay.ts';
 import { css } from './tokens.ts';
@@ -69,6 +67,14 @@ const STYLE = `
 #ui.phone .setup .tools button { flex: 1 1 40%; }
 #ui.phone .setup .start { flex-wrap: wrap; justify-content: center; }
 #ui.phone .setup .start button { flex: 1 1 40%; white-space: normal; }
+#ui .setup .back .arrow, #ui .setup .back .short, #ui.phone .setup .back .long { display: none; }
+#ui.phone .setup .back .arrow, #ui.phone .setup .back .short { display: inline; }
+/* The way out and the way in stay in view, floating at the foot of the page. */
+#ui.phone .setup .start:not(.others) { position: sticky; bottom: -18px; z-index: 1; flex-wrap: nowrap;
+  margin: 12px -14px -18px; padding: 10px 14px 14px; background: var(--ceruse);
+  border-top: 2px solid var(--gilt); box-shadow: 0 -4px 10px var(--shade); }
+#ui.phone .setup .start:not(.others) button.back { flex: none; }
+#ui.phone .setup .start:not(.others) button.fire { flex: 1 1 auto; }
 `;
 let styled = false;
 
@@ -80,8 +86,6 @@ export function showSetupScreen(
   initial: MatchSetup,
   onStart: (setup: MatchSetup) => void,
   onCancel?: () => void,
-  /** « Revoir la dernière partie » and « Importer un replay »: watch that log */
-  onWatch?: (log: GameLog) => void,
   /** online matches (GDD §6): create one with this setup, or join one by its code */
   online?: { host: (setup: MatchSetup) => void; join: () => void },
   /** i18n key of the button that calls onCancel: back to the match, or to the title */
@@ -242,40 +246,8 @@ export function showSetupScreen(
     options.append(regicide, turnLength, infoButton(() => [t('setup.note')]));
     panel.append(options);
 
-    // The other ways to play: watch a replay, or play online.
+    // The other way to play: online.
     const others = el('div', 'start others');
-    if (onWatch) {
-      // The replays (GDD §6): the last match played to its end, or one saved as a JSON file.
-      const last = loadLastReplay();
-      if (last) {
-        const watch = button(t('setup.watchLast'));
-        watch.addEventListener('click', () => {
-          close();
-          onWatch(last);
-        });
-        others.append(watch);
-      }
-      const file = el('input');
-      file.type = 'file';
-      file.accept = 'application/json,.json';
-      file.classList.add('hidden');
-      file.addEventListener('change', () => {
-        const f = file.files?.[0];
-        if (!f) return;
-        void f.text().then((text) => {
-          const log = parseLog(text);
-          if (!log) {
-            window.alert(t('setup.importBad'));
-            return;
-          }
-          close();
-          onWatch(log);
-        });
-      });
-      const load = button(t('setup.import'));
-      load.addEventListener('click', () => file.click());
-      others.append(file, load);
-    }
     if (online) {
       const host = button(t('setup.onlineHost'));
       host.title = t('setup.onlineHostTip');
@@ -299,7 +271,14 @@ export function showSetupScreen(
       onStart(setup);
     });
     if (onCancel) {
-      const back = button(t(cancelKey));
+      // On a phone held upright: an arrow back and a word (« ← Accueil »).
+      const back = button('', 'back');
+      back.title = t(cancelKey);
+      back.append(
+        el('span', 'arrow', '← '),
+        el('span', 'long', t(cancelKey)),
+        el('span', 'short', t(`${cancelKey}.short`)),
+      );
       back.addEventListener('click', () => {
         close();
         onCancel();

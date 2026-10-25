@@ -249,7 +249,7 @@ Le dragon de la « vie du ciel » n'est plus un décor : il est dans la simulati
 | Mixte | ✅ | Joueurs en ligne + maisons de l'IA |
 | En ligne | Jalon M9 | 2 joueurs à distance, un par appareil (décidé le 2026-10-24, remplace le LAN 2 PC). L'un crée la partie sur l'écran de préparation et reçoit un **code** ; l'autre le saisit dans « Rejoindre une partie ». Les maisons paires (1ʳᵉ, 3ᵉ) sont à l'hôte, les impaires à l'invité. Chacun ne voit que les chausse-trapes de ses maisons (et toutes pendant le tour de son Sapeur) ; pas d'écran « Passez la main ». Les gestes de l'adversaire s'affichent avec environ une demi-seconde de retard. Une page rechargée reprend la partie par le même code. Cf. TECH_SPEC §8. Programmé le 2026-10-24 : boutons « Créer une partie en ligne » et « Rejoindre une partie… » de l'écran de préparation ; les règles et les maisons sont celles de l'hôte ; pause, aide et réglages arrêtent le jeu des deux côtés ; un bandeau dit quand on attend l'adversaire ; une désynchronisation ou le départ de l'adversaire arrête la partie ; quitter une partie en cours (Nouvelle partie, Recommencer) la donne perdue à l'adversaire. Hébergé sur https://medieverse-06.web.app |
 | Défis | P2 | Puzzles à munitions imposées, du type « tuer 3 unités en 1 tour » |
-| Replays | ✅ | Revoir la dernière partie, exporter et importer en JSON. Programmé le 2026-10-25 : « Revoir la partie » sur la tapisserie de fin rejoue le log depuis le premier instant (`ReplayInput`, une `InputSource` comme les autres) ; barre de lecture : pause, ×1 ×2 ×4, depuis le début, exporter (JSON), quitter ; la dernière partie terminée est gardée par le navigateur et l'écran de préparation propose de la revoir ou d'importer un fichier |
+| Replays | ✅ | Revoir la partie qui vient de finir, depuis la tapisserie de fin. Programmé le 2026-10-25 : « Revoir la partie » rejoue le log depuis le premier instant (`ReplayInput`, une `InputSource` comme les autres) ; barre de lecture : pause, ×1 ×2 ×4, depuis le début, quitter. **Ni export, ni import, ni « dernière partie » gardée** (décidé le 2026-10-25) : le replay ne vit que le temps de la page ; les logs JSON restent un outil de développement (`tests/replays/`, `sim:headless`) |
 
 ### Schémas de règles (presets)
 - **Classique** : valeurs par défaut.
@@ -374,7 +374,7 @@ Règles de level design :
 ## 12. Progression et persistance
 - Pas de progression obligatoire en V1.
 - **Sauvegarde automatique de la partie en cours** (décidé le 2026-10-24) : en solo contre l'IA comme en hotseat, le log de la partie (configuration, graine, commandes) est enregistré en local à chaque commande. Après un rafraîchissement, un plantage ou un redémarrage, le jeu propose **Reprendre la partie** : il rejoue le log jusqu'au dernier tick, ce qui redonne exactement le même état (déterminisme). Une partie terminée efface sa sauvegarde.
-- Persistance locale : équipes (noms, blasons, compositions), schémas, options, statistiques simples (parties, victoires, plus gros dégât en un tir), dernier replay.
+- Persistance locale : équipes (noms, blasons, compositions), schémas, options, statistiques simples (parties, victoires, plus gros dégât en un tir).
 - P2 : déblocage cosmétique (meubles héraldiques, chapeaux) par exploits.
 
 ## 13. Accessibilité et options

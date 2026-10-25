@@ -69,7 +69,6 @@ export interface ReplayControls {
   readonly speeds: readonly number[];
   /** watch again from the start */
   readonly restart: () => void;
-  readonly exportLog: () => void;
   /** back to the setup screen */
   readonly quit: () => void;
 }
@@ -361,8 +360,6 @@ export class GameUi {
     });
     speeds.append(...speedButtons);
     const again = this.click(button(t('replay.again')), () => c.restart());
-    const save = this.click(button(t('replay.export')), () => c.exportLog());
-    save.title = t('replay.exportTip');
     const quit = this.click(button(t('replay.quit')), () => c.quit());
     bar.append(
       el('span', 'replay-title', t('replay.badge')),
@@ -370,7 +367,6 @@ export class GameUi {
       speeds,
       el('div', 'sep'),
       again,
-      save,
       quit,
     );
     this.root.append(bar);

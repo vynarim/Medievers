@@ -6,7 +6,6 @@ import { BattleScene, battleMap, onlineBattle, type BattleData } from '../render
 import type { GameLog } from '../sim/log.ts';
 import { showSetupScreen } from '../ui/setup-screen.ts';
 import { showTitleScreen } from '../ui/title-screen.ts';
-import { t } from '../ui/i18n.ts';
 import { loadSetup, rulesFor, saveSetup, type MatchSetup } from './match-setup.ts';
 import { loadSave } from './autosave.ts';
 import { loadFonts } from '../ui/fonts.ts';
@@ -67,15 +66,6 @@ async function boot(): Promise<void> {
         start(chosen, buildMap(chosen.map, seed));
       },
       title,
-      (log) => {
-        void mapOfLog(log).then((map) => {
-          if (map) start(setup, map, { replay: log });
-          else {
-            window.alert(t('setup.importMap'));
-            choose();
-          }
-        });
-      },
       {
         host: (chosen) => {
           saveSetup(chosen);

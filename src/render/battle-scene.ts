@@ -26,7 +26,7 @@ import { t } from '../ui/i18n.ts';
 import type { TuningOverrides } from '../ui/tuning-model.ts';
 import { COLORS, css, cssAlpha } from '../ui/tokens.ts';
 import { isPhonePortrait, uiScale } from '../ui/ui-scale.ts';
-import { AutoSaver, clearSave, downloadLog, saveLastReplay } from '../app/autosave.ts';
+import { AutoSaver, clearSave } from '../app/autosave.ts';
 import { ReplayInput } from '../input/replay-input.ts';
 import { replay, type GameLog } from '../sim/log.ts';
 import { frame, type Point } from './framing.ts';
@@ -64,7 +64,7 @@ import { UNICORN_TEX_SCALE, unicornTextures } from './unicorn-art.ts';
 import { RELIC_TEX_SCALE, reliquaryTextures } from './reliquary-art.ts';
 import { showTitleScreen } from '../ui/title-screen.ts';
 import { StructureState, type StructurePlacement } from '../content/structures.ts';
-import { buildMap, mapForLog, type BuiltMap } from '../app/map-build.ts';
+import { buildMap, type BuiltMap } from '../app/map-build.ts';
 import { leaveMatch, type OnlineMatch } from '../app/online.ts';
 import { hostFlow, joinFlow } from '../app/online-flow.ts';
 import { roleOfTeam } from '../net/protocol.ts';
@@ -431,9 +431,6 @@ export class BattleScene extends Phaser.Scene {
         speed: (s) => (this.speed = s),
         speeds: REPLAY_SPEEDS,
         restart: () => this.watchReplay(),
-        exportLog: () => {
-          if (this.watchLog) downloadLog(this.watchLog);
-        },
         quit: () => this.newMatch(),
       });
     }
@@ -632,17 +629,6 @@ export class BattleScene extends Phaser.Scene {
         this.startMatch(setup, loadOverrides());
       },
       () => (this.paused = false),
-      (log) => {
-        const built = mapForLog(log.mapId) ?? (log.mapId === this.data_.mapId ? null : undefined);
-        if (built === undefined) {
-          window.alert(t('setup.importMap'));
-          this.paused = false;
-          return;
-        }
-        clearSave();
-        const data: BattleData = { ...this.data_, ...(built ? battleMap(built) : {}), replay: log };
-        this.scene.restart(data);
-      },
       {
         host: (setup) => {
           saveSetup(setup);
@@ -1027,10 +1013,7 @@ export class BattleScene extends Phaser.Scene {
     const cmds = this.ai?.plays(view) ? this.ai.poll(view.tick + 1, view) : local;
     this.saver.record(view.tick + 1, cmds, this.time.now);
     const events = this.sim.step(cmds);
-    if (events.some((e) => e.e === 'gameOver')) {
-      clearSave();
-      saveLastReplay(this.saver.logAt(this.sim.view().tick));
-    }
+    if (events.some((e) => e.e === 'gameOver')) clearSave();
     this.handleEvents(events);
     return true;
   }
@@ -1053,10 +1036,7 @@ export class BattleScene extends Phaser.Scene {
     online.lockstep.produceAfter(this.sim.view(), (t) =>
       live ? this.input_.poll(t, this.sim.view()) : [],
     );
-    if (events.some((e) => e.e === 'gameOver')) {
-      saveLastReplay(this.saver.logAt(this.sim.view().tick));
-      leaveMatch(online, false);
-    }
+    if (events.some((e) => e.e === 'gameOver')) leaveMatch(online, false);
     if (live) this.handleEvents(events);
   }
 

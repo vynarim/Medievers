@@ -239,7 +239,7 @@ Pour que les parties ne s'éternisent pas, **le Déluge** arrive après 20 tours
 | **Escarmouche contre l'IA** | 1 humain contre 1 à 3 maisons de l'IA | {{st:jeu}} |
 | **Mixte** | Joueurs en ligne et maisons de l'IA dans la même partie | {{st:prevu}} |
 | **En ligne** | 2 joueurs à distance, chacun sur son appareil : l'un crée la partie et donne le code, l'autre la rejoint | {{st:jeu}} |
-| **Replays** | « Revoir la partie » sur la tapisserie de fin (ou à tout moment, depuis le début) ; « Revoir la dernière partie » et « Importer un replay… » sur l'écran de préparation ; pendant le replay : pause, vitesse ×1, ×2, ×4, depuis le début, **Exporter** (fichier JSON) et Quitter. Tous les pièges y sont visibles | {{st:jeu}} |
+| **Replays** | « Revoir la partie » sur la tapisserie de fin (ou à tout moment, depuis le début) ; pendant le replay : pause, vitesse ×1, ×2, ×4, depuis le début et Quitter. Le replay n'est pas gardé une fois le jeu quitté. Tous les pièges y sont visibles | {{st:jeu}} |
 
 **Écran titre** {{st:jeu}} : il s'ouvre à chaque lancement, avec **Reprendre la partie** quand une partie est en cours, **Entrer en lice** pour en préparer une nouvelle et **Rejoindre une partie…** pour saisir le code d'un adversaire, et **Comment jouer** pour le tutoriel illustré. Le menu ☰ Pause y ramène (**Écran titre**).
 
