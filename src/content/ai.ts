@@ -68,6 +68,7 @@ export const AI_LEVELS: Readonly<Record<AiLevelId, AiLevel>> = {
       'sword',
       'shieldCharge',
       'trebuchet',
+      'arrowRain',
     ],
     thinkMs: [2000, 4000],
     dragon: true,

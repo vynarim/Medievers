@@ -76,11 +76,23 @@ function weaponFields(w: WeaponDef): TuningField[] {
     ];
   }
   if (w.strike) {
+    // The rain of arrows has no blast: its arrows strike where they fall.
+    const arrows = w.explosionRadius === 0;
     return [
       ammo,
       field(`${p}.damage`, 'tuning.damage', 'units.hp', 1, 1, 0, 200),
-      field(`${p}.explosionRadius`, 'tuning.explosionRadius', 'units.px', 1, 1, 1, 300),
-      field(`${p}.strike.count`, 'tuning.strikeCount', 'units.stones', 1, 1, 1, 20),
+      arrows
+        ? field(`${p}.strike.spacing`, 'tuning.strikeSpacing', 'units.px', 1, 1, 2, 80)
+        : field(`${p}.explosionRadius`, 'tuning.explosionRadius', 'units.px', 1, 1, 1, 300),
+      field(
+        `${p}.strike.count`,
+        arrows ? 'tuning.strikeArrows' : 'tuning.strikeCount',
+        arrows ? 'units.arrows' : 'units.stones',
+        1,
+        1,
+        1,
+        30,
+      ),
       field(`${p}.windPct`, 'tuning.windPct', 'units.percent', 1, 5, 0, 300),
     ];
   }

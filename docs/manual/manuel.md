@@ -117,7 +117,7 @@ Déjà jouables {{st:jeu}} : **arc**, **arbalète**, **fronde**, **pot de feu gr
 | Arme | Dégâts | Rayon | Munitions | À savoir |
 |---|---|---|---|---|
 | **Volée de trébuchet** {{st:jeu}} | 5 × 30 | 45 px | 1 | Cliquez sur la carte : 5 pierres tombent autour du point, lancées du côté opposé à la visée (la flèche de visée montre où elles vont). Sans clic, la jauge choisit la distance devant vous. Chaque pierre explose là où elle tombe |
-| **Pluie de flèches** | 12 × 10 | — | 1 | Couvre une large zone, faibles dégâts par flèche |
+| **Pluie de flèches** {{st:jeu}} | 12 × 10 | — | 1 | Comme la volée : cliquez sur la carte, ou la jauge choisit la distance. Douze flèches tombent sur environ 150 px autour du point ; le vent les déporte. Chacune fait 10 dégâts là où elle tombe |
 
 ### 4.3 Mêlée
 

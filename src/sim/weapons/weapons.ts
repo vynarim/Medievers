@@ -423,7 +423,7 @@ export function stepShots(state: SimState, events: SimEvent[]): void {
       if (stops) impact = { kind: 'outOfMap', x: p.x, y: p.y };
     }
 
-    if (def.behavior === 'strike') {
+    if (def.behavior === 'strike' && def.explosionRadius > 0) {
       // A trebuchet stone bursts wherever it lands, on the ground or on a unit (GDD §4.2).
       if (impact && impact.kind !== 'outOfMap') {
         queueExplosion(state.explosions, state.tick, {
@@ -452,7 +452,8 @@ export function stepShots(state: SimState, events: SimEvent[]): void {
         });
       }
       ended = impact !== null;
-    } else if (def.behavior === 'directHit') {
+    } else if (def.behavior === 'directHit' || def.behavior === 'strike') {
+      // An arrow, a bolt, a stone, or an arrow of the rain of arrows (a strike without a blast).
       if (impact?.kind === 'unit') {
         const u = state.units.find((x) => x.id === impact.unitId);
         if (u) {

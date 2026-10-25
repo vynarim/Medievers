@@ -50,6 +50,10 @@ export function weaponLines(w: WeaponDef): string[] {
   }
   if (w.reach) lines.push(t('weapon.reach', { px: w.reach }));
   if (w.charge) lines.push(t('weapon.charge', { px: w.charge.distance }));
-  if (w.strike) lines.push(t('weapon.strike', { n: w.strike.count }));
+  if (w.strike) {
+    lines.push(
+      t(w.explosionRadius > 0 ? 'weapon.strike' : 'weapon.strikeArrows', { n: w.strike.count }),
+    );
+  }
   return lines;
 }

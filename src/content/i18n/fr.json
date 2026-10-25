@@ -1594,5 +1594,16 @@
   "quip.weapon.shieldCharge.1": "{name} baisse la tête et fonce. Le plan s'arrête là.",
   "quip.weapon.shieldCharge.2": "{name} charge, l'écu en avant, en hurlant le nom d'un saint au hasard.",
   "quip.weapon.shieldCharge.3": "{name} : « Place ! Place ! Je ne sais pas freiner ! »",
-  "quip.weapon.shieldCharge.4": "La {house} charge. Les chèvres s'écartent par prudence."
+  "quip.weapon.shieldCharge.4": "La {house} charge. Les chèvres s'écartent par prudence.",
+  "weapons.arrowRain": "Pluie de flèches",
+  "weapons.arrowRain.desc": "Douze flèches tombées du ciel autour du point cliqué, sur une large zone ; le vent les porte.",
+  "weapon.strikeArrows": "{n} flèches autour du point visé, chacune frappe où elle tombe",
+  "tuning.strikeArrows": "Nombre de flèches",
+  "tuning.strikeSpacing": "Écart entre deux flèches",
+  "units.arrows": "flèches",
+  "hud.hint.arrowRain": "Cliquez sur la carte (ou Appeler) pour appeler la pluie · elle vient du côté opposé à la visée, et le vent la porte",
+  "quip.weapon.arrowRain.1": "{name} lève la main. Le ciel s'assombrit, de flèches.",
+  "quip.weapon.arrowRain.2": "Douze flèches pour un seul ennemi. On ne compte pas, chez la {house}.",
+  "quip.weapon.arrowRain.3": "Il pleut des flèches. Les parapluies n'ont pas encore été inventés, hélas.",
+  "quip.weapon.arrowRain.4": "{name} : « Archers ! Visez… à peu près là. »"
 }

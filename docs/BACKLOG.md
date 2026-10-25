@@ -85,7 +85,7 @@ La priorité est le moteur : simulation, règles, réseau, IA. Jusqu'au lot 9, t
 |---|---|---|
 | 4.1 | Arbalète, pot de poix, cochon enflammé | Un replay de référence par arme |
 | 4.2 | Ruche, faucon | idem |
-| 4.3 | Volée de trébuchet, pluie de flèches | idem |
+| 4.3 | Volée de trébuchet, pluie de flèches | idem — fait le 2026-10-25 (replays `trebuchet`, `arrow-rain`) |
 | 4.4 | Épée, masse, charge à l'écu | idem — fait le 2026-10-25 (replays `mace`, `sword-charge`) |
 | 4.5 | Grappin (V1 : un seul ancrage) et escalade au grappin (GDD §4.4 : sortir d'un trou, monter sur un rempart ; 10 PV, fin du tour) | idem ; un combattant au fond d'un trou de 300 px en sort |
 | 4.6 | Mur de pierres, échelle, bannière | idem |

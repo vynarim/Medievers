@@ -750,6 +750,27 @@ const SCRIPTS: readonly Script[] = [
       r.until('transition');
     },
   },
+  {
+    name: 'arrow-rain',
+    description:
+      'Pluie de flèches (GDD §4.2): twelve arrows called down on the enemy with a little wind, ' +
+      'each striking like an arrow where it falls.',
+    mapId: 'flat',
+    seed: 1415,
+    config: {
+      rules: { ...NO_PLACEMENT, wind: { ...NO_PLACEMENT.wind, max: 4 } },
+      teams: [{ spawns: [300] }, { spawns: [900, 980] }],
+    },
+    play: (r) => {
+      r.until('action');
+      r.step([
+        { t: 'selectWeapon', id: 'arrowRain' },
+        { t: 'aim', angle: 0 },
+        { t: 'fireAt', x: 920, y: 0 },
+      ]);
+      r.until('transition');
+    },
+  },
 ];
 
 const force = process.argv.includes('--force');

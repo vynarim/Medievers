@@ -118,3 +118,26 @@ describe('shield charge (GDD §4.3)', () => {
     expect(sim.view().turn.weapon).toBe('bow');
   });
 });
+
+describe('rain of arrows (GDD §4.2)', () => {
+  it('drops twelve arrows around the point, each one striking like an arrow', () => {
+    const sim = match(CALM, 300, [900, 1000]);
+    const events = run(
+      sim,
+      [
+        { t: 'selectWeapon', id: 'arrowRain' },
+        { t: 'aim', angle: 0 },
+        { t: 'fireAt', x: 900, y: 0 },
+      ],
+      600,
+    );
+    expect(events.filter((e) => e.e === 'shotEnded')).toHaveLength(12);
+    expect(events.some((e) => e.e === 'explosion')).toBe(false);
+    const hp = unit(sim, 2)?.hp ?? 100;
+    expect(hp).toBeLessThan(100);
+    expect((100 - hp) % 10).toBe(0);
+    // The other enemy, 100 px off, is out of the rain.
+    expect(unit(sim, 3)?.hp).toBe(100);
+    expect(events.some((e) => e.e === 'terrainCarved')).toBe(true);
+  });
+});

@@ -117,6 +117,11 @@ const ART: Record<WeaponId, string> = {
     <rect x="27" y="12" width="10" height="10" fill="${C.white}" ${s(2)}/>
     <rect x="46" y="12" width="10" height="10" fill="${C.white}" ${s(2)}/>
     <path d="M8 58 L56 58" stroke="${C.green}" stroke-width="3"/>`,
+  arrowRain: `
+    <path d="M10 20 Q10 8 22 10 Q28 2 38 8 Q50 4 54 14 Q62 18 54 24 L12 24 Q4 24 10 20 Z" fill="${C.sky}" ${s(2)}/>
+    <path d="M18 30 L14 52 M32 30 L28 56 M46 30 L42 52" ${s(2.5)}/>
+    <path d="M14 52 L11 45 L17 46 Z M28 56 L25 49 L31 50 Z M42 52 L39 45 L45 46 Z" fill="${C.stone}" ${s(1.2)}/>
+    <path d="M18 30 L16 26 M18 30 L21 27 M32 30 L30 26 M32 30 L35 27 M46 30 L44 26 M46 30 L49 27" stroke="${C.red}" stroke-width="2.5"/>`,
   trebuchet: `
     <path d="M14 56 L30 22 L46 56" fill="none" ${s(4)}/>
     <path d="M14 56 L30 22 L46 56" fill="none" stroke="${C.wood}" stroke-width="2"/>

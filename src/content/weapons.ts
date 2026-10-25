@@ -15,7 +15,8 @@ export type WeaponId =
   | 'stoneWall'
   | 'trebuchet'
   | 'sword'
-  | 'shieldCharge';
+  | 'shieldCharge'
+  | 'arrowRain';
 
 /** Fragments a cluster weapon throws when it bursts (pot de poix, GDD §4.1). */
 export interface FragmentDef {
@@ -384,5 +385,18 @@ export const WEAPONS: readonly WeaponDef[] = [
     knockbackPct: 100,
     ammo: 1,
     strike: { count: 5, spacing: 28, speed: 3 * 256, range: 1600, height: 300 },
+  },
+  {
+    // Pluie de flèches (2026-10-25): twelve arrows from off the map on a chosen point, 14 px
+    // apart; each one strikes like an arrow (10 HP, a chip in the ground) and the wind bends them.
+    id: 'arrowRain',
+    behavior: 'strike',
+    ...TOOL,
+    windPct: 100,
+    damage: 10,
+    chipRadius: 3,
+    knockbackPct: 30,
+    ammo: 1,
+    strike: { count: 12, spacing: 14, speed: 2 * 256, range: 1600, height: 300 },
   },
 ];

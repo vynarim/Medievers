@@ -111,7 +111,7 @@ Toutes les valeurs sont des défauts dans `src/content/weapons.ts`, ajustables p
 | Arme | Dégâts | Rayon | Munitions | Notes |
 |---|---|---|---|---|
 | **Volée de trébuchet** | 5 × 30 | 45 px | 1 | 5 pierres, cible au toucher, direction gauche/droite choisie |
-| **Pluie de flèches** | 12 × 10 | 0 | 1 | Zone large, faible dégât unitaire |
+| **Pluie de flèches** | 12 × 10 | 0 | 1 | Zone large, faible dégât unitaire. Programmée le 2026-10-25 (`arrowRain`, valeurs provisoires) : visée sur un point comme la volée (clic, ou la jauge devant soi), 12 flèches lâchées 300 px au-dessus de la carte, 14 px d'écart (environ 150 px de zone), du côté opposé à la visée ; **sensibles au vent**. Chacune frappe comme une flèche là où elle tombe : 10 PV et un petit recul sur un combattant, un trou de 3 px dans le sol, un baril qui saute. Replay de référence `arrow-rain` |
 
 ### 4.3 Mêlée
 | Arme | Dégâts | Recul | Notes |

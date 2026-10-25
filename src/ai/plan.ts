@@ -341,9 +341,17 @@ function weaponsFor(v: SimView, u: Readonly<Unit>, level: AiLevel): WeaponDef[] 
 }
 
 /** What a hit is roughly worth: damage, more on a weak or royal enemy. */
-function guessWorth(v: SimView, def: WeaponDef, target: Readonly<Unit>, m: number): number {
+function guessWorth(
+  v: SimView,
+  def: WeaponDef,
+  target: Readonly<Unit>,
+  m: number,
+  /** hits it may take: the stones or arrows of a strike that land on it */
+  hits = 1,
+): number {
   const reach = Math.max(1, def.explosionRadius * SUBPX);
-  const dmg = def.explosionRadius > 0 ? def.damage * Math.max(0, 1 - m / reach) : def.damage;
+  const one = def.explosionRadius > 0 ? def.damage * Math.max(0, 1 - m / reach) : def.damage;
+  const dmg = one * hits;
   let worth = Math.min(dmg, target.hp);
   if (dmg >= target.hp) worth += AI_SCORE.enemyKill;
   if (v.rules.regicide && classOf(v, target) === 'king') worth *= AI_SCORE.kingFactor;
@@ -517,7 +525,8 @@ function candidatesFrom(
             power: MAX_POWER,
             at: { x: ex, y: subToPx(e.y) },
           },
-          guess: guessWorth(at, def, e, 0) * 0.8,
+          // Two stones of a volley, or three arrows of the rain, may well fall on it.
+          guess: guessWorth(at, def, e, 0, def.explosionRadius > 0 ? 2 : 3) * 0.8,
         });
       }
     }
