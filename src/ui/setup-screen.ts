@@ -16,10 +16,11 @@ import { AI_LEVEL_IDS, type AiLevelId } from '../content/ai.ts';
 import { t } from './i18n.ts';
 import { button, el, infoButton, shield, uiRoot } from './overlay.ts';
 import { playerArt } from './player-art.ts';
+import { icon, setIcon } from './icons.ts';
 import { css } from './tokens.ts';
 
 const STYLE = `
-#ui .setup { width: min(1240px, calc(100vw - 32px)); max-width: calc(100vw - 32px); padding-top: 14px;
+#ui .setup { width: min(1240px, calc(100vw - 32px)); max-width: calc(100vw - 32px); overflow-x: hidden; padding-top: 14px;
   padding-bottom: 16px; }
 #ui .setup h2 { margin-bottom: 6px; }
 #ui .setup h3 { margin: 10px 0 4px; }
@@ -38,6 +39,30 @@ const STYLE = `
 #ui .setup select.player { width: 196px; font-family: var(--caps); }
 #ui .setup .player-pick { display: flex; align-items: center; gap: 6px; flex: none; }
 #ui .setup .player-pick .face { flex: none; line-height: 0; }
+/* A unit: its class, and a small cross on the corner that takes it out. */
+#ui .setup .unit { position: relative; flex: none; display: flex; }
+#ui .setup button.unit-out { position: absolute; top: -7px; right: -7px; width: 22px; height: 22px;
+  min-width: 22px; min-height: 22px; padding: 0; border-radius: 50%; color: var(--vermillon);
+  background: var(--ceruse); border: 2px solid var(--vermillon); box-shadow: none; z-index: 1; }
+#ui .setup button.unit-out .ico { width: 13px; height: 13px; }
+#ui .setup button.unit-out::before { content: ''; position: absolute; inset: -12px; }
+#ui .setup button.unit-out:hover { background: var(--vermillon); color: var(--ceruse); }
+/* One more unit: an empty dashed slot. */
+#ui .setup button.unit-add { width: 48px; min-height: 48px; padding: 0; background: none;
+  border: 2px dashed var(--brun); box-shadow: none; color: var(--brun); }
+#ui .setup button.unit-add:hover { background: var(--velin); color: var(--encre); }
+/* Régicide: a switch, its knob on the right when it is on. */
+#ui .setup button.switch { display: inline-flex; align-items: center; gap: 10px; }
+#ui .setup button.switch .track { position: relative; width: 40px; height: 22px; border-radius: 11px;
+  border: 2px solid var(--encre); background: var(--ceruse); flex: none; }
+#ui .setup button.switch .track i { position: absolute; top: 2px; left: 2px; width: 14px; height: 14px;
+  border-radius: 50%; background: var(--brun); transition: left 0.15s; }
+#ui .setup button.switch.on { background: var(--velin); }
+#ui .setup button.switch.on .track { background: var(--vert); }
+#ui .setup button.switch.on .track i { left: 20px; background: var(--ceruse); }
+@media (pointer: coarse) {
+  #ui .setup button.unit-out { width: 26px; height: 26px; min-width: 26px; min-height: 26px; }
+}
 #ui .setup .tools { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
 #ui .setup .tools button, #ui .setup .start button { white-space: nowrap; flex: none; }
 #ui .setup .tools .note { flex: 1 1 auto; margin: 0 0 0 8px; font-size: 15px; }
@@ -60,10 +85,12 @@ const STYLE = `
 #ui.phone .setup .scheme { flex: 1 1 40%; display: flex; align-items: center; justify-content: space-between;
   min-height: 48px; }
 #ui.phone .setup .scheme b { font-size: 16px; }
-#ui.phone .setup .house { flex-wrap: wrap; padding: 8px 0; }
+#ui.phone .setup .house { flex-wrap: wrap; padding: 8px 8px 8px 0; }
 #ui.phone .setup .house > * { order: 2; }
 #ui.phone .setup .house .name { order: 0; flex: 1 1 calc(100% - 60px); min-width: 0; }
 #ui.phone .setup .house button.drop { order: 1; }
+#ui.phone .setup .unit, #ui.phone .setup button.unit-add { flex: 1 1 30%; min-width: 0; }
+#ui.phone .setup .unit select { flex: 1 1 auto; }
 #ui.phone .setup select { flex: 1 1 30%; min-width: 0; width: auto; }
 #ui.phone .setup .player-pick { flex: 1 1 100%; }
 #ui.phone .setup select.player { flex: 1 1 auto; min-width: 0; width: auto; }
@@ -189,6 +216,7 @@ export function showSetupScreen(
         update({ ...setup, lineups });
       };
       lineup.forEach((cls, u) => {
+        const slot = el('div', 'unit');
         const select = el('select');
         select.title = t('setup.unit', { n: u + 1 });
         for (const id of CLASS_IDS) {
@@ -203,17 +231,23 @@ export function showSetupScreen(
           next[u] = select.value as ClassId;
           setLineup(next);
         });
-        row.append(select);
+        slot.append(select);
+        // This one leaves the house: a small cross on its corner, while it is not alone.
+        if (lineup.length > 1) {
+          const out = setIcon(button('', 'unit-out'), 'close');
+          out.title = t('setup.unitOut', { n: u + 1 });
+          out.addEventListener('click', () => setLineup(lineup.filter((_, k) => k !== u)));
+          slot.append(out);
+        }
+        row.append(slot);
       });
-      const less = button('−', 'icon');
-      less.title = t('setup.unitLess');
-      less.disabled = lineup.length <= 1;
-      less.addEventListener('click', () => setLineup(lineup.slice(0, -1)));
-      const more = button('+', 'icon');
-      more.title = t('setup.unitMore');
-      more.disabled = lineup.length >= MAX_UNITS;
-      more.addEventListener('click', () => setLineup([...lineup, 'knight']));
-      row.append(less, more);
+      // One more: an empty dashed slot, while the house has room.
+      if (lineup.length < MAX_UNITS) {
+        const more = setIcon(button('', 'unit-add'), 'newMatch');
+        more.title = t('setup.unitMore');
+        more.addEventListener('click', () => setLineup([...lineup, 'knight']));
+        row.append(more);
+      }
       // This house leaves the match: a small round « − » at the end of its row.
       // Hidden, its place kept, while the match has no house to spare.
       const drop = button('', setup.lineups.length <= MIN_HOUSES ? 'drop hidden' : 'drop');
@@ -227,15 +261,19 @@ export function showSetupScreen(
       row.append(drop);
       panel.append(row);
     });
-    const regicide = button(
-      t(setup.regicide ? 'setup.regicide.on' : 'setup.regicide.off'),
-      setup.regicide ? 'on' : '',
-    );
+    // Régicide, yes or no: a switch, read at a glance.
+    const regicide = button('', setup.regicide ? 'switch on' : 'switch');
+    regicide.setAttribute('role', 'switch');
+    regicide.setAttribute('aria-checked', String(setup.regicide));
+    const knob = el('span', 'track');
+    knob.append(el('i'));
+    regicide.append(knob, el('span', 'label', t('setup.regicide')));
     regicide.title = t('setup.regicide.tip');
     regicide.addEventListener('click', () => update({ ...setup, regicide: !setup.regicide }));
     // The turn's length: each click offers the next one.
     const seconds = setup.turnSeconds ?? TURN_SECONDS[0] ?? 45;
-    const turnLength = button(t('setup.turnSeconds', { s: seconds }));
+    const turnLength = setIcon(button(''), 'hourglass', t('setup.turnSeconds', { s: seconds }));
+    turnLength.append(icon('next'));
     turnLength.title = t('setup.turnSeconds.tip');
     turnLength.addEventListener('click', () => {
       const i = TURN_SECONDS.indexOf(seconds);
