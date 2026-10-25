@@ -3,6 +3,7 @@
 // UiIntents (CLAUDE.md rule 3).
 import { CLASSIC_RULES, type MatchRules } from '../content/rules.ts';
 import { FACTIONS, unitName } from '../content/factions.ts';
+import type { WeaponId } from '../content/weapons.ts';
 import type { UiIntents } from '../input/ui-intents.ts';
 import { canSwitchUnit, jumpLeft, nextTeammate, type SimView } from '../sim/sim.ts';
 import { classOf, maxHpOf, mayUse } from '../sim/classes.ts';
@@ -133,6 +134,14 @@ export class GameUi {
   /** the modal on screen, if any */
   private open: HTMLElement | null = null;
   private selectedUnit: number | null = null;
+  /**
+   * A weapon chosen for one of the player's units while another house plays, by house: kept on
+   * this device only, it becomes a command at the start of that house's turn, and does nothing
+   * before then (a shield in hand protects nobody yet).
+   */
+  private readonly prepared = new Map<number, { unitId: number; weapon: WeaponId }>();
+  /** the unit whose weapon the arsenal prepares (null: the arsenal of the playing unit) */
+  private preparing: number | null = null;
   /** settings tab last shown, kept while the page lives */
   private settingsTab = 0;
   private cardSignature = '';
@@ -222,7 +231,10 @@ export class GameUi {
       )),
     );
     // The arsenal button wears the playing unit's weapon, right of its name.
-    this.arsenalButton = this.click(button('', 'arsenal'), () => this.toggle(this.arsenal));
+    this.arsenalButton = this.click(button('', 'arsenal'), () => {
+      this.preparing = null;
+      this.toggle(this.arsenal);
+    });
     this.arsenalArt = el('span', 'art');
     this.arsenalButton.append(el('span', 'label', t('ui.arsenal')), this.arsenalArt);
     // The fuse of the throwables (a wall's length): one press for the next value.
@@ -551,6 +563,7 @@ export class GameUi {
     this.view = view;
     this.hud.update(view, now);
     const phase = view.turn.phase;
+    this.takePrepared(view);
     const canMove = phase === 'action' || phase === 'retreat';
     const budget = (view.rules.unit.moveBudget ?? 0) * 256;
     const moveLeft = budget === 0 || view.turn.moveLeft > 0;
@@ -650,23 +663,54 @@ export class GameUi {
     this.renderCard(view);
   }
 
+  /**
+   * The start of a house's turn on this device: the unit and weapon prepared for it are taken,
+   * as commands of that turn (the sim refuses what is no longer allowed: a unit resting, ammo
+   * spent). A unit fallen meanwhile leaves its weapon unused.
+   */
+  private takePrepared(v: SimView): void {
+    const turn = v.turn;
+    if (turn.phase !== 'action' || !this.mine(turn.activeTeam)) return;
+    const p = this.prepared.get(turn.activeTeam);
+    if (!p) return;
+    this.prepared.delete(turn.activeTeam);
+    this.cardSignature = '';
+    if (!v.units.some((u) => u.id === p.unitId && u.alive)) return;
+    if (p.unitId !== turn.activeUnitId) this.opts.intents.selectUnit = p.unitId;
+    this.opts.intents.selectWeapon = p.weapon;
+  }
+
+  /** Opens the arsenal to prepare the weapon of unit `unitId`, one of the player's. */
+  private prepareFor(unitId: number): void {
+    this.preparing = unitId;
+    this.show(this.arsenal);
+  }
+
   private renderArsenal(force: boolean): void {
     const v = this.view;
     if (!v) return;
-    const team = v.teams[v.turn.activeTeam];
-    const signature = `${v.turn.weapon}|${team?.ammo.join(',')}|${v.turn.phase}|${v.turn.activeUnitId}`;
+    // Preparing: the unit's own house, its ammo, at any phase.
+    const prepUnit =
+      this.preparing === null ? undefined : v.units.find((u) => u.id === this.preparing);
+    const preparing = prepUnit?.alive === true;
+    const teamId = preparing ? prepUnit.team : v.turn.activeTeam;
+    const team = v.teams[teamId];
+    const chosen = preparing ? this.prepared.get(teamId)?.weapon : v.turn.weapon;
+    const signature = `${chosen}|${team?.ammo.join(',')}|${v.turn.phase}|${v.turn.activeUnitId}|${this.preparing}`;
     if (!force && signature === this.arsenalSignature) return;
     this.arsenalSignature = signature;
-    this.arsenal.replaceChildren(this.closeButton(), el('h2', '', t('ui.arsenal')));
+    const title = preparing ? t('ui.arsenalFor', { name: unitName(prepUnit.id) }) : t('ui.arsenal');
+    this.arsenal.replaceChildren(this.closeButton(), el('h2', '', title));
+    if (preparing) this.arsenal.append(el('p', 'note', t('ui.arsenalFor.note')));
     const grid = el('div', 'grid');
-    const unit = v.units.find((u) => u.id === v.turn.activeUnitId);
+    const unit = preparing ? prepUnit : v.units.find((u) => u.id === v.turn.activeUnitId);
     v.rules.weapons.forEach((w, idx) => {
       // A siege engine's weapon only on a map that has such a machine.
       if (w.engine && !v.engines.some((e) => e.type === w.engine)) return;
       const ammo = team?.ammo[idx] ?? 0;
       // A cleric may not take up a melee weapon (GDD §3.2).
       const allowed = !unit || mayUse(v, unit, w);
-      const b = button('', `weapon${w.id === v.turn.weapon ? ' on' : ''}`);
+      const b = button('', `weapon${w.id === chosen ? ' on' : ''}`);
       const art = el('span', 'art');
       art.innerHTML = weaponArt(w.id, 60);
       b.append(art, el('b', '', t(`weapons.${w.id}`)));
@@ -675,9 +719,14 @@ export class GameUi {
         b.append(el('small', line.startsWith(t('weapon.ammo')) ? 'keep' : '', line));
       if (!allowed)
         b.append(el('small', 'keep', t(w.engine ? 'weapons.needEngine' : 'weapons.forbidden')));
-      b.disabled = ammo === 0 || !allowed || v.turn.phase !== 'action';
+      b.disabled = ammo === 0 || !allowed || (!preparing && v.turn.phase !== 'action');
       b.addEventListener('click', () => {
-        this.opts.intents.selectWeapon = w.id;
+        if (preparing) {
+          this.prepared.set(teamId, { unitId: prepUnit.id, weapon: w.id });
+          this.cardSignature = '';
+        } else {
+          this.opts.intents.selectWeapon = w.id;
+        }
         this.show(null);
       });
       grid.append(b);
@@ -697,7 +746,12 @@ export class GameUi {
     const marks = v.afflictions
       .filter((a) => a.unitId === u.id)
       .map((a) => `${a.trick}:${a.turns}`);
-    const signature = `${marks.join(',')}|${u.hp}|${u.alive}|${u.grounded}|${active}|${switchable}|${resting}|${v.turn.weapon}|${v.turn.phase}`;
+    // One of the player's units while another house plays: its weapon can be made ready.
+    const ready =
+      u.alive && this.mine(u.team) && v.turn.phase !== 'gameOver' && u.team !== v.turn.activeTeam;
+    const prep = this.prepared.get(u.team);
+    const preparedHere = prep?.unitId === u.id ? prep.weapon : null;
+    const signature = `${marks.join(',')}|${u.hp}|${u.alive}|${u.grounded}|${active}|${switchable}|${resting}|${v.turn.weapon}|${v.turn.phase}|${ready}|${preparedHere}`;
     if (signature === this.cardSignature) return;
     this.cardSignature = signature;
 
@@ -749,6 +803,21 @@ export class GameUi {
         for (const line of weaponLines(def)) list.append(el('li', '', line));
         this.card.append(el('h3', '', `${t('card.weapon')} : ${t(`weapons.${def.id}`)}`), list);
       }
+    }
+    if (ready) {
+      this.card.append(
+        el('h3', '', t('card.prepared')),
+        el(
+          'div',
+          '',
+          preparedHere
+            ? t('card.prepared.weapon', { weapon: t(`weapons.${preparedHere}`) })
+            : t('card.prepared.none'),
+        ),
+        this.click(button(t(preparedHere ? 'card.prepare.change' : 'card.prepare')), () =>
+          this.prepareFor(u.id),
+        ),
+      );
     }
   }
 

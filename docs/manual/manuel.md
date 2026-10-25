@@ -54,6 +54,7 @@ Un chroniqueur à l'humour douteux commente la partie {{st:jeu}} : chaque tour s
 - Un combattant **touché pendant son propre tour** termine son tour aussitôt.
 - **Le tir ami existe** : une flèche ou une explosion blesse aussi vos propres combattants, et vous-même.
 - **Vous choisissez qui joue** : le jeu propose un combattant, mais un clic sur un autre de vos combattants (sur lui ou sur son nom), ou le bouton **Combattant** (deux flèches opposées), lui donne la main, tant que personne n'a encore bougé ni tiré ce tour (viser ne compte pas). Ensuite, sa fiche indique « la maison a déjà bougé ou tiré ce tour ». En revanche, le combattant qui a joué le tour précédent de votre maison **souffle** : il ne peut pas rejouer tout de suite (sa fiche l'indique), sauf s'il est le dernier debout.
+- **Préparez votre tour pendant celui des autres** : cliquez sur l'un de vos combattants, puis **Préparer une arme…** sur sa fiche. Au début du tour de votre maison, ce combattant prend la main avec cette arme (s'il le peut encore : celui qui souffle ne rejoue pas). D'ici là, l'arme préparée ne sert à rien et ne protège de rien.
 - Les morts sont constatées à la fin de la résolution : un combattant à 0 PV ne tombe qu'une fois que tout s'est arrêté.
 
 ## 3. Vos combattants
