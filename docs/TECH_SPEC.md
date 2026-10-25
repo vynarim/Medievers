@@ -195,36 +195,37 @@ public/assets/maps/<mapId>/
 
 ## 8. En ligne (jalon M9)
 
-Décidé le 2026-10-24 : le jeu à distance remplace le LAN 2 PC (WebRTC sans serveur). Raisons et options écartées : [ADR 0002](adr/0002-online-transport.md).
+Décidé le 2026-10-24 : le jeu à distance remplace le LAN 2 PC (WebRTC sans serveur). Raisons et options écartées : [ADR 0002](adr/0002-online-transport.md). Décidé le 2026-10-25 : jusqu'à 4 joueurs (le créateur et 3 copains, un par appareil), avec des maisons de l'IA calculées chez le créateur.
 
 ### 8.1 Firebase
 - Projet `videogames-06`, partagé par les jeux vidéo de l'utilisateur. Medieverse y a son application web, son site d'hébergement (`medieverse-06`) et son espace de données (`/medieverse/` dans la base par défaut, puis une instance Realtime Database dédiée une fois le projet en Blaze).
 - Connexion **anonyme** : chaque appareil a un `uid` stable (persisté par le SDK), ce qui permet de reprendre une partie après un rechargement.
-- Aucun serveur de calcul : la base ne sert que de boîte aux lettres entre les deux pairs.
+- Aucun serveur de calcul : la base ne sert que de boîte aux lettres entre les pairs.
 
 ### 8.2 Salle et code
-- L'hôte crée `/medieverse/rooms/{code}` : `{ v, host: uid, guest: null, createdAt }`. Le code fait 6 caractères pris dans un alphabet sans ambiguïté (`23456789ABCDEFGHJKMNPQRSTUVWXYZ`), affiché `XXX-XXX`.
-- L'invité saisit le code et s'inscrit dans `guest` (la place doit être libre, ou déjà la sienne).
-- Messages : `/medieverse/rooms/{code}/to/{host|guest}/{pushId}`. Chaque pair écrit dans la boîte de l'autre et lit la sienne ; il efface chaque message lu.
-- Règles de sécurité (`database.rules.json`) : seuls l'hôte et l'invité lisent et écrivent leur salle ; un message est une chaîne de 64 Ko au plus.
-- Nettoyage : l'hôte efface la salle en fin de partie. Le nettoyage des salles abandonnées attend Blaze (fonction programmée).
+- Sièges : le créateur est le siège 0 ; les copains prennent les sièges 1 à 4. La k-ième maison marquée « Un copain » sur l'écran de préparation est au siège k ; la maison du créateur et celles de l'IA sont au siège 0 (`houseSeats`, `src/net/protocol.ts`). Un siège au-delà des maisons de copains regarde la partie sans jouer.
+- Dès qu'une maison est donnée à « Un copain », l'écran de préparation crée `/medieverse/rooms/{code}` : `{ v, host: uid, createdAt }`, et affiche le code à côté du titre des maisons. Le code fait 6 caractères pris dans un alphabet sans ambiguïté (`23456789ABCDEFGHJKMNPQRSTUVWXYZ`), affiché `XXX-XXX`. La salle est effacée si l'écran se ferme sans lancer la partie.
+- Un copain saisit le code : il reprend son siège s'il en avait un (page rechargée), sinon il prend le premier libre dans `seats/{1..4}` par transaction. Il dit `hello` et attend ; le créateur voit sa maison passer de ⌛ à ✓, et « À la bataille ! » ne s'active que quand chaque maison de copain a le sien. Un copain qui annule, ou dont la page se ferme avant le départ, rend son siège.
+- Messages : `/medieverse/rooms/{code}/to/{siège}/{pushId}`, chacun enveloppé `{ f: expéditeur, t?: destinataire, d: message }`. Topologie en étoile : un copain n'écrit que dans la boîte du créateur, qui relaie aux autres copains ce qui leur est destiné. Chaque pair efface chaque message lu. Présence : `online/{siège}`.
+- Règles de sécurité (`database.rules.json`) : seuls le créateur et les copains assis lisent et écrivent leur salle ; un copain n'écrit dans `seats` que son propre siège (le créateur peut en libérer un) ; un message est une chaîne de 64 Ko au plus.
+- Nettoyage : le créateur efface la salle en fin de partie. Le nettoyage des salles abandonnées attend Blaze (fonction programmée).
 
 ### 8.3 Protocole
 JSON, versionné par `PROTOCOL_VERSION` (`src/net/protocol.ts`) ; tout changement de message l'incrémente.
 - `hello { protocolVersion, buildHash, tick }` : à chaque connexion ; un écart de version ou de build refuse la partie. `tick` dit jusqu'où le pair a joué (0 : il n'a rien).
-- `start { setup, rules, seed, delay }` : envoyé par l'hôte ; les deux pairs construisent la même carte et la même configuration.
+- `start { setup, rules, seed, delay }` : envoyé par le créateur à chaque copain assis quand il lance la partie ; tous les pairs construisent la même carte et la même configuration.
 - `frames { from, cmds }` : les commandes des ticks `from..from + cmds.length - 1`, par lots.
-- `turnEnd { turn, hash }` : à chaque début de tour, par les deux pairs ; un écart affiche l'écran de désync. Une désync n'est jamais corrigée en silence.
-- `resume { start, frames }` : la configuration et toutes les commandes produites, pour un pair qui revient sans état.
-- `pause { on }`, `resign`.
+- `turnEnd { turn, hash }` : à chaque début de tour, par chaque pair ; un écart entre deux pairs quelconques affiche l'écran de désync. Une désync n'est jamais corrigée en silence.
+- `resume { start, frames }` : la configuration et toutes les commandes produites, pour un pair qui arrive sans état (page rechargée, ou copain arrivé après le départ).
+- `pause { on }`, `resign`. Protocole en version 2 depuis le 2026-10-25 (sièges).
 
 ### 8.4 Lockstep
-- Chaque tick `t` a exactement **un producteur** : le pair qui contrôle la maison active dans l'état du tick `t - D - 1`. Les maisons paires sont à l'hôte, les impaires à l'invité.
-- Le producteur décide des commandes du tick `t` quand il atteint le tick `t - D - 1`, les garde et les envoie. Les deux pairs les appliquent au tick `t` : le **délai** `D` est le même des deux côtés (30 ticks, une demi-seconde, porté par `start`). Les ticks `1..D` sont vides.
-- Un pair ne joue le tick `t` que s'il en a les commandes ; sinon il attend. Le changement de producteur entre deux tours ne crée ni trou ni chevauchement, puisque la propriété de chaque tick se lit dans un état que les deux pairs calculent à l'identique.
+- Chaque tick `t` a exactement **un producteur** : le pair du siège de la maison active dans l'état du tick `t - D - 1`. Le créateur produit aussi pour les maisons de l'IA, qui tourne chez lui seul.
+- Le producteur décide des commandes du tick `t` quand il atteint le tick `t - D - 1`, les garde et les envoie. Tous les pairs les appliquent au tick `t` : le **délai** `D` est le même partout (30 ticks, une demi-seconde, porté par `start`). Les ticks `1..D` sont vides.
+- Un pair ne joue le tick `t` que s'il en a les commandes ; sinon il attend. Le changement de producteur entre deux tours ne crée ni trou ni chevauchement, puisque la propriété de chaque tick se lit dans un état que tous les pairs calculent à l'identique.
 - Les lots partent tous les 6 ticks (100 ms) ou dès qu'ils portent une commande.
-- Les menus qui arrêtent l'horloge (pause, aide, réglages) envoient `pause` : les deux pairs s'arrêtent.
-- Reprise : un pair qui revient (page rechargée) envoie `hello { tick: 0 }` ; l'autre lui envoie `resume`. Le pair rejoue en accéléré, puis le lockstep reprend.
+- Les menus qui arrêtent l'horloge (pause, aide, réglages) envoient `pause` : tous les pairs s'arrêtent tant qu'un menu est ouvert quelque part.
+- Reprise : un pair qui arrive sans état envoie `hello { tick: 0 }` ; les pairs qui le reçoivent lui répondent `resume` (le premier reçu compte). Le pair rejoue en accéléré, puis le lockstep reprend.
 - Les tests tournent sur un transport en mémoire, avec latence et désordre simulés (`tests/net/`).
 
 ### 8.5 À faire au passage en Blaze

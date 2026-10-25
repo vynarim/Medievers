@@ -31,6 +31,15 @@ Option **C**.
 - Le projet reste en Spark pour l'instant ; l'utilisateur le passera en **Blaze** plus tard (instance de base dédiée, nettoyage planifié, mails). Voir BACKLOG 9.7.
 - Lockstep par tour : chaque tick a un seul producteur, et les deux pairs appliquent les commandes avec le même délai (30 ticks). Détail : TECH_SPEC §8.
 
+## Complément du 2026-10-25 : plusieurs joueurs et l'IA en ligne
+
+L'utilisateur a trouvé le parcours « Créer une partie en ligne » obscur (un code, puis rien qu'un bouton Annuler) et a demandé de pouvoir composer une partie en ligne maison par maison : « 3 joueurs et 1 IA, 2 et 2… ». Décision :
+- le menu de chaque maison offre « Un copain » à côté de « Vous » et des niveaux de l'IA ; la première maison de copain ouvre la salle et affiche son code sur l'écran de préparation ;
+- jusqu'à 4 joueurs, par sièges numérotés ; topologie en étoile par le créateur, qui relaie (un copain n'écrit qu'à lui), pour garder un seul écrivain par boîte et peu de lectures ;
+- l'IA tourne chez le créateur, qui produit les ticks des maisons de l'IA comme ceux de la sienne ;
+- le départ d'un joueur arrête la partie pour tous (comme à deux) ;
+- protocole en version 2. Détail : TECH_SPEC §8.
+
 ## Conséquences
 
 - Le jeu doit être mis en ligne (Firebase Hosting) pour qu'un joueur distant l'ouvre.

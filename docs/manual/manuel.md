@@ -20,7 +20,7 @@ Ce manuel décrit le jeu tel qu'on le joue. Il grandit avec le jeu : chaque règ
 | Moteur de simulation | Calcul exact et identique sur tous les appareils, terrain, combattants, projectiles, explosions, tours | terminée |
 | Première version jouable | Formes simples à l'écran, clavier, souris et tactile, arc, fronde et pot | jouable (reste à essayer sur une vraie tablette) |
 | Règles complètes | Classes, Régicide, Déluge, flammes, tours qui s'effondrent, schémas de règles, écran de préparation | jouable |
-| Jeu en ligne | Créer une partie, la rejoindre par un code, reprise après rechargement | jouable |
+| Jeu en ligne | De 2 à 4 joueurs, avec ou sans l'IA : une maison « Un copain » par invité, un code à transmettre, reprise après rechargement | jouable |
 | IA | Trois niveaux, Écuyer, Chevalier et Connétable, qui marchent, sautent et tirent | jouable |
 | Arsenal complet | Toutes les armes, outils et machines de siège | jouable |
 | Graphismes et musique | Le style enluminé et la musique | à venir |
@@ -253,15 +253,21 @@ Pour que les parties ne s'éternisent pas, **le Déluge** arrive après 20 tours
 | Mode | Joueurs | État |
 |---|---|---|
 | **Escarmouche contre l'IA** | 1 humain contre 1 à 3 maisons de l'IA | {{st:jeu}} |
-| **Mixte** | Joueurs en ligne et maisons de l'IA dans la même partie | {{st:prevu}} |
-| **En ligne** | 2 joueurs à distance, chacun sur son appareil : l'un crée la partie et donne le code, l'autre la rejoint | {{st:jeu}} |
+| **Mixte** | Joueurs en ligne et maisons de l'IA dans la même partie, par exemple 3 joueurs et 1 IA | {{st:jeu}} |
+| **En ligne** | 2 à 4 joueurs à distance, chacun sur son appareil : l'un prépare la partie et donne le code, les autres la rejoignent | {{st:jeu}} |
 | **Replays** | « Revoir la partie » sur la tapisserie de fin (ou à tout moment, depuis le début) ; pendant le replay : pause, vitesse ×1, ×2, ×4, depuis le début et Quitter. Le replay n'est pas gardé une fois le jeu quitté. Tous les pièges y sont visibles | {{st:jeu}} |
 
-**Écran titre** {{st:jeu}} : il s'ouvre à chaque lancement, avec **Reprendre la partie** quand une partie est en cours, **Entrer en lice** pour en préparer une nouvelle et **Rejoindre une partie…** pour saisir le code d'un adversaire, et **Comment jouer** pour le tutoriel illustré. Le menu ☰ Pause y ramène (**Écran titre**).
+**Écran titre** {{st:jeu}} : il s'ouvre à chaque lancement, avec **Reprendre la partie** quand une partie est en cours, **Entrer en lice** pour en préparer une nouvelle et **Rejoindre une partie…** pour saisir le code qu'un copain vous a donné, et **Comment jouer** pour le tutoriel illustré. Le menu ☰ Pause y ramène (**Écran titre**).
 
-**Jouer en ligne** {{st:jeu}} : le jeu se joue sur https://medieverse-06.web.app. Sur l'écran de préparation, l'un choisit la carte, les règles et les maisons, puis touche **Créer une partie en ligne** : un code de six signes s'affiche (par exemple `K7M-2QX`). Il le donne à son adversaire, qui touche **Rejoindre une partie…** et le saisit. Celui qui a créé la partie joue la 1ʳᵉ maison (et la 3ᵉ), l'autre la 2ᵉ (et la 4ᵉ). Pendant le tour adverse, on regarde : les gestes de l'adversaire arrivent avec une demi-seconde de retard. Chacun ne voit que ses propres chausse-trapes. La pause, l'aide et les réglages arrêtent le jeu des deux côtés. Si la page se recharge, le jeu retrouve la partie tout seul et rattrape ce qui s'est passé. Quitter une partie en cours la laisse à l'adversaire.
+**Jouer en ligne** {{st:jeu}} : le jeu se joue sur https://medieverse-06.web.app, de 2 à 4 joueurs, chacun sur son appareil.
 
-On ne joue jamais à deux sur le même appareil : c'est en ligne, ou contre l'IA. Sur l'écran de préparation, chaque maison a son menu **Vous / IA Écuyer / IA Chevalier / IA Connétable** : vous menez une maison au plus, l'IA les autres (par défaut, vous la première, l'IA Chevalier la suivante). On peut aussi confier toutes les maisons à l'IA et regarder la bataille.
+1. **Celui qui prépare la partie** choisit la carte, les règles et les maisons. Pour chaque joueur qu'il invite, il règle le menu d'une maison sur **Un copain**. Un code de six signes s'affiche aussitôt à côté du titre « Les maisons et leurs combattants » (par exemple `K7M-2QX`), avec **Copier le code** : il le transmet à ses copains, par message ou de vive voix. Les autres maisons restent à lui (**Vous**) ou à l'IA.
+2. **Chaque copain** ouvre le jeu, touche **Rejoindre une partie…** et saisit le code. Il prend la première maison de copain libre, puis attend : « Vous êtes à la table ».
+3. Sur l'écran de celui qui prépare, la tête de chaque maison de copain porte un sablier, puis une coche verte quand son joueur est arrivé. **À la bataille !** reste grisé, avec « En attente de N copain(s)… », jusqu'à ce que tous soient là. Il le touche alors, et la bataille s'ouvre chez tout le monde.
+
+Pendant le tour des autres, on regarde : leurs gestes arrivent avec une demi-seconde de retard. Les maisons de l'IA sont calculées sur l'appareil de celui qui a préparé la partie. Chacun ne voit que ses propres chausse-trapes. La pause, l'aide et les réglages arrêtent le jeu pour tous. Si la page se recharge, le jeu retrouve la partie tout seul et rattrape ce qui s'est passé. Si un joueur quitte la partie en cours, elle s'arrête pour tous.
+
+On ne joue jamais à deux sur le même appareil : c'est en ligne, ou contre l'IA. Sur l'écran de préparation, chaque maison a son menu **Vous / Un copain / IA Écuyer / IA Chevalier / IA Connétable** : vous menez une maison au plus, un copain en ligne celles que vous lui donnez, l'IA les autres (par défaut, vous la première, l'IA Chevalier la suivante). On peut aussi confier toutes les maisons à l'IA et regarder la bataille.
 
 **Régicide** (option) {{st:jeu}} : chaque maison a un Roi, et sa mort élimine toute la maison : ses autres combattants quittent aussitôt le champ.
 

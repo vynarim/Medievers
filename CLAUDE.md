@@ -13,7 +13,7 @@ Documents de référence (à lire avant toute tâche structurante) :
 | Sujet | Décision |
 |---|---|
 | Modes | Décidé le 2026-10-24 : contre l'IA, ou en ligne entre joueurs à distance (code de partie). **Jamais deux humains sur le même appareil** : pas de hotseat |
-| En ligne | Décidé le 2026-10-24, remplace le LAN : partie créée par un joueur, rejointe par un code ; transport Firebase Realtime Database (projet `videogames-06`, partagé avec les futurs jeux vidéo), connexion anonyme, hébergement Firebase. Cf. `docs/adr/0002-online-transport.md` |
+| En ligne | Décidé le 2026-10-24, remplace le LAN : partie créée par un joueur, rejointe par un code ; depuis le 2026-10-25, 2 à 4 joueurs (maisons « Un copain ») et des maisons de l'IA calculées chez le créateur ; transport Firebase Realtime Database (projet `videogames-06`, partagé avec les futurs jeux vidéo), connexion anonyme, hébergement Firebase. Cf. `docs/adr/0002-online-transport.md` |
 | Unités | Hybride : arsenal partagé + 1 passif par classe |
 | Simulation | Déterministe, module pur sans dépendance au rendu |
 | Physique | Collision pixel vs masque bitmap, maison. Pas de Matter.js / Box2D |
