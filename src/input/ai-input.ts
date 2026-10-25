@@ -45,7 +45,20 @@ function workerPlanner(): { planner: Planner; dispose: () => void } | null {
       new Promise<PlanResult>((ok, ko) => {
         const id = next++;
         pending.set(id, { ok, ko });
-        worker.postMessage({ id, input });
+        // The pixels go as copies handed over to the worker (a memcpy, not a structured clone of
+        // megabytes on the main thread); the rest of the match is small.
+        const s = input.state;
+        const data = s.terrain.data.slice();
+        const owners = s.owners ? s.owners.slice() : null;
+        const state = {
+          ...s,
+          terrain: { ...s.terrain, data: new Uint8Array(0) },
+          owners: owners ? new Uint8Array(0) : null,
+        };
+        worker.postMessage({ id, input: { ...input, state }, data, owners }, [
+          data.buffer,
+          ...(owners ? [owners.buffer] : []),
+        ]);
       }),
     dispose: () => worker.terminate(),
   };
