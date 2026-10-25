@@ -1,4 +1,8 @@
-# The project lives under OneDrive: keep dependency files out of the synced tree.
 # node_modules only holds links into the global virtual store (<store>/links).
 enableGlobalVirtualStore: true
 saveExact: true
+# Install scripts the game does not need: Firebase's default-config writer (the app passes its
+# config) and protobufjs's version check. Declared so pnpm neither runs nor fails on them.
+allowBuilds:
+  '@firebase/util': false
+  protobufjs: false
