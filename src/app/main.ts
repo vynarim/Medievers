@@ -101,3 +101,8 @@ async function boot(): Promise<void> {
 }
 
 void boot();
+
+// The installed app (PWA): its service worker, on the published site only.
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => void navigator.serviceWorker.register('/sw.js'));
+}

@@ -25,6 +25,7 @@
     "format:check": "prettier --check .",
     "gen:lut": "node tools/gen-trig-lut.ts",
     "manual": "node tools/build-manual.ts",
+    "icons": "node tools/build-icons.ts",
     "online:probe": "node tools/online-probe.ts",
     "check": "pnpm run lint && pnpm run typecheck && pnpm test && pnpm run test:determinism && pnpm run test:browser"
   },
