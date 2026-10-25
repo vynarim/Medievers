@@ -10,7 +10,7 @@ import type { SimView } from '../sim/sim.ts';
 import { t, variantCount } from './i18n.ts';
 import { StructureState } from '../content/structures.ts';
 import { classOf, maxHpOf } from '../sim/classes.ts';
-import { unitName } from '../content/factions.ts';
+import { FACTIONS, unitName } from '../content/factions.ts';
 import { UNIT_HEIGHT } from '../sim/units/unit.ts';
 
 export type ObjectRef =
@@ -26,6 +26,8 @@ export type ObjectRef =
 export interface ObjectInfo {
   readonly title: string;
   readonly text: string;
+  /** the title's colour: a unit's (or a grave's) house ink; absent: the bubble's own */
+  readonly ink?: number;
   /** world px: top centre of the object, where the bubble points */
   readonly x: number;
   readonly y: number;
@@ -93,6 +95,12 @@ export function objectAt(v: SimView, x: number, y: number, slop: number): Object
   return null;
 }
 
+/** The ink of house `team`, for a name in a bubble. */
+function inkOf(team: number): { ink?: number } {
+  const ink = FACTIONS[team]?.ink;
+  return ink !== undefined ? { ink } : {};
+}
+
 /** The hover bubble of a unit: name, class and HP; `above` px over its head (its label). */
 export function unitInfo(v: SimView, unitId: number, above: number): ObjectInfo | null {
   const u = v.units.find((x) => x.id === unitId);
@@ -102,6 +110,7 @@ export function unitInfo(v: SimView, unitId: number, above: number): ObjectInfo 
   return {
     title: unitName(u.id),
     text: cls ? `${t(`classes.${cls}`)} · ${hp}` : hp,
+    ...inkOf(u.team),
     x: u.x / SUBPX,
     y: u.y / SUBPX - UNIT_HEIGHT - above,
   };
@@ -119,8 +128,9 @@ export function objectInfo(v: SimView, ref: ObjectRef): ObjectInfo | null {
       const epitaph = n > 0 ? t(`epitaph.${1 + (u.id % n)}`, { name: unitName(u.id) }) : '';
       return {
         title: unitName(u.id),
-        // Its house is told by the tombstone's colour.
+        // In its house's colour, like its tombstone.
         text: epitaph,
+        ...inkOf(u.team),
         x: u.x / SUBPX,
         y: u.y / SUBPX - GRAVE_HEIGHT,
       };

@@ -449,16 +449,22 @@ export class GameUi {
    * The bubble over a map object (screen px of the point it hangs from), or none. The text is
    * rebuilt only when it changes.
    */
-  showBubble(info: { title: string; text: string } | null, sx: number, sy: number): void {
+  showBubble(
+    info: { title: string; text: string; ink?: number } | null,
+    sx: number,
+    sy: number,
+  ): void {
     this.bubble.classList.toggle('hidden', info === null);
     if (!info) {
       this.bubbleText = '';
       return;
     }
-    const text = `${info.title}|${info.text}`;
+    const text = `${info.title}|${info.text}|${info.ink ?? ''}`;
     if (text !== this.bubbleText) {
       this.bubbleText = text;
-      this.bubble.replaceChildren(el('b', '', info.title), el('div', '', info.text));
+      const title = el('b', '', info.title);
+      if (info.ink !== undefined) title.style.color = css(info.ink);
+      this.bubble.replaceChildren(title, el('div', '', info.text));
     }
     this.bubble.style.left = `${Math.round(sx)}px`;
     this.bubble.style.top = `${Math.round(sy)}px`;
@@ -497,7 +503,8 @@ export class GameUi {
     this.down.classList.toggle('hidden', !ladder);
     // A wall to climb (or a drop to go down) with a rope, before the shot (rules.unit.wallClimb).
     const active = view.units.find((x) => x.id === view.turn.activeUnitId);
-    const ropeWay = !ladder && active?.alive === true && active.grounded ? ropeDir(view, active) : 0;
+    const ropeWay =
+      !ladder && active?.alive === true && active.grounded ? ropeDir(view, active) : 0;
     this.rope.classList.toggle('hidden', ropeWay === 0);
     // It says which way the rope goes: up the wall in front, or down the drop in front.
     const ropeLabel = t(ropeWay > 0 ? 'ui.ropeDown' : 'ui.rope');
