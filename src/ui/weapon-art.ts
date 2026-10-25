@@ -78,6 +78,17 @@ const ART: Record<WeaponId, string> = {
     <path d="M42 5 L45 11 L39 11 Z M57 20 L51 23 L51 17 Z M42 35 L39 29 L45 29 Z M27 20 L33 17 L33 23 Z
              M53 9 L51 15 L47 11 Z M53 31 L47 29 L51 25 Z" fill="${C.stone}" ${s(1.5)}/>
     <circle cx="42" cy="20" r="3" fill="${C.gold}" ${s(1)}/>`,
+  sword: `
+    <path d="M30 6 L34 6 L35 42 L29 42 Z" fill="${C.white}" ${s(2)}/>
+    <line x1="32" y1="9" x2="32" y2="38" stroke="${C.stone}" stroke-width="1.5"/>
+    <rect x="18" y="42" width="28" height="5" rx="2" fill="${C.gold}" ${s(2)}/>
+    <rect x="29" y="47" width="6" height="10" fill="${C.wood}" ${s(1.5)}/>
+    <circle cx="32" cy="59" r="3.5" fill="${C.gold}" ${s(1.5)}/>`,
+  shieldCharge: `
+    <path d="M14 10 L50 10 L50 30 Q50 50 32 58 Q14 50 14 30 Z" fill="${C.red}" ${s()}/>
+    <path d="M32 10 L32 58 M14 28 L50 28" stroke="${C.gold}" stroke-width="4"/>
+    <path d="M14 10 L50 10 L50 30 Q50 50 32 58 Q14 50 14 30 Z" fill="none" ${s()}/>
+    <path d="M56 20 L62 20 M54 32 L62 32 M56 44 L62 44 M4 26 L9 26 M2 38 L9 38" ${s(2)}/>`,
   pick: `
     <line x1="20" y1="56" x2="38" y2="16" stroke="${INK}" stroke-width="7" stroke-linecap="round"/>
     <line x1="20" y1="56" x2="38" y2="16" stroke="${C.wood}" stroke-width="3.5" stroke-linecap="round"/>

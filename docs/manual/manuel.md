@@ -79,7 +79,7 @@ Toutes les classes partagent le **même arsenal**. Chacune a en plus un talent, 
 | **Archer** | *Œil exercé* : la trajectoire prévue (les points dorés qui apparaissent quand on charge le tir) s'affiche deux fois plus loin avec l'arc et l'arbalète | — |
 | **Frondeur** | *Bras souple* : la fronde et les pots partent 15 % plus vite, donc plus loin | −10 PV maximum |
 | **Sapeur** | *Maître d'œuvre* : creuse deux fois plus vite à la pioche et à la sape (deux fois plus profond, deux fois plus loin), et quand c'est lui qui joue, sa maison voit les chausse-trapes ennemies | — |
-| **Clerc** | *Bénédiction* : à la fin de son tour, soigne de 10 PV les alliés à moins de 120 pixels (pas lui-même) | Pas d'armes de mêlée |
+| **Clerc** | *Bénédiction* : à la fin de son tour, soigne de 10 PV les alliés à moins de 120 pixels (pas lui-même) | Pas d'armes de mêlée (épée, masse, charge à l'écu) |
 | **Roi** | *Majesté* : les alliés à moins de 200 pixels infligent +10 % de dégâts (il compte au moment du tir) | −20 PV ; un seul par maison |
 
 Chaque maison compose son armée sur l'écran de préparation de la partie. On reconnaît les classes à leur attribut : la couronne du Roi, le carquois de l'Archer, la fronde du Frondeur, la pioche du Sapeur, la crosse du Clerc ; le Chevalier est le combattant en heaume, sans rien de plus. La fiche du combattant (clic sur lui) rappelle son talent et sa contrepartie, avec les valeurs de la partie. Les talents se règlent dans ⚙ Réglages, onglet **Classes**.
@@ -121,13 +121,15 @@ Déjà jouables {{st:jeu}} : **arc**, **arbalète**, **fronde**, **pot de feu gr
 
 ### 4.3 Mêlée
 
-La **masse d'armes** est jouable {{st:jeu}} : le bouton devient « Frapper ». Elle se charge comme un tir : maintenez « Frapper » (ou Espace), la jauge se remplit, relâchez pour frapper, à 34 pixels devant vous dans la direction visée. Les dégâts sont toujours les mêmes ; plus la jauge est pleine, plus l'ennemi vole loin (jauge vide : un cinquième de la distance). Sans rien à frapper à portée dans la direction visée, le bouton **Frapper** reste grisé : on ne gâche pas son action à battre l'air. Les autres armes de mêlée sont {{st:prevu}}.
+La **masse d'armes** est jouable {{st:jeu}} : le bouton devient « Frapper ». Elle se charge comme un tir : maintenez « Frapper » (ou Espace), la jauge se remplit, relâchez pour frapper, à 34 pixels devant vous dans la direction visée. Les dégâts sont toujours les mêmes ; plus la jauge est pleine, plus l'ennemi vole loin (jauge vide : un cinquième de la distance). Sans rien à frapper à portée dans la direction visée, le bouton **Frapper** reste grisé : on ne gâche pas son action à battre l'air. 
+
+L'**épée** et la **charge à l'écu** sont jouables aussi {{st:jeu}}. L'épée frappe aussitôt, droit devant, du côté où vous regardez (une pression sur ← ou → vous retourne sans rien coûter) ; comme la masse, elle refuse de battre l'air. La charge, au bouton « Charger », vous lance sur 120 pixels droit devant : chaque ennemi (ou ami !) que votre écu rencontre perd 20 PV et culbute devant vous. Elle s'arrête contre un mur ou au bord d'un vide.
 
 | Arme | Dégâts | Recul | À savoir |
 |---|---|---|---|
-| **Épée** | 25 | faible | Frappe devant soi |
+| **Épée** {{st:jeu}} | 25 | faible | Frappe droit devant soi, sans jauge |
 | **Masse d'armes** | 30 | fort, dans la direction visée | Pour envoyer l'ennemi au loin |
-| **Charge à l'écu** | 20 | moyen | Course de 120 px qui renverse tout sur son passage |
+| **Charge à l'écu** {{st:jeu}} | 20 | moyen | Course de 120 px qui renverse tout sur son passage |
 
 ### 4.4 Outils
 

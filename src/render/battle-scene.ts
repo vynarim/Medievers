@@ -11,7 +11,7 @@ import type { SimEvent } from '../sim/events.ts';
 import { cosQ14, sinQ14 } from '../sim/math/angle.ts';
 import { SUBPX } from '../sim/math/fixed.ts';
 import { createProjectile, stepProjectile } from '../sim/projectiles/projectile.ts';
-import { Sim, canSwitchUnit } from '../sim/sim.ts';
+import { Sim, canSwitchUnit, type SimView } from '../sim/sim.ts';
 import type { MatchConfig } from '../sim/state.ts';
 import type { Mask } from '../sim/terrain/mask.ts';
 import type { Terrain } from '../sim/terrain/terrain.ts';
@@ -1251,6 +1251,7 @@ export class BattleScene extends Phaser.Scene {
       const cls = classOf(v, u);
       drawFigure(g, x, y, u.facing, primary, secondary, cls, isActive, time);
       drawClassMark(g, cls, x, y, u.facing);
+      this.drawGear(g, v, u, x, y, primary, secondary);
 
       if (label) {
         // A small phylactery with the name and a thin life bar under it; the figures are in the
@@ -1948,6 +1949,39 @@ export class BattleScene extends Phaser.Scene {
     g.lineStyle(3, COLORS.encre, 1);
     g.lineBetween(x, y - 28, x, y - 10);
     g.lineBetween(x - 6, y - 22, x + 6, y - 22);
+  }
+
+  /** What a unit holds out while a tool of the arsenal is at work: the shield of a charge. */
+  private drawGear(
+    g: Phaser.GameObjects.Graphics,
+    v: SimView,
+    u: SimView['units'][number],
+    x: number,
+    y: number,
+    primary: number,
+    secondary: number,
+  ): void {
+    if (v.charge?.unitId === u.id) {
+      const sx = x + u.facing * 22;
+      const sy = y - UNIT_HEIGHT * 0.55;
+      const shield = poly([
+        { x: sx - 13, y: sy - 22 },
+        { x: sx + 13, y: sy - 22 },
+        { x: sx + 13, y: sy + 2 },
+        { x: sx, y: sy + 22 },
+        { x: sx - 13, y: sy + 2 },
+      ]);
+      g.fillStyle(primary, 1);
+      g.fillPoints(shield, true);
+      g.fillStyle(secondary, 1);
+      g.fillRect(sx - 3, sy - 22, 6, 36);
+      g.lineStyle(3, COLORS.encre, 1);
+      g.strokePoints(shield, true);
+      // Dust kicked up behind the run.
+      g.fillStyle(COLORS.ocre, 0.5);
+      for (let i = 1; i <= 3; i++)
+        g.fillCircle(x - u.facing * (14 + i * 12), y - 4 - i * 3, 9 - i * 2);
+    }
   }
 
   /** Stylised blast: a gilt star with a vermillon core, ink-outlined, shrinking out. */

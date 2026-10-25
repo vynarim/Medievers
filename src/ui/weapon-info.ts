@@ -49,6 +49,7 @@ export function weaponLines(w: WeaponDef): string[] {
     lines.push(t('weapon.fragments', { n: w.fragments.count, damage: w.fragments.damage }));
   }
   if (w.reach) lines.push(t('weapon.reach', { px: w.reach }));
+  if (w.charge) lines.push(t('weapon.charge', { px: w.charge.distance }));
   if (w.strike) lines.push(t('weapon.strike', { n: w.strike.count }));
   return lines;
 }

@@ -99,9 +99,10 @@ export function digPctOf(s: ClassView, u: Unit): number {
   return classOf(s, u) === 'sapper' ? (s.rules.classes?.sapper.digPct ?? 100) : 100;
 }
 
-/** A cleric may not use melee weapons (GDD §3.2). */
+/** A cleric may not use melee weapons, the shield charge among them (GDD §3.2). */
 export function mayUse(s: ClassView, u: Unit, def: WeaponDef): boolean {
-  return !(def.behavior === 'melee' && classOf(s, u) === 'cleric');
+  const melee = def.behavior === 'melee' || def.behavior === 'charge';
+  return !(melee && classOf(s, u) === 'cleric');
 }
 
 const distPx = (a: Unit, b: Unit): number => {

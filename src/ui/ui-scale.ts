@@ -20,7 +20,9 @@ export function isPhonePortrait(w: number, h: number): boolean {
 
 /** Overlay scale for a window of w × h CSS pixels, in [UI_SCALE_MIN, 1]. */
 export function uiScale(w: number, h: number): number {
-  const s = isPhonePortrait(w, h) ? Math.min(w / PHONE_REF_W, 1) : Math.min(w / REF_W, h / REF_H, 1);
+  const s = isPhonePortrait(w, h)
+    ? Math.min(w / PHONE_REF_W, 1)
+    : Math.min(w / REF_W, h / REF_H, 1);
   return Math.round(Math.max(UI_SCALE_MIN, s) * 100) / 100;
 }
 

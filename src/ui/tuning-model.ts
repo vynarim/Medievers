@@ -48,6 +48,15 @@ function weaponFields(w: WeaponDef): TuningField[] {
       field(`${p}.dig.radius`, 'tuning.digRadius', 'units.px', 1, 1, 15, 40),
     ];
   }
+  if (w.charge) {
+    return [
+      ammo,
+      field(`${p}.damage`, 'tuning.damage', 'units.hp', 1, 1, 0, 200),
+      field(`${p}.knockbackPct`, 'tuning.knockbackPct', 'units.percent', 1, 10, 0, 1000),
+      field(`${p}.charge.distance`, 'tuning.chargeDistance', 'units.px', 1, 10, 10, 600),
+      field(`${p}.charge.speed`, 'tuning.chargeSpeed', 'units.pxPerTick', SUB, 0.5, 1, 20),
+    ];
+  }
   if (w.wall) {
     return [
       ammo,

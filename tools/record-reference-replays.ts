@@ -718,6 +718,38 @@ const SCRIPTS: readonly Script[] = [
       r.until('transition');
     },
   },
+  {
+    name: 'sword-charge',
+    description:
+      'Épée et charge à l’écu (GDD §4.3): a level sword blow at the enemy in front, then a ' +
+      'shield charge that throws two enemies over.',
+    mapId: 'flat',
+    seed: 1214,
+    config: {
+      rules: { ...NO_PLACEMENT, wind: { ...NO_PLACEMENT.wind, max: 0 } },
+      teams: [{ spawns: [300, 500] }, { spawns: [340, 560, 600] }],
+    },
+    play: (r) => {
+      r.until('action');
+      r.step([
+        { t: 'selectWeapon', id: 'sword' },
+        { t: 'aim', angle: 3400 },
+        { t: 'fire', power: 0 },
+      ]);
+      r.until('transition');
+      r.until('action');
+      r.step([{ t: 'skip' }]);
+      r.until('transition');
+      r.until('action');
+      r.step([
+        { t: 'selectUnit', unitId: 2 },
+        { t: 'selectWeapon', id: 'shieldCharge' },
+        { t: 'aim', angle: 0 },
+        { t: 'fire', power: 0 },
+      ]);
+      r.until('transition');
+    },
+  },
 ];
 
 const force = process.argv.includes('--force');

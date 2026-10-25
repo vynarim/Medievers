@@ -248,8 +248,14 @@ export class Hud {
     const fuseText = fuse === null ? '' : ` · ${t(fuseKey, { s: fuse ?? 0 })}`;
     this.weaponName.textContent = `${t(`weapons.${turn.weapon}`)}${fuseText}`;
     // How to use the weapon in hand: aim and charge, click the map, or just press.
+    // A weapon's own hint first (the sword strikes at once), then its behaviour's.
+    const own = t(`hud.hint.${turn.weapon}`);
     const hintKey = `hud.hint.${def?.behavior ?? 'directHit'}`;
-    const hint = t(hintKey).startsWith('[') ? t('hud.hint') : t(hintKey);
+    const hint = !own.startsWith('[')
+      ? own
+      : t(hintKey).startsWith('[')
+        ? t('hud.hint')
+        : t(hintKey);
     if (this.hint.dataset.text !== hint) {
       this.hint.dataset.text = hint;
       this.hint.replaceChildren(...withIcons(hint));

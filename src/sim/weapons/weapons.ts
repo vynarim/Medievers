@@ -2,7 +2,8 @@
 //  - directHit: arrow, bolt or stone; damages and pushes the unit it hits, chips the ground.
 //  - fusedBouncer: pot that bounces until its fuse runs out, then explodes.
 //  - cluster: a fusedBouncer that bursts into fragments, each exploding where it lands.
-//  - melee: no projectile; strikes what stands within reach along the aim.
+//  - melee: no projectile; strikes what stands within reach along the aim (level, for the sword).
+//  - charge: the shield charge; the unit runs along its facing side, throwing over what it meets.
 //  - dig, mine, build, strike: the pick and sap, the chausse-trape, the stone wall and the
 //    trebuchet volley (src/sim/tools.ts).
 import { weaponDefIn } from '../../content/rules.ts';
@@ -28,7 +29,7 @@ import {
 } from '../projectiles/projectile.ts';
 import type { SimEvent } from '../events.ts';
 import type { FlyingShot, SimState } from '../state.ts';
-import { UNIT_HEIGHT, launch, type Unit } from '../units/unit.ts';
+import { UNIT_HALF_WIDTH, UNIT_HEIGHT, launch, walk, type Unit } from '../units/unit.ts';
 import { MAX_POWER } from '../commands.ts';
 import { damageDealtPct, throwPct, type ClassView } from '../classes.ts';
 import { igniteStructureAt, shotHitsStructure } from '../structures.ts';
@@ -55,7 +56,7 @@ export function fire(
   at: { readonly x: number; readonly y: number } | null = null,
 ): boolean {
   const def = weaponDefIn(state.rules, state.turn.weapon);
-  const angle = state.turn.aim;
+  const angle = blowAngle(def, u, state.turn.aim);
   if (def.behavior === 'build') {
     const p = at ?? targetFor(state, u, def, power);
     if (!buildWall(state, u, def, p.x, p.y, events)) return false;
@@ -76,6 +77,20 @@ export function fire(
     events.push({ e: 'shotFired', shotId: id, weapon: def.id });
     strike(state, u, def, angle, pct, power, events);
     events.push({ e: 'shotEnded', shotId: id });
+    return true;
+  }
+  if (def.behavior === 'charge') {
+    if (!def.charge) return false;
+    events.push({ e: 'shotFired', shotId: id, weapon: def.id });
+    state.charge = {
+      id,
+      unitId: u.id,
+      weapon: def.id,
+      dir: u.facing,
+      left: def.charge.distance * SUBPX,
+      damagePct: pct,
+      hit: [],
+    };
     return true;
   }
   if (def.behavior === 'dig') {
@@ -151,6 +166,12 @@ function isSolidNear(state: SimState, x: number, y: number): boolean {
   return false;
 }
 
+/** BAM a melee blow is struck along: the aim, or level on the facing side (frontal, the sword). */
+export function blowAngle(def: WeaponDef, u: Pick<Unit, 'facing'>, aim: number): number {
+  if (!def.frontal) return aim;
+  return u.facing > 0 ? 0 : 2048;
+}
+
 /** Point the blow of a melee weapon lands on, along the aim at its reach, in sub-px. */
 function strikePoint(u: Unit, def: WeaponDef, angle: number): { x: number; y: number; cy: number } {
   const reach = (def.reach ?? 0) * SUBPX;
@@ -216,17 +237,66 @@ function strike(
     if (!other.alive || other.id === u.id || !touchesUnit(other, x, y, STRIKE_RADIUS)) continue;
     directHit(other, def, scaled(def.damage, pct), state.rules.explosion, dx, dy, events, knock);
   }
-  const barrel = barrelOnSegment(state, u.x, cy, x, y);
-  if (barrel !== null) igniteBarrel(state, barrel, 1);
-  const crate = crateOnSegment(state, u.x, cy, x, y);
-  if (crate !== null) burstCrate(state, crate, events);
-  if (segmentTouchesKitchen(state, u.x, cy, x, y)) useKitchen(state, events);
-  if (beastOnSegment(state, u.x, cy, x, y)) killBeast(state, events);
-  if (unicornOnSegment(state, u.x, cy, x, y)) touchUnicorn(state, u.id, events);
+  touchAlong(state, u, u.x, cy, x, y, events);
   if (isSolidNear(state, subToPx(x), subToPx(y))) {
     shotHitsStructure(state, subToPx(x), subToPx(y), scaled(def.damage, pct), def.id, events);
   }
   if (def.chipRadius) carveCircle(state.terrain, subToPx(x), subToPx(y), def.chipRadius);
+}
+
+/**
+ * What a blow or a run from (x0, y0) to (x1, y1), sub-px, meets besides the units: a barrel goes
+ * up, a coffer bursts, the kitchen is used, a beast is put down, the unicorn touched.
+ */
+function touchAlong(
+  state: SimState,
+  u: Unit,
+  x0: number,
+  y0: number,
+  x1: number,
+  y1: number,
+  events: SimEvent[],
+): void {
+  const barrel = barrelOnSegment(state, x0, y0, x1, y1);
+  if (barrel !== null) igniteBarrel(state, barrel, 1);
+  const crate = crateOnSegment(state, x0, y0, x1, y1);
+  if (crate !== null) burstCrate(state, crate, events);
+  if (segmentTouchesKitchen(state, x0, y0, x1, y1)) useKitchen(state, events);
+  if (beastOnSegment(state, x0, y0, x1, y1)) killBeast(state, events);
+  if (unicornOnSegment(state, x0, y0, x1, y1)) touchUnicorn(state, u.id, events);
+}
+
+/**
+ * One tick of the shield charge: the unit runs on over the ground (up steps, down slopes) on its
+ * facing side; every unit its shield meets takes the damage once and is thrown ahead. The run
+ * ends when covered, against a wall, or when the unit falls or dies.
+ */
+export function stepCharge(state: SimState, events: SimEvent[]): void {
+  const c = state.charge;
+  if (!c) return;
+  const u = state.units.find((x) => x.id === c.unitId);
+  const def = weaponDefIn(state.rules, c.weapon);
+  const run = def.charge;
+  if (!run || !u?.alive || !u.grounded || c.left <= 0) {
+    state.charge = null;
+    events.push({ e: 'shotEnded', shotId: c.id });
+    return;
+  }
+  const x0 = u.x;
+  const speed = Math.min(run.speed, c.left);
+  const r = walk(u, state.terrain, c.dir, { ...state.rules.unit, walkSpeed: speed });
+  c.left = r === 'moved' ? c.left - speed : 0;
+  // The shield, at the front of the body, half way up.
+  const cy = u.y - (UNIT_HEIGHT * SUBPX) / 2;
+  const front = u.x + c.dir * UNIT_HALF_WIDTH * SUBPX;
+  for (const o of state.units) {
+    if (!o.alive || o.id === u.id || c.hit.includes(o.id)) continue;
+    if (!touchesUnit(o, front, cy, STRIKE_RADIUS)) continue;
+    c.hit.push(o.id);
+    c.hit.sort((a, b) => a - b);
+    directHit(o, def, scaled(def.damage, c.damagePct), state.rules.explosion, c.dir, 0, events);
+  }
+  touchAlong(state, u, x0 + c.dir * UNIT_HALF_WIDTH * SUBPX, cy, front, cy, events);
 }
 
 /** Damages unit `u` by `damage` and pushes it along (vx, vy) scaled by the weapon. */

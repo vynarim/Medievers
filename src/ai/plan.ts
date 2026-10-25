@@ -17,7 +17,7 @@ import { canPlace, canSwitchUnit, type Sim, type SimView } from '../sim/sim.ts';
 import type { SimState } from '../sim/state.ts';
 import type { Terrain } from '../sim/terrain/terrain.ts';
 import { ropeTarget } from '../sim/units/climb.ts';
-import { UNIT_HEIGHT, type Unit } from '../sim/units/unit.ts';
+import { UNIT_HALF_WIDTH, UNIT_HEIGHT, type Unit } from '../sim/units/unit.ts';
 import { shotSpeed } from '../sim/weapons/weapons.ts';
 import { Sandbox } from './sandbox.ts';
 import { SANDBOX_PACE, TurnScript, type AiMove, type AiPlan, type AiShot } from './script.ts';
@@ -331,7 +331,12 @@ function weaponsFor(v: SimView, u: Readonly<Unit>, level: AiLevel): WeaponDef[] 
     if (level.weapons && !level.weapons.includes(w.id)) return false;
     if ((team?.ammo[i] ?? 0) === 0) return false;
     if (!mayUse(v as SimState, u as Unit, w as WeaponDef)) return false;
-    return isProjectile(w as WeaponDef) || w.behavior === 'melee' || w.behavior === 'strike';
+    return (
+      isProjectile(w as WeaponDef) ||
+      w.behavior === 'melee' ||
+      w.behavior === 'charge' ||
+      w.behavior === 'strike'
+    );
   }) as WeaponDef[];
 }
 
@@ -481,6 +486,22 @@ function candidatesFrom(
           move,
           shot: { weapon: def.id, angle: atan2Bam(dy, dx), power: MAX_POWER },
           guess: guessWorth(at, def, e, 0),
+        });
+      }
+    } else if (def.charge) {
+      // A run at the enemies standing level with it, within its length: towards each side once.
+      const run = def.charge.distance + 2 * UNIT_HALF_WIDTH;
+      for (const dir of [-1, 1] as const) {
+        const met = enemiesOf(at, team).filter((e) => {
+          const dx = (subToPx(e.x) - subToPx(u.x)) * dir;
+          return dx > 0 && dx <= run && Math.abs(subToPx(e.y) - subToPx(u.y)) <= 40;
+        });
+        if (met.length === 0) continue;
+        out.push({
+          unitId,
+          move,
+          shot: { weapon: def.id, angle: dir > 0 ? 0 : 2048, power: MAX_POWER },
+          guess: met.reduce((sum, e) => sum + guessWorth(at, def, e, 0), 0),
         });
       }
     } else if (isTargeted(def) && move.kind === 'stay') {

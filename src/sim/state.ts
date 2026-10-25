@@ -104,6 +104,21 @@ export interface Dig {
   ticksLeft: number;
 }
 
+/** A unit running with the shield charge (GDD §4.3). */
+export interface Charge {
+  /** id of the « shot », for the shotFired and shotEnded events */
+  readonly id: number;
+  readonly unitId: number;
+  readonly weapon: WeaponId;
+  readonly dir: -1 | 1;
+  /** sub-px of the run still to cover */
+  left: number;
+  /** percent of the weapon's damage (king's aura) */
+  readonly damagePct: number;
+  /** units already thrown by this run, sorted */
+  readonly hit: number[];
+}
+
 /** A chausse-trape on the ground (GDD §4.4), seen only by its own house. */
 export interface Mine {
   readonly id: number;
@@ -290,6 +305,8 @@ export interface SimState {
   readonly pots: PlacedPot[];
   /** the pick or the sap at work; null otherwise */
   dig: Dig | null;
+  /** the shield charge under way; null otherwise */
+  charge: Charge | null;
   /** sorted by id */
   mines: Mine[];
   /** units still to be placed, the next one first; empty once the battle has begun */

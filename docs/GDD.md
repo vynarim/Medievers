@@ -75,7 +75,7 @@
 | **Archer** | Œil exercé : prévisualisation de trajectoire 2× plus longue pour arc/arbalète | — | Chaperon, carquois |
 | **Frondeur** | Bras souple : puissance max +15 % sur les armes lancées (fronde, pots) | PV max −10 | Tunique courte, fronde |
 | **Sapeur** | Maître d'œuvre : creusement 2× plus rapide ; voit les chausse-trapes ennemies | — | Bonnet, pioche, tablier |
-| **Clerc** | Bénédiction : en fin de *son* tour, +10 PV aux alliés à ≤ 120 px (pas lui-même) | Pas d'armes de mêlée | Robe, tonsure, crosse |
+| **Clerc** | Bénédiction : en fin de *son* tour, +10 PV aux alliés à ≤ 120 px (pas lui-même) | Pas d'armes de mêlée (épée, masse, charge à l'écu) | Robe, tonsure, crosse |
 | **Roi** | Majesté : alliés à ≤ 200 px infligent +10 % de dégâts | PV −20 ; obligatoire et unique en mode Régicide | Couronne, manteau, sceptre |
 
 - Composition d'équipe : libre (option : max 2 par classe), Roi limité à 1.
@@ -116,9 +116,9 @@ Toutes les valeurs sont des défauts dans `src/content/weapons.ts`, ajustables p
 ### 4.3 Mêlée
 | Arme | Dégâts | Recul | Notes |
 |---|---|---|---|
-| **Épée** | 25 | Faible | Frappe frontale |
+| **Épée** | 25 | Faible | Frappe frontale. Programmée le 2026-10-25 (`frontal`) : le coup part à l'horizontale du côté où regarde le combattant, quelle que soit la visée, à 34 px, aussitôt (pas de jauge) ; recul ×1 ; munitions ∞. Comme la masse, pas de coup dans le vide (`needsTarget`). Replay de référence `sword-charge` |
 | **Masse d'armes** | 30 | Fort, angle visé | Équivalent batte de baseball : frappe à 34 px dans la direction visée, recul ×3,2 (programmée le 2026-10-24). **Se charge comme un tir** (décidé le 2026-10-24) : la jauge règle la distance de projection, de 20 % du recul à vide à 100 % jauge pleine (`knockbackMinPct`) ; les dégâts ne changent pas. **Pas de coup dans le vide** (décidé le 2026-10-25, `needsTarget`) : sans rien à frapper à portée dans la direction visée (combattant, baril, reliquaire, cuisine, bête, licorne, construction ; le sol nu ne compte pas), le bouton Frapper est grisé et le coup est refusé, sans consommer l'action |
-| **Charge à l'écu** | 20 | Moyen | Course de 120 px, renverse tout sur le trajet |
+| **Charge à l'écu** | 20 | Moyen | Course de 120 px, renverse tout sur le trajet. Programmée le 2026-10-25 (`charge`, valeurs provisoires) : un appui lance la course du côté où regarde le combattant, à 6 px par instant, en suivant le sol (marches, pentes) ; chaque combattant que l'écu rencontre perd 20 PV une fois et est projeté devant (recul ×2,5) ; un baril rencontré saute, un reliquaire éclate, la cuisine sert. La course s'arrête au bout de 120 px, contre un mur, ou si le combattant tombe. C'est l'action du tour ; le chronomètre s'arrête pendant la course. Munitions ∞ ; interdite au Clerc |
 
 ### 4.4 Utilitaires
 | Outil | Effet | Munitions |

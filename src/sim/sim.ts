@@ -41,7 +41,7 @@ import { blastReachesUnicorn, stepUnicorn, unicornAtAction } from './unicorn.ts'
 import { Trick } from '../content/beasts.ts';
 import { blastMovesPots, potsTurn, stepPots } from './pots.ts';
 import { kitchenTurn, inKitchen, stepKitchen, useKitchen } from './kitchen.ts';
-import { fire, stepShots, strikeHasTarget } from './weapons/weapons.ts';
+import { blowAngle, fire, stepCharge, stepShots, strikeHasTarget } from './weapons/weapons.ts';
 import { blastReachesMines, stepDig, stepMines } from './tools.ts';
 import { weatherTurnEnd } from './weather.ts';
 import { isTargeted, type WeaponId } from '../content/weapons.ts';
@@ -122,7 +122,7 @@ export class Sim {
     const def = s.rules.weapons.find((w) => w.id === s.turn.weapon);
     const u = s.units.find((x) => x.id === s.turn.activeUnitId);
     if (!def || !u || def.behavior !== 'melee' || !def.needsTarget) return false;
-    return !strikeHasTarget(s, u, def, s.turn.aim);
+    return !strikeHasTarget(s, u, def, blowAngle(def, u, s.turn.aim));
   }
 
   /** 32-bit FNV-1a over the canonical state (TECH_SPEC §3). */
@@ -207,6 +207,7 @@ function createState(config: MatchConfig, seed: number, mask: Mask): SimState {
     lift: null,
     pots: [],
     dig: null,
+    charge: null,
     mines: [],
     // One unit per house in turn: first units of every house, then the second ones…
     placing: placing
@@ -408,8 +409,8 @@ function applyCommand(s: SimState, c: GameCommand, events: SimEvent[]): void {
   if (shelled && (c.t === 'move' || c.t === 'jump' || c.t === 'climb')) return;
   // Lifted by an angel: nothing to do but wait to be let go.
   if (s.lift?.unitId === u.id && (c.t === 'move' || c.t === 'jump' || c.t === 'climb')) return;
-  // Digging with the pick or the sap: the tool moves the unit, nothing else does.
-  if (s.dig && (c.t === 'move' || c.t === 'jump' || c.t === 'climb')) return;
+  // Digging with the pick or the sap, or charging: the tool moves the unit, nothing else does.
+  if ((s.dig || s.charge) && (c.t === 'move' || c.t === 'jump' || c.t === 'climb')) return;
   switch (c.t) {
     case 'climb':
       if (s.rules.unit.climbSpeed === undefined) return;
@@ -606,6 +607,7 @@ function advanceTick(s: SimState, phaseJustSet: boolean, events: SimEvent[]): vo
   }
 
   stepDig(s, events);
+  stepCharge(s, events);
   for (const u of s.units) {
     if (!u.alive) continue;
     const r = stepUnitPhysics(u, s.terrain, s.rules.unit);
@@ -689,8 +691,8 @@ function advancePhase(
     case 'action':
     case 'retreat':
       // Hit during its own turn, the active unit stops at once (GDD §2.2).
-      // The clock stops while the pick or the sap is at work.
-      if (activeHurt || (!s.dig && (--t.phaseTicks <= 0 || nothingLeftToDo(s)))) {
+      // The clock stops while the pick or the sap is at work, and during a charge.
+      if (activeHurt || (!s.dig && !s.charge && (--t.phaseTicks <= 0 || nothingLeftToDo(s)))) {
         setPhase(s, 'resolution', 0, events);
       }
       break;
@@ -851,6 +853,7 @@ function settled(s: SimState): boolean {
     s.explosions.items.length === 0 &&
     s.blocks.length === 0 &&
     s.dig === null &&
+    s.charge === null &&
     !dragonBusy(s) &&
     s.lift === null &&
     s.units.every(atRest)
@@ -1054,6 +1057,10 @@ function hashState(s: SimState): number {
   if (s.rules.weapons.some((w) => w.dig)) {
     const g = s.dig;
     for (const v of g ? [g.id, g.unitId, g.dx, g.dy, g.x, g.y, g.speed, g.ticksLeft] : [-1]) int(v);
+  }
+  if (s.rules.weapons.some((w) => w.charge)) {
+    const c = s.charge;
+    for (const v of c ? [c.id, c.unitId, c.dir, c.left, c.damagePct, ...c.hit] : [-1]) int(v);
   }
   if (s.rules.weapons.some((w) => w.mine)) {
     int(s.mines.length);

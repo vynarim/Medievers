@@ -13,7 +13,9 @@ export type WeaponId =
   | 'sap'
   | 'caltrop'
   | 'stoneWall'
-  | 'trebuchet';
+  | 'trebuchet'
+  | 'sword'
+  | 'shieldCharge';
 
 /** Fragments a cluster weapon throws when it bursts (pot de poix, GDD §4.1). */
 export interface FragmentDef {
@@ -84,11 +86,27 @@ export interface StrikeDef {
   readonly height: number;
 }
 
+/** Charge à l'écu (GDD §4.3): a run along the facing side that throws over all it meets. */
+export interface ChargeDef {
+  /** px the run covers at most */
+  readonly distance: number;
+  /** sub-px/tick of the run */
+  readonly speed: number;
+}
+
 export interface WeaponDef {
   readonly id: WeaponId;
   /** behaviour implemented in src/sim/weapons */
   readonly behavior:
-    'directHit' | 'fusedBouncer' | 'cluster' | 'melee' | 'dig' | 'mine' | 'build' | 'strike';
+    | 'directHit'
+    | 'fusedBouncer'
+    | 'cluster'
+    | 'melee'
+    | 'charge'
+    | 'dig'
+    | 'mine'
+    | 'build'
+    | 'strike';
   /** px; 0 = point projectile */
   readonly projectileRadius: number;
   /** percent of wind acceleration applied (GDD §4.1 « Vent ») */
@@ -135,6 +153,10 @@ export interface WeaponDef {
    * Absent from older logs: a fuse in seconds.
    */
   readonly fuseTurns?: number;
+  /** melee: the blow is struck level on the side the unit faces, whatever the aim (the sword) */
+  readonly frontal?: boolean;
+  /** Charge à l'écu: the run */
+  readonly charge?: ChargeDef;
   /** thrown by hand (sling, pots): the slinger's passive applies (GDD §3.2) */
   readonly thrown?: boolean;
   /**
@@ -284,6 +306,39 @@ export const WEAPONS: readonly WeaponDef[] = [
     reach: 34,
     knockbackMinPct: 20,
     needsTarget: true,
+  },
+  {
+    // Épée (2026-10-25): a level blow on the side the unit faces, struck at once, light recoil.
+    id: 'sword',
+    behavior: 'melee',
+    projectileRadius: 0,
+    windPct: 0,
+    maxSpeed: 0,
+    damage: 25,
+    explosionRadius: 0,
+    knockbackPct: 100,
+    bouncePct: 0,
+    defaultFuse: 0,
+    ammo: -1,
+    reach: 34,
+    frontal: true,
+    needsTarget: true,
+  },
+  {
+    // Charge à l'écu (2026-10-25): a run of 120 px along the facing side, at 6 px a tick; every
+    // unit met takes 20 HP and is thrown ahead, a barrel met goes up, a coffer bursts.
+    id: 'shieldCharge',
+    behavior: 'charge',
+    projectileRadius: 0,
+    windPct: 0,
+    maxSpeed: 0,
+    damage: 20,
+    explosionRadius: 0,
+    knockbackPct: 250,
+    bouncePct: 0,
+    defaultFuse: 0,
+    ammo: -1,
+    charge: { distance: 120, speed: 6 * 256 },
   },
   {
     // Pioche: 3 s straight down; about 90 px in earth, twice that for a sapper.

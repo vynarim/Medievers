@@ -7,7 +7,7 @@ import type { SimView } from '../sim/sim.ts';
 import { UNIT_HEIGHT } from '../sim/units/unit.ts';
 import type { Hud } from './hud.ts';
 import { houseName } from './house-names.ts';
-import { pick, t } from './i18n.ts';
+import { pick, t, variantCount } from './i18n.ts';
 import { showEndScreen } from './end-screen.ts';
 import { COLORS } from './tokens.ts';
 import { uiRoot } from './overlay.ts';
@@ -122,8 +122,10 @@ export class Commentary {
                     : 'quip.fire';
           // A tool is not a shot that can miss.
           if (tool !== 'quip.fire' && tool !== 'quip.strike') this.pendingMiss = null;
+          // A weapon with quips of its own says them (the sword, the charge…).
+          const own = `quip.weapon.${e.weapon}`;
           this.hud.say(
-            pick(tool, {
+            pick(variantCount(own) > 0 ? own : tool, {
               name: unitName(v.turn.activeUnitId),
               house: house(v.turn.activeTeam),
             }),
