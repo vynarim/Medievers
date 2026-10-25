@@ -1,6 +1,7 @@
 // Complete simulation state. Plain integers, typed arrays and arrays sorted by id only, so it
 // can be hashed, cloned for snapshots and sent to the AI worker.
 import type { ClassId } from '../content/classes.ts';
+import type { EnginePlacement, EngineType } from '../content/engines.ts';
 import type { MatchRules } from '../content/rules.ts';
 import type { StructurePlacement, StructureType } from '../content/structures.ts';
 import type { WeaponId } from '../content/weapons.ts';
@@ -26,6 +27,8 @@ export interface MatchConfig {
   readonly waterLevel?: number;
   /** the map's structures with HP (rules.structures; ids 1 to 255) */
   readonly structures?: readonly StructurePlacement[];
+  /** the map's siege engines (rules.engines) */
+  readonly engines?: readonly EnginePlacement[];
 }
 
 /** A structure of the map (GDD §4.7). state: content/structures.ts StructureState. */
@@ -40,6 +43,18 @@ export interface Structure {
   readonly struck: number[];
   /** a wooden tower on fire: turns left before it is burnt away (rules.structures.burnTurns) */
   fire?: number;
+}
+
+/** A siege engine of the map (GDD §4.8). */
+export interface Engine {
+  readonly id: number;
+  readonly type: EngineType;
+  /** sub-px: middle of its base */
+  readonly x: number;
+  y: number;
+  hp: number;
+  /** turn ends left before it may be served again; 0: ready */
+  reload: number;
 }
 
 /** A piece of a collapsed structure, falling (TECH_SPEC §5.4). */
@@ -87,6 +102,8 @@ export interface FlyingShot {
   readonly damagePct?: number;
   /** the falcon: px of the point it steers for */
   readonly homing?: { readonly x: number; readonly y: number };
+  /** units a piercing bolt has gone through, sorted (the ballista) */
+  pierced?: number[];
 }
 
 /** A swarm of bees out of a broken hive (GDD §4.1), after the nearest unit. */
@@ -360,6 +377,8 @@ export interface SimState {
   walkers: Walker[];
   /** swarms of bees, sorted by id */
   swarms: Swarm[];
+  /** the siege engines still standing, sorted by id; empty without rules.engines */
+  engines: Engine[];
   /** sorted by id */
   mines: Mine[];
   /** units still to be placed, the next one first; empty once the battle has begun */

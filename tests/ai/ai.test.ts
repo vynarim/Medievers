@@ -287,6 +287,28 @@ describe('the AI rope', () => {
     playOut(pit, out.plan);
     expect(px(pit, 1, 'y')).toBe(600);
 
+    // Siege engines: it walks to the catapult a little way off and shoots with it.
+    const engines = new Sim(
+      {
+        rules: RULES,
+        teams: [{ spawns: [400] }, { spawns: [1300] }],
+        engines: [{ id: 200, type: 'catapult', x: 560 }],
+      },
+      3,
+      flatMask(),
+    );
+    for (let i = 0; i < 1000 && engines.view().turn.phase !== 'action'; i++) engines.step();
+    const siege = planTurn({
+      state: engines.snapshot(),
+      team: 0,
+      level: { ...STILL, weapons: ['catapult'] },
+      seed: 1,
+    });
+    expect(siege.plan.move.kind).toBe('walk');
+    expect(siege.plan.shot?.weapon).toBe('catapult');
+    playOut(engines, siege.plan);
+    expect(engines.view().units.find((u) => u.id === 2)?.hp ?? 100).toBeLessThan(100);
+
     // Miracle: up onto the cliff, from the plain.
     const miracle = duel(300, 1400);
     playOut(miracle, { unitId: 1, move: { kind: 'miracle', x: 1000, y: 400 }, shot: null });

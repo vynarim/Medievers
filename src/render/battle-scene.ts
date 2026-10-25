@@ -13,6 +13,9 @@ import { SUBPX } from '../sim/math/fixed.ts';
 import { createProjectile, stepProjectile } from '../sim/projectiles/projectile.ts';
 import { Sim, canSwitchUnit, type SimView } from '../sim/sim.ts';
 import type { MatchConfig } from '../sim/state.ts';
+import type { EnginePlacement } from '../content/engines.ts';
+import { engineFor } from '../sim/engines.ts';
+import { drawEngine } from './engine-art.ts';
 import type { Mask } from '../sim/terrain/mask.ts';
 import type { Terrain } from '../sim/terrain/terrain.ts';
 import { UNIT_HALF_WIDTH, UNIT_HEIGHT, type Unit } from '../sim/units/unit.ts';
@@ -46,7 +49,7 @@ import { TerrainLayer } from './terrain-layer.ts';
 import { drawClassMark } from './class-marks.ts';
 import { drawFigure } from './figures.ts';
 import { aimPreviewTicks, classOf, maxHpOf, visibleMines } from '../sim/classes.ts';
-import { shotSpeed } from '../sim/weapons/weapons.ts';
+import { heldAim, launchPoint, shotSpeed } from '../sim/weapons/weapons.ts';
 import {
   targetFor,
   teleportLanding,
@@ -74,12 +77,13 @@ import { RemoteInputSource } from '../input/remote-input.ts';
 /** The map fields of the battle data, from a built map. */
 export function battleMap(
   b: BuiltMap,
-): Pick<BattleData, 'map' | 'mask' | 'mapId' | 'structures' | 'waterLevel'> {
+): Pick<BattleData, 'map' | 'mask' | 'mapId' | 'structures' | 'engines' | 'waterLevel'> {
   return {
     map: b.def,
     mask: b.mask,
     mapId: b.mapId,
     ...(b.structures ? { structures: b.structures } : {}),
+    ...(b.engines ? { engines: b.engines } : {}),
     ...(b.waterLevel !== undefined ? { waterLevel: b.waterLevel } : {}),
   };
 }
@@ -91,6 +95,8 @@ export interface BattleData {
   readonly mapId: string;
   /** the map's structures and sea, from its generation (or the fixed map's own) */
   readonly structures?: readonly StructurePlacement[];
+  /** the map's siege engines, from its generation */
+  readonly engines?: readonly EnginePlacement[];
   readonly waterLevel?: number;
   readonly seed: number;
   /** match rules, from the setup's scheme (and the player's settings for « Personnalisé ») */
@@ -290,12 +296,13 @@ export class BattleScene extends Phaser.Scene {
   }
 
   create(): void {
-    const { map, mask, seed, rules, setup, waterLevel } = this.data_;
+    const { map, mask, seed, rules, setup, waterLevel, engines } = this.data_;
     const structures = this.data_.structures ?? map.structures;
     const config: MatchConfig = matchConfig(
       {
         mask,
         ...(structures ? { structures } : {}),
+        ...(engines ? { engines } : {}),
         ...(waterLevel !== undefined ? { waterLevel } : {}),
       },
       setup,
@@ -1073,6 +1080,10 @@ export class BattleScene extends Phaser.Scene {
         this.terrain.invalidate(e.x + Math.floor(e.w / 2), e.y + Math.floor(e.h / 2), half);
       }
       if (e.e === 'structureFell') this.cameras.main.shake(400, 0.01);
+      if (e.e === 'engineDestroyed') {
+        this.cameras.main.shake(300, 0.008);
+        this.bursts.push({ x: e.x, y: e.y - 30, radius: 50, born: this.time.now });
+      }
       if (e.e === 'lightning') {
         this.bolts.push({ x: e.x, y: e.y, born: this.time.now });
         this.cameras.main.flash(350, 255, 250, 235);
@@ -1254,6 +1265,7 @@ export class BattleScene extends Phaser.Scene {
     this.drawMines(g, time);
     this.drawFlames(g, time);
     this.drawStructures(g);
+    this.drawEngines(g, time);
     this.drawPlacementGhost(g, time);
     this.stackLabels(alpha);
     for (const u of v.units) {
@@ -1340,7 +1352,9 @@ export class BattleScene extends Phaser.Scene {
         s.weapon === 'bow' ||
         s.weapon === 'crossbow' ||
         s.weapon === 'fireArrow' ||
-        s.weapon === 'arrowRain'
+        s.weapon === 'arrowRain' ||
+        s.weapon === 'ballista' ||
+        s.weapon === 'scorpion'
       ) {
         if (s.weapon === 'fireArrow') {
           // Its burning head, flickering.
@@ -1938,6 +1952,44 @@ export class BattleScene extends Phaser.Scene {
     drawClassMark(g, cls, x, y, 1);
   }
 
+  /**
+   * The siege engines: each machine, a thin bar of its HP, a dot for each turn it still reloads,
+   * and a gilt glow when the playing unit stands beside it and may serve it.
+   */
+  private drawEngines(g: Phaser.GameObjects.Graphics, time: number): void {
+    const v = this.sim.view();
+    const r = v.rules.engines;
+    if (!r || v.engines.length === 0) return;
+    const active = v.units.find((u) => u.id === v.turn.activeUnitId && u.alive);
+    for (const e of v.engines) {
+      const def = r.defs[e.type];
+      const x = e.x / SUBPX;
+      const y = e.y / SUBPX;
+      const ready =
+        active !== undefined &&
+        v.turn.phase === 'action' &&
+        e.reload === 0 &&
+        engineFor(v, active, e.type)?.id === e.id;
+      if (ready) {
+        g.fillStyle(COLORS.or, 0.25 + 0.15 * Math.sin(time / 200));
+        g.fillEllipse(x, y - def.h / 2, def.w + 40, def.h + 40);
+      }
+      drawEngine(g, e.type, x, y, def.w, def.h, time);
+      const bw = Math.max(30, def.w * 0.6);
+      const top = y - def.h - 18;
+      g.fillStyle(COLORS.encre, 0.8);
+      g.fillRect(x - bw / 2 - 1, top - 1, bw + 2, 6);
+      g.fillStyle(COLORS.vertDeGris, 1);
+      g.fillRect(x - bw / 2, top, (bw * e.hp) / def.hp, 4);
+      for (let i = 0; i < Math.max(0, e.reload - 1); i++) {
+        g.fillStyle(COLORS.vermillon, 1);
+        g.lineStyle(2, COLORS.encre, 1);
+        g.fillCircle(x - (e.reload - 2) * 6 + i * 12, top - 10, 4);
+        g.strokeCircle(x - (e.reload - 2) * 6 + i * 12, top - 10, 4);
+      }
+    }
+  }
+
   /** Pots resting on the map, smoking, with the turns left written above in roman figures. */
   private drawPots(g: Phaser.GameObjects.Graphics, time: number): void {
     const pots = this.sim.view().pots;
@@ -2258,13 +2310,16 @@ export class BattleScene extends Phaser.Scene {
     const power = def.fixedPower ? MAX_POWER : this.input_.controls.power;
     if (power <= 0) return;
     const speed = shotSpeed(v, u, def, power);
+    // From the unit's hand, or from the siege engine it serves; the trebuchet's aim held.
+    const aim = heldAim(def, v.turn.aim);
+    const start = launchPoint(v, u, def, aim);
     const p = createProjectile(
       0,
       u.id,
-      u.x + Math.trunc((20 * SUBPX * cosQ14(v.turn.aim)) / 16384),
-      u.y - (UNIT_HEIGHT * SUBPX) / 2 + Math.trunc((20 * SUBPX * sinQ14(v.turn.aim)) / 16384),
-      Math.trunc((speed * cosQ14(v.turn.aim)) / 16384),
-      Math.trunc((speed * sinQ14(v.turn.aim)) / 16384),
+      start.x,
+      start.y,
+      Math.trunc((speed * cosQ14(aim)) / 16384),
+      Math.trunc((speed * sinQ14(aim)) / 16384),
       { radius: def.projectileRadius, windPct: def.windPct, gravityPct: 100 },
     );
     const ticks = aimPreviewTicks(v, u, def);

@@ -23,6 +23,7 @@ const STONE: Omit<StructureDef, 'hp'> = {
     mace: 50,
     greekFire: 100,
     pitchPot: 80,
+    siegeRam: 400,
   },
   defaultPct: 100,
 };
@@ -35,6 +36,7 @@ const WOOD: Omit<StructureDef, 'hp'> = {
     mace: 100,
     greekFire: 200,
     pitchPot: 200,
+    siegeRam: 400,
   },
   defaultPct: 100,
 };

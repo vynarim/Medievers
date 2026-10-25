@@ -3,6 +3,7 @@
 // gives the same map in every browser and in Node, and a replay redraws the map it was played on.
 import { MAP_GEN, type MapGen, type MapTheme } from '../../content/maps.ts';
 import type { StructurePlacement } from '../../content/structures.ts';
+import type { EnginePlacement } from '../../content/engines.ts';
 import { createPrng, nextRange, type PrngState } from '../math/prng.ts';
 import { Material } from './material.ts';
 import type { Mask } from './mask.ts';
@@ -13,6 +14,8 @@ export interface GeneratedMap {
   readonly structures: readonly StructurePlacement[];
   /** px: top of the sea, when the theme has one */
   readonly waterLevel?: number;
+  /** the map's siege engines (GDD §4.8) */
+  readonly engines: readonly EnginePlacement[];
 }
 
 /** px of indestructible rock at the bottom of every map */
@@ -100,6 +103,57 @@ function freeColumn(
     }
   }
   return null;
+}
+
+/** first id of the siege engines, apart from the structures' */
+const ENGINE_ID = 200;
+/** where the pair of siege engines stands, in percent of the width from each end */
+const ENGINE_AT_PCT = 28;
+/** px a siege engine keeps from the towers and walls */
+const ENGINE_GAP = 120;
+/** chance in percent of an engine in the middle of the map, when the theme has one */
+const MIDDLE_PCT = 50;
+
+/**
+ * The siege engines of the theme: a pair at the same distance from each end, of the same type,
+ * and sometimes one in the middle; moved off towers and walls, and out of the sea. Drawn with a
+ * PRNG of their own, so that the land of a seed stays as it was before them.
+ */
+function placeEngines(
+  g: MapGen,
+  seed: number,
+  ground: Int32Array,
+  taken: readonly (readonly [number, number])[],
+): EnginePlacement[] {
+  const e = g.engines;
+  if (!e || e.pair.length === 0) return [];
+  const prng = createPrng((seed ^ 0x454e4749) >>> 0);
+  const out: EnginePlacement[] = [];
+  const clear = (x: number): boolean =>
+    taken.every(([a, b]) => x < a - ENGINE_GAP || x > b + ENGINE_GAP) &&
+    (g.waterLevel === undefined || (ground[x] ?? 0) < g.waterLevel - 20);
+  /** The nearest clear column to x, looking inwards then outwards. */
+  const near = (x: number, inward: 1 | -1): number | null => {
+    for (let d = 0; d < 600; d += 10) {
+      for (const c of [x + inward * d, x - inward * d])
+        if (c > 60 && c < g.width - 60 && clear(c)) return c;
+    }
+    return null;
+  };
+  const type = e.pair[nextRange(prng, 0, e.pair.length - 1)];
+  const at = Math.trunc((g.width * ENGINE_AT_PCT) / 100);
+  const left = near(at, 1);
+  const right = near(g.width - 1 - at, -1);
+  if (type && left !== null && right !== null) {
+    out.push({ id: ENGINE_ID, type, x: left }, { id: ENGINE_ID + 1, type, x: right });
+  }
+  const middle = e.middle;
+  if (middle && middle.length > 0 && nextRange(prng, 0, 99) < MIDDLE_PCT) {
+    const m = middle[nextRange(prng, 0, middle.length - 1)];
+    const x = near(g.width >> 1, 1);
+    if (m && x !== null) out.push({ id: ENGINE_ID + 2, type: m, x });
+  }
+  return out;
 }
 
 /** The map of theme `theme` drawn from `seed`. */
@@ -256,6 +310,7 @@ export function generateMap(theme: MapTheme, seed: number): GeneratedMap {
   return {
     mask: { width, height, data },
     structures,
+    engines: placeEngines(g, seed, ground, taken),
     ...(g.waterLevel !== undefined ? { waterLevel: g.waterLevel } : {}),
   };
 }

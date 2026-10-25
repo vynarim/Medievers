@@ -35,6 +35,8 @@ import { damageDealtPct, throwPct, type ClassView } from '../classes.ts';
 import { igniteStructureAt, shotHitsStructure } from '../structures.ts';
 import { flameAt } from '../flames.ts';
 import { letLoose } from '../walkers.ts';
+import { engineFor, engineMuzzle, engineOnSegment, engineShot, hitEngine } from '../engines.ts';
+import type { SimView } from '../sim.ts';
 import { breakHive } from '../swarms.ts';
 import { shootHook } from '../rope.ts';
 import {
@@ -51,6 +53,8 @@ import {
 const MUZZLE_DISTANCE = 20;
 /** px: radius of the melee strike around the point at reach */
 const STRIKE_RADIUS = 14;
+/** ticks a siege engine's shot spares the unit serving the machine */
+const ENGINE_SPARE_TICKS = 30;
 /** BAM: fragments fly out over this fan, centred straight up */
 const FRAGMENT_FAN = 1536;
 
@@ -67,7 +71,7 @@ export function fire(
   at: { readonly x: number; readonly y: number } | null = null,
 ): boolean {
   const def = weaponDefIn(state.rules, state.turn.weapon);
-  const angle = blowAngle(def, u, state.turn.aim);
+  const angle = heldAim(def, blowAngle(def, u, state.turn.aim));
   if (def.behavior === 'build') {
     const p = at ?? targetFor(state, u, def, power);
     if (!buildWall(state, u, def, p.x, p.y, events)) return false;
@@ -100,8 +104,12 @@ export function fire(
   const pct = damageDealtPct(state, u);
   const damagePct = pct !== 100 ? { damagePct: pct } : {};
   if (def.behavior === 'melee') {
+    // The ram is served like any siege engine.
+    const ram = def.engine ? engineFor(state, u, def.engine) : null;
+    if (def.engine && !ram) return false;
     events.push({ e: 'shotFired', shotId: id, weapon: def.id });
-    strike(state, u, def, angle, pct, power, events);
+    strike(state, u, def, angle, pct, power, events, ram?.id ?? -1);
+    if (ram) engineShot(state, ram, events);
     events.push({ e: 'shotEnded', shotId: id });
     return true;
   }
@@ -171,17 +179,38 @@ export function fire(
     return true;
   }
   const speed = shotSpeed(state, u, def, power);
-  const cx = u.x;
-  const cy = u.y - (UNIT_HEIGHT * SUBPX) / 2;
+  // A siege engine's shot leaves from the machine, which reloads (GDD §4.8).
+  const engine = def.engine ? engineFor(state, u, def.engine) : null;
+  if (def.engine && !engine) return false;
+  const start = launchPoint(state, u, def, angle);
+  if (engine) engineShot(state, engine, events);
+  // The scorpion's bolts: the first one carries the shot's id, the others their own.
+  const burst = def.burst?.count ?? 1;
+  const half = (burst - 1) >> 1;
+  for (let k = -half; k <= burst - 1 - half; k++) {
+    if (k === 0) continue;
+    const a = (angle + k * (def.burst?.spread ?? 0)) & ANGLE_MASK;
+    const bolt = createProjectile(
+      state.nextEntityId++,
+      u.id,
+      start.x,
+      start.y,
+      mulQ14(speed, cosQ14(a)),
+      mulQ14(speed, sinQ14(a)),
+      { radius: def.projectileRadius, windPct: def.windPct, gravityPct: 100 },
+    );
+    state.shots.push({ projectile: bolt, weapon: def.id, fuse: 0, ...damagePct });
+  }
   const projectile = createProjectile(
     id,
     u.id,
-    cx + mulQ14(MUZZLE_DISTANCE * SUBPX, cosQ14(angle)),
-    cy + mulQ14(MUZZLE_DISTANCE * SUBPX, sinQ14(angle)),
+    start.x,
+    start.y,
     mulQ14(speed, cosQ14(angle)),
     mulQ14(speed, sinQ14(angle)),
     { radius: def.projectileRadius, windPct: def.windPct, gravityPct: 100 },
   );
+  if (burst > 1) state.shots.sort((a, b) => a.projectile.id - b.projectile.id);
   const fused = def.behavior === 'fusedBouncer' || def.behavior === 'cluster';
   if (def.fuseTurns !== undefined) {
     // Fuse in turns: 1 goes off during this throw, 2 and 3 rest on the map and wait.
@@ -203,6 +232,40 @@ export function fire(
   }
   events.push({ e: 'shotFired', shotId: id, weapon: def.id });
   return true;
+}
+
+/**
+ * sub-px: where the shot of `def` along `angle` leaves from: the unit's hand, 20 px out, or the
+ * top of the siege engine it serves. The AI and the aim preview use it too.
+ */
+export function launchPoint(
+  state: SimState | SimView,
+  u: Pick<Unit, 'x' | 'y'>,
+  def: WeaponDef,
+  angle: number,
+): { x: number; y: number } {
+  const engine = def.engine ? engineFor(state, u, def.engine) : null;
+  if (engine) return engineMuzzle(state, engine);
+  const cy = u.y - (UNIT_HEIGHT * SUBPX) / 2;
+  return {
+    x: u.x + mulQ14(MUZZLE_DISTANCE * SUBPX, cosQ14(angle)),
+    y: cy + mulQ14(MUZZLE_DISTANCE * SUBPX, sinQ14(angle)),
+  };
+}
+
+/**
+ * BAM: the aim a weapon is fired along: as aimed, or held within its range above the horizon on
+ * the aimed side (the trebuchet's 45° ± 15°).
+ */
+export function heldAim(def: WeaponDef, aim: number): number {
+  const r = def.aimRange;
+  if (!r) return aim;
+  const right = cosQ14(aim) >= 0;
+  // Elevation above the horizon on the aimed side, 0..2048 (below the horizon: negative).
+  const up = right ? (4096 - aim) & ANGLE_MASK : (aim - 2048) & ANGLE_MASK;
+  const elev = up > 2048 ? up - 4096 : up;
+  const held = Math.max(r.min, Math.min(r.max, elev));
+  return right ? (4096 - held) & ANGLE_MASK : (2048 + held) & ANGLE_MASK;
 }
 
 /**
@@ -232,6 +295,23 @@ export function blowAngle(def: WeaponDef, u: Pick<Unit, 'facing'>, aim: number):
   return u.facing > 0 ? 0 : 2048;
 }
 
+/** px: the first solid pixel from (x0, y0) to (x1, y1), sub-px, or null. */
+function firstSolid(
+  state: SimState,
+  x0: number,
+  y0: number,
+  x1: number,
+  y1: number,
+): { x: number; y: number } | null {
+  const steps = Math.max(1, subToPx(Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0))));
+  for (let i = 0; i <= steps; i++) {
+    const x = subToPx(x0 + idiv((x1 - x0) * i, steps));
+    const y = subToPx(y0 + idiv((y1 - y0) * i, steps));
+    if (isSolid(state.terrain, x, y)) return { x, y };
+  }
+  return null;
+}
+
 /** Point the blow of a melee weapon lands on, along the aim at its reach, in sub-px. */
 function strikePoint(u: Unit, def: WeaponDef, angle: number): { x: number; y: number; cy: number } {
   const reach = (def.reach ?? 0) * SUBPX;
@@ -253,6 +333,7 @@ export function strikeHasTarget(state: SimState, u: Unit, def: WeaponDef, angle:
   if (segmentTouchesKitchen(state, u.x, cy, x, y)) return true;
   if (beastOnSegment(state, u.x, cy, x, y)) return true;
   if (unicornOnSegment(state, u.x, cy, x, y)) return true;
+  if (engineOnSegment(state as SimState, u.x, cy, x, y) !== null) return true;
   const owners = state.owners;
   if (!owners) return false;
   const px = subToPx(x);
@@ -285,6 +366,8 @@ function strike(
   pct: number,
   power: number,
   events: SimEvent[],
+  /** the siege engine being served, which the blow leaves alone (the ram) */
+  served = -1,
 ) {
   // Charged like a shot: the power sets how far the blow throws (knockbackMinPct..100).
   const min = def.knockbackMinPct;
@@ -294,11 +377,19 @@ function strike(
   const dy = sinQ14(angle);
   const { x, y, cy } = strikePoint(u, def, angle);
   for (const other of state.units) {
+    if (def.sparesUnits) break;
     if (!other.alive || other.id === u.id || !touchesUnit(other, x, y, STRIKE_RADIUS)) continue;
     directHit(other, def, scaled(def.damage, pct), state.rules.explosion, dx, dy, events, knock);
   }
+  // A machine within reach takes the blow (the ram crushes it).
+  const machine = engineOnSegment(state, u.x, cy, x, y, served);
+  if (machine) hitEngine(state, machine, scaled(def.damage, pct), def.id, events);
   touchAlong(state, u, u.x, cy, x, y, events);
-  if (isSolidNear(state, subToPx(x), subToPx(y))) {
+  if (def.sparesUnits) {
+    // The ram strikes the first thing built along its swing.
+    const hit = firstSolid(state, u.x, cy, x, y);
+    if (hit) shotHitsStructure(state, hit.x, hit.y, scaled(def.damage, pct), def.id, events);
+  } else if (isSolidNear(state, subToPx(x), subToPx(y))) {
     shotHitsStructure(state, subToPx(x), subToPx(y), scaled(def.damage, pct), def.id, events);
   }
   if (def.chipRadius) carveCircle(state.terrain, subToPx(x), subToPx(y), def.chipRadius);
@@ -500,6 +591,10 @@ export function stepShots(state: SimState, events: SimEvent[]): void {
       state.units,
       state.turn.wind,
       state.rules.wind.accelPerUnit,
+      // A siege engine's shot leaves over its server's head: it spares the server at first.
+      def.engine && p.age < ENGINE_SPARE_TICKS
+        ? [...(shot.pierced ?? []), p.ownerId]
+        : shot.pierced,
     );
     let ended = false;
     // Things that stop an arrow, a bolt, a stone or a fragment: they count as an impact.
@@ -508,6 +603,7 @@ export function stepShots(state: SimState, events: SimEvent[]): void {
       def.behavior === 'strike' ||
       def.behavior === 'hive' ||
       def.behavior === 'homing' ||
+      def.behavior === 'shell' ||
       shot.fragment === true;
     // Any shot touching the field kitchen heals the shooter (GDD §4.9).
     if (segmentTouchesKitchen(state, fromX, fromY, p.x, p.y)) {
@@ -542,6 +638,19 @@ export function stepShots(state: SimState, events: SimEvent[]): void {
       shootAngel(state, angel, p.ownerId, events);
       if (stops) impact = { kind: 'outOfMap', x: p.x, y: p.y };
     }
+    // A shot that touches a siege engine: an arrow or a bolt strikes it, a stone bursts on it.
+    if (stops && state.engines.length > 0 && impact?.kind !== 'unit') {
+      const eng = engineOnSegment(state, fromX, fromY, p.x, p.y);
+      if (eng) {
+        if (
+          def.behavior === 'directHit' ||
+          (def.behavior === 'strike' && def.explosionRadius === 0)
+        ) {
+          hitEngine(state, eng, scaled(def.damage, shot.damagePct), def.id, events);
+          impact = { kind: 'outOfMap', x: p.x, y: p.y };
+        } else impact = { kind: 'terrain', x: p.x, y: p.y };
+      }
+    }
     // A shot that touches a reliquary bursts it (GDD §4.5).
     const crate = crateOnSegment(state, fromX, fromY, p.x, p.y);
     if (crate !== null) {
@@ -567,8 +676,8 @@ export function stepShots(state: SimState, events: SimEvent[]): void {
       const spent = h !== undefined && p.age >= h.ticks;
       if ((impact && impact.kind !== 'outOfMap') || there || spent) {
         // On a unit it strikes home: the blast is at the middle of its prey.
-        const prey =
-          impact?.kind === 'unit' ? state.units.find((x) => x.id === impact.unitId) : null;
+        const hit = impact;
+        const prey = hit?.kind === 'unit' ? state.units.find((x) => x.id === hit.unitId) : null;
         queueExplosion(state.explosions, state.tick, {
           x: prey ? prey.x : p.x,
           y: prey ? prey.y - (UNIT_HEIGHT * SUBPX) / 2 : p.y,
@@ -580,14 +689,15 @@ export function stepShots(state: SimState, events: SimEvent[]): void {
         });
         ended = true;
       } else ended = impact !== null;
-    } else if (def.behavior === 'strike' && def.explosionRadius > 0) {
-      // A trebuchet stone bursts wherever it lands, on the ground or on a unit (GDD §4.2).
+    } else if ((def.behavior === 'strike' && def.explosionRadius > 0) || def.behavior === 'shell') {
+      // A trebuchet stone (volley or engine) or a catapult's bursts wherever it lands, on the
+      // ground or on a unit (GDD §4.2, §4.8).
       if (impact && impact.kind !== 'outOfMap') {
         queueExplosion(state.explosions, state.tick, {
           x: p.x,
           y: p.y,
           radius: def.explosionRadius,
-          carveRadius: def.explosionRadius,
+          carveRadius: idiv(def.explosionRadius * (def.craterPct ?? 100), 100),
           maxDamage: scaled(def.damage, shot.damagePct),
           sourceId: p.id,
           ...tagged(state, def),
@@ -612,10 +722,16 @@ export function stepShots(state: SimState, events: SimEvent[]): void {
     } else if (def.behavior === 'directHit' || def.behavior === 'strike') {
       // An arrow, a bolt, a stone, or an arrow of the rain of arrows (a strike without a blast).
       if (impact?.kind === 'unit') {
-        const u = state.units.find((x) => x.id === impact.unitId);
+        const hitId = impact.unitId;
+        const u = state.units.find((x) => x.id === hitId);
         if (u) {
           const damage = scaled(def.damage, shot.damagePct);
           directHit(u, def, damage, state.rules.explosion, p.vx, p.vy, events);
+          // A ballista's bolt goes on through the first units it strikes.
+          if (def.pierce && (shot.pierced?.length ?? 0) < def.pierce) {
+            shot.pierced = [...(shot.pierced ?? []), u.id].sort((a, b) => a - b);
+            impact = null;
+          }
         }
       } else if (impact?.kind === 'terrain' && def.chipRadius) {
         // Every shot wears the ground down: enough arrows go through a wall (GDD §4.7).

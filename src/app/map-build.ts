@@ -9,6 +9,7 @@ import {
   type MapTheme,
 } from '../content/maps.ts';
 import type { StructurePlacement } from '../content/structures.ts';
+import type { EnginePlacement } from '../content/engines.ts';
 import { generateMap } from '../sim/terrain/generate.ts';
 import type { Mask } from '../sim/terrain/mask.ts';
 
@@ -18,6 +19,7 @@ export interface BuiltMap {
   readonly mapId: string;
   readonly mask: Mask;
   readonly structures?: readonly StructurePlacement[];
+  readonly engines?: readonly EnginePlacement[];
   /** px: top of the sea, if the map has one */
   readonly waterLevel?: number;
 }
@@ -32,6 +34,7 @@ export function buildMap(theme: MapTheme, seed: number): BuiltMap {
     mapId: generatedMapId(def.theme, seed),
     mask: g.mask,
     structures: g.structures,
+    engines: g.engines,
     ...(g.waterLevel !== undefined ? { waterLevel: g.waterLevel } : {}),
   };
 }

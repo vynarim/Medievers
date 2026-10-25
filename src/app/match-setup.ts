@@ -14,6 +14,7 @@ import {
 import { applyOverrides, type TuningOverrides } from '../ui/tuning-model.ts';
 import { MAP_THEMES, type MapTheme } from '../content/maps.ts';
 import type { StructurePlacement } from '../content/structures.ts';
+import type { EnginePlacement } from '../content/engines.ts';
 import type { MatchConfig } from '../sim/state.ts';
 import type { Mask } from '../sim/terrain/mask.ts';
 import { spawnColumns } from './spawns.ts';
@@ -155,6 +156,7 @@ export function matchConfig(
   map: {
     readonly mask: Mask;
     readonly structures?: readonly StructurePlacement[];
+    readonly engines?: readonly EnginePlacement[];
     readonly waterLevel?: number;
   },
   setup: MatchSetup,
@@ -165,6 +167,7 @@ export function matchConfig(
   return {
     rules,
     ...(map.structures ? { structures: map.structures } : {}),
+    ...(map.engines && map.engines.length > 0 && rules.engines ? { engines: map.engines } : {}),
     ...(map.waterLevel !== undefined ? { waterLevel: map.waterLevel } : {}),
     // Each house takes as many of its spawn columns as it has units.
     teams: spawnColumns(map.mask, lineups.length, perTeam).map((columns, h) => {

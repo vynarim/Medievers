@@ -48,6 +48,7 @@ import { weatherTurnEnd } from './weather.ts';
 import { blastReachesWalkers, detonateWalkers, stepWalkers } from './walkers.ts';
 import { stepSwarms } from './swarms.ts';
 import { letGo, swing } from './rope.ts';
+import { blastReachesEngines, enginesTurnEnd, initEngines, stepEngines } from './engines.ts';
 import { isTargeted, type WeaponId } from '../content/weapons.ts';
 import { MAX_POWER } from './commands.ts';
 import { delugeTurnEnd, drownThings, drownUnits, hasWater, underWater } from './deluge.ts';
@@ -214,6 +215,7 @@ function createState(config: MatchConfig, seed: number, mask: Mask): SimState {
     charge: null,
     walkers: [],
     swarms: [],
+    engines: initEngines(terrain, config.rules.engines, config.engines),
     mines: [],
     // One unit per house in turn: first units of every house, then the second ones…
     placing: placing
@@ -693,6 +695,7 @@ function advanceTick(s: SimState, phaseJustSet: boolean, events: SimEvent[]): vo
     blastMovesPots(s, e);
     blastReachesMines(s, e, events);
     blastReachesWalkers(s, e, events);
+    blastReachesEngines(s, e, events);
     spawnFlames(s, e);
     blastHitsStructures(s, e, events);
     // A blast that reaches the kitchen counts as a touch (GDD §4.9).
@@ -702,6 +705,7 @@ function advanceTick(s: SimState, phaseJustSet: boolean, events: SimEvent[]): vo
   stepBarrels(s, events);
   stepCrates(s, events);
   stepPots(s);
+  stepEngines(s);
   stepFlames(s, events);
   // Ground dug away this tick may leave a tower or a wall without its footing.
   for (let i = firstEvent; i < events.length; i++) {
@@ -994,6 +998,7 @@ function endTurn(s: SimState, events: SimEvent[]): void {
   drownFlames(s);
   beastsTurnEnd(s, events);
   burnTowersTurnEnd(s, events);
+  enginesTurnEnd(s);
   maybeDropCrate(s, events);
   callDeaths(s, events);
   const alive = s.teams.filter((team) => teamAlive(s, team));
@@ -1057,6 +1062,7 @@ function hashState(s: SimState): number {
     if (shot.turns !== undefined) int(shot.turns);
     if (shot.damagePct !== undefined) int(shot.damagePct);
     if (shot.homing) for (const v of [shot.homing.x, shot.homing.y]) int(v);
+    if (shot.pierced) for (const v of [-2, ...shot.pierced]) int(v);
   }
   int(s.explosions.items.length);
   int(s.explosions.nextSeq);
@@ -1132,6 +1138,10 @@ function hashState(s: SimState): number {
   if (s.rules.weapons.some((w) => w.dig)) {
     const g = s.dig;
     for (const v of g ? [g.id, g.unitId, g.dx, g.dy, g.x, g.y, g.speed, g.ticksLeft] : [-1]) int(v);
+  }
+  if (s.rules.engines) {
+    int(s.engines.length);
+    for (const e of s.engines) for (const v of [e.id, e.x, e.y, e.hp, e.reload]) int(v);
   }
   if (s.rules.weapons.some((w) => w.rope)) {
     const g = t.grapple;

@@ -149,6 +149,12 @@ export type SimEvent =
   | { readonly e: 'hooked'; readonly unitId: number; readonly x: number; readonly y: number }
   /** the unit let go of its rope */
   | { readonly e: 'unhooked'; readonly unitId: number }
+  /** a siege engine shot (it reloads now) */
+  | { readonly e: 'engineShot'; readonly id: number }
+  /** a siege engine took damage */
+  | { readonly e: 'engineHit'; readonly id: number; readonly damage: number }
+  /** a siege engine fell apart, at (x, y) px, its base */
+  | { readonly e: 'engineDestroyed'; readonly id: number; readonly x: number; readonly y: number }
   /** a unit held up its banner */
   | { readonly e: 'bannerRaised'; readonly unitId: number }
   | { readonly e: 'gameOver'; readonly winner: number };

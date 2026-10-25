@@ -3,6 +3,7 @@
 // time, and a replay redraws the same map from its id. The greybox valley of the first builds is
 // kept for the logs recorded on it.
 import type { StructurePlacement } from './structures.ts';
+import type { EngineType } from './engines.ts';
 
 /** Map themes: the lie of the land, its colours, its scenery and its beasts. */
 export type MapTheme = 'valley' | 'coast' | 'holyLand';
@@ -65,6 +66,14 @@ export interface MapGen {
   readonly beach?: boolean;
   /** two towers with a curtain wall between them, in the middle third (Saracen fortress) */
   readonly fortress?: boolean;
+  /**
+   * siege engines (GDD §4.8): a pair, one in each half of the map at the same distance from its
+   * end, of a type drawn from `pair`; and, sometimes, one more in the middle (2026-10-25)
+   */
+  readonly engines?: {
+    readonly pair: readonly EngineType[];
+    readonly middle?: readonly EngineType[];
+  };
 }
 
 export const MAP_GEN: Readonly<Record<MapTheme, MapGen>> = {
@@ -86,6 +95,7 @@ export const MAP_GEN: Readonly<Record<MapTheme, MapGen>> = {
     walls: [1, 1],
     outcrops: [0, 2],
     pockets: [2, 4],
+    engines: { pair: ['catapult', 'ballista', 'scorpion'], middle: ['trebuchet'] },
   },
   // La côte normande: sand and grass by the sea, a cliff at one end, a cove, the sea below.
   coast: {
@@ -108,6 +118,7 @@ export const MAP_GEN: Readonly<Record<MapTheme, MapGen>> = {
     waterLevel: 1440,
     cliff: 300,
     beach: true,
+    engines: { pair: ['scorpion', 'ballista'] },
   },
   // La Terre sainte: dunes, outcrops of rock and a Saracen fortress.
   holyLand: {
@@ -128,6 +139,7 @@ export const MAP_GEN: Readonly<Record<MapTheme, MapGen>> = {
     outcrops: [3, 5],
     pockets: [2, 3],
     fortress: true,
+    engines: { pair: ['catapult', 'ram'], middle: ['trebuchet'] },
   },
 };
 

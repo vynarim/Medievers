@@ -11,6 +11,7 @@ import { WEATHER_RULES, type WeatherRules } from './weather.ts';
 import { FLAME_RULES, type FlameRules } from './flames.ts';
 import { STRUCTURE_RULES, type StructureRules } from './structures.ts';
 import { CRATE_RULES, type CrateRules } from './crates.ts';
+import { ENGINE_RULES, type EngineRules } from './engines.ts';
 import { KITCHEN_RULES, type KitchenRules } from './kitchen.ts';
 import { UNIT_RULES, type UnitRules } from './units.ts';
 import { WEAPONS, type WeaponDef, type WeaponId } from './weapons.ts';
@@ -116,6 +117,8 @@ export interface MatchRules {
   readonly flames?: FlameRules;
   /** structures with HP declared by the map (GDD §4.7); absent from older logs: none */
   readonly structures?: StructureRules;
+  /** the siege engines the map sets up (GDD §4.8); absent from older logs: none */
+  readonly engines?: EngineRules;
 }
 
 /** « Classique » rules scheme (GDD §6). */
@@ -153,6 +156,7 @@ export const CLASSIC_RULES: MatchRules = {
   weather: WEATHER_RULES,
   flames: FLAME_RULES,
   structures: STRUCTURE_RULES,
+  engines: ENGINE_RULES,
 };
 
 /** Index of a weapon in the match arsenal; throws for a weapon the match does not have. */

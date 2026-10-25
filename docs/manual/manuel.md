@@ -22,7 +22,7 @@ Ce manuel décrit le jeu tel qu'on le joue. Il grandit avec le jeu : chaque règ
 | Règles complètes | Classes, Régicide, Déluge, flammes, tours qui s'effondrent, schémas de règles, écran de préparation | jouable |
 | Jeu en ligne | Créer une partie, la rejoindre par un code, reprise après rechargement | jouable |
 | IA | Trois niveaux, Écuyer, Chevalier et Connétable, qui marchent, sautent et tirent | jouable |
-| Arsenal complet | — | à venir |
+| Arsenal complet | Toutes les armes, outils et machines de siège | jouable |
 | Graphismes et musique | Le style enluminé et la musique | à venir |
 
 <div class="page-break"></div>
@@ -90,7 +90,7 @@ Chaque équipe est une **maison héraldique** : un nom, un blason et deux couleu
 
 **À chaque partie, les maisons reçoivent un nom nouveau** {{st:jeu}}, tiré d'une héraldique un peu dérangée : un animal, une couleur et un trait de caractère, jamais deux animaux, et jamais le même animal, la même couleur ni le même trait pour deux maisons (*Maison du Hareng d'Or Enrhumé*, *Maison de la Limace d'Azur Vexée*, *Maison de l'Oie de Gueules Accroupie*…). Les bandeaux et les fiches n'en gardent que l'essentiel : *Hareng d'Or Enrhumé*. Leur couleur, elle, ne change pas.
 
-## 4. L'arsenal {{st:prevu}}
+## 4. L'arsenal {{st:jeu}}
 
 **Chaque combattant garde son arme** {{st:jeu}} : à son tour suivant, il reprend celle qu'il a choisie en dernier (l'arc s'il n'en reste plus). L'enluminure de l'arme en main est dessinée sur le bouton **Arsenal**.
 
@@ -98,7 +98,7 @@ Les valeurs ci-dessous sont celles du schéma de règles *Classique*. « Vent »
 
 ### 4.1 Armes de tir et de lancer
 
-Déjà jouables {{st:jeu}} : **arc**, **arbalète**, **fronde**, **pot de feu grégeois** (il laisse des flammes au sol) et **pot de poix**. Les autres armes sont {{st:prevu}}. Les munitions limitées se regagnent dans les reliquaires.
+Toutes les armes sont jouables {{st:jeu}}. Les munitions limitées se regagnent dans les reliquaires.
 
 | Arme | Dégâts max | Rayon d'explosion | Vent | Munitions | À savoir |
 |---|---|---|---|---|---|
@@ -144,6 +144,20 @@ L'**épée** et la **charge à l'écu** sont jouables aussi {{st:jeu}}. L'épée
 | **Chausse-trape** {{st:jeu}} | « Poser » : le piège tombe juste devant vous. Il s'arme en 2 s puis saute sous le premier combattant qui marche dessus, ami ou ennemi : 40 dégâts dans un rayon de 50 px. Une explosion proche le fait sauter aussi. En ligne, chacun ne voit que les pièges de ses maisons (et tous quand c'est son Sapeur qui joue) | 2 |
 | **Miracle** {{st:jeu}} | Cliquez sur la carte (ou « Prier » avec la jauge) : vous apparaissez là, et descendez doucement jusqu'au sol. Votre contour doré montre où vous serez ; rouge, le ciel refuse (dans la terre, sur quelqu'un, au-dessus du vide ou de l'eau). Votre tour s'arrête à l'arrivée | 1 |
 | **Passer son tour** | — | ∞ |
+
+### 4.5 bis Les machines de siège {{st:jeu}}
+
+Les cartes portent des machines de bois : une paire, une de chaque côté à la même distance du bord, et parfois une troisième au milieu. N'importe quel combattant **debout à côté** (moins de 40 pixels) d'une machine prête peut la servir : son arme apparaît dans l'arsenal, et le tir part de la machine. Un halo doré entoure celle que vous pouvez servir. Après un tir, la machine recharge pendant quelques tours (des points rouges les comptent), pour tout le monde.
+
+| Machine | Tir | Dégâts | Recharge | PV |
+|---|---|---|---|---|
+| **Baliste** | Trait à pleine puissance, l'angle seul ; il traverse le premier combattant | 55 | 2 tours | 120 |
+| **Scorpion** | Trois carreaux d'un coup, l'angle seul | 3 × 20 | 1 tour | 80 |
+| **Catapulte** | Pierre en cloche, que le vent porte ; grand cratère | 50 / 70 px | 2 tours | 150 |
+| **Trébuchet** | Grosse pierre très lointaine, la visée entre 30° et 60° | 70 / 90 px | 3 tours | 200 |
+| **Bélier** | Coup droit devant, quatre fois plus dur aux tours, murs et machines ; il épargne les combattants | 40 × 4 | 1 tour | 150 |
+
+Les machines sont en bois : le feu les ronge deux fois plus vite, les flèches à peine. À 0 PV, elles s'effondrent en un tas de gravats.
 
 ### 4.5 Comment se calculent les dégâts {{st:jeu}}
 

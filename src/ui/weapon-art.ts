@@ -153,6 +153,46 @@ const ART: Record<WeaponId, string> = {
     <circle cx="32" cy="10" r="3" fill="none" ${s(2)}/>
     <path d="M32 33 Q26 42 34 48 Q42 54 30 60" fill="none" ${s(3.5)}/>
     <path d="M32 33 Q26 42 34 48 Q42 54 30 60" fill="none" stroke="${C.ochre}" stroke-width="1.8"/>`,
+  ballista: `
+    <path d="M12 26 Q32 14 52 26" fill="none" ${s(4)}/>
+    <path d="M12 26 Q32 14 52 26" fill="none" stroke="${C.wood}" stroke-width="2"/>
+    <line x1="12" y1="26" x2="52" y2="26" ${s(1.2)}/>
+    <rect x="18" y="26" width="28" height="8" fill="${C.wood}" ${s(2)}/>
+    <line x1="6" y1="22" x2="58" y2="22" ${s(3)}/>
+    <path d="M58 22 L52 18 L52 26 Z" fill="${C.stone}" ${s(1.5)}/>
+    <path d="M20 34 L14 56 M44 34 L50 56 M14 56 L50 56" ${s(3)}/>
+    <circle cx="20" cy="56" r="4" fill="${C.wood}" ${s(1.5)}/><circle cx="44" cy="56" r="4" fill="${C.wood}" ${s(1.5)}/>`,
+  scorpion: `
+    <path d="M14 30 Q32 20 50 30" fill="none" ${s(4)}/>
+    <path d="M14 30 Q32 20 50 30" fill="none" stroke="${C.wood}" stroke-width="2"/>
+    <path d="M10 22 L54 14 M10 28 L56 26 M10 34 L54 38" ${s(2)}/>
+    <path d="M54 14 L49 12 L50 17 Z M56 26 L51 23 L51 29 Z M54 38 L49 35 L49 40 Z" fill="${C.stone}" ${s(1.2)}/>
+    <path d="M32 32 L32 56 M22 56 L42 56" ${s(3.5)}/>`,
+  catapult: `
+    <rect x="10" y="44" width="44" height="8" fill="${C.wood}" ${s(2)}/>
+    <circle cx="16" cy="56" r="4" fill="${C.wood}" ${s(1.5)}/><circle cx="48" cy="56" r="4" fill="${C.wood}" ${s(1.5)}/>
+    <path d="M24 44 L30 30 L36 44" fill="none" ${s(3)}/>
+    <line x1="22" y1="40" x2="50" y2="14" stroke="${INK}" stroke-width="6" stroke-linecap="round"/>
+    <line x1="22" y1="40" x2="50" y2="14" stroke="${C.wood}" stroke-width="3" stroke-linecap="round"/>
+    <path d="M44 10 Q50 6 56 12 Q52 18 46 16 Z" fill="${C.wood}" ${s(1.5)}/>
+    <circle cx="50" cy="8" r="5" fill="${C.stone}" ${s(1.5)}/>`,
+  greatTrebuchet: `
+    <path d="M12 58 L28 18 L44 58" fill="none" ${s(4)}/>
+    <path d="M12 58 L28 18 L44 58" fill="none" stroke="${C.wood}" stroke-width="2"/>
+    <line x1="6" y1="58" x2="56" y2="58" ${s(3)}/>
+    <line x1="10" y1="34" x2="58" y2="8" stroke="${INK}" stroke-width="6" stroke-linecap="round"/>
+    <line x1="10" y1="34" x2="58" y2="8" stroke="${C.wood}" stroke-width="3" stroke-linecap="round"/>
+    <rect x="4" y="32" width="14" height="14" fill="${C.stone}" ${s(2)}/>
+    <circle cx="28" cy="18" r="2.5" fill="${C.gold}" ${s(1)}/>
+    <circle cx="58" cy="18" r="5" fill="${C.stone}" ${s(1.5)}/>
+    <path d="M58 8 L58 13" ${s(1.2)}/>`,
+  siegeRam: `
+    <path d="M10 20 L54 20 L58 30 L6 30 Z" fill="${C.red}" ${s(2)}/>
+    <path d="M14 30 L14 48 M50 30 L50 48" ${s(3)}/>
+    <line x1="4" y1="40" x2="58" y2="40" stroke="${INK}" stroke-width="8" stroke-linecap="round"/>
+    <line x1="4" y1="40" x2="58" y2="40" stroke="${C.wood}" stroke-width="4" stroke-linecap="round"/>
+    <path d="M56 34 L62 40 L56 46 Z" fill="${C.stone}" ${s(1.5)}/>
+    <circle cx="16" cy="54" r="5" fill="${C.wood}" ${s(1.5)}/><circle cx="48" cy="54" r="5" fill="${C.wood}" ${s(1.5)}/>`,
   miracle: `
     <circle cx="32" cy="26" r="16" fill="${C.gold}" ${s(2)}/>
     <path d="M32 2 L32 8 M32 44 L32 50 M8 26 L14 26 M50 26 L56 26 M15 9 L19 13 M45 39 L49 43 M49 9 L45 13 M19 39 L15 43" ${s(2)}/>

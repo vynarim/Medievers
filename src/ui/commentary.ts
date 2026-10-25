@@ -146,6 +146,9 @@ export class Commentary {
           );
           break;
         }
+        case 'engineDestroyed':
+          this.hud.say(pick('quip.engineDestroyed'), now);
+          break;
         case 'stung':
           if (now - this.stungAt > 4000) {
             this.stungAt = now;

@@ -20,12 +20,10 @@ import { ladderLook, teleportLanding } from '../sim/tools.ts';
 import { hookPoint, ledgeBeside } from '../sim/rope.ts';
 import { ropeTarget } from '../sim/units/climb.ts';
 import { UNIT_HALF_WIDTH, UNIT_HEIGHT, type Unit } from '../sim/units/unit.ts';
-import { shotSpeed } from '../sim/weapons/weapons.ts';
+import { heldAim, launchPoint, shotSpeed } from '../sim/weapons/weapons.ts';
 import { Sandbox } from './sandbox.ts';
 import { SANDBOX_PACE, TurnScript, type AiMove, type AiPlan, type AiShot } from './script.ts';
 
-/** px from the muzzle to the body centre, as the sim fires (weapons.ts) */
-const MUZZLE = 20;
 /** px between two columns tried for a placement, outwards from the one the match proposes */
 const PLACE_STEP = 8;
 /** ticks a sweep follows a throw at most */
@@ -173,14 +171,16 @@ function landing(
   const speed = shotSpeed(v as SimState, u as Unit, def, power);
   const d = dragon ? v.dragon : null;
   const dragonSpeed = v.rules.dragon?.speed ?? 0;
-  const cy = centreY(u);
+  // From the hand, or from the siege engine served; the trebuchet's aim held as the sim holds it.
+  const aim = heldAim(def, angle);
+  const start = launchPoint(v, u, def, aim);
   const p = createProjectile(
     0,
     u.id,
-    u.x + mulQ14(MUZZLE * SUBPX, cosQ14(angle)),
-    cy + mulQ14(MUZZLE * SUBPX, sinQ14(angle)),
-    mulQ14(speed, cosQ14(angle)),
-    mulQ14(speed, sinQ14(angle)),
+    start.x,
+    start.y,
+    mulQ14(speed, cosQ14(aim)),
+    mulQ14(speed, sinQ14(aim)),
     { radius: def.projectileRadius, windPct: def.windPct, gravityPct: 100 },
   );
   const units = v.units as Unit[];
@@ -393,6 +393,18 @@ function movesFor(v: SimView, u: Readonly<Unit>, team: number, level: AiLevel): 
   const width = v.terrain.width;
   // Within a walk of an enemy: right beside it, for the mace.
   const budget = v.rules.unit.moveBudget ?? 280;
+  // Beside a ready siege engine within a walk, to serve it (GDD §4.8).
+  const er = v.rules.engines;
+  if (er && level.positions >= 6) {
+    for (const e of v.engines) {
+      if (e.reload > 0) continue;
+      const ex = subToPx(e.x);
+      const side = x < ex ? -1 : 1;
+      const spot = ex + side * ((er.defs[e.type].w >> 1) + 12);
+      if (Math.abs(spot - x) > 6 && Math.abs(spot - x) < budget)
+        moves.push({ kind: 'walk', x: spot });
+    }
+  }
   if (nearest > 30 && nearest < budget) {
     moves.push({ kind: 'walk', x: x + toward * (nearest - 26) });
   }
@@ -611,6 +623,18 @@ function candidatesFrom(
         const shot = throwAtDragon(at, u, def, level);
         if (shot) out.push({ unitId, move, shot, guess: AI_SCORE.enemyKill * 1.5, dragon: true });
       }
+    } else if (def.behavior === 'melee' && def.sparesUnits) {
+      // The ram: at a tower or a wall in front with enemies on it, to bring it down on them.
+      for (const dir of [-1, 1] as const) {
+        const on = enemiesOnStructureAhead(at, u, def, dir, team);
+        if (on.length === 0) continue;
+        out.push({
+          unitId,
+          move,
+          shot: { weapon: def.id, angle: dir > 0 ? 0 : 2048, power: MAX_POWER },
+          guess: on.reduce((sum, e) => sum + Math.min(30, e.hp), 0) * 0.5,
+        });
+      }
     } else if (def.behavior === 'melee') {
       const reach = (def.reach ?? 30) + 16;
       for (const e of enemiesOf(at, team)) {
@@ -712,6 +736,35 @@ function pigsFrom(
     });
   }
   return out;
+}
+
+/**
+ * The enemies standing on the structure (tower, wall) the ram's blow on side `dir` would strike:
+ * the first built pixel within its reach, and every enemy whose feet are on that structure.
+ */
+function enemiesOnStructureAhead(
+  v: SimView,
+  u: Readonly<Unit>,
+  def: WeaponDef,
+  dir: -1 | 1,
+  team: number,
+): Readonly<Unit>[] {
+  const owners = v.owners;
+  if (!owners) return [];
+  const t = v.terrain as Terrain;
+  const x0 = subToPx(u.x);
+  const y = subToPx(centreY(u));
+  let id = 0;
+  for (let d = 0; d <= (def.reach ?? 0) && id === 0; d++) {
+    const x = x0 + dir * d;
+    if (x >= 0 && x < t.width && isSolid(t, x, y)) id = owners[y * t.width + x] ?? 0;
+  }
+  if (id === 0) return [];
+  return enemiesOf(v, team).filter((e) => {
+    const ex = subToPx(e.x);
+    const ey = subToPx(e.y);
+    return ex >= 0 && ex < t.width && ey < t.height && (owners[ey * t.width + ex] ?? 0) === id;
+  });
 }
 
 /** The AI's plan for its house's turn. */

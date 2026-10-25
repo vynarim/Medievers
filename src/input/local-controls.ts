@@ -1,6 +1,7 @@
 // Turns raw player input (keys held, presses, drags) into GameCommands, one tick at a time
 // (GDD §8). Pure logic, so it is tested in Node; the Phaser adapter only fills RawInput.
 import { isTargeted, usesPower, type WeaponDef, type WeaponId } from '../content/weapons.ts';
+import { mayUse } from '../sim/classes.ts';
 import { MAX_POWER, type GameCommand } from '../sim/commands.ts';
 import { atan2Bam } from '../sim/math/angle.ts';
 import type { SimView } from '../sim/sim.ts';
@@ -215,7 +216,11 @@ export class LocalControls {
     if (input.selectWeapon) out.push({ t: 'selectWeapon', id: input.selectWeapon });
     else if (input.nextWeaponPressed) {
       const ammo = view.teams[turn.activeTeam]?.ammo ?? [];
-      out.push({ t: 'selectWeapon', id: nextWeapon(view.rules.weapons, turn.weapon, ammo) });
+      const usable = (w: WeaponDef): boolean => mayUse(view, unit, w);
+      out.push({
+        t: 'selectWeapon',
+        id: nextWeapon(view.rules.weapons, turn.weapon, ammo, usable),
+      });
     }
     if (input.fusePressed !== null && input.fusePressed >= 1 && input.fusePressed <= 5) {
       out.push({ t: 'setFuse', seconds: input.fusePressed as 1 | 2 | 3 | 4 | 5 });
@@ -297,11 +302,13 @@ function nextWeapon(
   weapons: readonly WeaponDef[],
   current: WeaponId,
   ammo: readonly number[],
+  usable: (w: WeaponDef) => boolean,
 ): WeaponId {
   const i = weapons.findIndex((w) => w.id === current);
   for (let k = 1; k <= weapons.length; k++) {
     const j = (i + k) % weapons.length;
-    if ((ammo[j] ?? -1) !== 0) return weapons[j]?.id ?? current;
+    const w = weapons[j];
+    if (w && (ammo[j] ?? -1) !== 0 && usable(w)) return w.id;
   }
   return current;
 }

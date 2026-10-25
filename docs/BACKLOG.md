@@ -91,7 +91,7 @@ La priorité est le moteur : simulation, règles, réseau, IA. Jusqu'au lot 9, t
 | 4.6 | Mur de pierres, échelle, bannière | idem — fait le 2026-10-25 (replays `stone-wall`, `ladder-banner-miracle`) |
 | 4.7 | Pioche, sape, chausse-trape (visibilité par équipe), miracle | idem — fait le 2026-10-25 (replays `pick-sap`, `caltrop`, `ladder-banner-miracle`) |
 | 4.8 | UI d'arsenal (greybox) + munitions | Accessible au clavier et au tactile |
-| 4.9 | Machines de siège : baliste, scorpion, catapulte, trébuchet, bélier (GDD §4.8) | Un replay de référence par machine ; une machine détruite s'effondre |
+| 4.9 | Machines de siège : baliste, scorpion, catapulte, trébuchet, bélier (GDD §4.8) | Un replay de référence par machine ; une machine détruite s'effondre — fait le 2026-10-25 (replay `siege-engines` pour baliste, catapulte, trébuchet ; scorpion, bélier et destruction couverts par `tests/sim/arsenal-m4.test.ts`) |
 | 4.10 | Mèche du pot en tours (1 = ce tour, 2 = tour suivant, 3 = dans deux tours), pots posés persistants entre les tours (GDD §4.1) | Un pot à mèche 2 explose au début du tour suivant ; replay de référence |
 
 ## M5 — IA

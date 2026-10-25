@@ -2,6 +2,8 @@
 import { describe, expect, it } from 'vitest';
 import { CLASSIC_RULES, type MatchRules } from '../rules-fixture.ts';
 import { Material, Sim, type GameCommand, type Mask, type SimEvent } from '../../src/sim/index.ts';
+import { heldAim } from '../../src/sim/weapons/weapons.ts';
+import { STRUCTURE_RULES } from '../../src/content/structures.ts';
 
 function flatMask(): Mask {
   const width = 1200;
@@ -466,5 +468,138 @@ describe('grapple (GDD §4.4)', () => {
     run(sim, [{ t: 'climb', dir: -1 }], 150);
     expect(px(unit(sim, 1)?.y)).toBe(500);
     expect(unit(sim, 1)?.grounded).toBe(true);
+  });
+});
+
+describe('siege engines (GDD §4.8)', () => {
+  const siege = (
+    engines: {
+      id: number;
+      type: 'ballista' | 'scorpion' | 'catapult' | 'trebuchet' | 'ram';
+      x: number;
+    }[],
+    a: number,
+    b: readonly number[],
+  ): Sim => {
+    const sim = new Sim(
+      { rules: CALM, teams: [{ spawns: [a] }, { spawns: [...b] }], engines },
+      2,
+      flatMask(),
+    );
+    for (let i = 0; i < 1000 && sim.view().turn.phase !== 'action'; i++) sim.step();
+    return sim;
+  };
+
+  it('a ballista is served from beside it: its bolt goes through the first unit', () => {
+    const sim = siege([{ id: 50, type: 'ballista', x: 340 }], 300, [700, 800]);
+    expect(sim.view().engines[0]?.y).toBe(500 * 256);
+    run(
+      sim,
+      [
+        { t: 'selectWeapon', id: 'ballista' },
+        { t: 'aim', angle: 4090 },
+        { t: 'fire', power: 0 },
+      ],
+      200,
+    );
+    expect(unit(sim, 2)?.hp).toBe(45);
+    expect(unit(sim, 3)?.hp).toBe(45);
+    expect(sim.view().engines[0]?.reload).toBe(3);
+  });
+
+  it('is out of reach farther than 40 px from its side, and reloads for its turns', () => {
+    const far = siege([{ id: 50, type: 'ballista', x: 400 }], 300, [700]);
+    far.step([{ t: 'selectWeapon', id: 'ballista' }]);
+    expect(far.view().turn.weapon).toBe('bow');
+    const sim = siege([{ id: 50, type: 'scorpion', x: 330 }], 300, [700]);
+    const events = run(
+      sim,
+      [
+        { t: 'selectWeapon', id: 'scorpion' },
+        { t: 'aim', angle: 3900 },
+        { t: 'fire', power: 0 },
+      ],
+      0,
+    );
+    expect(events.filter((e) => e.e === 'shotFired')).toHaveLength(1);
+    expect(sim.view().shots).toHaveLength(3);
+    run(sim, [], 200);
+    run(sim, [{ t: 'skip' }], 600);
+    // Reloading: 1 turn after its own, it is ready again.
+    expect(sim.view().turn.number).toBe(2);
+    expect(sim.view().engines[0]?.reload).toBe(1);
+  });
+
+  it('a catapult stone bursts where it lands; the trebuchet holds its aim at 45° ± 15°', () => {
+    const sim = siege(
+      [
+        { id: 50, type: 'catapult', x: 330 },
+        { id: 51, type: 'trebuchet', x: 1000 },
+      ],
+      300,
+      [1100],
+    );
+    const events = run(
+      sim,
+      [
+        { t: 'selectWeapon', id: 'catapult' },
+        { t: 'aim', angle: 3584 },
+        { t: 'fire', power: 700 },
+      ],
+      300,
+    );
+    expect(events.some((e) => e.e === 'explosion')).toBe(true);
+    const def = CALM.weapons.find((w) => w.id === 'greatTrebuchet');
+    expect(def && heldAim(def, 0)).toBe(4096 - 341);
+    expect(def && heldAim(def, 3072)).toBe(4096 - 683);
+    expect(def && heldAim(def, 2048)).toBe(2048 + 341);
+  });
+
+  it('falls apart to rubble at 0 HP, under blasts', () => {
+    const sim = siege([{ id: 50, type: 'scorpion', x: 700 }], 300, [1000]);
+    const before = sim.view().engines[0]?.hp ?? 0;
+    expect(before).toBe(80);
+    const events = run(
+      sim,
+      [
+        { t: 'selectWeapon', id: 'arrowRain' },
+        { t: 'aim', angle: 0 },
+        { t: 'fireAt', x: 700, y: 0 },
+      ],
+      400,
+    );
+    expect(events.some((e) => e.e === 'engineHit')).toBe(true);
+    expect(sim.view().engines[0]?.hp ?? 0).toBeLessThan(before);
+  });
+
+  it('a ram crushes a wall four times as hard, and spares the units', () => {
+    const sim = new Sim(
+      {
+        rules: { ...CALM, structures: STRUCTURE_RULES },
+        teams: [{ spawns: [300] }, { spawns: [370] }],
+        engines: [{ id: 50, type: 'ram', x: 260 }],
+        structures: [{ id: 1, type: 'tower', rect: [340, 380, 20, 120] }],
+      },
+      2,
+      (() => {
+        const m = flatMask();
+        for (let y = 380; y < 500; y++)
+          m.data.fill(Material.BuiltStone, y * 1200 + 340, y * 1200 + 360);
+        return m;
+      })(),
+    );
+    for (let i = 0; i < 1000 && sim.view().turn.phase !== 'action'; i++) sim.step();
+    const hp0 = sim.view().structures[0]?.hp ?? 0;
+    run(
+      sim,
+      [
+        { t: 'selectWeapon', id: 'siegeRam' },
+        { t: 'aim', angle: 0 },
+        { t: 'fire', power: 0 },
+      ],
+      10,
+    );
+    expect(hp0 - (sim.view().structures[0]?.hp ?? 0)).toBe(160);
+    expect(sim.view().units.every((u) => u.hp === 100)).toBe(true);
   });
 });

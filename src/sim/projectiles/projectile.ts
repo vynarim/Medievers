@@ -110,6 +110,8 @@ export function stepProjectile(
   units: readonly Unit[],
   wind: number,
   windAccel: number,
+  /** units it goes through without stopping (a piercing bolt has already struck them) */
+  skip?: readonly number[],
 ): Impact | null {
   p.age++;
   p.vx += idiv(wind * windAccel * p.windPct, 100);
@@ -128,6 +130,7 @@ export function stepProjectile(
     let overlapsOwner = false;
     for (const u of units) {
       if (!u.alive || !touchesUnit(u, p.x, p.y, p.radius)) continue;
+      if (skip?.includes(u.id)) continue;
       if (u.id === p.ownerId && !p.clearOfOwner) {
         overlapsOwner = true;
         continue;

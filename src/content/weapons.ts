@@ -1,5 +1,6 @@
 // Weapon definitions (GDD §4). Speeds in sub-px/tick (256 = 1 px), radii in px, times in ticks.
-// Only the weapons implemented in src/sim/weapons are listed; the rest arrive with M4.
+// The whole arsenal of M4, with the weapons of the siege engines (GDD §4.8).
+import type { EngineType } from './engines.ts';
 
 export type WeaponId =
   | 'bow'
@@ -23,7 +24,12 @@ export type WeaponId =
   | 'flamingPig'
   | 'beehive'
   | 'falcon'
-  | 'grapple';
+  | 'grapple'
+  | 'ballista'
+  | 'scorpion'
+  | 'catapult'
+  | 'greatTrebuchet'
+  | 'siegeRam';
 
 /** Fragments a cluster weapon throws when it bursts (pot de poix, GDD §4.1). */
 export interface FragmentDef {
@@ -193,7 +199,8 @@ export interface WeaponDef {
     | 'walker'
     | 'hive'
     | 'homing'
-    | 'rope';
+    | 'rope'
+    | 'shell';
   /** px; 0 = point projectile */
   readonly projectileRadius: number;
   /** percent of wind acceleration applied (GDD §4.1 « Vent ») */
@@ -264,6 +271,21 @@ export interface WeaponDef {
   readonly hive?: HiveDef;
   readonly homing?: HomingDef;
   readonly rope?: RopeDef;
+  /**
+   * a siege engine's own weapon (GDD §4.8): only a unit beside a ready machine of this type may
+   * shoot with it, from the machine
+   */
+  readonly engine?: EngineType;
+  /** units its bolt goes through, harming each, before it stops at the next (the ballista) */
+  readonly pierce?: number;
+  /** bolts shot at once, spread over `spread` BAM either side of the aim (the scorpion) */
+  readonly burst?: { readonly count: number; readonly spread: number };
+  /** BAM above the horizon the aim is held within, on either side (the trebuchet: 45° ± 15°) */
+  readonly aimRange?: { readonly min: number; readonly max: number };
+  /** percent of the blast's radius its crater reaches (shell; absent: 100) */
+  readonly craterPct?: number;
+  /** melee: units are not harmed nor thrown, only what is built (the ram) */
+  readonly sparesUnits?: boolean;
   readonly teleport?: TeleportDef;
   readonly ladder?: LadderDef;
   readonly banner?: BannerDef;
@@ -286,6 +308,7 @@ export const usesPower = (w: WeaponDef): boolean =>
 
 /** Weapons that throw something through the air along the aim (they have a flight preview). */
 export const isProjectile = (w: WeaponDef): boolean =>
+  w.behavior === 'shell' ||
   w.behavior === 'directHit' ||
   w.behavior === 'fusedBouncer' ||
   w.behavior === 'cluster' ||
@@ -592,5 +615,92 @@ export const WEAPONS: readonly WeaponDef[] = [
     ammo: 1,
     endsTurn: true,
     teleport: { reach: 900 },
+  },
+  {
+    // Baliste (GDD §4.8): a bolt at full power, angle only, through the first unit it meets.
+    id: 'ballista',
+    engine: 'ballista',
+    behavior: 'directHit',
+    projectileRadius: 0,
+    windPct: 20,
+    maxSpeed: 34 * 256,
+    damage: 55,
+    explosionRadius: 0,
+    chipRadius: 6,
+    knockbackPct: 80,
+    bouncePct: 0,
+    defaultFuse: 0,
+    ammo: -1,
+    fixedPower: true,
+    pierce: 1,
+  },
+  {
+    // Scorpion (GDD §4.8): three bolts at once, angle only, a little spread.
+    id: 'scorpion',
+    engine: 'scorpion',
+    behavior: 'directHit',
+    projectileRadius: 0,
+    windPct: 40,
+    maxSpeed: 28 * 256,
+    damage: 20,
+    explosionRadius: 0,
+    chipRadius: 4,
+    knockbackPct: 60,
+    bouncePct: 0,
+    defaultFuse: 0,
+    ammo: -1,
+    fixedPower: true,
+    burst: { count: 3, spread: 24 },
+  },
+  {
+    // Catapulte (GDD §4.8): a stone lobbed, bent by the wind, that bursts where it lands, with a
+    // big crater.
+    id: 'catapult',
+    engine: 'catapult',
+    behavior: 'shell',
+    projectileRadius: 7,
+    windPct: 100,
+    maxSpeed: 20 * 256,
+    damage: 50,
+    explosionRadius: 70,
+    craterPct: 130,
+    knockbackPct: 100,
+    bouncePct: 0,
+    defaultFuse: 0,
+    ammo: -1,
+  },
+  {
+    // Trébuchet (GDD §4.8): a great stone thrown very far, the aim held at 45° ± 15°.
+    id: 'greatTrebuchet',
+    engine: 'trebuchet',
+    behavior: 'shell',
+    projectileRadius: 9,
+    windPct: 60,
+    maxSpeed: 30 * 256,
+    damage: 70,
+    explosionRadius: 90,
+    knockbackPct: 100,
+    bouncePct: 0,
+    defaultFuse: 0,
+    ammo: -1,
+    aimRange: { min: 341, max: 683 },
+  },
+  {
+    // Bélier (GDD §4.8): a blow at what is built, four times as hard; units are not harmed.
+    id: 'siegeRam',
+    engine: 'ram',
+    behavior: 'melee',
+    projectileRadius: 0,
+    windPct: 0,
+    maxSpeed: 0,
+    damage: 40,
+    explosionRadius: 0,
+    knockbackPct: 0,
+    bouncePct: 0,
+    defaultFuse: 0,
+    ammo: -1,
+    reach: 70,
+    frontal: true,
+    sparesUnits: true,
   },
 ];

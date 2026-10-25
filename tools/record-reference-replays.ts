@@ -964,6 +964,48 @@ const SCRIPTS: readonly Script[] = [
       r.until('transition');
     },
   },
+  {
+    name: 'siege-engines',
+    description:
+      'Machines de siège (GDD §4.8): a ballista bolt through two enemies, a catapult stone, and ' +
+      'a trebuchet stone with its aim held at 30° to 60°; reloads counted at the turns’ ends.',
+    mapId: 'flat',
+    seed: 1204,
+    config: {
+      rules: { ...NO_PLACEMENT, wind: { ...NO_PLACEMENT.wind, max: 0 } },
+      teams: [{ spawns: [300, 200, 90] }, { spawns: [800, 900] }],
+      engines: [
+        { id: 200, type: 'ballista', x: 340 },
+        { id: 201, type: 'catapult', x: 160 },
+        { id: 202, type: 'trebuchet', x: 50 },
+      ],
+    },
+    play: (r) => {
+      const ours = (unitId: number, cmds: Parameters<Recorder['step']>[0]): void => {
+        r.until('action');
+        r.step([{ t: 'selectUnit', unitId }, ...cmds]);
+        r.until('transition');
+        r.until('action');
+        r.step([{ t: 'skip' }]);
+        r.until('transition');
+      };
+      ours(1, [
+        { t: 'selectWeapon', id: 'ballista' },
+        { t: 'aim', angle: 4088 },
+        { t: 'fire', power: 0 },
+      ]);
+      ours(2, [
+        { t: 'selectWeapon', id: 'catapult' },
+        { t: 'aim', angle: 3584 },
+        { t: 'fire', power: 780 },
+      ]);
+      ours(3, [
+        { t: 'selectWeapon', id: 'greatTrebuchet' },
+        { t: 'aim', angle: 3072 },
+        { t: 'fire', power: 570 },
+      ]);
+    },
+  },
 ];
 
 const force = process.argv.includes('--force');

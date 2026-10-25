@@ -634,6 +634,8 @@ export class GameUi {
     const grid = el('div', 'grid');
     const unit = v.units.find((u) => u.id === v.turn.activeUnitId);
     v.rules.weapons.forEach((w, idx) => {
+      // A siege engine's weapon only on a map that has such a machine.
+      if (w.engine && !v.engines.some((e) => e.type === w.engine)) return;
       const ammo = team?.ammo[idx] ?? 0;
       // A cleric may not take up a melee weapon (GDD §3.2).
       const allowed = !unit || mayUse(v, unit, w);
@@ -642,7 +644,8 @@ export class GameUi {
       art.innerHTML = weaponArt(w.id, 60);
       b.append(art, el('b', '', t(`weapons.${w.id}`)));
       for (const line of weaponLines({ ...w, ammo })) b.append(el('small', '', line));
-      if (!allowed) b.append(el('small', '', t('weapons.forbidden')));
+      if (!allowed)
+        b.append(el('small', '', t(w.engine ? 'weapons.needEngine' : 'weapons.forbidden')));
       b.disabled = ammo === 0 || !allowed || v.turn.phase !== 'action';
       b.addEventListener('click', () => {
         this.opts.intents.selectWeapon = w.id;

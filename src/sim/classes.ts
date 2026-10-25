@@ -9,6 +9,7 @@ import { idiv, subToPx } from './math/fixed.ts';
 import { isqrt } from './math/isqrt.ts';
 import type { SimState } from './state.ts';
 import type { Unit } from './units/unit.ts';
+import { engineFor, type EngineView } from './engines.ts';
 
 /** What the class helpers read: the rules and the houses' line-ups (a SimView fits). */
 export interface ClassView {
@@ -99,8 +100,12 @@ export function digPctOf(s: ClassView, u: Unit): number {
   return classOf(s, u) === 'sapper' ? (s.rules.classes?.sapper.digPct ?? 100) : 100;
 }
 
-/** A cleric may not use melee weapons, the shield charge among them (GDD §3.2). */
-export function mayUse(s: ClassView, u: Unit, def: WeaponDef): boolean {
+/**
+ * A cleric may not use melee weapons, the shield charge among them (GDD §3.2); a siege engine's
+ * weapon needs a ready machine of its type beside the unit (GDD §4.8).
+ */
+export function mayUse(s: ClassView & EngineView, u: Unit, def: WeaponDef): boolean {
+  if (def.engine && !engineFor(s, u, def.engine)) return false;
   const melee = def.behavior === 'melee' || def.behavior === 'charge';
   return !(melee && classOf(s, u) === 'cleric');
 }
