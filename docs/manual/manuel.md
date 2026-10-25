@@ -108,9 +108,9 @@ Toutes les armes sont jouables {{st:jeu}}. Les munitions limitées se regagnent 
 | **Fronde** | 25 | — | oui | ∞ | Fort recul : idéale pour éjecter un ennemi |
 | **Pot de feu grégeois** | 45 | 60 px | non | 3 | Rebondit. **Mèche en tours** : 1 = il explose pendant ce tour (après 3 s) ; 2 = il se pose et explose au début du tour suivant ; 3 = dans deux tours. Un pot posé affiche son compte (I, II) et peut être projeté par une explosion |
 | **Pot de poix** | 30 + 5 × 15 | 50 / 30 px | non | 1 | Rebondit, puis éclate en 5 gouttes enflammées qui explosent là où elles tombent |
-| **Cochon enflammé** {{st:jeu}} | 70 | 90 px | non | 1 | « Lâcher » : il part du côté où vous regardez, trotte tout seul, saute les obstacles (et fait demi-tour devant un mur trop haut). Appuyez de nouveau (« Faire sauter ») pour qu'il explose ; sinon il explose au bout de 8 s. L'eau l'éteint |
+| **Cochon enflammé** {{st:jeu}} | 70, sur le bâti seulement | 90 px | non | 1 | Une bête de sapeur : il ne blesse aucun combattant, mais ruine une tour de pierre et abat un mur de pierre ; le bois le craint peu. « Lâcher » : il part du côté où vous regardez, trotte tout seul, saute les obstacles (et fait demi-tour devant un mur trop haut). Appuyez de nouveau (« Faire sauter ») pour qu'il explose ; sinon il explose au bout de 8 s. L'eau l'éteint |
 | **Ruche** {{st:jeu}} | 5 par piqûre | — | oui | 1 | Se lance comme une pierre et se brise où elle tombe. L'essaim poursuit pendant 4 s le combattant le plus proche, **ami ou ennemi** (vous compris !), et pique toutes les demi-secondes : 40 PV au plus |
-| **Faucon** {{st:jeu}} | 50 | 50 px | oui | 1 | Cliquez sur la carte (ou « Lâcher » avec la jauge) : il monte, puis fond sur le point en contournant le relief par le haut ; le vent le déporte. Il explose sur ce qu'il touche ; un combattant qu'il atteint prend les 50 dégâts en plein |
+| **Faucon** {{st:jeu}} | 40 | 50 px | oui | 1 | Cliquez sur la carte (ou « Lâcher » avec la jauge) : il monte, puis fond sur le point en contournant le relief par le haut ; le vent le déporte beaucoup : par grand vent, visez large. Il explose sur ce qu'il touche ; un combattant qu'il atteint prend les 40 dégâts en plein |
 
 ### 4.2 Frappes venues du ciel
 
@@ -127,7 +127,7 @@ L'**épée** et la **charge à l'écu** sont jouables aussi {{st:jeu}}. L'épée
 
 | Arme | Dégâts | Recul | À savoir |
 |---|---|---|---|
-| **Épée** {{st:jeu}} | 25 | faible | Frappe droit devant soi, sans jauge |
+| **Épée** {{st:jeu}} | 25 | faible | Un moulinet qui frappe à droite **et** à gauche d'un coup, sans jauge : idéale quand deux ennemis vous encadrent |
 | **Masse d'armes** | 30 | fort, dans la direction visée | Pour envoyer l'ennemi au loin |
 | **Charge à l'écu** {{st:jeu}} | 20 | moyen | Course de 120 px qui renverse tout sur son passage |
 
@@ -262,9 +262,9 @@ Pour que les parties ne s'éternisent pas, **le Déluge** arrive après 20 tours
 
 **Jouer en ligne** {{st:jeu}} : le jeu se joue sur https://medieverse-06.web.app, de 2 à 4 joueurs, chacun sur son appareil.
 
-1. **Celui qui prépare la partie** choisit la carte, les règles et les maisons. Pour chaque joueur qu'il invite, il règle le menu d'une maison sur **Un copain**. Un code de six signes s'affiche aussitôt à côté du titre « Les maisons et leurs combattants » (par exemple `K7M-2QX`), avec **Copier le code** : il le transmet à ses copains, par message ou de vive voix. Les autres maisons restent à lui (**Vous**) ou à l'IA.
-2. **Chaque copain** ouvre le jeu, touche **Rejoindre une partie…** et saisit le code. Il prend la première maison de copain libre, puis attend : « Vous êtes à la table ».
-3. Sur l'écran de celui qui prépare, la tête de chaque maison de copain porte un sablier, puis une coche verte quand son joueur est arrivé. **À la bataille !** reste grisé, avec « En attente de N copain(s)… », jusqu'à ce que tous soient là. Il le touche alors, et la bataille s'ouvre chez tout le monde.
+1. **Celui qui prépare la partie** choisit la carte, les règles et les maisons. Le **code de la partie**, six signes (par exemple `K7M-2QX`), est toujours affiché en haut à droite de l'écran, avec **Copier le code** : il le transmet à ses copains, par message ou de vive voix. Joué seul contre l'IA, le code ne sert simplement à rien.
+2. **Chaque copain** ouvre le jeu, touche **Rejoindre une partie…** et saisit le code. Il reçoit une maison (la première tenue par l'IA, sinon une maison de plus) et **choisit ses combattants** sur son propre appareil, puis attend : « Vous êtes à la table ». On peut aussi régler d'avance une maison sur **Un copain** : sa ligne rappelle le code à lui donner.
+3. Sur l'écran de celui qui prépare, la ligne de chaque maison de copain montre les combattants qu'il a choisis ; sa tête porte un sablier, puis une coche verte quand son joueur est arrivé. **À la bataille !** reste grisé, avec « En attente de N copain(s)… », jusqu'à ce que tous soient là. Il le touche alors, et la bataille s'ouvre chez tout le monde.
 
 Pendant le tour des autres, on regarde : leurs gestes arrivent avec une demi-seconde de retard. Les maisons de l'IA sont calculées sur l'appareil de celui qui a préparé la partie. Chacun ne voit que ses propres chausse-trapes. La pause, l'aide et les réglages arrêtent le jeu pour tous. Si la page se recharge, le jeu retrouve la partie tout seul et rattrape ce qui s'est passé. Si un joueur quitte la partie en cours, elle s'arrête pour tous.
 

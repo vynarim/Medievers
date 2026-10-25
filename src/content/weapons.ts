@@ -144,6 +144,11 @@ export interface WalkerDef {
    * logs: three hops against anything, and it turns round.
    */
   readonly hopProgress?: boolean;
+  /**
+   * px: the hole its blast digs, smaller than the blast (2026-10-25: it saps foundations, it does
+   * not blow the hill away). Absent from older logs: the blast's radius.
+   */
+  readonly carve?: number;
 }
 
 /** Ruche (GDD §4.1): a hive thrown that breaks and lets out a swarm. */
@@ -255,6 +260,11 @@ export interface WeaponDef {
   readonly fuseTurns?: number;
   /** melee: the blow is struck level on the side the unit faces, whatever the aim (the sword) */
   readonly frontal?: boolean;
+  /**
+   * melee: one swing strikes both sides at once, the blow's own and its mirror (the sword,
+   * 2026-10-25: two enemies flanking the unit). Absent from older logs: one side only.
+   */
+  readonly bothSides?: boolean;
   /** Charge à l'écu: the run */
   readonly charge?: ChargeDef;
   /** thrown by hand (sling, pots): the slinger's passive applies (GDD §3.2) */
@@ -290,7 +300,7 @@ export interface WeaponDef {
   readonly aimRange?: { readonly min: number; readonly max: number };
   /** percent of the blast's radius its crater reaches (shell; absent: 100) */
   readonly craterPct?: number;
-  /** melee: units are not harmed nor thrown, only what is built (the ram) */
+  /** units are not harmed nor thrown, only what is built: the ram's blow, the pig's blast */
   readonly sparesUnits?: boolean;
   readonly teleport?: TeleportDef;
   readonly ladder?: LadderDef;
@@ -430,6 +440,8 @@ export const WEAPONS: readonly WeaponDef[] = [
   {
     // Cochon enflammé (2026-10-25): let loose on the facing side, it trots at 2 px a tick, hops
     // over walls, and goes up at a second press of Fire, or after 8 s, or when a blast reaches it.
+    // A sapper's beast (balance of 2026-10-25): its blast spares the units and saps stone, a lot
+    // (structures.ts STONE), wood a little (WOOD), and digs a small hole only.
     id: 'flamingPig',
     behavior: 'walker',
     ...TOOL,
@@ -437,7 +449,15 @@ export const WEAPONS: readonly WeaponDef[] = [
     explosionRadius: 90,
     knockbackPct: 100,
     ammo: 1,
-    walker: { speed: 2 * 256, fuse: 8 * 60, hop: 7 * 256, maxStep: 8, hopProgress: true },
+    sparesUnits: true,
+    walker: {
+      speed: 2 * 256,
+      fuse: 8 * 60,
+      hop: 7 * 256,
+      maxStep: 8,
+      hopProgress: true,
+      carve: 40,
+    },
   },
   {
     // Ruche (2026-10-25): thrown like a stone, bent by the wind; where it breaks, a swarm comes
@@ -460,19 +480,21 @@ export const WEAPONS: readonly WeaponDef[] = [
   {
     // Faucon (2026-10-25): sent at the point clicked (or as far along the aim as the gauge says),
     // it rises, then steers its way there at 8 px a tick, the wind bending its course, and
-    // strikes the first thing it meets: 50 HP at the centre, 50 px.
+    // strikes the first thing it meets: 40 HP at the centre (50 until the balance of 2026-10-25,
+    // it hit too surely), 50 px. The wind bends it hard (windDrift 64, from 24): a sure strike in calm
+    // weather only.
     id: 'falcon',
     behavior: 'homing',
     projectileRadius: 4,
     windPct: 0,
     maxSpeed: 8 * 256,
-    damage: 50,
+    damage: 40,
     explosionRadius: 50,
     knockbackPct: 100,
     bouncePct: 0,
     defaultFuse: 0,
     ammo: 1,
-    homing: { speed: 8 * 256, turn: 80, rise: 16, windDrift: 24, ticks: 6 * 60, reach: 1200 },
+    homing: { speed: 8 * 256, turn: 80, rise: 16, windDrift: 64, ticks: 6 * 60, reach: 1200 },
   },
   {
     id: 'trebuchet',
@@ -515,7 +537,7 @@ export const WEAPONS: readonly WeaponDef[] = [
     needsTarget: true,
   },
   {
-    // Épée (2026-10-25): a level blow on the side the unit faces, struck at once, light recoil.
+    // Épée (2026-10-25): a level swing struck at once to the left and to the right, light recoil.
     id: 'sword',
     behavior: 'melee',
     projectileRadius: 0,
@@ -529,6 +551,7 @@ export const WEAPONS: readonly WeaponDef[] = [
     ammo: -1,
     reach: 34,
     frontal: true,
+    bothSides: true,
     needsTarget: true,
   },
   {

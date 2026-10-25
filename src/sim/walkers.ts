@@ -78,10 +78,11 @@ function goUp(s: SimState, w: Walker, events: SimEvent[]): void {
     x: w.x,
     y: w.y - (PIG_HEIGHT >> 1) * SUBPX,
     radius: def.explosionRadius,
-    carveRadius: def.explosionRadius,
+    carveRadius: def.walker?.carve ?? def.explosionRadius,
     maxDamage: idiv(def.damage * w.damagePct + 50, 100),
     sourceId: w.id,
     ...(s.rules.structures ? { weapon: def.id } : {}),
+    ...(def.sparesUnits ? { sparesUnits: true } : {}),
   });
   events.push({ e: 'walkerGone', id: w.id, fizzled: false });
   events.push({ e: 'shotEnded', shotId: w.id });

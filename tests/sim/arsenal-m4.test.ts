@@ -54,6 +54,25 @@ describe('sword (GDD §4.3)', () => {
     expect(moved).toBeLessThan(120);
   });
 
+  it('strikes both sides in one swing: two flanking enemies take 25 HP each, thrown apart', () => {
+    const sim = match(CALM, 300, [340, 260]);
+    run(
+      sim,
+      [
+        { t: 'selectWeapon', id: 'sword' },
+        { t: 'aim', angle: 0 },
+        { t: 'fire', power: 0 },
+      ],
+      200,
+    );
+    const right = unit(sim, 2);
+    const left = unit(sim, 3);
+    expect(right?.hp).toBe(75);
+    expect(left?.hp).toBe(75);
+    expect(px(right?.x)).toBeGreaterThan(340);
+    expect(px(left?.x)).toBeLessThan(260);
+  });
+
   it('is refused with nobody in front, the action kept', () => {
     const sim = match(CALM, 300, [800]);
     const events = run(
@@ -273,7 +292,7 @@ describe('flaming pig (GDD §4.1)', () => {
       0,
     );
 
-  it('trots on by itself at 2 px a tick and goes up at a second press of Fire', () => {
+  it('trots on by itself at 2 px a tick and goes up at a second press of Fire, sparing units', () => {
     const sim = match(CALM, 300, [600]);
     loose(sim);
     expect(sim.view().walkers).toHaveLength(1);
@@ -285,8 +304,41 @@ describe('flaming pig (GDD §4.1)', () => {
     const events = run(sim, [{ t: 'fire', power: 0 }], 2);
     expect(events.some((e) => e.e === 'walkerGone')).toBe(true);
     expect(events.some((e) => e.e === 'explosion')).toBe(true);
-    expect(unit(sim, 2)?.hp).toBeLessThan(60);
+    // A sapper's beast (2026-10-25): its blast hurts nobody.
+    expect(unit(sim, 2)?.hp).toBe(100);
     expect(sim.view().walkers).toHaveLength(0);
+  });
+
+  /** A pig set off at once by a tower of `type`, with an enemy just behind its master. */
+  function pigAtTower(type: 'tower' | 'woodTower'): { lost: number; sim: Sim } {
+    const material = type === 'tower' ? Material.BuiltStone : Material.Wood;
+    const sim = new Sim(
+      {
+        rules: { ...CALM, structures: STRUCTURE_RULES },
+        teams: [{ spawns: [370] }, { spawns: [340] }],
+        // As wide as the towers of the maps (120 px): its small hole does not undermine it.
+        structures: [{ id: 1, type, rect: [395, 380, 120, 120] }],
+      },
+      2,
+      (() => {
+        const m = flatMask();
+        for (let y = 380; y < 500; y++) m.data.fill(material, y * 1200 + 395, y * 1200 + 515);
+        return m;
+      })(),
+    );
+    for (let i = 0; i < 1000 && sim.view().turn.phase !== 'action'; i++) sim.step();
+    const hp0 = sim.view().structures[0]?.hp ?? 0;
+    loose(sim);
+    run(sim, [], 2);
+    run(sim, [{ t: 'fire', power: 0 }], 10);
+    return { lost: hp0 - (sim.view().structures[0]?.hp ?? 0), sim };
+  }
+
+  it('saps a stone tower hard, a wooden one a little, and hurts no unit (2026-10-25)', () => {
+    const stone = pigAtTower('tower');
+    expect(stone.lost).toBe(175);
+    expect(stone.sim.view().units.every((u) => u.hp === 100)).toBe(true);
+    expect(pigAtTower('woodTower').lost).toBe(21);
   });
 
   it('goes up by itself at the end of its fuse', () => {
@@ -420,12 +472,13 @@ describe('falcon (GDD §4.1)', () => {
           { t: 'selectWeapon', id: 'falcon' },
           { t: 'fireAt', x: 300, y: 100 },
         ],
-        200,
+        // Long enough for its 6 s of flight: blown hard, it may never reach its point.
+        400,
       );
       const e = events.find((x) => x.e === 'explosion');
       return e && e.e === 'explosion' ? e.x >> 8 : -1;
     };
-    expect(land(10)).toBeGreaterThan(land(0));
+    expect(land(3)).toBeGreaterThan(land(0));
   });
 });
 

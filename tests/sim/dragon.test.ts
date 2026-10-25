@@ -79,6 +79,18 @@ describe('dragon (GDD §4.11)', () => {
     expect(events).toContainEqual({ e: 'dragonGone' });
   });
 
+  it('flies over the water, never in it (rules.dragon.overWater)', () => {
+    const sim = new Sim(
+      { rules: LEVEL_RULES, teams: [{ spawns: [1000] }, { spawns: [1010] }], waterLevel: 450 },
+      3,
+      mask(),
+    );
+    for (let i = 0; i < 1000 && sim.view().turn.phase !== 'action'; i++) sim.step();
+    // Over the flooded plain (ground at 500), its belly is `clearance` px over the water at 450.
+    const y = (sim.view().dragon?.y ?? 0) >> 8;
+    expect(y).toBe(450 - DRAGON_RULES.clearance - DRAGON_HALF_HEIGHT);
+  });
+
   it('climbs and sinks a little as it flies, never under its lowest', () => {
     const sim = match();
     const low = 500 - DRAGON_RULES.clearance - DRAGON_HALF_HEIGHT;

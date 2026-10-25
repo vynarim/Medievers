@@ -332,6 +332,16 @@ function strikePoint(u: Unit, def: WeaponDef, angle: number): { x: number; y: nu
  * the kitchen, a beast, the unicorn, or a standing structure. The bare ground is no target.
  */
 export function strikeHasTarget(state: SimState, u: Unit, def: WeaponDef, angle: number): boolean {
+  if (def.bothSides) {
+    return sideHasTarget(state, u, def, angle) || sideHasTarget(state, u, def, mirror(angle));
+  }
+  return sideHasTarget(state, u, def, angle);
+}
+
+/** BAM of the blow struck on the other side, mirrored about the vertical. */
+const mirror = (angle: number): number => (2048 - angle) & 4095;
+
+function sideHasTarget(state: SimState, u: Unit, def: WeaponDef, angle: number): boolean {
   const { x, y, cy } = strikePoint(u, def, angle);
   if (state.units.some((o) => o.alive && o.id !== u.id && touchesUnit(o, x, y, STRIKE_RADIUS))) {
     return true;
@@ -365,8 +375,23 @@ const scaled = (damage: number, pct: number | undefined): number =>
 /**
  * Melee blow: every other unit touching the point at `reach` along the aim takes the damage and
  * is thrown along the aim; a barrel there goes up, the kitchen there is used, the ground chips.
+ * A two-sided weapon (the sword) strikes its mirror side too, in the same swing.
  */
 function strike(
+  state: SimState,
+  u: Unit,
+  def: WeaponDef,
+  angle: number,
+  pct: number,
+  power: number,
+  events: SimEvent[],
+  served = -1,
+) {
+  strikeSide(state, u, def, angle, pct, power, events, served);
+  if (def.bothSides) strikeSide(state, u, def, mirror(angle), pct, power, events, served);
+}
+
+function strikeSide(
   state: SimState,
   u: Unit,
   def: WeaponDef,

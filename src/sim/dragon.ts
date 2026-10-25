@@ -24,13 +24,13 @@ const GROUND_SAMPLE = 8;
 
 /**
  * px: the dragon's centre row over column x: its belly `clearance` px above the highest ground or
- * masonry under its body, so it hugs the relief as low as it can.
+ * masonry under its body, so it hugs the relief as low as it can (and the water, rules.overWater).
  */
 function flightY(s: SimState, x: number, clearance: number): number {
   const t = s.terrain;
   const x0 = Math.max(0, Math.min(t.width - 1, x - DRAGON_HALF_WIDTH));
   const x1 = Math.max(0, Math.min(t.width - 1, x + DRAGON_HALF_WIDTH));
-  let top = t.height;
+  let top = s.rules.dragon?.overWater ? Math.min(t.height, s.waterY) : t.height;
   // Read straight from the pixels (x0..x1 are on the map): run every tick, it must be cheap.
   const solid = t.rules.solid;
   const data = t.data;

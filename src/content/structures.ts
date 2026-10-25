@@ -24,6 +24,8 @@ const STONE: Omit<StructureDef, 'hp'> = {
     greekFire: 100,
     pitchPot: 80,
     siegeRam: 400,
+    // The flaming pig saps foundations (2026-10-25): a stone wall falls, a tower is left a ruin.
+    flamingPig: 250,
   },
   defaultPct: 100,
 };
@@ -37,6 +39,7 @@ const WOOD: Omit<StructureDef, 'hp'> = {
     greekFire: 200,
     pitchPot: 200,
     siegeRam: 400,
+    flamingPig: 30,
   },
   defaultPct: 100,
 };

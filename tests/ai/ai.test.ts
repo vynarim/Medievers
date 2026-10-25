@@ -240,7 +240,8 @@ describe('the AI rope', () => {
     expect(px(cliff, 1, 'y')).toBe(600);
     expect(cliff.view().units.find((u) => u.id === 1)?.hp).toBe(100);
 
-    // Flaming pig: let loose and set off by the enemy.
+    // Flaming pig: a sapper's beast since 2026-10-25, it hurts no unit, so the AI does not
+    // waste it on an enemy standing in the open.
     const pig = duel(400, 800);
     const { plan } = planTurn({
       state: pig.snapshot(),
@@ -248,10 +249,7 @@ describe('the AI rope', () => {
       level: { ...STILL, weapons: ['flamingPig'] },
       seed: 1,
     });
-    expect(plan.shot?.weapon).toBe('flamingPig');
-    expect(plan.shot?.detonate).toBeGreaterThan(0);
-    playOut(pig, plan);
-    expect(pig.view().units.find((u) => u.id === 2)?.hp ?? 100).toBeLessThan(50);
+    expect(plan.shot?.weapon).not.toBe('flamingPig');
 
     // Beehive and falcon, each alone in the level's arsenal: both hurt the enemy.
     for (const weapon of ['beehive', 'falcon'] as const) {

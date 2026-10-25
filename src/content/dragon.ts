@@ -28,6 +28,11 @@ export interface DragonRules {
    * older logs: it swallows its prey.
    */
   readonly biteDamage?: number;
+  /**
+   * The water counts as ground under it: it flies over the sea and the Déluge, never in them
+   * (2026-10-25, playtest). Absent from older logs: it flew through the water.
+   */
+  readonly overWater?: boolean;
 }
 
 export const DRAGON_RULES: DragonRules = {
@@ -39,6 +44,7 @@ export const DRAGON_RULES: DragonRules = {
   swing: 240,
   swingTicks: 420,
   biteDamage: 50,
+  overWater: true,
 };
 
 /** px: the dragon's body, around its centre, where a shot or a blast touches it */

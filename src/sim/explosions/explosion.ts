@@ -26,6 +26,8 @@ export interface Explosion {
   readonly weapon?: WeaponId;
   /** a trapped coffer going off (rules.crates.trapSparesTurn) */
   readonly trap?: boolean;
+  /** it neither hurts nor throws the units (the flaming pig, a sapper's beast) */
+  readonly sparesUnits?: boolean;
 }
 
 export interface UnitHit {
@@ -67,6 +69,7 @@ export function explode(
   const radiusSub = e.radius * SUBPX;
   const hits: UnitHit[] = [];
   for (const u of units) {
+    if (e.sparesUnits) break;
     if (!u.alive) continue;
     const dx = u.x - e.x;
     const dy = hitboxCentreY(u) - e.y;

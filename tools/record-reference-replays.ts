@@ -26,6 +26,7 @@ import { Material } from '../src/sim/terrain/material.ts';
 
 /** The snowy pass of seed 11 (GDD §10): its water, and the columns its ice spans. */
 const PASS = generateMap('pass', 11);
+const COAST = generateMap('coast', 11);
 const PASS_ICE = ((): { first: number; last: number } => {
   const { width, data } = PASS.mask;
   const row = (PASS.waterLevel ?? 0) - 1;
@@ -544,6 +545,30 @@ const SCRIPTS: readonly Script[] = [
     },
   },
   {
+    name: 'pig-sapper',
+    description:
+      'Cochon enflammé en sapeur (2026-10-25): a pig trots to the foot of the stone tower and ' +
+      'is set off there; the tower takes 250 % of its damage, the units none.',
+    mapId: 'tower',
+    seed: 1292,
+    config: {
+      rules: { ...NO_PLACEMENT, wind: { ...NO_PLACEMENT.wind, max: 0 }, structures: STRUCTURE_RULES },
+      teams: [{ spawns: [380] }, { spawns: [680, 1000] }],
+      structures: TOWER_STRUCTURES,
+    },
+    play: (r) => {
+      r.until('action');
+      r.step([
+        { t: 'selectWeapon', id: 'flamingPig' },
+        { t: 'aim', angle: 0 },
+        { t: 'fire', power: 0 },
+      ]);
+      r.steps(95);
+      r.step([{ t: 'fire', power: 0 }]);
+      r.until('transition');
+    },
+  },
+  {
     name: 'pick-sap',
     description:
       'Digging tools (GDD §4.4): a sapper picks a shaft down, then saps a level tunnel from its ' +
@@ -636,6 +661,29 @@ const SCRIPTS: readonly Script[] = [
       ]);
       r.until('transition');
       r.until('action');
+      r.step([{ t: 'skip' }]);
+      r.until('transition');
+    },
+  },
+  {
+    name: 'dragon-over-water',
+    description:
+      'Dragon over the sea (GDD §4.11, 2026-10-25): on the coast, it crosses the whole sky and ' +
+      'flies over the sea at its east end with its belly over the water, never in it.',
+    mapId: 'coast@b',
+    seed: 2027,
+    config: {
+      rules: {
+        ...NO_PLACEMENT,
+        wind: { ...NO_PLACEMENT.wind, max: 0 },
+        dragon: { ...DRAGON_RULES, spawnPermille: 1000 },
+      },
+      teams: [{ spawns: [600] }, { spawns: [1400, 2000] }],
+      ...(COAST.waterLevel !== undefined ? { waterLevel: COAST.waterLevel } : {}),
+    },
+    play: (r) => {
+      r.until('action');
+      r.steps(2400);
       r.step([{ t: 'skip' }]);
       r.until('transition');
     },
@@ -768,6 +816,27 @@ const SCRIPTS: readonly Script[] = [
       r.step([
         { t: 'selectUnit', unitId: 2 },
         { t: 'selectWeapon', id: 'shieldCharge' },
+        { t: 'aim', angle: 0 },
+        { t: 'fire', power: 0 },
+      ]);
+      r.until('transition');
+    },
+  },
+  {
+    name: 'sword-both-sides',
+    description:
+      'Épée des deux côtés (GDD §4.3, 2026-10-25): one swing strikes the two enemies flanking ' +
+      'the unit, left and right, and throws them apart.',
+    mapId: 'flat',
+    seed: 1215,
+    config: {
+      rules: { ...NO_PLACEMENT, wind: { ...NO_PLACEMENT.wind, max: 0 } },
+      teams: [{ spawns: [500] }, { spawns: [540, 460] }],
+    },
+    play: (r) => {
+      r.until('action');
+      r.step([
+        { t: 'selectWeapon', id: 'sword' },
         { t: 'aim', angle: 0 },
         { t: 'fire', power: 0 },
       ]);
