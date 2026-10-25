@@ -123,6 +123,34 @@ describe('slopes', () => {
     expect(walkTicks(v, steep, 1, 60)).toContain('fell');
   });
 
+  it('jumps forward from a slope too steep to walk, instead of going straight up (2026-10-25)', () => {
+    // A 70° slope rising ahead: the front of the body already touches it.
+    const t = terrainFrom(800, 600, (x) => (x < 300 ? 500 : x < 340 ? 500 - (x - 300) * 3 : 380));
+    const reach = (rules: typeof UNIT_RULES): number => {
+      const u = createUnit(1, 0, 300, 0, CLASSIC_RULES.startHp);
+      expect(settle(u, t)).toBe(true);
+      u.facing = 1;
+      jump(u, 'forward', rules);
+      for (let i = 0; i < 400 && !u.grounded; i++) stepUnitPhysics(u, t, rules);
+      return px(u.x) - 300;
+    };
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { jumpKeepsSpeed, ...before } = UNIT_RULES;
+    expect(reach(before)).toBeLessThan(20);
+    // It rises clear of the slope, then lands on the top beyond it.
+    expect(reach(UNIT_RULES)).toBeGreaterThan(60);
+  });
+
+  it('still stops a jump against a wall too high to clear', () => {
+    const t = terrainFrom(800, 600, (x) => (x < 330 ? 500 : 300));
+    const u = standingUnit(t, 300);
+    u.facing = 1;
+    jump(u, 'forward', UNIT_RULES);
+    for (let i = 0; i < 400 && !u.grounded; i++) stepUnitPhysics(u, t, UNIT_RULES);
+    expect(px(u.x)).toBeLessThan(330);
+    expect(px(u.y)).toBe(500);
+  });
+
   it('is blocked by a 70° slope', () => {
     const t = terrainFrom(400, 300, (x) => (x < 100 ? 250 : x < 140 ? 250 - (x - 100) * 3 : 130));
     const u = standingUnit(t, 80);
@@ -235,7 +263,9 @@ describe('jumps', () => {
     fallUntilLanded(u, t);
     expect(px(u.x)).toBeGreaterThan(400);
     // Logs recorded before the fix keep the old physics: the slope stops the take-off.
-    const oldRules = { ...UNIT_RULES, slopeTakeoff: false };
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { jumpKeepsSpeed, ...older } = UNIT_RULES;
+    const oldRules = { ...older, slopeTakeoff: false };
     const old = standingUnit(t, 300);
     jump(old, 'forward', oldRules);
     for (let i = 0; i < 2000 && !stepUnitPhysics(old, t, oldRules).landed; i++);

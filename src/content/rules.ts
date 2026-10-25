@@ -34,6 +34,13 @@ export interface TurnRules {
    */
   readonly settleTicks?: number;
   /**
+   * The match is won as soon as no other house has a fighter standing: the turn stops there, and
+   * once everything has settled the winner is called, without the end-of-turn effects (Déluge,
+   * fire of the parchment) that could still kill it and make a draw (2026-10-25, playtest).
+   * Absent from older logs: the winner is called at the end of the turn, after them.
+   */
+  readonly instantWin?: boolean;
+  /**
    * After the shot, the unit keeps the action time left (at least retreatTicks) to use the
    * moves it has not used, and may end the turn itself (GDD §2.2, 2026-10-24). Absent from
    * older logs: a fixed retreatTicks.
@@ -129,6 +136,7 @@ export const CLASSIC_RULES: MatchRules = {
     retreatTicks: 3 * TICKS_PER_SECOND,
     maxResolutionTicks: 30 * TICKS_PER_SECOND,
     settleTicks: 2 * TICKS_PER_SECOND,
+    instantWin: true,
     moveAfterShot: true,
     // As long as the turn itself: the shot does not cut the clock, which runs on.
     retreatMaxTicks: 45 * TICKS_PER_SECOND,

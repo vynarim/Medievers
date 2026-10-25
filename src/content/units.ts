@@ -40,6 +40,13 @@ export interface UnitRules {
    */
   readonly slopeTakeoff?: boolean;
   /**
+   * A jumping unit blocked sideways by the ground keeps its forward speed, and goes on as soon
+   * as it has risen clear: a jump from a steep slope or at the foot of a low wall carries over
+   * it instead of going straight up (2026-10-25, playtest on the snowy pass). Absent from older
+   * logs: the jump loses its forward speed at the first touch.
+   */
+  readonly jumpKeepsSpeed?: boolean;
+  /**
    * px of free room a unit needs above its head to jump: under a lower ceiling (the wall-walk of
    * a curtain wall), the jump is refused and costs nothing (2026-10-25). Absent from older logs:
    * the jump goes, and bumps its head.
@@ -102,6 +109,7 @@ export const UNIT_RULES: UnitRules = {
   fallMinDamage: 5,
   moveBudget: 280,
   slopeTakeoff: true,
+  jumpKeepsSpeed: true,
   jumpHeadroom: 40,
   jumpGrace: 20,
   turnTicks: 12,

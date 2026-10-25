@@ -289,7 +289,9 @@ export function stepUnitPhysics(u: Unit, t: Terrain, rules: UnitRules): PhysicsR
       ) {
         // Taking off from a slope: rising clears the ground that blocks the sideways step.
         u.x = nx;
-      } else u.vx = u.knocked ? -idiv(u.vx * RESTITUTION_PCT, 100) : 0;
+      } else if (u.knocked) u.vx = -idiv(u.vx * RESTITUTION_PCT, 100);
+      // A jump against a slope or a low wall keeps its way, to go on once it has risen clear.
+      else if (rules.jumpKeepsSpeed !== true) u.vx = 0;
     }
     if (dy !== 0) {
       const ny = u.y + dy;

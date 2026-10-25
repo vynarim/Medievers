@@ -250,6 +250,24 @@ function teamAlive(s: SimState, team: TeamState): boolean {
   return team.unitIds.some((id) => unitById(s, id)?.alive === true);
 }
 
+/**
+ * The house still has a fighter standing: alive with HP left (a fighter at 0 HP is only called
+ * dead once everything stops); in Régicide, its king.
+ */
+function teamStanding(s: SimState, team: TeamState): boolean {
+  const up = (id: number): boolean => {
+    const u = unitById(s, id);
+    return u?.alive === true && u.hp > 0;
+  };
+  const king = kingOf(s, team.id);
+  return king ? up(king.id) : team.unitIds.some(up);
+}
+
+/** rules.turn.instantWin: at most one house still has a fighter standing. */
+function decided(s: SimState): boolean {
+  return s.rules.turn.instantWin === true && s.teams.filter((t) => teamStanding(s, t)).length <= 1;
+}
+
 function setPhase(s: SimState, phase: Phase, ticks: number, events: SimEvent[]): void {
   // The rope is let go once the turn's moves are over.
   if (s.turn.grapple && phase !== 'action' && phase !== 'retreat') {
@@ -746,14 +764,20 @@ function advancePhase(
     case 'retreat':
       // Hit during its own turn, the active unit stops at once (GDD §2.2).
       // The clock stops while the pick or the sap is at work, and during a charge.
-      if (activeHurt || (!s.dig && !s.charge && (--t.phaseTicks <= 0 || nothingLeftToDo(s)))) {
+      // No other house left standing: the turn stops there (rules.turn.instantWin).
+      if (
+        activeHurt ||
+        decided(s) ||
+        (!s.dig && !s.charge && (--t.phaseTicks <= 0 || nothingLeftToDo(s)))
+      ) {
         setPhase(s, 'resolution', 0, events);
       }
       break;
     case 'resolution': {
       t.resolutionTicks++;
       if (t.resolutionTicks >= s.rules.turn.maxResolutionTicks) {
-        endTurn(s, events);
+        if (decided(s)) callWinner(s, events);
+        else endTurn(s, events);
         break;
       }
       // phaseTicks counts the ticks spent at rest; any movement starts the count again.
@@ -763,8 +787,10 @@ function advancePhase(
       }
       // Deaths are called as soon as everything stops, then the scene is left to be seen.
       if (t.phaseTicks === 0) callDeaths(s, events);
-      if (t.phaseTicks >= (s.rules.turn.settleTicks ?? 0)) endTurn(s, events);
-      else t.phaseTicks++;
+      if (t.phaseTicks >= (s.rules.turn.settleTicks ?? 0)) {
+        if (decided(s)) callWinner(s, events);
+        else endTurn(s, events);
+      } else t.phaseTicks++;
       break;
     }
     case 'gameOver':
@@ -1025,6 +1051,15 @@ function endTurn(s: SimState, events: SimEvent[]): void {
     return;
   }
   startTurn(s, events);
+}
+
+/** The match is decided (rules.turn.instantWin): the last house standing wins, nothing else. */
+function callWinner(s: SimState, events: SimEvent[]): void {
+  callDeaths(s, events);
+  const alive = s.teams.filter((team) => teamAlive(s, team));
+  s.winner = alive.length === 1 ? (alive[0]?.id ?? -1) : -1;
+  setPhase(s, 'gameOver', 0, events);
+  events.push({ e: 'gameOver', winner: s.winner });
 }
 
 function hashState(s: SimState): number {
