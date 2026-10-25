@@ -2,6 +2,7 @@
 // with Previous / Next. Texts are i18n keys; drawings are inline SVG in the palette tokens.
 import { t } from './i18n.ts';
 import { button, el } from './overlay.ts';
+import { icon, setIcon, withIcons } from './icons.ts';
 import { COLORS, css } from './tokens.ts';
 
 const C = {
@@ -120,13 +121,16 @@ export function renderTutorial(panel: HTMLElement, close: () => void): void {
     const n = page + 1;
     const pic = el('div', 'tuto-pic');
     pic.innerHTML = DRAWINGS[page] ?? '';
-    const prev = button(`◀ ${t('tuto.prev')}`);
+    const prev = setIcon(button(''), 'prev', t('tuto.prev'));
     prev.disabled = page === 0;
     prev.addEventListener('click', () => {
       page = Math.max(0, page - 1);
       show();
     });
-    const next = button(page === count - 1 ? t('tuto.done') : `${t('tuto.next')} ▶`);
+    const next = button('');
+    if (page === count - 1) next.textContent = t('tuto.done');
+    else next.append(el('span', 'label', t('tuto.next')), icon('next'));
+    next.classList.add('has-icon');
     next.addEventListener('click', () => {
       if (page === count - 1) close();
       else {
@@ -136,10 +140,14 @@ export function renderTutorial(panel: HTMLElement, close: () => void): void {
     });
     const nav = el('div', 'tuto-nav');
     nav.append(prev, el('span', 'tuto-count', t('tuto.count', { n, count })), next);
-    const closeBtn = button('✕', 'close');
+    const closeBtn = setIcon(button('', 'close'), 'close');
     closeBtn.addEventListener('click', close);
     const body = el('div', 'tuto-body');
-    for (const line of t(`tuto.${n}.body`).split('\n')) body.append(el('p', '', line));
+    for (const line of t(`tuto.${n}.body`).split('\n')) {
+      const p = el('p');
+      p.append(...withIcons(line));
+      body.append(p);
+    }
     panel.replaceChildren(closeBtn, el('h2', '', t(`tuto.${n}.title`)), pic, body, nav);
   };
   show();

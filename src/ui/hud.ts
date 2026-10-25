@@ -7,6 +7,7 @@ import type { SimView } from '../sim/sim.ts';
 import { houseShortName } from './house-names.ts';
 import { t } from './i18n.ts';
 import { button, el, shield } from './overlay.ts';
+import { withIcons } from './icons.ts';
 import { COLORS, css } from './tokens.ts';
 
 /** ms a commentary line stays up */
@@ -67,7 +68,7 @@ export class Hud {
     const power = el('div', 'power');
     this.powerFill = el('i');
     power.append(this.powerFill);
-    this.hint = el('div', 'hint', t('hud.hint'));
+    this.hint = el('div', 'hint');
     weapon.append(this.weaponName, power, this.hint);
 
     this.chronicle = el('div', 'chronicles');
@@ -249,7 +250,10 @@ export class Hud {
     // How to use the weapon in hand: aim and charge, click the map, or just press.
     const hintKey = `hud.hint.${def?.behavior ?? 'directHit'}`;
     const hint = t(hintKey).startsWith('[') ? t('hud.hint') : t(hintKey);
-    if (this.hint.textContent !== hint) this.hint.textContent = hint;
+    if (this.hint.dataset.text !== hint) {
+      this.hint.dataset.text = hint;
+      this.hint.replaceChildren(...withIcons(hint));
+    }
     this.hint.classList.toggle('hidden', turn.phase !== 'action');
   }
 }

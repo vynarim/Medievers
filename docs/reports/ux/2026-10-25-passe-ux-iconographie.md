@@ -1,6 +1,6 @@
 # Passe UX : iconographie et libellés de l'interface (2026-10-25)
 
-Analyse de tous les boutons et menus du jeu sur PC (1920 × 1080), tablette en paysage (1180 × 820) et smartphone en portrait (390 × 844), d'après le code (`src/ui/`) et les captures de la session. Rien n'est encore modifié : ce rapport propose, pèse et ordonne.
+Analyse de tous les boutons et menus du jeu sur PC (1920 × 1080), tablette en paysage (1180 × 820) et smartphone en portrait (390 × 844), d'après le code (`src/ui/`) et les captures de la session. Ce rapport propose, pèse et ordonne. **État** : lots A et B faits le 2026-10-25, avec les recommandations du § 5 retenues par l'utilisateur (libellés gardés sur PC et tablette, jauge dans le bouton Tirer sur téléphone, lot C après essai). Lots C, D et E à faire ; les icônes du menu de pause (lot E) sont déjà posées avec le lot A.
 
 ## 1. Constats
 

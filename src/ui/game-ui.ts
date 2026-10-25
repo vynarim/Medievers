@@ -13,6 +13,8 @@ import { renderTutorial } from './tutorial.ts';
 import { houseShortName } from './house-names.ts';
 import { t } from './i18n.ts';
 import { button, el, holdButton, measureBars, shield, uiRoot, watchBar } from './overlay.ts';
+import { setIcon } from './icons.ts';
+import { MAX_POWER } from '../sim/commands.ts';
 import { COLORS, css } from './tokens.ts';
 import {
   readValue,
@@ -77,15 +79,25 @@ export class GameUi {
   private readonly opts: GameUiOptions;
   private readonly root: HTMLElement;
   readonly hud: Hud;
-  private readonly fuses: HTMLElement;
+  /** the fuse (or a wall's length), one press for the next value */
+  private readonly fuse: HTMLButtonElement;
+  private readonly fuseValue: HTMLElement;
+  private fuseNow = 1;
+  private fuseMax = 5;
+  private fuseKind = '';
   private readonly skip: HTMLButtonElement;
   private readonly resetView: HTMLButtonElement;
-  /** ↓, shown at a ladder only */
+  /** down the ladder, shown at a ladder only */
   private readonly down: HTMLButtonElement;
   /** « Grimper »: shown where a rope goes up or down a wall */
   private readonly rope: HTMLButtonElement;
+  private ropeWay = 0;
   /** Fire, in the colour of the house that plays */
   private readonly fire: HTMLButtonElement;
+  private readonly fireLabel: HTMLElement;
+  /** the power charging, filling Fire itself (shown on a phone held upright, overlay.ts) */
+  private readonly fireCharge: HTMLElement;
+  private firePower = -1;
   /** set each frame: the mace in hand has nothing to strike along the aim (Fire greys) */
   strikeRefused = false;
   private fireColour = -1;
@@ -146,81 +158,96 @@ export class GameUi {
     const bar = el('div', 'bar panel');
     const pad = el('div', 'group');
     const longJump = (dir: -1 | 1): HTMLButtonElement =>
-      this.click(button(t(dir < 0 ? 'ui.jumpLeft' : 'ui.jumpRight'), 'icon'), () => {
+      this.click(setIcon(button('', 'icon'), dir < 0 ? 'jumpLeft' : 'jumpRight'), () => {
         i.jump = 'forward';
         i.jumpDir = dir;
       });
-    // Long jumps on the outside, the high jump between the walking arrows.
+    // Long jumps on the outside, the high jump between the walking arrows; the rope last, so
+    // that it shows up without moving the others under the finger.
     pad.append(
       act(longJump(-1), 'jump', 'tip.jumpLeft'),
       act(
-        holdButton(t('ui.walkLeft'), (h) => (i.walk = h ? -1 : 0), 'icon'),
+        setIcon(
+          holdButton('', (h) => (i.walk = h ? -1 : 0), 'icon'),
+          'walkLeft',
+        ),
         'walk',
         'tip.walkLeft',
       ),
       // ↑: the high jump, or, at a ladder, climb up while held (GDD §4.4).
       act(
-        holdButton(
-          t('ui.jumpUp'),
-          (h) => {
-            if (!h) i.climb = 0;
-            else if (this.onLadder()) i.climb = -1;
-            else i.jump = 'back';
-          },
-          'icon',
+        setIcon(
+          holdButton(
+            '',
+            (h) => {
+              if (!h) i.climb = 0;
+              else if (this.onLadder()) i.climb = -1;
+              else i.jump = 'back';
+            },
+            'icon',
+          ),
+          'jumpUp',
         ),
         'up',
         'tip.jumpUp',
       ),
       (this.down = act(
-        holdButton(t('ui.climbDown'), (h) => (i.climb = h ? 1 : 0), 'icon hidden'),
+        setIcon(
+          holdButton('', (h) => (i.climb = h ? 1 : 0), 'icon hidden'),
+          'climbDown',
+        ),
         'down',
         'tip.climbDown',
       )),
-      (this.rope = act(
-        this.click(button(t('ui.rope'), 'hidden'), () => (i.rope = true)),
-        'rope',
-        'tip.rope',
-      )),
       act(
-        holdButton(t('ui.walkRight'), (h) => (i.walk = h ? 1 : 0), 'icon'),
+        setIcon(
+          holdButton('', (h) => (i.walk = h ? 1 : 0), 'icon'),
+          'walkRight',
+        ),
         'walk',
         'tip.walkRight',
       ),
       act(longJump(1), 'jump', 'tip.jumpRight'),
+      (this.rope = act(
+        this.click(setIcon(button('', 'hidden'), 'ropeUp', t('ui.rope')), () => (i.rope = true)),
+        'rope',
+        'tip.rope',
+      )),
     );
     // The arsenal button wears the playing unit's weapon, right of its name.
-    this.arsenalButton = this.click(button(t('ui.arsenal'), 'arsenal'), () =>
-      this.toggle(this.arsenal),
-    );
+    this.arsenalButton = this.click(button('', 'arsenal'), () => this.toggle(this.arsenal));
     this.arsenalArt = el('span', 'art');
-    this.arsenalButton.append(this.arsenalArt);
-    // Weapons and fire, bottom right.
-    this.fuses = el('div', 'fuses');
-    this.fuses.append(el('span', '', t('ui.fuse')));
-    for (let s = 1; s <= 5; s++) {
-      const b = act(button(String(s)));
-      b.dataset.fuse = String(s);
-      b.addEventListener('click', () => (i.fuse = s));
-      this.fuses.append(b);
-    }
+    this.arsenalButton.append(el('span', 'label', t('ui.arsenal')), this.arsenalArt);
+    // The fuse of the throwables (a wall's length): one press for the next value.
+    this.fuse = act(
+      this.click(setIcon(button('', 'fuse-pick'), 'fuse', t('ui.fuse')), () => {
+        i.fuse = (this.fuseNow % this.fuseMax) + 1;
+      }),
+    );
+    this.fuseValue = el('b', 'value');
+    this.fuse.append(this.fuseValue);
+    this.fuse.title = t('tip.fusePick');
     const arms = el('div', 'group');
     this.skip = act(
-      this.click(button(t('ui.skip')), () => (i.skip = true)),
+      this.click(setIcon(button(''), 'hourglass', t('ui.skip')), () => (i.skip = true)),
       'end',
     );
     // Weapon, aim and fire together.
     arms.append(
       act(this.arsenalButton),
-      this.fuses,
+      this.fuse,
       act(
-        holdButton(t('ui.spin'), (h) => (i.spin = h)),
+        setIcon(
+          holdButton('', (h) => (i.spin = h)),
+          'spin',
+          t('ui.spin'),
+        ),
         'action',
         'tip.spin',
       ),
       (this.fire = act(
         holdButton(
-          t('ui.fire'),
+          '',
           (h) => {
             i.charge = h;
             if (h) i.firePressed = true;
@@ -229,9 +256,12 @@ export class GameUi {
         ),
       )),
     );
+    this.fireCharge = el('i', 'charge');
+    this.fireLabel = el('span', 'label', t('ui.fire'));
+    this.fire.append(this.fireCharge, this.fireLabel);
     // Worms' « worm select »: hands the turn to the next unit of the team (GDD §2.2).
     const switchUnit = act(
-      this.click(button(t('ui.switchUnit')), () => {
+      this.click(setIcon(button(''), 'switchUnit', t('ui.switchUnit')), () => {
         const next = this.view ? nextTeammate(this.view) : null;
         if (next !== null) i.selectUnit = next;
       }),
@@ -241,19 +271,26 @@ export class GameUi {
     bar.append(pad, el('div', 'sep'), arms, el('div', 'sep'), switchUnit, this.skip);
     const sys = el('div', 'sys');
     // Shown only away from the default view (showResetView).
-    this.resetView = this.click(button(t('ui.resetView'), 'icon reset hidden'), () => opts.resetView());
+    this.resetView = this.click(setIcon(button('', 'icon reset hidden'), 'resetView'), () =>
+      opts.resetView(),
+    );
     this.resetView.title = t('tip.resetView');
     // Not on a phone held upright (overlay.ts): the page already fills it.
     if (document.fullscreenEnabled) sys.append(this.fullscreenButton());
     // On a phone held upright, help and settings are reached from the pause menu, which shows
     // as its three strokes alone (overlay.ts).
-    const helpButton = this.click(button('?', 'icon help'), () => this.toggle(this.help));
+    const helpButton = this.click(setIcon(button('', 'icon sys-help'), 'help'), () =>
+      this.toggle(this.help),
+    );
     helpButton.title = t('ui.help');
-    const settingsButton = this.click(button('⚙', 'icon settings'), () => this.openSettings());
+    const settingsButton = this.click(setIcon(button('', 'icon sys-settings'), 'settings'), () =>
+      this.openSettings(),
+    );
     settingsButton.title = t('ui.settings');
-    const pauseButton = this.click(button('☰', 'menu'), () => this.toggle(this.pause));
+    const pauseButton = this.click(setIcon(button('', 'menu'), 'menu', t('ui.pause')), () =>
+      this.toggle(this.pause),
+    );
     pauseButton.title = t('ui.pause');
-    pauseButton.append(el('span', 'label', ` ${t('ui.pause')}`));
     sys.append(this.resetView, helpButton, settingsButton, pauseButton);
 
     this.veil = el('div', 'veil hidden');
@@ -268,18 +305,18 @@ export class GameUi {
     this.pause = this.modal('pause');
     const pauseActions = el('div', 'actions');
     pauseActions.append(
-      this.click(button(t('pause.resume')), () => this.show(null)),
-      this.click(button(t('pause.restart')), () => {
+      this.click(setIcon(button(''), 'play', t('pause.resume')), () => this.show(null)),
+      this.click(setIcon(button(''), 'restart', t('pause.restart')), () => {
         this.show(null);
         this.opts.restart(loadOverrides());
       }),
-      this.click(button(t('pause.newMatch')), () => {
+      this.click(setIcon(button(''), 'newMatch', t('pause.newMatch')), () => {
         this.show(null);
         this.opts.newMatch();
       }),
-      this.click(button(`? ${t('ui.help')}`), () => this.show(this.help)),
-      this.click(button(`⚙ ${t('ui.settings')}`), () => this.openSettings()),
-      this.click(button(t('pause.title.screen')), () => {
+      this.click(setIcon(button(''), 'help', t('ui.help')), () => this.show(this.help)),
+      this.click(setIcon(button(''), 'settings', t('ui.settings')), () => this.openSettings()),
+      this.click(setIcon(button(''), 'home', t('pause.title.screen')), () => {
         this.show(null);
         this.opts.title();
       }),
@@ -324,7 +361,7 @@ export class GameUi {
 
   /** Toggles the browser's full screen, like F11; the tooltip follows the state. */
   private fullscreenButton(): HTMLButtonElement {
-    const b = this.click(button(t('ui.fullscreen'), 'icon fullscreen'), () => {
+    const b = this.click(setIcon(button('', 'icon fullscreen'), 'fullscreen'), () => {
       if (document.fullscreenElement) void document.exitFullscreen();
       else void document.documentElement.requestFullscreen().catch(() => undefined);
     });
@@ -343,10 +380,10 @@ export class GameUi {
   showReplayBar(c: ReplayControls): void {
     this.root.classList.add('replaying');
     const bar = el('div', 'bar replay-bar panel');
-    const pause = button(t('replay.pause'));
+    const pause = setIcon(button(''), 'pause', t('replay.pause'));
     pause.addEventListener('click', () => {
       c.togglePause();
-      pause.textContent = t(c.paused() ? 'replay.play' : 'replay.pause');
+      setIcon(pause, c.paused() ? 'play' : 'pause', t(c.paused() ? 'replay.play' : 'replay.pause'));
     });
     const speeds = el('div', 'group');
     const speedButtons = c.speeds.map((s) => {
@@ -359,8 +396,8 @@ export class GameUi {
       return b;
     });
     speeds.append(...speedButtons);
-    const again = this.click(button(t('replay.again')), () => c.restart());
-    const quit = this.click(button(t('replay.quit')), () => c.quit());
+    const again = this.click(setIcon(button(''), 'restart', t('replay.again')), () => c.restart());
+    const quit = this.click(setIcon(button(''), 'close', t('replay.quit')), () => c.quit());
     bar.append(
       el('span', 'replay-title', t('replay.badge')),
       pause,
@@ -419,7 +456,7 @@ export class GameUi {
   }
 
   private closeButton(): HTMLButtonElement {
-    return this.click(button('✕', 'close'), () => this.show(null));
+    return this.click(setIcon(button('', 'close'), 'close'), () => this.show(null));
   }
 
   /** Shows one modal (or none), with the veil behind it. */
@@ -506,10 +543,11 @@ export class GameUi {
       !ladder && active?.alive === true && active.grounded ? ropeDir(view, active) : 0;
     this.rope.classList.toggle('hidden', ropeWay === 0);
     // It says which way the rope goes: up the wall in front, or down the drop in front.
-    const ropeLabel = t(ropeWay > 0 ? 'ui.ropeDown' : 'ui.rope');
-    if (ropeWay !== 0 && this.rope.textContent !== ropeLabel) {
-      this.rope.textContent = ropeLabel;
-      this.rope.title = t(ropeWay > 0 ? 'tip.ropeDown' : 'tip.rope');
+    if (ropeWay !== 0 && ropeWay !== this.ropeWay) {
+      this.ropeWay = ropeWay;
+      const down = ropeWay > 0;
+      setIcon(this.rope, down ? 'ropeDown' : 'ropeUp', t(down ? 'ui.ropeDown' : 'ui.rope'));
+      this.rope.title = t(down ? 'tip.ropeDown' : 'tip.rope');
     }
     // Who plays is never in doubt: Fire wears the colours of the house whose turn it is.
     const colour = FACTIONS[view.turn.activeTeam]?.primary ?? COLORS.vermillon;
@@ -543,21 +581,28 @@ export class GameUi {
     }
     // Before the shot it passes the turn; after it, it ends the turn.
     const skipLabel = phase === 'retreat' ? t('ui.endTurn') : t('ui.skip');
-    if (this.skip.textContent !== skipLabel) this.skip.textContent = skipLabel;
+    if (this.skip.textContent !== skipLabel) {
+      setIcon(this.skip, 'hourglass', skipLabel);
+      this.skip.title = t(phase === 'retreat' ? 'tip.endTurn' : 'tip.skip');
+    }
     const def = view.rules.weapons.find((w) => w.id === view.turn.weapon);
     const build = def?.behavior === 'build';
     const fused = def?.behavior === 'fusedBouncer' || def?.behavior === 'cluster' || build;
-    this.fuses.classList.toggle('hidden', !fused);
+    this.fuse.classList.toggle('hidden', !fused);
     const fuseSeconds = Math.round((view.turn.fuse || (def?.defaultFuse ?? 0)) / 60);
     // A fuse in turns (Greek fire) offers 1 to 3 turns; in seconds, 1 to 5; a wall, 3 lengths.
     const inTurns = def?.fuseTurns !== undefined || build;
-    const fuseLabel = t(build ? 'ui.wallLength' : inTurns ? 'ui.fuseTurns' : 'ui.fuse');
-    const fuseTitle = this.fuses.firstElementChild;
-    if (fuseTitle && fuseTitle.textContent !== fuseLabel) fuseTitle.textContent = fuseLabel;
-    for (const b of this.fuses.querySelectorAll('button')) {
-      b.classList.toggle('on', b.dataset.fuse === String(fuseSeconds));
-      b.classList.toggle('hidden', inTurns && Number(b.dataset.fuse) > 3);
+    this.fuseNow = Math.max(1, fuseSeconds);
+    this.fuseMax = inTurns ? 3 : 5;
+    const kind = build ? 'wall' : inTurns ? 'turns' : 'seconds';
+    if (kind !== this.fuseKind) {
+      this.fuseKind = kind;
+      const label = t(build ? 'ui.wallLength' : inTurns ? 'ui.fuseTurns' : 'ui.fuse');
+      setIcon(this.fuse, build ? 'length' : 'fuse', label);
+      this.fuse.append(this.fuseValue);
     }
+    const shown = String(this.fuseNow);
+    if (this.fuseValue.textContent !== shown) this.fuseValue.textContent = shown;
     if (view.turn.weapon !== this.arsenalWeapon) {
       this.arsenalWeapon = view.turn.weapon;
       this.arsenalArt.innerHTML = weaponArt(view.turn.weapon, 30);
@@ -565,7 +610,11 @@ export class GameUi {
     }
     // Fire says what the weapon does: strike, dig, set, build…
     const fireLabel = t(`ui.fire.${def?.behavior ?? 'directHit'}`);
-    if (this.fire.textContent !== fireLabel) this.fire.textContent = fireLabel;
+    if (this.fireLabel.textContent !== fireLabel) this.fireLabel.textContent = fireLabel;
+    if (power !== this.firePower) {
+      this.firePower = power;
+      this.fireCharge.style.width = `${(power * 100) / MAX_POWER}%`;
+    }
     if (this.open === this.arsenal) this.renderArsenal(false);
     this.renderCard(view);
   }
@@ -655,7 +704,7 @@ export class GameUi {
       rules.append(el('li', '', line));
     }
     this.card.replaceChildren(
-      this.click(button('✕', 'close'), () => this.selectUnit(null)),
+      this.click(setIcon(button('', 'close'), 'close'), () => this.selectUnit(null)),
       el('h2', '', unitName(u.id)),
       house,
       el('div', '', `${t('card.hp')} : ${u.hp} / ${maxHp}`),

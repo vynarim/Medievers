@@ -53,7 +53,7 @@ Un chroniqueur à l'humour douteux commente la partie {{st:jeu}} : chaque tour s
 - Le sablier **ne s'arrête pas** pendant que vous visez : la pression du temps fait partie du jeu.
 - Un combattant **touché pendant son propre tour** termine son tour aussitôt.
 - **Le tir ami existe** : une flèche ou une explosion blesse aussi vos propres combattants, et vous-même.
-- **Vous choisissez qui joue** : le jeu propose un combattant, mais un clic sur un autre de vos combattants (sur lui ou sur son nom), ou le bouton **⇄ Combattant**, lui donne la main, tant que personne n'a encore bougé ni tiré ce tour (viser ne compte pas). Ensuite, sa fiche indique « la maison a déjà bougé ou tiré ce tour ». En revanche, le combattant qui a joué le tour précédent de votre maison **souffle** : il ne peut pas rejouer tout de suite (sa fiche l'indique), sauf s'il est le dernier debout.
+- **Vous choisissez qui joue** : le jeu propose un combattant, mais un clic sur un autre de vos combattants (sur lui ou sur son nom), ou le bouton **Combattant** (deux flèches opposées), lui donne la main, tant que personne n'a encore bougé ni tiré ce tour (viser ne compte pas). Ensuite, sa fiche indique « la maison a déjà bougé ou tiré ce tour ». En revanche, le combattant qui a joué le tour précédent de votre maison **souffle** : il ne peut pas rejouer tout de suite (sa fiche l'indique), sauf s'il est le dernier debout.
 - Les morts sont constatées à la fin de la résolution : un combattant à 0 PV ne tombe qu'une fois que tout s'est arrêté.
 
 ## 3. Vos combattants
@@ -62,7 +62,7 @@ Un chroniqueur à l'humour douteux commente la partie {{st:jeu}} : chaque tour s
 
 - **Points de vie** : {{unit:startHp}} par défaut (50, 150 ou 200 en option).
 - **Marcher** : un combattant avance de {{unit:walkSpeedPx}} pixel par instant de jeu, franchit une marche de {{unit:maxStep}} pixels au plus et grimpe des pentes jusqu'à environ 60°. Au bord d'un précipice, il tombe.
-- **Sauter** : **↶** et **↷** font un saut long vers la gauche ou vers la droite (le combattant se retourne au besoin) ; **↑** fait un saut haut, très haut en reculant un peu, pour sortir d'un trou ou grimper sur un rebord. Au clavier, Entrée saute loin devant, Entrée deux fois saute haut.
+- **Sauter** : les deux boutons en **arc de saut** (aux bouts du pavé) font un saut long vers la gauche ou vers la droite (le combattant se retourne au besoin) ; la **flèche vers le haut** fait un saut haut, très haut en reculant un peu, pour sortir d'un trou ou grimper sur un rebord. Au clavier, Entrée saute loin devant, Entrée deux fois saute haut.
 - **Marcher ou sauter** : à chaque tour, c'est l'un ou l'autre. Soit on marche, {{unit:moveBudget}} pixels au plus (environ 10 largeurs de combattant) ; soit on fait un seul saut, qui porte bien plus loin (environ 15 largeurs) mais toujours à la même distance. Se retourner ne coûte rien, et un pas fait par erreur (20 pixels au plus) laisse encore le saut. La barre verte sous le nom de la maison montre la marche qui reste.
 - **Grimper** : au pied d'une échelle, un appui sur **↑** fait monter le combattant **jusqu'en haut d'un seul trait** ; **↓** (qui n'apparaît qu'à une échelle) le fait descendre jusqu'en bas. Au clavier, ↑ et ↓ font de même quand on est à l'échelle. Prendre l'échelle est **l'action du tour**, comme un tir : elle ne coûte rien de la marche, se prend avant de tirer (jamais après), et **termine le tour** une fois arrivé au bout. Il faut appuyer sur ↑ ou ↓ une fois à l'échelle : arriver devant en tenant ↑ pour viser ne la fait pas prendre ; pendant la montée, le combattant ne fait rien d'autre. **Grimper aux murs** : face à un mur sans échelle (jusqu'à 220 pixels de haut), le bouton **Grimper** (ou la touche G) lance une corde, et le combattant monte jusqu'au rebord ; au bord d'un à-pic, le bouton devient **Descendre** et le combattant y redescend par la corde. Comme l'échelle, c'est l'action du tour, qui finit le tour. Sinon, il faut sauter, et la chute coûte au moins 5 PV. Pas besoin d'être pile dessus : l'échelle se prend jusqu'à une largeur de combattant de distance, et le combattant s'y place de lui-même. En haut, il se hisse sur le rempart et y reste, même si l'on garde ↑ appuyé. Sur le haut d'une tour, il s'arrête au bord, au-dessus de l'échelle, au lieu de tomber : ↓ apparaît alors pour redescendre. Un clic sur un combattant de votre maison qui ne peut pas prendre la main (il a joué au tour précédent, ou la maison a déjà bougé) affiche une petite bulle qui le dit.
 - **Se retourner** est gratuit : un appui bref vers l'autre côté retourne le combattant sur place, sans marcher. Un combattant qui commence son tour près d'un bout de la carte est déjà tourné vers l'intérieur.
@@ -285,7 +285,7 @@ L'IA joue avec les mêmes règles et les mêmes commandes que vous : elle choisi
 | Ouvrir l'arsenal | Clic droit ou Tab |
 | Régler la mèche d'un pot | Touches 1 à 5 |
 | Déplacer la caméra / zoomer | Bords de l'écran ou clic molette / molette |
-| Revenir à la vue par défaut | C ou le bouton **◎**, visible seulement quand vous avez zoomé ou déplacé la vue (ou double clic). La vue par défaut montre toujours tous les combattants, et suit le projectile pendant un tir |
+| Revenir à la vue par défaut | C ou le bouton **recentrer** (quatre coins et un point), visible seulement quand vous avez zoomé ou déplacé la vue (ou double clic). La vue par défaut montre toujours tous les combattants, et suit le projectile pendant un tir |
 | Afficher les informations de debug | F1 (puis P : pause, N : avancer d'un instant) |
 | Pause | Échap |
 
@@ -293,7 +293,7 @@ L'IA joue avec les mêmes règles et les mêmes commandes que vous : elle choisi
 
 Le combattant qui joue porte une **auréole dorée**, une **flèche** oscille au-dessus de son nom et son cartouche passe à l'or. Une annonce au centre de l'écran rappelle à chaque tour qui a la main.
 
-Il vise **du côté où il regarde** : la ligne de points rouges et dorés, terminée par une pointe de flèche, part de lui. Le plus simple : **attrapez la pointe rouge** à la souris ou au doigt et faites-la glisser où vous voulez viser, même derrière lui ; il se retourne tout seul, et rien ne part tant que vous n'avez pas tiré. Sans souris, maintenez **⟳ Viser** : la visée fait le tour complet, et le combattant se retourne quand elle passe derrière lui. Au clavier, ↑ ↓ lèvent ou baissent la visée, et **T** le retourne sur place. Un appui bref sur ← ou → vers l'autre côté le retourne aussi sans le faire avancer : se retourner ne coûte ni marche ni saut.
+Il vise **du côté où il regarde** : la ligne de points rouges et dorés, terminée par une pointe de flèche, part de lui. Le plus simple : **attrapez la pointe rouge** à la souris ou au doigt et faites-la glisser où vous voulez viser, même derrière lui ; il se retourne tout seul, et rien ne part tant que vous n'avez pas tiré. Sans souris, maintenez **Viser** (la flèche qui tourne) : la visée fait le tour complet, et le combattant se retourne quand elle passe derrière lui. Au clavier, ↑ ↓ lèvent ou baissent la visée, et **T** le retourne sur place. Un appui bref sur ← ou → vers l'autre côté le retourne aussi sans le faire avancer : se retourner ne coûte ni marche ni saut.
 
 ### À la souris {{st:jeu}}
 
@@ -301,18 +301,20 @@ Tout se fait aussi à la souris (ou au doigt), avec les deux groupes de boutons 
 
 En bas à gauche, le **pad** :
 
-- **↶ ◀ ↑ ▶ ↷** : au centre, ◀ et ▶ (maintenir pour marcher) entourent ↑, le saut haut ; aux deux bouts, ↶ et ↷ sont les sauts longs vers la gauche et vers la droite ;
-- **⟳ Viser** : maintenir pour faire tourner la visée tout autour du combattant.
+- **le pavé** : au centre, les deux triangles (maintenir pour marcher) entourent la flèche vers le haut, le saut haut ; aux deux bouts, les arcs de saut sont les sauts longs vers la gauche et vers la droite. Au pied d'une échelle apparaît la flèche vers le bas, et devant un mur ou un à-pic, la **corde** (Grimper ou Descendre), toujours au bout du pavé ;
+- **Viser** (la flèche qui tourne) : maintenir pour faire tourner la visée tout autour du combattant.
+
+Les boutons portent des icônes dessinées. Sur PC et tablette, leur nom est écrit à côté ; sur téléphone tenu en hauteur, l'icône est seule. Sur un écran tactile, **un appui long sur un bouton** affiche ce qu'il fait.
 
 En bas à droite, les armes :
 
 - **Arsenal** : la liste des armes avec leurs dégâts, leur rayon, leur sensibilité au vent et les munitions restantes ; un clic choisit l'arme ;
-- **Mèche 1 à 5** : visible avec le pot de feu grégeois ;
-- **⇄ Combattant** : donner la main au combattant suivant de votre maison, avant d'avoir bougé ou tiré ;
-- **Passer** : finir son tour sans tirer ;
+- **Mèche** (un pot à la mèche allumée) : visible avec les armes à mèche ; chaque appui passe à la valeur suivante (1 à 5 secondes, ou 1 à 3 tours pour le feu grégeois ; pour le mur, sa longueur de 1 à 3) ;
+- **Combattant** : donner la main au combattant suivant de votre maison, avant d'avoir bougé ou tiré ;
+- **Passer** (le sablier) : finir son tour sans tirer ; après le tir, il devient **Fin du tour** ;
 - **Tirer** est aux couleurs de la maison qui joue : on sait toujours à qui c'est le tour. Maintenir pour charger la puissance, relâcher pour tirer. Une jauge pleine repart de zéro : rien ne part tout seul, il faut lâcher au bon moment.
 
-Au-dessus, le cartouche de l'arme en main montre la jauge de puissance. En haut à droite : **⤢** (plein écran, comme F11 ; un second appui en sort), **◎** (revenir au zoom par défaut et recentrer ; il n'apparaît que lorsque vous avez zoomé ou déplacé la vue), **?** (l'aide : un petit tutoriel illustré en sept pages : le but, le tour, se déplacer, viser, tirer, le vent, la caméra), **⚙** (les réglages) et **Pause**. En haut au centre, la bannière du titre montre le vent et le numéro du tour ; en haut à gauche, les bandeaux des maisons, celui de la maison qui joue brillant à sa couleur. La souris posée contre un bord de l'écran fait défiler la carte. Le menu de pause (aussi sur Échap) propose de reprendre, de recommencer la partie, de lire l'aide ou d'ouvrir les réglages ; le temps est arrêté tant qu'il est ouvert, comme pendant l'aide et les réglages.
+Au-dessus, le cartouche de l'arme en main montre la jauge de puissance ; sur téléphone tenu en hauteur, c'est le bouton Tirer lui-même qui se remplit d'or. En haut à droite : **plein écran** (quatre flèches vers les coins, comme F11 ; un second appui en sort ; absent sur téléphone), **recentrer** (revenir au zoom par défaut et recentrer ; il n'apparaît que lorsque vous avez zoomé ou déplacé la vue), **?** (l'aide : un petit tutoriel illustré en sept pages : le but, le tour, se déplacer, viser, tirer, le vent, la caméra), **la roue dentée** (les réglages) et **Pause** (trois traits ; sur téléphone, il donne aussi l'aide et les réglages). En haut au centre, la bannière du titre montre le vent et le numéro du tour ; en haut à gauche, les bandeaux des maisons, celui de la maison qui joue brillant à sa couleur. La souris posée contre un bord de l'écran fait défiler la carte. Le menu de pause (aussi sur Échap) propose de reprendre, de recommencer la partie, de lire l'aide ou d'ouvrir les réglages ; le temps est arrêté tant qu'il est ouvert, comme pendant l'aide et les réglages.
 
 On peut aussi viser « à la fronde » : appuyer sur son combattant, tirer franchement en arrière (le trait devient rouge quand le tir est armé), relâcher. Un simple clic sur le combattant ne tire jamais, et revenir près de lui avant de relâcher annule le tir.
 
@@ -334,7 +336,7 @@ Le bouton **⚙ Réglages** ouvre toutes les valeurs du jeu en cours de réglage
 
 - Le **pad** en bas à gauche pour marcher, sauter et viser ; **Arsenal**, **Passer** et **Tirer** en bas à droite. Tous les boutons font au moins 48 px de côté.
 - **Viser à la fronde** : glissez depuis votre combattant, puis relâchez.
-- **Viser à la jauge** : ⟳ Viser maintenu (ou la pointe rouge glissée) pour l'angle, le bouton Tirer maintenu pour la puissance.
+- **Viser à la jauge** : Viser maintenu (ou la pointe rouge glissée) pour l'angle, le bouton Tirer maintenu pour la puissance.
 - **Caméra** : un doigt glissé hors du combattant pour se déplacer, deux doigts pour zoomer, double tap pour recentrer.
 - **Frappes du ciel** {{st:prevu}} : touchez la cible, puis Confirmer.
 

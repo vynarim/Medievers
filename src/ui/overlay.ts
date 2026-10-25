@@ -62,7 +62,16 @@ const STYLE = `
 #ui .bar .group { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; justify-content: center; }
 #ui .bar .sep { width: 2px; align-self: stretch; background: var(--or); box-shadow: 1px 0 0 var(--encre); }
 #ui button:disabled { filter: grayscale(1); }
-#ui .fuses { display: flex; gap: 4px; align-items: center; font-family: var(--caps); }
+/* The fuse: its icon, what it sets, and the value, one press for the next one. */
+#ui button.fuse-pick .value { font-family: var(--title); font-size: 24px; font-weight: normal;
+  min-width: 14px; }
+/* Fire fills with the power as it charges (on a phone held upright, where the weapon's panel
+   gives way to the battlefield). */
+#ui button.fire { position: relative; overflow: hidden; }
+#ui button.fire .label { position: relative; }
+#ui button.fire .charge { display: none; position: absolute; left: 0; top: 0; bottom: 0; width: 0;
+  background: var(--or); opacity: 0.65; pointer-events: none; }
+#ui.phone button.fire .charge { display: block; }
 #ui .sys { position: absolute; top: 12px; right: 12px; display: flex; gap: 6px; }
 #ui .pause-code { display: flex; align-items: center; justify-content: center; gap: 12px;
   margin: 0 0 12px; font-size: 18px; }
@@ -155,6 +164,11 @@ const STYLE = `
 #ui h3 { margin: 16px 0 6px; color: var(--vermillon); font-family: var(--caps); font-weight: normal;
   font-size: 20px; }
 #ui .close { float: right; margin-left: 12px; }
+/* Closing a window: a plain cross, small, its touch area still a finger wide. */
+#ui button.close { min-width: 48px; min-height: 48px; padding: 0; background: none; border: 0;
+  box-shadow: none; color: var(--encre); }
+#ui button.close:hover { background: none; color: var(--vermillon); }
+#ui button.close .ico { width: 22px; height: 22px; }
 #ui .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 10px; }
 #ui .weapon { text-align: left; display: block; width: 100%; padding: 10px 12px; font-family: var(--text); }
 #ui .weapon b { display: block; font-family: var(--caps); font-weight: normal; font-size: 20px;
@@ -186,7 +200,7 @@ const STYLE = `
   display: flex; flex-direction: column; overflow: hidden; }
 #ui .help .tuto-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
 #ui .help .tuto-body p:last-child { margin-bottom: 0; }
-#ui .help .close { position: absolute; top: 18px; right: 24px; margin: 0; }
+#ui .help .close { position: absolute; top: 6px; right: 6px; margin: 0; }
 #ui .help h2 { padding-right: 64px; flex: none; }
 #ui .help .tuto-pic { flex: none; }
 #ui .tuto-pic svg { display: block; width: 100%; max-height: 32vh; margin: 0 auto 10px;
@@ -202,6 +216,13 @@ const STYLE = `
 #ui button.arsenal { display: inline-flex; align-items: center; gap: 6px; padding-right: 6px; }
 #ui button.arsenal .art { line-height: 0; }
 #ui .hidden { display: none !important; }
+#ui button { -webkit-touch-callout: none; }
+/* Drawn icons (icons.ts), in the button's colour, beside a label or alone. */
+#ui .ico-wrap { display: inline-flex; vertical-align: middle; line-height: 0; }
+#ui .ico { width: 24px; height: 24px; }
+#ui button.has-icon { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+#ui button.icon .ico { width: 26px; height: 26px; }
+#ui .tuto-body .ico, #ui .hint .ico, #ui .info-bubble .ico { width: 1.2em; height: 1.2em; }
 
 /* Flavour text: in full on a wide screen; on a phone held upright, behind a « ? » (infoButton). */
 #ui .info { display: none; }
@@ -221,10 +242,15 @@ html.phone #game { height: calc(100% - var(--bar-h, 0px)); }
 #ui.phone .modal { max-height: calc(100vh - 24px); padding: 16px 18px 18px; }
 #ui.phone .actions { justify-content: center; }
 #ui.phone .sys { flex-direction: column; align-items: flex-end; }
-#ui.phone .sys .fullscreen, #ui.phone .sys .help, #ui.phone .sys .settings,
+#ui.phone .sys .fullscreen, #ui.phone .sys .sys-help, #ui.phone .sys .sys-settings,
   #ui.phone .sys .menu .label { display: none; }
-#ui.phone .sys .menu { font-family: var(--text); font-size: 30px; min-width: 64px; min-height: 64px;
-  padding: 0; }
+#ui.phone .sys .menu { min-width: 64px; min-height: 64px; padding: 0; }
+#ui.phone .sys .menu .ico { width: 34px; height: 34px; }
+/* In the action bars, the frequent gestures show their icon alone (a long press explains). */
+#ui.phone .bar .has-icon .label, #ui.phone .bar .arsenal .label { display: none; }
+#ui.phone .bar .sep { display: none; }
+#ui.phone .bar button.fire { min-width: 120px; }
+#ui.phone .hud-weapon { display: none; }
 /* One line on top: the houses, the wind and the turn, the menu. */
 #ui.phone .hud-teams { max-width: none; width: auto; right: 262px; }
 #ui.phone .team { min-width: 0; padding: 4px 8px 4px 6px; }
@@ -308,11 +334,13 @@ export function shield(primary: number, secondary: number, small = false): HTMLE
 }
 
 /** A button that never steals keyboard focus from the game. */
-export function button(label: string, className = ''): HTMLButtonElement {
+export function button(label: string, className = '', explain = true): HTMLButtonElement {
   const b = el('button', className, label);
   b.type = 'button';
   b.tabIndex = -1;
   b.addEventListener('mousedown', (e) => e.preventDefault());
+  // A held button (walk, aim, fire) is held on purpose: no explanation then.
+  if (explain) explainOnLongPress(b);
   return b;
 }
 
@@ -322,7 +350,7 @@ export function holdButton(
   onHold: (held: boolean) => void,
   className = '',
 ): HTMLButtonElement {
-  const b = button(label, className);
+  const b = button(label, className, false);
   b.addEventListener('pointerdown', (e) => {
     b.setPointerCapture(e.pointerId);
     b.classList.add('on');
@@ -357,7 +385,8 @@ export function measureBars(): void {
   if (style.getPropertyValue('--bar-h') === value) return;
   style.setProperty('--bar-h', value);
   // The game's canvas follows its parent's size on window resizes only (Phaser.Scale.RESIZE).
-  if (document.documentElement.classList.contains('phone')) window.dispatchEvent(new Event('resize'));
+  if (document.documentElement.classList.contains('phone'))
+    window.dispatchEvent(new Event('resize'));
 }
 
 let bubble: { readonly el: HTMLElement; readonly anchor: HTMLElement } | null = null;
@@ -389,26 +418,63 @@ export function infoButton(content: () => readonly (string | Node)[]): HTMLEleme
       closeBubble();
       return;
     }
-    closeBubble();
-    const b = el('div', 'info-bubble panel');
-    b.append(...content());
-    uiRoot().append(b);
-    // Under the « ? », kept on screen.
-    const r = q.getBoundingClientRect();
-    const margin = 12;
-    const left = Math.min(
-      Math.max(margin, r.left + r.width / 2 - b.offsetWidth / 2),
-      window.innerWidth - margin - b.offsetWidth,
-    );
-    const below = r.bottom + 8;
-    const top =
-      below + b.offsetHeight <= window.innerHeight - margin
-        ? below
-        : Math.max(margin, r.top - 8 - b.offsetHeight);
-    b.style.left = `${left}px`;
-    b.style.top = `${top}px`;
-    bubble = { el: b, anchor: q };
-    window.addEventListener('pointerdown', onPointerOutside, true);
+    openBubble(q, content());
   });
   return q;
+}
+
+/** Opens the explanation bubble beside `anchor`: under it, or over it near the screen's foot. */
+function openBubble(anchor: HTMLElement, content: readonly (string | Node)[]): void {
+  closeBubble();
+  const b = el('div', 'info-bubble panel');
+  b.append(...content);
+  uiRoot().append(b);
+  const r = anchor.getBoundingClientRect();
+  const margin = 12;
+  const left = Math.min(
+    Math.max(margin, r.left + r.width / 2 - b.offsetWidth / 2),
+    window.innerWidth - margin - b.offsetWidth,
+  );
+  const below = r.bottom + 8;
+  const top =
+    below + b.offsetHeight <= window.innerHeight - margin
+      ? below
+      : Math.max(margin, r.top - 8 - b.offsetHeight);
+  b.style.left = `${left}px`;
+  b.style.top = `${top}px`;
+  bubble = { el: b, anchor };
+  window.addEventListener('pointerdown', onPointerOutside, true);
+}
+
+/** ms a finger rests on a button before its explanation opens */
+const LONG_PRESS_MS = 500;
+
+/**
+ * On a touch screen, where no tooltip shows, a long press on the button opens its title in a
+ * bubble; the press then does not count as a click.
+ */
+function explainOnLongPress(b: HTMLButtonElement): void {
+  let timer = 0;
+  let explained = false;
+  b.addEventListener('pointerdown', (e) => {
+    explained = false;
+    if (e.pointerType !== 'touch') return;
+    window.clearTimeout(timer);
+    timer = window.setTimeout(() => {
+      if (!b.title) return;
+      explained = true;
+      openBubble(b, [b.title]);
+    }, LONG_PRESS_MS);
+  });
+  const cancel = (): void => window.clearTimeout(timer);
+  b.addEventListener('pointerup', cancel);
+  b.addEventListener('pointercancel', cancel);
+  b.addEventListener('pointerleave', cancel);
+  // Registered first, so it stops the button's own click handlers.
+  b.addEventListener('click', (e) => {
+    if (!explained) return;
+    explained = false;
+    e.stopImmediatePropagation();
+    e.preventDefault();
+  });
 }

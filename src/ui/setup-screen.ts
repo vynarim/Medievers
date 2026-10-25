@@ -162,7 +162,8 @@ export function showSetupScreen(
       for (const id of ['human', ...AI_LEVEL_IDS] as Player[]) {
         // The AI's levels go from the easiest to the hardest: one to three stars.
         const k = AI_LEVEL_IDS.indexOf(id as AiLevelId);
-        const stars = k < 0 ? '' : ` ${'★'.repeat(k + 1)}${'☆'.repeat(AI_LEVEL_IDS.length - k - 1)}`;
+        const stars =
+          k < 0 ? '' : ` ${'★'.repeat(k + 1)}${'☆'.repeat(AI_LEVEL_IDS.length - k - 1)}`;
         const o = el('option', '', `${t(`setup.player.${id}`)}${stars}`);
         o.value = id;
         o.selected = id === players[h];
@@ -252,7 +253,11 @@ export function showSetupScreen(
     // How the match runs, apart from who fights it.
     panel.append(el('h3', '', t('setup.options')));
     const options = el('div', 'tools');
-    options.append(regicide, turnLength, infoButton(() => [t('setup.note')]));
+    options.append(
+      regicide,
+      turnLength,
+      infoButton(() => [t('setup.note')]),
+    );
     panel.append(options);
 
     // The other way to play: online.
