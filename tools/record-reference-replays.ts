@@ -11,7 +11,12 @@ import { STRUCTURE_RULES } from '../src/content/structures.ts';
 import { TOWER_STRUCTURES } from '../tests/fixtures/maps/test-maps.ts';
 import { KITCHEN_RULES } from '../src/content/kitchen.ts';
 import { CLASSIC_RULES, type MatchRules } from '../src/content/rules.ts';
-import { formatHash, type MatchConfig, type ReplayFile } from '../src/sim/index.ts';
+import {
+  formatHash,
+  type GameCommand,
+  type MatchConfig,
+  type ReplayFile,
+} from '../src/sim/index.ts';
 import { loadMask } from './lib/maps-node.ts';
 import { hookPoint, ledgeBeside } from '../src/sim/rope.ts';
 import type { Terrain } from '../src/sim/terrain/terrain.ts';
@@ -785,7 +790,7 @@ const SCRIPTS: readonly Script[] = [
       teams: [{ spawns: [300] }, { spawns: [1000] }],
     },
     play: (r) => {
-      const ours = (cmds: Parameters<Recorder['step']>[0]): void => {
+      const ours = (cmds: GameCommand[]): void => {
         r.until('action');
         r.step(cmds);
         r.until('transition');
@@ -833,7 +838,7 @@ const SCRIPTS: readonly Script[] = [
       teams: [{ spawns: [300] }, { spawns: [760] }],
     },
     play: (r) => {
-      const ours = (cmds: Parameters<Recorder['step']>[0], then?: number): void => {
+      const ours = (cmds: GameCommand[], then?: number): void => {
         r.until('action');
         r.step(cmds);
         if (then !== undefined) {
@@ -879,7 +884,7 @@ const SCRIPTS: readonly Script[] = [
       teams: [{ spawns: [300] }, { spawns: [700] }],
     },
     play: (r) => {
-      const ours = (cmds: Parameters<Recorder['step']>[0]): void => {
+      const ours = (cmds: GameCommand[]): void => {
         r.until('action');
         r.step(cmds);
         r.until('transition');
@@ -920,7 +925,7 @@ const SCRIPTS: readonly Script[] = [
       teams: [{ spawns: [300] }, { spawns: [900] }],
     },
     play: (r) => {
-      const ours = (cmds: Parameters<Recorder['step']>[0]): void => {
+      const ours = (cmds: GameCommand[]): void => {
         r.until('action');
         r.step(cmds);
         r.until('transition');
@@ -981,7 +986,7 @@ const SCRIPTS: readonly Script[] = [
       ],
     },
     play: (r) => {
-      const ours = (unitId: number, cmds: Parameters<Recorder['step']>[0]): void => {
+      const ours = (unitId: number, cmds: GameCommand[]): void => {
         r.until('action');
         r.step([{ t: 'selectUnit', unitId }, ...cmds]);
         r.until('transition');

@@ -11,7 +11,7 @@ export const SCHEME_OVERRIDES: Readonly<
 > = {
   classic: {},
   // Siège: high, sturdy towers and walls, many stone walls to build forts, trebuchet ×3 and the
-  // fire, pick and sap to bring the walls down.
+  // fire, pick and sap to bring the walls down, ladders and grapples to go up them.
   siege: {
     'structures.towerHeight': 440,
     'structures.defs.tower.hp': 360,
@@ -22,6 +22,8 @@ export const SCHEME_OVERRIDES: Readonly<
     'weapons.trebuchet.ammo': 3,
     'weapons.pick.ammo': 3,
     'weapons.sap.ammo': 3,
+    'weapons.ladder.ammo': 4,
+    'weapons.grapple.ammo': 8,
   },
   // Fortune: no limited weapon at the start; everything comes down with the reliquaries.
   fortune: {
@@ -33,6 +35,14 @@ export const SCHEME_OVERRIDES: Readonly<
     'weapons.caltrop.ammo': 0,
     'weapons.stoneWall.ammo': 0,
     'weapons.trebuchet.ammo': 0,
+    'weapons.arrowRain.ammo': 0,
+    'weapons.flamingPig.ammo': 0,
+    'weapons.beehive.ammo': 0,
+    'weapons.falcon.ammo': 0,
+    'weapons.grapple.ammo': 0,
+    'weapons.ladder.ammo': 0,
+    'weapons.banner.ammo': 0,
+    'weapons.miracle.ammo': 0,
     'crates.chancePermille': 700,
     'crates.maxOnMap': 5,
   },

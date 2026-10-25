@@ -272,8 +272,8 @@ On ne joue jamais à deux sur le même appareil : c'est en ligne, ou contre l'IA
 
 **Schémas de règles** {{st:jeu}} :
 - *Classique* : les valeurs de ce manuel.
-- *Siège* : des tours plus hautes et plus solides, 8 murs de pierres pour bâtir ses forts, 3 volées de trébuchet, 3 pioches et 3 sapes, 5 pots de feu grégeois et 2 de poix.
-- *Fortune* : aucune munition au départ hormis l'arc, la fronde et la masse ; les reliquaires tombent bien plus souvent.
+- *Siège* : des tours plus hautes et plus solides, 8 murs de pierres pour bâtir ses forts, 3 volées de trébuchet, 3 pioches et 3 sapes, 5 pots de feu grégeois et 2 de poix, 4 échelles et 8 grappins pour l'assaut.
+- *Fortune* : aucune munition au départ hormis les armes sans compte (arc, fronde, masse, épée, charge à l'écu) ; les reliquaires tombent bien plus souvent.
 - *Personnalisé* : vous réglez tout, et le jeu s'en souvient.
 
 ### Les adversaires de l'IA {{st:jeu}}
