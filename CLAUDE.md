@@ -19,7 +19,7 @@ Documents de référence (à lire avant toute tâche structurante) :
 | Physique | Collision pixel vs masque bitmap, maison. Pas de Matter.js / Box2D |
 | Rendu / input / audio | Phaser (version à figer au setup, cf. TECH_SPEC §1) |
 | Langage / build | TypeScript strict, Vite, Vitest |
-| Paquets | pnpm (projet sous OneDrive : store global et `enableGlobalVirtualStore` pour que `node_modules` ne contienne que des liens) |
+| Paquets | pnpm, avec store global et `enableGlobalVirtualStore` : `node_modules` ne contient que des liens |
 | Visée | Drag-to-aim ET jauge angle+puissance, choix en options |
 | Cartes | Image peinte + masque PNG + JSON. Pas d'éditeur in-game en V1 |
 | Factions | Maisons héraldiques fictives, blason personnalisable |

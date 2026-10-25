@@ -173,7 +173,7 @@ pnpm run dev        # http://localhost:5173
 | `pnpm run format` | Prettier |
 
 > [!TIP]
-> Le dépôt active le [global virtual store](https://pnpm.io/global-virtual-store) de pnpm (`pnpm-workspace.yaml`). `node_modules` ne contient alors que des liens vers le store de la machine. C'est utile quand le projet vit dans un dossier synchronisé (OneDrive, Dropbox…), qui n'a plus que quelques dizaines de fichiers à suivre au lieu de plusieurs milliers.
+> Le dépôt active le [global virtual store](https://pnpm.io/global-virtual-store) de pnpm (`pnpm-workspace.yaml`). `node_modules` ne contient alors que des liens vers le store de la machine. Les dépendances ne sont téléchargées qu'une fois par machine, quel que soit le nombre de clones.
 
 ## Feuille de route
 
