@@ -1,0 +1,438 @@
+{
+  "summary": {
+    "date": "2026-10-25T16:26:33.730Z",
+    "themes": [
+      "coast"
+    ],
+    "games": 2,
+    "levels": [
+      "constable",
+      "squire"
+    ],
+    "finished": 2,
+    "overTurnLimit": 0,
+    "leftWinPct": 50,
+    "rightWinPct": 50,
+    "byLevel": {
+      "constable": {
+        "played": 2,
+        "won": 2
+      },
+      "squire": {
+        "played": 2,
+        "won": 0
+      }
+    },
+    "avgTurns": 24,
+    "stuckUnits": 0,
+    "errors": 0,
+    "replayMismatches": 0,
+    "kills": {
+      "dragon": 8,
+      "bow": 1,
+      "other": 1,
+      "sling": 2,
+      "drowned": 2
+    },
+    "friendlyFirePct": 0,
+    "planMsAvg": 544,
+    "planMsMax": 2144
+  },
+  "games": [
+    {
+      "seed": 1,
+      "mapId": "coast@1",
+      "theme": "coast",
+      "winner": 0,
+      "levels": [
+        "constable",
+        "squire"
+      ],
+      "turns": 21,
+      "ticks": 9647,
+      "stuck": [],
+      "kills": {
+        "dragon": 4,
+        "bow": 1,
+        "other": 1
+      },
+      "shots": {
+        "crossbow": 2,
+        "bow": 11,
+        "falcon": 1,
+        "sling": 4,
+        "banner": 1,
+        "greekFire": 1,
+        "grapple": 1,
+        "miracle": 1
+      },
+      "weaponDamage": {
+        "bow": 109,
+        "falcon": 55,
+        "sling": 45
+      },
+      "enemyDamage": 209,
+      "friendlyDamage": 0,
+      "units": [
+        {
+          "id": 1,
+          "team": 0,
+          "cls": "knight",
+          "dealt": 0,
+          "friendly": 0,
+          "kills": 0,
+          "taken": 0,
+          "survived": true,
+          "turns": 1
+        },
+        {
+          "id": 2,
+          "team": 0,
+          "cls": "archer",
+          "dealt": 0,
+          "friendly": 0,
+          "kills": 0,
+          "taken": 0,
+          "survived": true,
+          "turns": 0
+        },
+        {
+          "id": 3,
+          "team": 0,
+          "cls": "slinger",
+          "dealt": 0,
+          "friendly": 0,
+          "kills": 0,
+          "taken": 0,
+          "survived": true,
+          "turns": 0
+        },
+        {
+          "id": 4,
+          "team": 0,
+          "cls": "cleric",
+          "dealt": 0,
+          "friendly": 0,
+          "kills": 0,
+          "taken": 0,
+          "survived": true,
+          "turns": 0
+        },
+        {
+          "id": 5,
+          "team": 0,
+          "cls": "sapper",
+          "dealt": 90,
+          "friendly": 0,
+          "kills": 1,
+          "taken": 0,
+          "survived": true,
+          "turns": 4
+        },
+        {
+          "id": 6,
+          "team": 0,
+          "cls": "king",
+          "dealt": 45,
+          "friendly": 0,
+          "kills": 1,
+          "taken": 74,
+          "survived": true,
+          "turns": 5
+        },
+        {
+          "id": 7,
+          "team": 1,
+          "cls": "knight",
+          "dealt": 35,
+          "friendly": 0,
+          "kills": 0,
+          "taken": 100,
+          "survived": false,
+          "turns": 5
+        },
+        {
+          "id": 8,
+          "team": 1,
+          "cls": "archer",
+          "dealt": 0,
+          "friendly": 0,
+          "kills": 0,
+          "taken": 0,
+          "survived": false,
+          "turns": 0
+        },
+        {
+          "id": 9,
+          "team": 1,
+          "cls": "slinger",
+          "dealt": 0,
+          "friendly": 0,
+          "kills": 0,
+          "taken": 90,
+          "survived": false,
+          "turns": 1
+        },
+        {
+          "id": 10,
+          "team": 1,
+          "cls": "cleric",
+          "dealt": 0,
+          "friendly": 0,
+          "kills": 0,
+          "taken": 0,
+          "survived": false,
+          "turns": 2
+        },
+        {
+          "id": 11,
+          "team": 1,
+          "cls": "sapper",
+          "dealt": 39,
+          "friendly": 0,
+          "kills": 0,
+          "taken": 0,
+          "survived": false,
+          "turns": 1
+        },
+        {
+          "id": 12,
+          "team": 1,
+          "cls": "king",
+          "dealt": 0,
+          "friendly": 0,
+          "kills": 0,
+          "taken": 0,
+          "survived": false,
+          "turns": 1
+        }
+      ],
+      "planMs": [
+        847.0994000000001,
+        62.36620000000016,
+        675.2344,
+        58.240299999999934,
+        681.7549999999999,
+        57.02649999999994,
+        997.8420999999998,
+        70.49590000000035,
+        1900.9497000000006,
+        128.88740000000053,
+        2143.8903,
+        99.17569999999978,
+        809.0106999999998,
+        118.08760000000075,
+        1455.8770999999997,
+        69.88960000000043,
+        559.3522999999986,
+        119.0526000000009,
+        244.91030000000137,
+        85.83910000000105,
+        312.84959999999955
+      ],
+      "replayOk": true
+    },
+    {
+      "seed": 2,
+      "mapId": "coast@2",
+      "theme": "coast",
+      "winner": 1,
+      "levels": [
+        "squire",
+        "constable"
+      ],
+      "turns": 26,
+      "ticks": 11832,
+      "stuck": [],
+      "kills": {
+        "sling": 2,
+        "dragon": 4,
+        "drowned": 2
+      },
+      "shots": {
+        "falcon": 1,
+        "crossbow": 2,
+        "bow": 12,
+        "ballista": 1,
+        "sling": 4,
+        "trebuchet": 1,
+        "beehive": 1,
+        "grapple": 1,
+        "greekFire": 1
+      },
+      "weaponDamage": {
+        "falcon": 74,
+        "bow": 140,
+        "ballista": 55,
+        "sling": 106,
+        "trebuchet": 47,
+        "beehive": 40
+      },
+      "enemyDamage": 462,
+      "friendlyDamage": 0,
+      "units": [
+        {
+          "id": 1,
+          "team": 0,
+          "cls": "knight",
+          "dealt": 35,
+          "friendly": 0,
+          "kills": 0,
+          "taken": 100,
+          "survived": false,
+          "turns": 3
+        },
+        {
+          "id": 2,
+          "team": 0,
+          "cls": "archer",
+          "dealt": 0,
+          "friendly": 0,
+          "kills": 0,
+          "taken": 81,
+          "survived": false,
+          "turns": 2
+        },
+        {
+          "id": 3,
+          "team": 0,
+          "cls": "slinger",
+          "dealt": 0,
+          "friendly": 0,
+          "kills": 0,
+          "taken": 40,
+          "survived": false,
+          "turns": 3
+        },
+        {
+          "id": 4,
+          "team": 0,
+          "cls": "cleric",
+          "dealt": 35,
+          "friendly": 0,
+          "kills": 0,
+          "taken": 0,
+          "survived": false,
+          "turns": 2
+        },
+        {
+          "id": 5,
+          "team": 0,
+          "cls": "sapper",
+          "dealt": 80,
+          "friendly": 0,
+          "kills": 2,
+          "taken": 0,
+          "survived": false,
+          "turns": 3
+        },
+        {
+          "id": 6,
+          "team": 0,
+          "cls": "king",
+          "dealt": 0,
+          "friendly": 0,
+          "kills": 0,
+          "taken": 91,
+          "survived": false,
+          "turns": 0
+        },
+        {
+          "id": 7,
+          "team": 1,
+          "cls": "knight",
+          "dealt": 74,
+          "friendly": 0,
+          "kills": 0,
+          "taken": 89,
+          "survived": true,
+          "turns": 2
+        },
+        {
+          "id": 8,
+          "team": 1,
+          "cls": "archer",
+          "dealt": 0,
+          "friendly": 0,
+          "kills": 0,
+          "taken": 95,
+          "survived": true,
+          "turns": 1
+        },
+        {
+          "id": 9,
+          "team": 1,
+          "cls": "slinger",
+          "dealt": 0,
+          "friendly": 0,
+          "kills": 0,
+          "taken": 90,
+          "survived": false,
+          "turns": 1
+        },
+        {
+          "id": 10,
+          "team": 1,
+          "cls": "cleric",
+          "dealt": 55,
+          "friendly": 0,
+          "kills": 0,
+          "taken": 60,
+          "survived": true,
+          "turns": 1
+        },
+        {
+          "id": 11,
+          "team": 1,
+          "cls": "sapper",
+          "dealt": 76,
+          "friendly": 0,
+          "kills": 2,
+          "taken": 35,
+          "survived": true,
+          "turns": 4
+        },
+        {
+          "id": 12,
+          "team": 1,
+          "cls": "king",
+          "dealt": 107,
+          "friendly": 0,
+          "kills": 2,
+          "taken": 80,
+          "survived": false,
+          "turns": 3
+        }
+      ],
+      "planMs": [
+        49.99070000000029,
+        748.1335999999992,
+        37.08339999999953,
+        743.0636999999988,
+        100.67380000000048,
+        962.3744000000006,
+        89.76820000000043,
+        640.8812999999991,
+        54.446900000000824,
+        650.3613000000023,
+        48.759500000000116,
+        727.0772999999972,
+        67.09720000000016,
+        687.3394999999982,
+        184.229000000003,
+        633.4791000000005,
+        115.27679999999964,
+        1241.3410000000003,
+        117.8125,
+        1743.691600000002,
+        52.29639999999927,
+        1212.2972999999984,
+        328.1955999999991,
+        1334.9464999999982,
+        326.83859999999913,
+        1193.1032999999989
+      ],
+      "replayOk": true
+    }
+  ]
+}

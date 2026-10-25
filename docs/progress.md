@@ -19,6 +19,8 @@
 
 - Livré le 2026-10-25 (après-midi, lot 6, M4) : **l'arsenal complet**. Épée et charge à l'écu (`sword-charge`), pluie de flèches (`arrow-rain`), cochon enflammé (`src/sim/walkers.ts`, `flaming-pig`), ruche (`src/sim/swarms.ts`) et faucon qui contourne le relief (`hive-falcon`), grappin avec balancement et hissage aux rebords (`src/sim/rope.ts`, `grapple`), échelle, bannière et miracle (`ladder-banner-miracle`), machines de siège posées par les cartes générées (`src/content/engines.ts`, `src/sim/engines.ts`, `siege-engines`). Chaque arme a son support IA (`src/ai/plan.ts`), ses enluminures, ses textes, ses réglages et ses répliques. L'arsenal est rangé par famille. Schémas Siège et Fortune mis à jour. Outil `pnpm run balance:battery` (`tools/battery.ts`, parties IA contre IA en parallèle) ; `maps:soak` partage la boucle de partie (`tools/lib/soak-game.ts`). IA : plans environ un tiers moins coûteux.
 
+- Livré ensuite (2026-10-25, soir, M5) : critère 5.5 atteint, le Connétable bat l'Écuyer dans 93,3 % des parties (90 parties). Batteries d'équilibrage et synthèse : `docs/reports/balance/2026-10-25-synthese.md` (l'eau et le dragon causent 46 à 66 % des morts ; classes proches, 13 % d'écart de dégâts par tour ; parties de 30 à 33 tours).
+
 ## À reprendre en premier
 0. **Lot C de la passe UX** (disposition « manette » sur téléphone) : après l'essai de l'application installée sur Android par l'utilisateur. Le site sert `4981bd2` (IA, portrait, passe UX, PWA), sans le lot 6 : mise en production à proposer.
 1. **Clore M2** : quand l'utilisateur aura fait les deux vérifications humaines du rapport, consigner le résultat et passer la gate à PASS.
