@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { AiController } from '../../src/ai/controller.ts';
-import { asSeen, planTurn } from '../../src/ai/plan.ts';
+import { asSeen, planTurn, throwAtDragon } from '../../src/ai/plan.ts';
 import { Sandbox } from '../../src/ai/sandbox.ts';
 import { SANDBOX_PACE, TurnScript, type AiPlan } from '../../src/ai/script.ts';
 import { buildMap } from '../../src/app/map-build.ts';
 import { defaultSetup, matchConfig, rulesFor } from '../../src/app/match-setup.ts';
 import { AI_LEVELS, type AiLevel } from '../../src/content/ai.ts';
+import { DRAGON_RULES } from '../../src/content/dragon.ts';
 import { MAP_THEMES } from '../../src/content/maps.ts';
 import { Material, Sim, type Mask, type MatchConfig, type SimState } from '../../src/sim/index.ts';
 import { CLASSIC_RULES, type MatchRules } from '../rules-fixture.ts';
@@ -117,6 +118,35 @@ describe('the AI turn (GDD §7.2)', () => {
     expect(allyLoss).toBeLessThanOrEqual(enemyLoss);
   });
 
+  it('finds a throw through the dragon crossing the sky (GDD §4.11)', () => {
+    const rules: MatchRules = { ...RULES, dragon: { ...DRAGON_RULES, spawnPermille: 0 } };
+    const config: MatchConfig = { rules, teams: [{ spawns: [300] }, { spawns: [1900] }] };
+    const sim = new Sim(config, 3, flatMask());
+    for (let i = 0; i < 1000 && sim.view().turn.phase !== 'action'; i++) sim.step();
+    const snap = sim.snapshot();
+    snap.dragon = {
+      id: 900,
+      x: 200 * 256,
+      y: 380 * 256,
+      dir: 1,
+      prey: 0,
+      fed: false,
+      born: snap.tick,
+    };
+    sim.restore(snap);
+    const v = sim.view();
+    const u = v.units[0];
+    const bow = v.rules.weapons.find((w) => w.id === 'bow');
+    const shot = u && bow ? throwAtDragon(v, u, bow, STILL) : null;
+    expect(shot).not.toBeNull();
+    const events: string[] = [];
+    const script = new TurnScript({ unitId: 1, move: { kind: 'stay' }, shot }, SANDBOX_PACE);
+    for (let i = 0; i < 400; i++) {
+      for (const e of sim.step(script.next(sim.view()))) events.push(e.e);
+    }
+    expect(events).toContain('dragonEnraged');
+  });
+
   it('does not see the enemy chausse-trapes (no cheating, GDD §7.3)', () => {
     const sim = duel(400, 1400);
     const state = sim.snapshot() as SimState;
@@ -154,6 +184,21 @@ describe('the AI script', () => {
       const x = (sim.view().units.find((w) => w.id === plan.unitId)?.x ?? 0) >> 8;
       expect(Math.abs(x - target)).toBeLessThanOrEqual(4);
     }
+  });
+});
+
+describe('the AI rope', () => {
+  it('climbs out of a pit too deep to jump out of (« Grimper »)', () => {
+    // A shaft 32 px wide and 180 px deep in the flat ground, the unit at its bottom.
+    const mask = flatMask();
+    for (let y = 600; y < 780; y++) mask.data.fill(Material.Air, y * 2000 + 384, y * 2000 + 416);
+    const config: MatchConfig = { rules: RULES, teams: [{ spawns: [400] }, { spawns: [1400] }] };
+    const sim = new Sim(config, 3, mask);
+    for (let i = 0; i < 1000 && sim.view().turn.phase !== 'action'; i++) sim.step();
+    expect((sim.view().units[0]?.y ?? 0) >> 8).toBe(780);
+    const plan: AiPlan = { unitId: 1, move: { kind: 'rope', dir: -1, face: 1 }, shot: null };
+    playOut(sim, plan);
+    expect((sim.view().units[0]?.y ?? 0) >> 8).toBe(600);
   });
 });
 

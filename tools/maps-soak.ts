@@ -52,23 +52,26 @@ interface GameReport {
   readonly replayOk?: boolean;
 }
 
-/** The active unit can get somewhere: a walk or a jump either way moves it at least 4 px. */
+/** The active unit can get somewhere: a walk, a jump or a rope moves it at least 4 px. */
 function canMove(sim: Sim): boolean {
   const v = sim.view();
   const id = v.turn.activeUnitId;
   const x0 = v.units.find((u) => u.id === id)?.x ?? 0;
+  const y0 = v.units.find((u) => u.id === id)?.y ?? 0;
   const tries: GameCommand[] = [
     { t: 'move', dir: 1 },
     { t: 'move', dir: -1 },
     { t: 'jump', kind: 'forward', dir: 1 },
     { t: 'jump', kind: 'forward', dir: -1 },
+    { t: 'climb', dir: -1 },
+    { t: 'climb', dir: 1 },
   ];
   return tries.some((cmd) => {
     const s = Sim.fromState(sim.snapshot());
     s.step([cmd]);
     for (let i = 0; i < 90; i++) s.step();
-    const x = s.view().units.find((u) => u.id === id)?.x ?? x0;
-    return Math.abs(x - x0) >= 4 * 256;
+    const u = s.view().units.find((w) => w.id === id);
+    return Math.abs((u?.x ?? x0) - x0) >= 4 * 256 || Math.abs((u?.y ?? y0) - y0) >= 4 * 256;
   });
 }
 

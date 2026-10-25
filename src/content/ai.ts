@@ -26,6 +26,13 @@ export interface AiLevel {
   readonly weapons: readonly WeaponId[] | null;
   /** ms it seems to think before acting, at least and at most (TECH_SPEC: shown, not spent) */
   readonly thinkMs: readonly [number, number];
+  /** it shoots the dragon crossing the sky to send it on the enemy (GDD §4.11) */
+  readonly dragon: boolean;
+  /**
+   * with the Déluge near or begun: score lost per px the unit it moves stands below the water
+   * line of three turns ahead, so that it climbs to safety (0: it does not look ahead)
+   */
+  readonly floodFear: number;
 }
 
 export const AI_LEVELS: Readonly<Record<AiLevelId, AiLevel>> = {
@@ -39,6 +46,8 @@ export const AI_LEVELS: Readonly<Record<AiLevelId, AiLevel>> = {
     powerNoisePct: 15,
     weapons: ['bow', 'sling', 'greekFire'],
     thinkMs: [2000, 3000],
+    dragon: false,
+    floodFear: 0,
   },
   knight: {
     units: 2,
@@ -59,6 +68,8 @@ export const AI_LEVELS: Readonly<Record<AiLevelId, AiLevel>> = {
       'trebuchet',
     ],
     thinkMs: [2000, 4000],
+    dragon: true,
+    floodFear: 0.1,
   },
   constable: {
     units: 2,
@@ -70,6 +81,8 @@ export const AI_LEVELS: Readonly<Record<AiLevelId, AiLevel>> = {
     powerNoisePct: 2,
     weapons: null,
     thinkMs: [3000, 5000],
+    dragon: true,
+    floodFear: 0.2,
   },
 };
 

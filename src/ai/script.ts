@@ -12,7 +12,12 @@ export type AiMove =
   | { readonly kind: 'stay' }
   /** walks towards x (px) until there, stopped, or out of breath */
   | { readonly kind: 'walk'; readonly x: number }
-  | { readonly kind: 'jump'; readonly jump: 'forward' | 'back'; readonly dir: -1 | 1 };
+  | { readonly kind: 'jump'; readonly jump: 'forward' | 'back'; readonly dir: -1 | 1 }
+  /**
+   * « Grimper »: a rope up the wall (dir -1) or down the drop (1) on side `face`; it is the turn's
+   * action and ends the turn (rules.unit.wallClimb), so no shot follows
+   */
+  | { readonly kind: 'rope'; readonly dir: -1 | 1; readonly face: -1 | 1 };
 
 export interface AiShot {
   readonly weapon: WeaponId;
@@ -43,7 +48,18 @@ export interface ScriptPace {
 /** In the sandboxes: everything at once. */
 export const SANDBOX_PACE: ScriptPace = { aimPerTick: Infinity, afterShot: 1, settle: 4 };
 
-type Stage = 'select' | 'move' | 'walking' | 'settle' | 'weapon' | 'aim' | 'after' | 'done';
+type Stage =
+  | 'select'
+  | 'move'
+  | 'walking'
+  | 'face'
+  | 'rope'
+  | 'roping'
+  | 'settle'
+  | 'weapon'
+  | 'aim'
+  | 'after'
+  | 'done';
 
 /** px from the target at which a walk stops */
 const WALK_CLOSE = 3;
@@ -113,10 +129,33 @@ export class TurnScript {
           this.go('walking');
           return [{ t: 'move', dir }];
         }
+        if (m.kind === 'rope') {
+          // Turned towards the wall first (on the spot: no walk spent), then the rope.
+          if (u.facing !== m.face) {
+            this.go('face');
+            return [{ t: 'move', dir: m.face }];
+          }
+          this.go('rope');
+          return [];
+        }
         this.go('settle');
         if (m.kind === 'jump') return [{ t: 'jump', kind: m.jump, dir: m.dir }];
         return [];
       }
+      case 'face':
+        this.go('rope');
+        return [{ t: 'move', dir: 0 }];
+      case 'rope': {
+        const m = plan.move;
+        if (m.kind !== 'rope' || t.turnHold > 0) return [];
+        this.go('roping');
+        return [{ t: 'climb', dir: m.dir }];
+      }
+      case 'roping':
+        // The rope is thrown and the turn ends at its end; with no rope taken, the turn is passed.
+        if (t.climbDir !== 0) return [];
+        this.go('done');
+        return t.phase === 'action' ? [{ t: 'skip' }] : [];
       case 'walking': {
         const m = plan.move;
         const x = subToPx(u.x);
