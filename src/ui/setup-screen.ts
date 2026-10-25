@@ -16,7 +16,7 @@ import { AI_LEVEL_IDS } from '../content/ai.ts';
 import { loadLastReplay, parseLog } from '../app/autosave.ts';
 import type { GameLog } from '../sim/log.ts';
 import { t } from './i18n.ts';
-import { button, el, shield, uiRoot } from './overlay.ts';
+import { button, el, infoButton, shield, uiRoot } from './overlay.ts';
 import { css } from './tokens.ts';
 
 const STYLE = `
@@ -41,6 +41,20 @@ const STYLE = `
 #ui .setup .tools button, #ui .setup .start button { white-space: nowrap; flex: none; }
 #ui .setup .tools .note { flex: 1 1 auto; margin: 0 0 0 8px; font-size: 15px; }
 #ui .setup .start { margin-top: 12px; display: flex; justify-content: flex-end; gap: 8px; }
+/* On a phone held upright: the choices wrap, their descriptions behind a « ? ». */
+#ui.phone .setup { padding-left: 14px; padding-right: 14px; }
+#ui.phone .setup .row { flex-wrap: wrap; gap: 6px; }
+#ui.phone .setup .scheme { flex: 1 1 40%; display: flex; align-items: center; justify-content: space-between;
+  min-height: 48px; }
+#ui.phone .setup .scheme b { font-size: 16px; }
+#ui.phone .setup .house { flex-wrap: wrap; padding: 8px 0; }
+#ui.phone .setup .house .name { flex: 1 1 100%; }
+#ui.phone .setup select { flex: 1 1 30%; min-width: 0; width: auto; }
+#ui.phone .setup select.player { flex: 1 1 100%; width: auto; }
+#ui.phone .setup .tools { flex-wrap: wrap; justify-content: center; }
+#ui.phone .setup .tools button { flex: 1 1 40%; }
+#ui.phone .setup .start { flex-wrap: wrap; justify-content: center; }
+#ui.phone .setup .start button { flex: 1 1 40%; white-space: normal; }
 `;
 let styled = false;
 
@@ -86,7 +100,11 @@ export function showSetupScreen(
     const maps = el('div', 'row');
     for (const theme of MAP_THEMES) {
       const b = button('', `scheme${setup.map === theme ? ' on' : ''}`);
-      b.append(el('b', '', t(`maps.${theme}`)), el('span', '', t(`maps.${theme}.text`)));
+      b.append(
+        el('b', '', t(`maps.${theme}`)),
+        el('span', 'ambient', t(`maps.${theme}.text`)),
+        infoButton(() => [t(`maps.${theme}.text`)]),
+      );
       b.addEventListener('click', () => update({ ...setup, map: theme }));
       maps.append(b);
     }
@@ -96,7 +114,11 @@ export function showSetupScreen(
     const schemes = el('div', 'row');
     for (const id of SCHEME_IDS) {
       const b = button('', `scheme${setup.scheme === id ? ' on' : ''}`);
-      b.append(el('b', '', t(`setup.scheme.${id}`)), el('span', '', t(`setup.scheme.${id}.text`)));
+      b.append(
+        el('b', '', t(`setup.scheme.${id}`)),
+        el('span', 'ambient', t(`setup.scheme.${id}.text`)),
+        infoButton(() => [t(`setup.scheme.${id}.text`)]),
+      );
       b.addEventListener('click', () => update({ ...setup, scheme: id }));
       schemes.append(b);
     }
@@ -188,7 +210,14 @@ export function showSetupScreen(
     removeHouse.addEventListener('click', () =>
       update({ ...setup, lineups: setup.lineups.slice(0, -1) }),
     );
-    houses.append(addHouse, removeHouse, regicide, turnLength, el('p', 'note', t('setup.note')));
+    houses.append(
+      addHouse,
+      removeHouse,
+      regicide,
+      turnLength,
+      el('p', 'note ambient', t('setup.note')),
+      infoButton(() => [t('setup.note')]),
+    );
     panel.append(houses);
 
     const start = el('div', 'start');

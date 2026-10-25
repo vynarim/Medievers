@@ -248,7 +248,7 @@ Règles :
 - Ré-upload des tuiles de terrain limité aux tuiles `dirty`, au maximum 4 par frame, le reste étant différé à la frame suivante.
 
 ## 10. Plateforme et intégration navigateur
-- Orientation paysage : un écran « tournez votre appareil » s'affiche en portrait. `screen.orientation.lock('landscape')` n'est tenté qu'en plein écran, car le support varie selon les navigateurs (**à vérifier sur iPadOS Safari**, probablement non supporté).
+- Orientation : paysage par défaut ; un smartphone tenu en portrait (fenêtre de 760 px de large au plus, plus haute que large, `isPhonePortrait` dans `src/ui/ui-scale.ts`) est aussi pris en charge (décidé le 2026-10-25). L'overlay reçoit alors la classe `phone` : mise en page sur une colonne, échelle calculée sur la largeur seule (référence 520 px), HUD empilé en haut à droite et à gauche. Les textes d'ambiance (descriptions des cartes et des règles, accroche et colophon du titre, note des maisons) portent la classe `ambient` et sont remplacés par un bouton « ? » (`infoButton`) qui les ouvre dans une bulle. La vue par défaut suit le combattant qui joue quand le champ entier ne tient pas à plus de 1000 px de monde en largeur. Rien ne change au-delà de ce seuil.
 - Plein écran : bouton dédié (Fullscreen API ; comportement à vérifier sur iPadOS).
 - Audio : déverrouillage du contexte audio au premier geste utilisateur.
 - Persistance : `localStorage` encapsulé dans try/catch pour les options et équipes, IndexedDB (P1) pour les replays longs.

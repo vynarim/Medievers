@@ -25,7 +25,7 @@ import { GameUi, loadOverrides } from '../ui/game-ui.ts';
 import { t } from '../ui/i18n.ts';
 import type { TuningOverrides } from '../ui/tuning-model.ts';
 import { COLORS, css, cssAlpha } from '../ui/tokens.ts';
-import { uiScale } from '../ui/ui-scale.ts';
+import { isPhonePortrait, uiScale } from '../ui/ui-scale.ts';
 import { AutoSaver, clearSave, downloadLog, saveLastReplay } from '../app/autosave.ts';
 import { ReplayInput } from '../input/replay-input.ts';
 import { replay, type GameLog } from '../sim/log.ts';
@@ -157,6 +157,13 @@ const DIAPER = 160;
 const SKY_EXTRA = 2000;
 /** Screen px kept clear of units by the default view, before the overlay scale: HUD and bar. */
 const FRAME_MARGINS = { top: 130, bottom: 110, side: 30 } as const;
+/** The same on a phone held upright, where the HUD stacks on top and the bar wraps (overlay.ts). */
+const PHONE_FRAME_MARGINS = { top: 290, bottom: 210, side: 20 } as const;
+/**
+ * World px a phone held upright shows across at least, by default: past it, the field cannot
+ * be framed whole at a size worth seeing, and the default view follows the playing unit.
+ */
+const PHONE_SPAN = 1000;
 /** px above the feet and either side of a unit where a click still picks it: its name label */
 const LABEL_REACH = 44;
 const LABEL_HALF_WIDTH = 34;
@@ -525,13 +532,20 @@ export class BattleScene extends Phaser.Scene {
     }
     const { width, height } = this.scale;
     const u = uiScale(width, height);
-    const margins = {
-      top: FRAME_MARGINS.top * u,
-      bottom: FRAME_MARGINS.bottom * u,
-      side: FRAME_MARGINS.side * u,
-    };
+    const phone = isPhonePortrait(width, height);
+    const m = phone ? PHONE_FRAME_MARGINS : FRAME_MARGINS;
+    const margins = { top: m.top * u, bottom: m.bottom * u, side: m.side * u };
     const closest = Math.max(this.minZoom(), (ZOOM_DEFAULT * height) / REF_HEIGHT);
-    return frame(points, width, height, margins, this.minZoom(), closest);
+    const f = frame(points, width, height, margins, this.minZoom(), closest);
+    // Upright, a phone too narrow for every unit follows the playing one, and its shot.
+    const active = this.activeUnit();
+    const floor = Math.min(closest, width / PHONE_SPAN);
+    if (!phone || !f || f.zoom >= floor || !active || v.turn.phase === 'placement') return f;
+    const [ax, ay] = this.pos(`u${active.id}`, alpha, active.x, active.y);
+    const near: Point[] = [{ x: ax, y: ay }];
+    const last = points[points.length - 1];
+    if (shot && last) near.push(last);
+    return frame(near, width, height, margins, floor, closest);
   }
 
   private zoomTo(zoom: number): void {

@@ -2,7 +2,8 @@
 // Buttons never take keyboard focus, so the keyboard keeps driving the game.
 import { FONT_CAPS, FONT_TEXT, FONT_TITLE } from './fonts.ts';
 import { COLORS, css } from './tokens.ts';
-import { scalableCss, uiScale } from './ui-scale.ts';
+import { t } from './i18n.ts';
+import { isPhonePortrait, scalableCss, uiScale } from './ui-scale.ts';
 
 const STYLE = `
 :root {
@@ -201,6 +202,43 @@ const STYLE = `
 #ui button.arsenal { display: inline-flex; align-items: center; gap: 6px; padding-right: 6px; }
 #ui button.arsenal .art { line-height: 0; }
 #ui .hidden { display: none !important; }
+
+/* Flavour text: in full on a wide screen; on a phone held upright, behind a « ? » (infoButton). */
+#ui .info { display: none; }
+#ui.phone .ambient { display: none !important; }
+#ui.phone .info { display: inline-flex; align-items: center; justify-content: center; flex: none;
+  width: 34px; height: 34px; margin: 0 0 0 8px; vertical-align: middle; border-radius: 50%;
+  font-family: var(--caps); font-size: 22px; line-height: 1; color: var(--ceruse);
+  background: var(--lapis); border: 2px solid var(--encre); box-shadow: inset 0 0 0 2px var(--or);
+  pointer-events: auto; cursor: pointer; }
+#ui .info-bubble { position: fixed; z-index: 30; width: max-content; max-width: min(440px, calc(100vw - 24px));
+  padding: 10px 16px 12px; font-family: var(--text); font-size: 19px; line-height: 1.4; text-align: left;
+  border-radius: 14px; }
+#ui .info-bubble a { color: var(--lapis); }
+
+/* A phone held upright: one column, the flavour folded, the HUD packed into the corners. */
+#ui.phone .modal { max-height: calc(100vh - 24px); padding: 16px 18px 18px; }
+#ui.phone .actions { justify-content: center; }
+#ui.phone .hud-teams { top: 76px; max-width: calc(100vw - 190px); }
+#ui.phone .team { min-width: 0; padding-right: 8px; }
+#ui.phone .team .hp { width: 48px; }
+#ui.phone .hud-wind { top: 76px; left: auto; right: 12px; transform: none; padding: 4px 12px 6px;
+  flex-direction: column; align-items: stretch; gap: 6px; }
+#ui.phone .hud-wind .game-title { display: none; }
+#ui.phone .hud-wind .wind-row, #ui.phone .hud-wind .turn-row { padding-left: 0; border-left: 0; }
+#ui.phone .hud-wind .turn-row { min-width: 0; }
+#ui.phone .hud-wind .turn { font-size: 28px; text-align: center; }
+#ui.phone .hud-timer { top: 196px; width: 80px; height: 80px; }
+#ui.phone .hud-weapon { right: 50%; bottom: 222px; transform: translateX(50%);
+  width: min(var(--col), calc(100vw - 24px)); }
+#ui.phone .hud-weapon .hint { display: none; }
+#ui.phone .chronicles { top: 290px; left: 12px; right: 12px; transform: none; }
+#ui.phone .chronicle { max-width: 100%; min-width: 0; }
+#ui.phone .card, #ui.phone .card.left { left: 12px; right: 12px; width: auto; top: auto; bottom: 280px;
+  max-height: 40vh; }
+#ui.phone .pause { min-width: 0; }
+#ui.phone .banner { top: 40%; }
+#ui.phone .banner .big { font-size: 44px; }
 `;
 
 /** Unscaled rules: touch targets stay 48 px whatever the overlay scale (rules/render.md). */
@@ -222,6 +260,7 @@ export function uiRoot(): HTMLElement {
   const fit = (): void => {
     const u = uiScale(window.innerWidth, window.innerHeight);
     document.documentElement.style.setProperty('--u', `${u}px`);
+    root?.classList.toggle('phone', isPhonePortrait(window.innerWidth, window.innerHeight));
   };
   fit();
   window.addEventListener('resize', fit);
@@ -276,4 +315,57 @@ export function holdButton(
   b.addEventListener('pointercancel', release);
   b.addEventListener('lostpointercapture', release);
   return b;
+}
+
+let bubble: { readonly el: HTMLElement; readonly anchor: HTMLElement } | null = null;
+
+function closeBubble(): void {
+  bubble?.el.remove();
+  bubble = null;
+  window.removeEventListener('pointerdown', onPointerOutside, true);
+}
+
+function onPointerOutside(e: PointerEvent): void {
+  if (bubble && e.target instanceof Node && bubble.anchor.contains(e.target)) return;
+  closeBubble();
+}
+
+/**
+ * A « ? » that, on a phone held upright, stands for flavour text marked `ambient` and opens it
+ * in a bubble; hidden on a wider screen, where the text itself is shown. A span, so that it can
+ * sit inside a button: its click does not reach the button.
+ */
+export function infoButton(content: () => readonly (string | Node)[]): HTMLElement {
+  const q = el('span', 'info', '?');
+  q.setAttribute('role', 'button');
+  q.title = t('ui.info');
+  q.addEventListener('click', (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    if (bubble?.anchor === q) {
+      closeBubble();
+      return;
+    }
+    closeBubble();
+    const b = el('div', 'info-bubble panel');
+    b.append(...content());
+    uiRoot().append(b);
+    // Under the « ? », kept on screen.
+    const r = q.getBoundingClientRect();
+    const margin = 12;
+    const left = Math.min(
+      Math.max(margin, r.left + r.width / 2 - b.offsetWidth / 2),
+      window.innerWidth - margin - b.offsetWidth,
+    );
+    const below = r.bottom + 8;
+    const top =
+      below + b.offsetHeight <= window.innerHeight - margin
+        ? below
+        : Math.max(margin, r.top - 8 - b.offsetHeight);
+    b.style.left = `${left}px`;
+    b.style.top = `${top}px`;
+    bubble = { el: b, anchor: q };
+    window.addEventListener('pointerdown', onPointerOutside, true);
+  });
+  return q;
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { UI_SCALE_MIN, scalableCss, uiScale } from '../../src/ui/ui-scale.ts';
+import { UI_SCALE_MIN, isPhonePortrait, scalableCss, uiScale } from '../../src/ui/ui-scale.ts';
 
 describe('uiScale', () => {
   it('keeps full size on the 1920×1080 reference screen', () => {
@@ -11,6 +11,13 @@ describe('uiScale', () => {
   });
   it('never goes below the legibility floor', () => {
     expect(uiScale(640, 360)).toBe(UI_SCALE_MIN);
+  });
+  it('sizes a phone held upright by its width alone', () => {
+    expect(isPhonePortrait(390, 844)).toBe(true);
+    expect(isPhonePortrait(844, 390)).toBe(false);
+    expect(isPhonePortrait(820, 1180)).toBe(false);
+    expect(uiScale(390, 844)).toBe(0.75);
+    expect(uiScale(320, 568)).toBe(0.62);
   });
 });
 

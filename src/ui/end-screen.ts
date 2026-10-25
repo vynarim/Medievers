@@ -87,6 +87,10 @@ const STYLE = `
   margin-left: auto; margin-right: auto; }
 .end-actions { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-top: 18px; }
 :is(#ui, body) .end-screen button { font-size: 21px; padding: 8px 26px; }
+/* On a phone held upright, a long house name wraps rather than runs off the card. */
+#ui.phone .end-card { padding: 14px 18px 18px; }
+#ui.phone .end-title { white-space: normal; font-size: 46px; }
+#ui.phone .end-quip { font-size: 19px; }
 @keyframes end-fade { from { opacity: 0; } }
 @keyframes end-rise { from { opacity: 0; transform: translateY(24px); } }
 @keyframes end-scroll { to { transform: translateX(-50%); } }

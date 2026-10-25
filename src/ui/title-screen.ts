@@ -1,7 +1,7 @@
 // Title screen (BACKLOG 7.4): the game's name as an illuminated incipit, a gilt initial on lapis
 // and the rest in textura, framed in vermilion and gold fillets. DOM over the canvas.
 import { t } from './i18n.ts';
-import { button, el, uiRoot } from './overlay.ts';
+import { button, el, infoButton, uiRoot } from './overlay.ts';
 import { renderTutorial } from './tutorial.ts';
 
 /** share of the window's width the title page takes, and how far it may grow */
@@ -27,14 +27,22 @@ const STYLE = `
   box-shadow: 0 3px 0 -1px var(--or); }
 #ui .title-screen .sub { font-family: var(--caps); font-size: clamp(18px, 3vw, 26px); color: var(--lapis); }
 #ui .title-screen .quip { font-size: 17px; font-style: italic; margin: 10px 0 24px; color: var(--brun); }
-#ui .title-screen .actions { justify-content: center; }
-#ui .title-screen .actions button { min-width: 220px; font-size: 20px; }
+#ui .title-screen .actions { flex-direction: column; align-items: center; gap: 8px; }
+#ui .title-screen .actions-row { display: flex; gap: 8px; justify-content: center; }
+#ui .title-screen .actions button { width: 260px; font-size: 20px; }
 #ui .title-screen .colophon { margin-top: 22px; font-size: 15px; color: var(--brun); }
 #ui .title-screen .author, #ui .title-screen .version { position: absolute; bottom: 26px;
   font-family: var(--caps); font-size: 14px; color: var(--brun); }
 #ui .title-screen .author { right: 34px; }
 #ui .title-screen .version { left: 34px; user-select: text; pointer-events: auto; }
 #ui .title-screen .colophon a, #ui .title-screen .author a { color: var(--lapis); pointer-events: auto; user-select: text; }
+/* On a phone held upright: one button per row, the quip and the colophon behind a « ? ». */
+#ui.phone .title-screen .folio { padding: 32px 22px 24px; }
+#ui.phone .title-screen .actions { margin-top: 22px; }
+#ui.phone .title-screen .actions-row { flex-direction: column; }
+#ui.phone .title-screen .actions button { width: min(260px, calc(100vw - 96px)); }
+#ui.phone .title-screen .author, #ui.phone .title-screen .version { position: static; margin-top: 14px; }
+#ui.phone .title-screen .version { margin-top: 4px; }
 `;
 
 let styled = false;
@@ -96,7 +104,7 @@ export function showTitleScreen(choices: TitleChoices): void {
   };
   window.addEventListener('keydown', onKey, true);
   // The manuscript named in the colophon links to its Wikipedia article.
-  const colophon = el('div', 'colophon');
+  const colophon = el('div', 'colophon ambient');
   // The two works the art follows, each linked to its Wikipedia page.
   const links: Record<string, [string, string]> = {
     bible: [t('title.bible'), BIBLE_URL],
@@ -121,6 +129,7 @@ export function showTitleScreen(choices: TitleChoices): void {
   link.target = '_blank';
   link.rel = 'noopener';
   author.append(t('title.by'), ' ', link, `, ${YEAR}`);
+  author.append(infoButton(() => [...colophon.cloneNode(true).childNodes]));
   // The version built: its commit and day, « dev » on the local server.
   const env = import.meta.env as Record<string, string | boolean | undefined> | undefined;
   const commit = String(env?.VITE_COMMIT ?? '');
@@ -132,13 +141,14 @@ export function showTitleScreen(choices: TitleChoices): void {
       ? t('title.versionUnknown')
       : t(env?.VITE_DEV === true ? 'title.versionDev' : 'title.version', { v: commit, day }),
   );
+  // Two rows: a new match and the help on the first, the match in progress and joining one
+  // under them.
+  const sub = el('div', 'sub', t('title.sub'));
+  sub.append(infoButton(() => [t('title.quip')]));
   const actions = el('div', 'actions');
+  const top = el('div', 'actions-row');
+  const bottom = el('div', 'actions-row');
   const resume = choices.resume;
-  if (resume) {
-    const again = button(t('title.resume'), 'fire');
-    again.addEventListener('click', () => close(resume));
-    actions.append(again);
-  }
   const enter = button(t('title.enter'), resume ? '' : 'fire');
   enter.addEventListener('click', () => close(choices.enter));
   const join = button(t('setup.onlineJoin'));
@@ -158,12 +168,19 @@ export function showTitleScreen(choices: TitleChoices): void {
     renderTutorial(panel, shut);
     root.append(veil, panel);
   });
-  actions.append(enter, join, help);
+  top.append(enter, help);
+  if (resume) {
+    const again = button(t('title.resume'), 'fire');
+    again.addEventListener('click', () => close(resume));
+    bottom.append(again);
+  }
+  bottom.append(join);
+  actions.append(top, bottom);
   folio.append(
     title,
     el('div', 'rule'),
-    el('div', 'sub', t('title.sub')),
-    el('div', 'quip', t('title.quip')),
+    sub,
+    el('div', 'quip ambient', t('title.quip')),
     actions,
     colophon,
     author,
