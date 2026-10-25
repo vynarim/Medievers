@@ -28,6 +28,13 @@ export interface EngineRules {
   readonly weaponPct: Readonly<Partial<Record<string, number>>>;
   /** px: height of the heap of rubble a destroyed machine leaves */
   readonly rubble: number;
+  /**
+   * The reload scales with the houses in play, so that whatever their number the house that
+   * shot skips as many of its own turns as in a duel, and the others wait as long (2026-10-25,
+   * playtest: with three houses, a catapult shot again at its shooter's very next turn). Absent
+   * from older logs: reloadTurns + 1 turn ends, whoever's.
+   */
+  readonly reloadPerHouses?: boolean;
 }
 
 /** A machine of the map, at column x (px), as the map declares it (`MatchConfig.engines`). */
@@ -59,4 +66,5 @@ export const ENGINE_RULES: EngineRules = {
     siegeRam: 400,
   },
   rubble: 24,
+  reloadPerHouses: true,
 };

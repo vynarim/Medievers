@@ -171,6 +171,8 @@ export interface Walker {
   fuse: number;
   /** hops in a row that took it nowhere: at the third, it turns round */
   hops: number;
+  /** px: where its last hop took off (WalkerDef.hopProgress) */
+  hopX?: number;
   /** percent of the weapon's damage (king's aura) */
   readonly damagePct: number;
 }

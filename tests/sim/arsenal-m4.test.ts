@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { CLASSIC_RULES, type MatchRules } from '../rules-fixture.ts';
 import { Material, Sim, type GameCommand, type Mask, type SimEvent } from '../../src/sim/index.ts';
 import { heldAim } from '../../src/sim/weapons/weapons.ts';
+import { engineShot, enginesTurnEnd } from '../../src/sim/engines.ts';
 import { STRUCTURE_RULES } from '../../src/content/structures.ts';
 
 function flatMask(): Mask {
@@ -317,6 +318,32 @@ describe('flaming pig (GDD §4.1)', () => {
     expect(farthest).toBeLessThan(700);
     expect(px(sim.view().walkers[0]?.x)).toBeLessThan(farthest);
   });
+
+  it('hops on up a slope too steep to trot, instead of turning round (2026-10-25)', () => {
+    // From x = 420, the ground rises 3 px for every 2 px: each hop takes it a little higher.
+    const mask = flatMask();
+    for (let x = 420; x < 1200; x++) {
+      const top = Math.max(200, 500 - Math.trunc(((x - 420) * 3) / 2));
+      for (let y = top; y < 500; y++) mask.data[y * 1200 + x] = Material.Earth;
+    }
+    const climb = (rules: MatchRules): number => {
+      const sim = match(rules, 300, [1150], mask);
+      loose(sim);
+      let farthest = 0;
+      for (let i = 0; i < 400 && sim.view().walkers.length > 0; i++) {
+        sim.step();
+        farthest = Math.max(farthest, px(sim.view().walkers[0]?.x));
+      }
+      return farthest;
+    };
+    const old: MatchRules = {
+      ...CALM,
+      weapons: CALM.weapons.map((w) =>
+        w.walker ? { ...w, walker: { ...w.walker, hopProgress: false } } : w,
+      ),
+    };
+    expect(climb(CALM)).toBeGreaterThan(climb(old) + 60);
+  });
 });
 
 describe('beehive (GDD §4.1)', () => {
@@ -489,6 +516,43 @@ describe('siege engines (GDD §4.8)', () => {
     for (let i = 0; i < 1000 && sim.view().turn.phase !== 'action'; i++) sim.step();
     return sim;
   };
+
+  it('reloads for as many of the shooter turns with three houses as in a duel (2026-10-25)', () => {
+    // The catapult (2 turns of reload) shot at turn 1 by the first house: at which turn is it
+    // ready again, and whose turn is that?
+    const readyAt = (houses: number, perHouses: boolean): number => {
+      const rules: MatchRules = {
+        ...CALM,
+        engines: CALM.engines ? { ...CALM.engines, reloadPerHouses: perHouses } : undefined,
+      } as MatchRules;
+      const sim = new Sim(
+        {
+          rules,
+          teams: [300, 600, 900, 1100].slice(0, houses).map((x) => ({ spawns: [x] })),
+          engines: [{ id: 50, type: 'catapult', x: 150 }],
+        },
+        2,
+        flatMask(),
+      );
+      const snap = sim.snapshot();
+      const e = snap.engines[0];
+      if (!e) throw new Error('engine');
+      engineShot(snap, e, []);
+      let turn = 1;
+      while (e.reload > 0) {
+        enginesTurnEnd(snap);
+        turn++;
+      }
+      return turn;
+    };
+    // A duel: ready at turn 4, the first house's turn 5 is its next but one, as before.
+    expect(readyAt(2, true)).toBe(readyAt(2, false));
+    expect(readyAt(2, true)).toBe(4);
+    // Three houses: before, ready at turn 4, the first house's very next turn.
+    expect(readyAt(3, false)).toBe(4);
+    // Now ready at turn 6: the first house misses its turn 4, as in a duel.
+    expect(readyAt(3, true)).toBe(6);
+  });
 
   it('a ballista is served from beside it: its bolt goes through the first unit', () => {
     const sim = siege([{ id: 50, type: 'ballista', x: 340 }], 300, [700, 800]);

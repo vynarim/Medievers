@@ -27,6 +27,12 @@ export interface CrateRules {
    * light, then lets go: the fall hurts (2026-10-25). Absent from older logs: angels are not hit.
    */
   readonly angelLift?: number;
+  /**
+   * A trapped coffer that goes off under the fighter whose turn it is does not end the turn:
+   * once on its feet again, it may still walk, aim and shoot (2026-10-25, playtest), unless the
+   * trap took its last HP. Absent from older logs: hurt in its own turn, it stops at once.
+   */
+  readonly trapSparesTurn?: boolean;
 }
 
 export const CRATE_RULES: CrateRules = {
@@ -44,6 +50,7 @@ export const CRATE_RULES: CrateRules = {
   trapRadius: 40,
   // About 300 px: a fall that costs some 17 HP.
   angelLift: 300,
+  trapSparesTurn: true,
 };
 
 /** px: the angel above a coffer coming down, where a shot touches it: half its wingspan, height */

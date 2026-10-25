@@ -138,6 +138,12 @@ export interface WalkerDef {
   readonly hop: number;
   /** px: the highest step it trots up without a hop */
   readonly maxStep: number;
+  /**
+   * A hop that took it forward counts as progress: up a steep slope it hops on and on instead of
+   * turning round after three hops (2026-10-25, playtest on the snowy pass). Absent from older
+   * logs: three hops against anything, and it turns round.
+   */
+  readonly hopProgress?: boolean;
 }
 
 /** Ruche (GDD §4.1): a hive thrown that breaks and lets out a swarm. */
@@ -431,7 +437,7 @@ export const WEAPONS: readonly WeaponDef[] = [
     explosionRadius: 90,
     knockbackPct: 100,
     ammo: 1,
-    walker: { speed: 2 * 256, fuse: 8 * 60, hop: 7 * 256, maxStep: 8 },
+    walker: { speed: 2 * 256, fuse: 8 * 60, hop: 7 * 256, maxStep: 8, hopProgress: true },
   },
   {
     // Ruche (2026-10-25): thrown like a stone, bent by the wind; where it breaks, a swarm comes

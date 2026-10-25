@@ -698,13 +698,18 @@ function advanceTick(s: SimState, phaseJustSet: boolean, events: SimEvent[]): vo
   stepUnicorn(s, events);
   stepLift(s, events);
 
+  /** HP the active unit lost to a trapped coffer this tick: they do not end its turn */
+  let trapped = 0;
   for (const e of takeDueExplosions(s.explosions, s.tick)) {
     const res = explode(e, s.terrain, s.units, s.rules.explosion, (u) => blastTakenPct(s, u));
     events.push({ e: 'explosion', x: e.x, y: e.y, radius: e.radius });
     if (res.carved > 0) {
       events.push({ e: 'terrainCarved', x: subToPx(e.x), y: subToPx(e.y), radius: e.carveRadius });
     }
-    for (const h of res.hits) events.push({ e: 'unitDamaged', unitId: h.unitId, damage: h.damage });
+    for (const h of res.hits) {
+      events.push({ e: 'unitDamaged', unitId: h.unitId, damage: h.damage });
+      if (e.trap && h.unitId === active?.id) trapped += h.damage;
+    }
     blastReachesBarrels(s, e);
     blastReachesCrates(s, e, events);
     blastReachesBeast(s, e, events);
@@ -736,7 +741,9 @@ function advanceTick(s: SimState, phaseJustSet: boolean, events: SimEvent[]): vo
   drownThings(s, events);
   drownFlames(s);
 
-  const hurt = active !== undefined && (active.hp < hpBefore || !active.alive);
+  const hurt =
+    active !== undefined &&
+    (active.hp + trapped < hpBefore || !active.alive || (trapped > 0 && active.hp <= 0));
   advancePhase(s, hurt, phaseJustSet, events);
 }
 

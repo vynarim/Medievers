@@ -211,6 +211,32 @@ describe('reliquaries (GDD §4.5)', () => {
     expect(sim.view().crates.map((c) => c.id)).toEqual([501]);
   });
 
+  it('let the fighter who sets a trap off go on with its turn (2026-10-25)', () => {
+    const trapped = (rules: typeof withCrates): string => {
+      const sim = duel(rules, 300, 900);
+      const snap = sim.snapshot();
+      // A trapped coffer right ahead, which the fighter walks into.
+      snap.crates.push({
+        id: 500,
+        x: 340 * 256,
+        y: 500 * 256,
+        kind: CrateKind.Trap,
+        weapon: -1,
+        landed: true,
+      });
+      sim.restore(snap);
+      run(sim, [{ t: 'move', dir: 1 }], 30);
+      expect(sim.view().units[0]?.hp).toBeLessThan(sim.view().rules.startHp);
+      return sim.view().turn.phase;
+    };
+    expect(trapped(withCrates)).toBe('action');
+    const crates = withCrates.crates;
+    if (!crates) throw new Error('crates');
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { trapSparesTurn, ...older } = crates;
+    expect(trapped({ ...withCrates, crates: older })).toBe('resolution');
+  });
+
   it('never come down in logs recorded without them', () => {
     const sim = duel(CALM, 300, 900);
     run(sim, [{ t: 'skip' }], 900);

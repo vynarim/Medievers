@@ -169,10 +169,10 @@ Une explosion fait ses dégâts maximum en son centre, puis de moins en moins ju
 
 **Trois champs de bataille** {{st:jeu}}, au choix sur l'écran de préparation, et **redessinés à chaque partie** : les collines, les tours, les murailles et les rochers n'y sont jamais au même endroit.
 
-- **La vallée** : collines vertes, moulins et vaches, deux tours et une muraille.
-- **La côte normande** : une falaise d'un côté, une plage qui s'enfonce dans la mer de l'autre (attention, la mer coûte 20 PV et vous rejette sur la rive), des cogues et une abbaye sur son rocher au loin.
-- **La Terre sainte** : des dunes, des rochers indestructibles, une forteresse sarrasine au milieu, Jérusalem à l'horizon, des palmiers et des chameaux.
-- **Le col enneigé** : des pentes raides sous la neige, l'hospice du col et sa cloche, des mules et des pèlerins au loin. Au creux du col, un **lac gelé** : on marche sur la glace, mais une explosion y ouvre un trou bien plus large que dans la terre, et l'eau glacée coûte 20 PV avant de vous rejeter sur la rive. Briser la glace sous les pieds de l'adversaire est une tactique honorable.
+- **Crécy, 1346** (la vallée) : collines vertes, moulins et vaches, deux tours et une muraille.
+- **Le Mont-Saint-Michel, 1424** (la côte normande) : une falaise d'un côté, une plage qui s'enfonce dans la mer de l'autre (attention, la mer coûte 20 PV et vous rejette sur la rive), des cogues et une abbaye sur son rocher au loin.
+- **Le siège de Jérusalem, 1099** (la Terre sainte) : des dunes, des rochers indestructibles, une forteresse sarrasine au milieu, Jérusalem à l'horizon, des palmiers et des chameaux.
+- **Le col du Mont-Cenis, 1077** (le col enneigé) : des pentes raides sous la neige, l'hospice du col et sa cloche, des mules et des pèlerins au loin. Au creux du col, un **lac gelé** : on marche sur la glace, mais une explosion y ouvre un trou bien plus large que dans la terre, et l'eau glacée coûte 20 PV avant de vous rejeter sur la rive. Briser la glace sous les pieds de l'adversaire est une tactique honorable.
 
 Chaque carte est une peinture, doublée d'une carte invisible des matières. Ce que vous voyez creusé est exactement ce qui est creusé : le jeu ne triche jamais sur la forme du terrain.
 

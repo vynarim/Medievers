@@ -24,6 +24,8 @@ export const PIG_HALF_WIDTH = 10;
 export const PIG_HEIGHT = 20;
 /** hops in a row that take it nowhere before it turns round */
 const HOPS_BEFORE_TURN = 3;
+/** px a hop must take the pig forward to count as progress (WalkerDef.hopProgress) */
+const HOP_PROGRESS = 4;
 
 /** Nothing solid in the pig's body with its feet at (px, py). */
 function free(t: Terrain, px: number, py: number): boolean {
@@ -108,7 +110,14 @@ export function blastReachesWalkers(s: SimState, e: Explosion, events: SimEvent[
 }
 
 /** One trot of the pig on the ground: pixel by pixel, up steps, down slopes; a hop at a wall. */
-function trot(s: SimState, w: Walker, maxStep: number, speed: number, hop: number): void {
+function trot(
+  s: SimState,
+  w: Walker,
+  maxStep: number,
+  speed: number,
+  hop: number,
+  hopProgress: boolean,
+): void {
   const t = s.terrain;
   let px = subToPx(w.x);
   let py = subToPx(w.y);
@@ -131,7 +140,12 @@ function trot(s: SimState, w: Walker, maxStep: number, speed: number, hop: numbe
         w.vy = 0;
         return;
       }
-      // A wall: it hops, and after a few hops that took it nowhere, it turns round.
+      // A wall: it hops, and after a few hops that took it nowhere, it turns round. Up a steep
+      // slope, each hop takes it a little further: that is progress, not a wall.
+      if (hopProgress) {
+        if (w.hopX !== undefined && (px - w.hopX) * w.dir >= HOP_PROGRESS) w.hops = 0;
+        w.hopX = px;
+      }
       if (++w.hops >= HOPS_BEFORE_TURN) {
         w.dir = w.dir > 0 ? -1 : 1;
         w.hops = 0;
@@ -190,7 +204,7 @@ export function stepWalkers(s: SimState, events: SimEvent[]): void {
     const def = weaponDefIn(s.rules, w.weapon).walker;
     if (!def) continue;
     if (w.grounded) {
-      trot(s, w, def.maxStep, def.speed, def.hop);
+      trot(s, w, def.maxStep, def.speed, def.hop, def.hopProgress === true);
       if (w.grounded && !standing(s.terrain, subToPx(w.x), subToPx(w.y))) w.grounded = false;
     } else fly(s.terrain, w);
     const px = subToPx(w.x);

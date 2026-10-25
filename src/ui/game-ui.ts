@@ -336,7 +336,7 @@ export class GameUi {
       const rules =
         t(`setup.scheme.${match.scheme}`) + (match.regicide ? ` · ${t('setup.regicide')}` : '');
       about.append(
-        el('h3', '', t(`maps.${match.map}`)),
+        el('h3', '', `${t(`maps.${match.map}`)} · ${t(`maps.${match.map}.date`)}`),
         el('p', 'ambient', t(`maps.${match.map}.text`)),
         el('p', '', t('pause.rules', { rules })),
         el('p', '', t(match.regicide ? 'pause.goal.regicide' : 'pause.goal')),

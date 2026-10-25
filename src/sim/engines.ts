@@ -86,7 +86,15 @@ export function engineShot(s: SimState, e: Engine, events: SimEvent[]): void {
   const def = s.rules.engines?.defs[e.type];
   if (!def) return;
   // One more, for the end of the turn it shot in.
-  e.reload = def.reloadTurns + 1;
+  const turns = def.reloadTurns + 1;
+  if (s.rules.engines?.reloadPerHouses) {
+    // In a duel, as many turn ends as before; with n houses, n / 2 times as many (rounded up),
+    // so the shooter misses as many of its own turns, whatever the number of houses.
+    const houses = s.teams.filter((t) =>
+      t.unitIds.some((id) => s.units.some((u) => u.id === id && u.alive)),
+    ).length;
+    e.reload = Math.trunc((turns * Math.max(2, houses) + 1) / 2);
+  } else e.reload = turns;
   events.push({ e: 'engineShot', id: e.id });
 }
 

@@ -30,6 +30,8 @@ const STYLE = `
   line-height: 1.25; }
 #ui .setup .scheme b { display: block; font-family: var(--caps); font-weight: normal; font-size: 18px;
   color: var(--lapis); }
+#ui .setup .scheme b .date { margin-left: 8px; font-family: var(--text); font-size: 14px;
+  color: var(--vermillon); }
 /* A heading with a small action beside it: « + Une maison ». */
 #ui .setup .head { display: flex; align-items: center; gap: 12px; margin: 10px 0 4px; }
 #ui .setup .head h3 { margin: 0; }
@@ -225,8 +227,11 @@ export function showSetupScreen(
     const maps = el('div', 'row');
     for (const theme of MAP_THEMES) {
       const b = button('', `scheme${setup.map === theme ? ' on' : ''}`);
+      // The battle it recalls: its name and date, then a line of its story and its ground.
+      const title = el('b', '', t(`maps.${theme}`));
+      title.append(el('small', 'date', t(`maps.${theme}.date`)));
       b.append(
-        el('b', '', t(`maps.${theme}`)),
+        title,
         el('span', 'ambient', t(`maps.${theme}.text`)),
         infoButton(() => [t(`maps.${theme}.text`)]),
       );

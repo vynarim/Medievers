@@ -155,6 +155,7 @@ export function burstCrate(s: SimState, id: number, events: SimEvent[]): void {
     carveRadius: trap ? r.trapRadius : r.blastRadius,
     maxDamage: trap ? r.trapDamage : r.blastDamage,
     sourceId: c.id,
+    ...(trap && r.trapSparesTurn ? { trap: true } : {}),
   });
   events.push({ e: 'crateBurst', id: c.id, trap });
 }

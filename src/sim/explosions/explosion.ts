@@ -24,6 +24,8 @@ export interface Explosion {
   readonly flames?: boolean;
   /** weapon that caused it, for the damage to structures (rules.structures); absent: other */
   readonly weapon?: WeaponId;
+  /** a trapped coffer going off (rules.crates.trapSparesTurn) */
+  readonly trap?: boolean;
 }
 
 export interface UnitHit {
