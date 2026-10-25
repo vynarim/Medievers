@@ -34,7 +34,15 @@ import { MAX_POWER } from '../commands.ts';
 import { damageDealtPct, throwPct, type ClassView } from '../classes.ts';
 import { igniteStructureAt, shotHitsStructure } from '../structures.ts';
 import { flameAt } from '../flames.ts';
-import { buildWall, launchStrike, placeMine, startDig, targetFor } from '../tools.ts';
+import {
+  buildWall,
+  launchStrike,
+  placeLadder,
+  placeMine,
+  startDig,
+  targetFor,
+  teleport,
+} from '../tools.ts';
 
 /** px from the hitbox centre to the muzzle */
 const MUZZLE_DISTANCE = 20;
@@ -60,6 +68,21 @@ export function fire(
   if (def.behavior === 'build') {
     const p = at ?? targetFor(state, u, def, power);
     if (!buildWall(state, u, def, p.x, p.y, events)) return false;
+    const id = state.nextEntityId++;
+    events.push({ e: 'shotFired', shotId: id, weapon: def.id });
+    events.push({ e: 'shotEnded', shotId: id });
+    return true;
+  }
+  if (def.behavior === 'teleport' || def.behavior === 'ladder' || def.behavior === 'banner') {
+    if (def.behavior === 'teleport') {
+      const p = at ?? targetFor(state, u, def, power);
+      if (!teleport(state, u, p.x, p.y, events)) return false;
+    } else if (def.behavior === 'ladder') {
+      if (!placeLadder(state, u, def, events)) return false;
+    } else {
+      u.banner = true;
+      events.push({ e: 'bannerRaised', unitId: u.id });
+    }
     const id = state.nextEntityId++;
     events.push({ e: 'shotFired', shotId: id, weapon: def.id });
     events.push({ e: 'shotEnded', shotId: id });

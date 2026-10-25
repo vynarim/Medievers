@@ -137,12 +137,12 @@ L'**épée** et la **charge à l'écu** sont jouables aussi {{st:jeu}}. L'épée
 |---|---|---|
 | **Grappin** | Une corde pour se balancer, la lâcher et la relancer en l'air | 5 |
 | **Mur de pierres** {{st:jeu}} | Cliquez sur la carte pour poser un bloc de pierre taillée, jusqu'à 320 px de vous ; la pierre est lourde : il tombe tout droit jusqu'au sol, où son contour s'affiche. La visée le tourne (par pas de 22,5°), les boutons 1 à 3 choisissent sa longueur (48, 80 ou 120 px). Son contour s'affiche sous la souris, en rouge là où il ne peut pas aller (trop loin, sur un combattant, en pleine terre) : le mur n'est alors pas posé et vous le gardez | 2 |
-| **Bannière** | Parachute : on descend lentement, porté par le vent | 3 |
+| **Bannière** {{st:jeu}} | « Brandir », puis sautez ou marchez dans le vide (ou brandissez-la en pleine chute) : on descend lentement, porté par le vent, et l'on atterrit sans se blesser. Brandir la bannière n'est pas votre action : vous pouvez encore tirer | 3 |
 | **Pioche** {{st:jeu}} | « Creuser » : creuse droit vers le bas pendant 3 s, environ 90 px dans la terre (180 pour un Sapeur), plus lentement dans la pierre, pas du tout dans la roche. Le temps du tour s'arrête pendant qu'on creuse | 2 |
 | **Sape** {{st:jeu}} | « Creuser » : un tunnel à plat, ou en biais à 45° vers le haut ou le bas selon la visée, pendant 4 s (environ 180 px, 360 pour un Sapeur) ; le combattant le suit. Elle ne creuse que dans la terre : visée vers l'air libre (sur un sol plat, à plat ou vers le haut), elle est refusée sans rien coûter ; visez le sol, ou un flanc de colline. Elle s'arrête là où le tunnel débouche à l'air libre | 2 |
-| **Échelle** | Pose une échelle de 200 px que tout le monde peut emprunter | 2 |
+| **Échelle** {{st:jeu}} | « Dresser » : une échelle se dresse devant vous, contre le mur s'il est assez près pour la saisir, jusqu'à son sommet (200 px au plus). La dresser n'est pas votre action ; la monter, si (comme toute échelle, cela termine le tour). Elle reste, et tout le monde peut l'emprunter | 2 |
 | **Chausse-trape** {{st:jeu}} | « Poser » : le piège tombe juste devant vous. Il s'arme en 2 s puis saute sous le premier combattant qui marche dessus, ami ou ennemi : 40 dégâts dans un rayon de 50 px. Une explosion proche le fait sauter aussi. En ligne, chacun ne voit que les pièges de ses maisons (et tous quand c'est son Sapeur qui joue) | 2 |
-| **Miracle** | Vous téléporte sur un point libre ; votre tour s'arrête | 1 |
+| **Miracle** {{st:jeu}} | Cliquez sur la carte (ou « Prier » avec la jauge) : vous apparaissez là, et descendez doucement jusqu'au sol. Votre contour doré montre où vous serez ; rouge, le ciel refuse (dans la terre, sur quelqu'un, au-dessus du vide ou de l'eau). Votre tour s'arrête à l'arrivée | 1 |
 | **Passer son tour** | — | ∞ |
 
 ### 4.5 Comment se calculent les dégâts {{st:jeu}}

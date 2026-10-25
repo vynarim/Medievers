@@ -23,6 +23,15 @@ export interface Pop {
 /** ticks to wait after a shot ends before calling it a miss */
 const MISS_DELAY_TICKS = 20;
 
+/** Tools of the arsenal: they do not hit or miss anybody. */
+const isTool = (b: string | undefined): boolean =>
+  b === 'dig' ||
+  b === 'mine' ||
+  b === 'build' ||
+  b === 'teleport' ||
+  b === 'ladder' ||
+  b === 'banner';
+
 export class Commentary {
   private readonly hud: Hud;
   private readonly replay: () => void;
@@ -121,7 +130,8 @@ export class Commentary {
                     ? 'quip.strike'
                     : 'quip.fire';
           // A tool is not a shot that can miss.
-          if (tool !== 'quip.fire' && tool !== 'quip.strike') this.pendingMiss = null;
+          if ((tool !== 'quip.fire' && tool !== 'quip.strike') || isTool(b))
+            this.pendingMiss = null;
           // A weapon with quips of its own says them (the sword, the charge…).
           const own = `quip.weapon.${e.weapon}`;
           this.hud.say(
@@ -154,8 +164,7 @@ export class Commentary {
         case 'shotEnded': {
           const at = shotAt(e.shotId);
           const b = v.rules.weapons.find((w) => w.id === v.turn.weapon)?.behavior;
-          const tool = b === 'dig' || b === 'mine' || b === 'build';
-          if (this.damage === 0 && at && !tool) {
+          if (this.damage === 0 && at && !isTool(b)) {
             this.pendingMiss = { tick: v.tick, ...at, unitId: v.turn.activeUnitId };
           }
           break;

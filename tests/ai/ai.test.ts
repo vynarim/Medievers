@@ -200,6 +200,51 @@ describe('the AI rope', () => {
     playOut(sim, plan);
     expect((sim.view().units[0]?.y ?? 0) >> 8).toBe(600);
   });
+
+  it('plays the arsenal of lot 6: a shield charge, a ladder, a banner, a miracle', () => {
+    const px = (sim: Sim, id: number, k: 'x' | 'y') =>
+      (sim.view().units.find((u) => u.id === id)?.[k] ?? 0) >> 8;
+    // Charge: the enemy 80 px to the right is thrown over.
+    const charge = duel(400, 480);
+    playOut(charge, {
+      unitId: 1,
+      move: { kind: 'stay' },
+      shot: { weapon: 'shieldCharge', angle: 0, power: 1024 },
+    });
+    expect(charge.view().units.find((u) => u.id === 2)?.hp).toBe(80);
+
+    // Ladder: up a rock cliff 140 px high, without a rope to throw.
+    const mask = flatMask();
+    for (let y = 460; y < 600; y++) mask.data.fill(Material.Rock, y * 2000 + 460, y * 2000 + 900);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { wallClimb, ...unitNoRope } = RULES.unit;
+    const noRope: MatchRules = { ...RULES, unit: unitNoRope };
+    const config: MatchConfig = { rules: noRope, teams: [{ spawns: [420] }, { spawns: [1400] }] };
+    const ladder = new Sim(config, 3, mask);
+    for (let i = 0; i < 1000 && ladder.view().turn.phase !== 'action'; i++) ladder.step();
+    playOut(ladder, { unitId: 1, move: { kind: 'ladder', face: 1 }, shot: null });
+    expect(px(ladder, 1, 'y')).toBe(460);
+
+    // Banner: a jump off the cliff's edge, unhurt.
+    const cliff = new Sim(
+      { rules: RULES, teams: [{ spawns: [880] }, { spawns: [1400] }] },
+      3,
+      mask,
+    );
+    for (let i = 0; i < 1000 && cliff.view().turn.phase !== 'action'; i++) cliff.step();
+    playOut(cliff, {
+      unitId: 1,
+      move: { kind: 'jump', jump: 'forward', dir: 1, banner: true },
+      shot: null,
+    });
+    expect(px(cliff, 1, 'y')).toBe(600);
+    expect(cliff.view().units.find((u) => u.id === 1)?.hp).toBe(100);
+
+    // Miracle: up onto the cliff, from the plain.
+    const miracle = duel(300, 1400);
+    playOut(miracle, { unitId: 1, move: { kind: 'miracle', x: 1000, y: 400 }, shot: null });
+    expect(px(miracle, 1, 'x')).toBe(1000);
+  });
 });
 
 describe('the AI controller', () => {

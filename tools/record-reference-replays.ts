@@ -771,6 +771,50 @@ const SCRIPTS: readonly Script[] = [
       r.until('transition');
     },
   },
+  {
+    name: 'ladder-banner-miracle',
+    description:
+      'Échelle, bannière et miracle (GDD §4.4): a stone wall, a ladder set up against it and ' +
+      'climbed, a jump off its top under the banner, unhurt, then a miracle across the field.',
+    mapId: 'flat',
+    seed: 1099,
+    config: {
+      rules: { ...NO_PLACEMENT, wind: { ...NO_PLACEMENT.wind, max: 5 } },
+      teams: [{ spawns: [300] }, { spawns: [1000] }],
+    },
+    play: (r) => {
+      const ours = (cmds: Parameters<Recorder['step']>[0]): void => {
+        r.until('action');
+        r.step(cmds);
+        r.until('transition');
+        r.until('action');
+        r.step([{ t: 'skip' }]);
+        r.until('transition');
+      };
+      const ground = (r.sim.view().units[0]?.y ?? 0) >> 8;
+      ours([
+        { t: 'selectWeapon', id: 'stoneWall' },
+        { t: 'setFuse', seconds: 3 },
+        { t: 'aim', angle: 1024 },
+        { t: 'fireAt', x: 350, y: ground - 60 },
+      ]);
+      ours([
+        { t: 'selectWeapon', id: 'ladder' },
+        { t: 'aim', angle: 3584 },
+        { t: 'fire', power: 0 },
+        { t: 'climb', dir: -1 },
+      ]);
+      ours([
+        { t: 'selectWeapon', id: 'banner' },
+        { t: 'fire', power: 0 },
+        { t: 'jump', kind: 'forward', dir: 1 },
+      ]);
+      ours([
+        { t: 'selectWeapon', id: 'miracle' },
+        { t: 'fireAt', x: 800, y: 300 },
+      ]);
+    },
+  },
 ];
 
 const force = process.argv.includes('--force');

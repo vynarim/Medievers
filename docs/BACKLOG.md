@@ -88,8 +88,8 @@ La priorité est le moteur : simulation, règles, réseau, IA. Jusqu'au lot 9, t
 | 4.3 | Volée de trébuchet, pluie de flèches | idem — fait le 2026-10-25 (replays `trebuchet`, `arrow-rain`) |
 | 4.4 | Épée, masse, charge à l'écu | idem — fait le 2026-10-25 (replays `mace`, `sword-charge`) |
 | 4.5 | Grappin (V1 : un seul ancrage) et escalade au grappin (GDD §4.4 : sortir d'un trou, monter sur un rempart ; 10 PV, fin du tour) | idem ; un combattant au fond d'un trou de 300 px en sort |
-| 4.6 | Mur de pierres, échelle, bannière | idem |
-| 4.7 | Pioche, sape, chausse-trape (visibilité par équipe), miracle | idem |
+| 4.6 | Mur de pierres, échelle, bannière | idem — fait le 2026-10-25 (replays `stone-wall`, `ladder-banner-miracle`) |
+| 4.7 | Pioche, sape, chausse-trape (visibilité par équipe), miracle | idem — fait le 2026-10-25 (replays `pick-sap`, `caltrop`, `ladder-banner-miracle`) |
 | 4.8 | UI d'arsenal (greybox) + munitions | Accessible au clavier et au tactile |
 | 4.9 | Machines de siège : baliste, scorpion, catapulte, trébuchet, bélier (GDD §4.8) | Un replay de référence par machine ; une machine détruite s'effondre |
 | 4.10 | Mèche du pot en tours (1 = ce tour, 2 = tour suivant, 3 = dans deux tours), pots posés persistants entre les tours (GDD §4.1) | Un pot à mèche 2 explose au début du tour suivant ; replay de référence |

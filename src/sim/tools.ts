@@ -5,6 +5,8 @@ import { weaponDefIn } from '../content/rules.ts';
 import type { WallDef, WeaponDef } from '../content/weapons.ts';
 import { MAX_POWER } from './commands.ts';
 import { digPctOf } from './classes.ts';
+import type { UnitRules } from '../content/units.ts';
+import { ladderReach } from './units/climb.ts';
 import type { SimEvent } from './events.ts';
 import { queueExplosion, type Explosion } from './explosions/explosion.ts';
 import { ANGLE_MASK, cosQ14, sinQ14 } from './math/angle.ts';
@@ -17,11 +19,20 @@ import {
   carveCircle,
   isSolid,
   materialOf,
+  rectShape,
   stamp,
   type StampShape,
   type Terrain,
 } from './terrain/terrain.ts';
-import { GRAVITY, UNIT_HALF_WIDTH, UNIT_HEIGHT, walk, type Unit } from './units/unit.ts';
+import {
+  GRAVITY,
+  UNIT_HALF_WIDTH,
+  UNIT_HEIGHT,
+  bodyFree,
+  supported,
+  walk,
+  type Unit,
+} from './units/unit.ts';
 
 /** Q14 sine of 22.5°: the sap cuts level unless the aim is steeper than this */
 const SIN_22 = 6270;
@@ -325,7 +336,7 @@ export function targetFor(
     );
     return { x, y: groundAt(v.terrain, x) };
   }
-  const d = idiv((def.wall?.reach ?? 0) * p, MAX_POWER);
+  const d = idiv((def.wall?.reach ?? def.teleport?.reach ?? 0) * p, MAX_POWER);
   return {
     x: cx + subToPx(mulQ14(d * SUBPX, cosQ14(aim))),
     y: cy + subToPx(mulQ14(d * SUBPX, sinQ14(aim))),
@@ -472,4 +483,136 @@ export function launchStrike(
     });
   }
   s.shots.sort((a, b) => a.projectile.id - b.projectile.id);
+}
+
+// ---------------------------------------------------------------------------------------------
+// Miracle, ladder
+// ---------------------------------------------------------------------------------------------
+
+/** What the miracle's landing reads (a SimView fits). */
+interface LandingView extends TargetView {
+  readonly units: readonly Readonly<Unit>[];
+  readonly waterY: number;
+  readonly burnPx: number;
+}
+
+/**
+ * px: where a unit sent by the miracle to (x, y) — its body's middle — comes to stand: the
+ * body must be free there, and it drops straight down onto the ground below. Null where it
+ * cannot go: in the ground, over the void, into the water or the burnt ends, onto another unit.
+ */
+export function teleportLanding(
+  v: LandingView,
+  self: number,
+  x: number,
+  y: number,
+): { x: number; y: number } | null {
+  const t = v.terrain;
+  const feet = y + (UNIT_HEIGHT >> 1);
+  if (x < v.burnPx + UNIT_HALF_WIDTH || x >= t.width - v.burnPx - UNIT_HALF_WIDTH) return null;
+  if (feet < UNIT_HEIGHT || !bodyFree(t, x, feet)) return null;
+  let ground = feet;
+  while (ground < t.height && !supported(t, x, ground)) {
+    if (!bodyFree(t, x, ground + 1)) return null;
+    ground++;
+  }
+  if (ground >= t.height || ground > v.waterY) return null;
+  for (const o of v.units) {
+    if (!o.alive || o.id === self) continue;
+    if (
+      Math.abs(subToPx(o.x) - x) < 2 * UNIT_HALF_WIDTH &&
+      Math.abs(subToPx(o.y) - ground) < UNIT_HEIGHT
+    )
+      return null;
+  }
+  return { x, y: ground };
+}
+
+/** The miracle: the unit stands at once where teleportLanding says; false where it cannot go. */
+export function teleport(s: SimState, u: Unit, x: number, y: number, events: SimEvent[]): boolean {
+  const to = teleportLanding(s, u.id, x, y);
+  if (!to) return false;
+  const from = { x: subToPx(u.x), y: subToPx(u.y) };
+  u.x = to.x * SUBPX + SUBPX / 2;
+  u.y = to.y * SUBPX;
+  u.vx = 0;
+  u.vy = 0;
+  u.grounded = true;
+  u.knocked = false;
+  if (u.climbing) u.climbing = false;
+  u.airPeakY = to.y;
+  if (u.airFromY !== undefined) u.airFromY = to.y;
+  u.stillTicks = 0;
+  events.push({ e: 'teleported', unitId: u.id, fromX: from.x, fromY: from.y, x: to.x, y: to.y });
+  return true;
+}
+
+/** px: gap between a wall's face and a ladder set against it, and the ladder's width */
+const LADDER_GAP = 6;
+const LADDER_W = 4;
+/** px under the feet the ladder's foot may be found */
+const LADDER_FOOT = 40;
+
+/** px from the unit's middle to the farthest wall a ladder is set against: within its grab. */
+export const ladderLook = (rules: UnitRules): number =>
+  ladderReach(rules) + LADDER_GAP + LADDER_W - 1;
+
+/**
+ * Column of the ladder's left edge, and the row of the top of the wall it leans on: against the
+ * wall in front within LADDER_LOOK px, or just past the unit's flank on open ground (no wall: -1).
+ */
+function ladderColumn(
+  t: Terrain,
+  ux: number,
+  feet: number,
+  dir: -1 | 1,
+  look: number,
+): { x: number; wallTop: number } {
+  for (let d = UNIT_HALF_WIDTH + 1; d <= look; d++) {
+    const x = ux + dir * d;
+    const low = feet - 20;
+    if (isSolid(t, x, low) || isSolid(t, x, feet - 60)) {
+      let top = isSolid(t, x, low) ? low : feet - 60;
+      while (top > 0 && isSolid(t, x, top - 1)) top--;
+      const near = x - dir * LADDER_GAP;
+      return { x: dir > 0 ? near - LADDER_W + 1 : near, wallTop: top };
+    }
+  }
+  const near = ux + dir * (UNIT_HALF_WIDTH + 4);
+  return { x: dir > 0 ? near : near - LADDER_W + 1, wallTop: -1 };
+}
+
+/**
+ * The ladder: a strip of ladder from the ground in front of the unit up to `height` px, through
+ * the air only, stopped by a ceiling. False (nothing done) with no ground under its foot.
+ */
+export function placeLadder(s: SimState, u: Unit, def: WeaponDef, events: SimEvent[]): boolean {
+  const l = def.ladder;
+  if (!l) return false;
+  const t = s.terrain;
+  const feet = subToPx(u.y);
+  // A wall farther than the unit could reach the ladder against it is not leant on.
+  const look = ladderLook(s.rules.unit);
+  const { x: x0, wallTop } = ladderColumn(t, subToPx(u.x), feet, u.facing, look);
+  if (x0 < 0 || x0 + LADDER_W > t.width) return false;
+  // Its foot: the highest ground under the strip, from the unit's waist down.
+  let foot = -1;
+  for (let y = feet - (UNIT_HEIGHT >> 1); y <= feet + LADDER_FOOT && foot < 0; y++) {
+    for (let x = x0; x < x0 + LADDER_W; x++) if (isSolid(t, x, y)) foot = y;
+  }
+  if (foot < 0) return false;
+  // Up to the top of the wall it leans on (a rung above it), or its full height.
+  const highest = Math.max(foot - l.height, wallTop < 0 ? 0 : wallTop - 2);
+  let top = foot;
+  while (top > highest) {
+    let blocked = false;
+    for (let x = x0; x < x0 + LADDER_W; x++) if (isSolid(t, x, top - 1)) blocked = true;
+    if (blocked) break;
+    top--;
+  }
+  if (foot - top < UNIT_HEIGHT >> 1) return false;
+  stamp(t, x0, top, rectShape(LADDER_W, foot - top), Material.Ladder);
+  events.push({ e: 'terrainChanged', x: x0, y: top, w: LADDER_W, h: foot - top });
+  events.push({ e: 'ladderPlaced', x: x0, y: top, h: foot - top });
+  return true;
 }

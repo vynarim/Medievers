@@ -22,6 +22,14 @@ export function weaponLines(w: WeaponDef): string[] {
       ammo,
     ];
   }
+  if (w.teleport || w.ladder || w.banner) {
+    const own = w.ladder
+      ? [t('weapon.ladder', { px: w.ladder.height })]
+      : w.teleport
+        ? [t('weapon.teleport')]
+        : [t('weapon.banner')];
+    return [t(`weapons.${w.id}.desc`), ...own, ammo];
+  }
   if (w.mine) {
     return [
       t(`weapons.${w.id}.desc`),

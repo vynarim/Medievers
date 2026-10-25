@@ -16,7 +16,10 @@ export type WeaponId =
   | 'trebuchet'
   | 'sword'
   | 'shieldCharge'
-  | 'arrowRain';
+  | 'arrowRain'
+  | 'miracle'
+  | 'ladder'
+  | 'banner';
 
 /** Fragments a cluster weapon throws when it bursts (pot de poix, GDD §4.1). */
 export interface FragmentDef {
@@ -95,6 +98,26 @@ export interface ChargeDef {
   readonly speed: number;
 }
 
+/** Miracle (GDD §4.4): the unit is taken up and set down on a free point of the map. */
+export interface TeleportDef {
+  /** px: farthest from the unit the point may be with the gauge (a click goes anywhere) */
+  readonly reach: number;
+}
+
+/** Échelle (GDD §4.4): a ladder set up against what stands in front of the unit. */
+export interface LadderDef {
+  /** px: its height at most, from the ground (a ceiling stops it lower) */
+  readonly height: number;
+}
+
+/** Bannière (GDD §4.4): held up as the unit falls, it slows the fall and the wind carries it. */
+export interface BannerDef {
+  /** sub-px/tick: speed of the fall under the banner */
+  readonly fallSpeed: number;
+  /** sub-px/tick of sideways drift per point of wind */
+  readonly windDrift: number;
+}
+
 export interface WeaponDef {
   readonly id: WeaponId;
   /** behaviour implemented in src/sim/weapons */
@@ -107,7 +130,10 @@ export interface WeaponDef {
     | 'dig'
     | 'mine'
     | 'build'
-    | 'strike';
+    | 'strike'
+    | 'teleport'
+    | 'ladder'
+    | 'banner';
   /** px; 0 = point projectile */
   readonly projectileRadius: number;
   /** percent of wind acceleration applied (GDD §4.1 « Vent ») */
@@ -167,6 +193,16 @@ export interface WeaponDef {
   readonly flames?: boolean;
   /** shots a weapon reliquary holds of it (absent: 1) */
   readonly crateAmmo?: number;
+  /**
+   * Using it is not the turn's action (the ladder, the banner): the turn goes on as before, the
+   * unit may still shoot; only the ammunition is spent.
+   */
+  readonly free?: boolean;
+  /** Using it ends the turn at once (the miracle). */
+  readonly endsTurn?: boolean;
+  readonly teleport?: TeleportDef;
+  readonly ladder?: LadderDef;
+  readonly banner?: BannerDef;
   readonly dig?: DigDef;
   readonly mine?: MineDef;
   readonly wall?: WallDef;
@@ -175,7 +211,7 @@ export interface WeaponDef {
 
 /** Weapons aimed at a point of the map rather than fired along the aim (click or gauge). */
 export const isTargeted = (w: WeaponDef): boolean =>
-  w.behavior === 'build' || w.behavior === 'strike';
+  w.behavior === 'build' || w.behavior === 'strike' || w.behavior === 'teleport';
 
 /** The gauge sets something (speed, distance, a blow's knockback); the others act at once. */
 export const usesPower = (w: WeaponDef): boolean =>
@@ -398,5 +434,35 @@ export const WEAPONS: readonly WeaponDef[] = [
     knockbackPct: 30,
     ammo: 1,
     strike: { count: 12, spacing: 14, speed: 2 * 256, range: 1600, height: 300 },
+  },
+  {
+    // Miracle (2026-10-25): the unit is set down on the free point clicked (or along the aim, as
+    // far as the gauge says), dropping onto the ground below it; the turn ends there.
+    id: 'miracle',
+    behavior: 'teleport',
+    ...TOOL,
+    ammo: 1,
+    endsTurn: true,
+    teleport: { reach: 900 },
+  },
+  {
+    // Échelle (2026-10-25): a ladder of 200 px set up just in front of the unit (against a wall
+    // within 40 px); setting it is not the turn's action, climbing it is (as any ladder).
+    id: 'ladder',
+    behavior: 'ladder',
+    ...TOOL,
+    ammo: 2,
+    free: true,
+    ladder: { height: 200 },
+  },
+  {
+    // Bannière (2026-10-25): held up for the next fall of the turn: down at 2 px a tick, carried
+    // by the wind, no fall damage. Not the turn's action; it opens in the air as well.
+    id: 'banner',
+    behavior: 'banner',
+    ...TOOL,
+    ammo: 3,
+    free: true,
+    banner: { fallSpeed: 2 * 256, windDrift: 40 },
   },
 ];

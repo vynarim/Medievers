@@ -49,6 +49,7 @@ import { aimPreviewTicks, classOf, maxHpOf, visibleMines } from '../sim/classes.
 import { shotSpeed } from '../sim/weapons/weapons.ts';
 import {
   targetFor,
+  teleportLanding,
   wallAngle,
   wallLanding,
   wallLength,
@@ -185,6 +186,9 @@ interface Interp {
   cy: number;
 }
 
+/** ms a miracle's beam of light lasts */
+const HALO_MS = 1400;
+
 interface Burst {
   readonly x: number;
   readonly y: number;
@@ -236,6 +240,8 @@ export class BattleScene extends Phaser.Scene {
   private ui!: GameUi;
   private commentary!: Commentary;
   private bursts: Burst[] = [];
+  /** beams of light where the miracle took a unit up and set it down */
+  private halos: Burst[] = [];
   private selectedUnit: number | null = null;
   private readonly clock = new FixedStep(TICK_MS, MAX_STEPS_PER_FRAME, MAX_FRAME_MS);
   private interp = new Map<string, Interp>();
@@ -1065,6 +1071,13 @@ export class BattleScene extends Phaser.Scene {
         this.cameras.main.shake(260, 0.008);
       }
       if (e.e === 'turnStarted' || e.e === 'shotFired') this.manualCamera = false;
+      if (e.e === 'teleported') {
+        // No sliding across the map: the unit is simply elsewhere.
+        this.interp.delete(`u${e.unitId}`);
+        const now = this.time.now;
+        this.halos.push({ x: e.fromX, y: e.fromY, radius: 40, born: now });
+        this.halos.push({ x: e.x, y: e.y, radius: 40, born: now });
+      }
       if (e.e === 'explosion') {
         this.cameras.main.shake(180, 0.006);
         this.bursts.push({ x: e.x / SUBPX, y: e.y / SUBPX, radius: e.radius, born: this.time.now });
@@ -1342,6 +1355,22 @@ export class BattleScene extends Phaser.Scene {
     }
 
     this.drawBursts(g, time);
+    this.drawHalos(g, time);
+  }
+
+  /** The miracle: a beam of gilt light where the unit vanished and where it stands now. */
+  private drawHalos(g: Phaser.GameObjects.Graphics, time: number): void {
+    this.halos = this.halos.filter((h) => time - h.born < HALO_MS);
+    for (const h of this.halos) {
+      const k = (time - h.born) / HALO_MS;
+      const a = 1 - k;
+      g.fillStyle(COLORS.or, 0.35 * a);
+      g.fillRect(h.x - h.radius, h.y - 900, h.radius * 2, 900);
+      g.fillStyle(COLORS.ceruse, 0.5 * a);
+      g.fillRect(h.x - h.radius / 3, h.y - 900, (h.radius * 2) / 3, 900);
+      g.lineStyle(3, COLORS.or, a);
+      g.strokeEllipse(h.x, h.y - UNIT_HEIGHT - 14, 40 + 30 * k, 12 + 6 * k);
+    }
   }
 
   /** A little tombstone where a unit fell. */
@@ -1966,6 +1995,30 @@ export class BattleScene extends Phaser.Scene {
     primary: number,
     secondary: number,
   ): void {
+    if (u.banner) {
+      // The banner held up high, wide open while it falls, furled on the ground.
+      const open = !u.grounded;
+      const top = y - UNIT_HEIGHT - (open ? 70 : 40);
+      g.lineStyle(4, COLORS.terreOmbre, 1);
+      g.lineBetween(x, y - UNIT_HEIGHT * 0.6, x, top);
+      const w = open ? 70 : 26;
+      const h = open ? 34 : 40;
+      const cloth = poly([
+        { x: x - w / 2, y: top },
+        { x: x + w / 2, y: top },
+        { x: x + w / 2, y: top + h * 0.7 },
+        { x: x + w / 4, y: top + h },
+        { x: x, y: top + h * 0.7 },
+        { x: x - w / 4, y: top + h },
+        { x: x - w / 2, y: top + h * 0.7 },
+      ]);
+      g.fillStyle(primary, 1);
+      g.fillPoints(cloth, true);
+      g.fillStyle(secondary, 1);
+      g.fillRect(x - w / 2, top + 6, w, 5);
+      g.lineStyle(3, COLORS.encre, 1);
+      g.strokePoints(cloth, true);
+    }
     if (v.charge?.unitId === u.id) {
       const sx = x + u.facing * 22;
       const sy = y - UNIT_HEIGHT * 0.55;
@@ -2139,6 +2192,35 @@ export class BattleScene extends Phaser.Scene {
       g.fillPoints(poly(corners), true);
       g.lineStyle(3, ok ? COLORS.encre : COLORS.vermillon, 0.9);
       g.strokePoints(poly(corners), true);
+      return;
+    }
+    if (def.teleport) {
+      // The miracle: the figure's outline where it will stand, vermilion where it cannot go.
+      const to = teleportLanding(v, u.id, at.x, at.y);
+      const fx = to?.x ?? at.x;
+      const fy = to?.y ?? at.y + UNIT_HEIGHT / 2;
+      const ok = to !== null;
+      g.fillStyle(ok ? COLORS.or : COLORS.vermillon, 0.35);
+      g.fillRoundedRect(
+        fx - UNIT_HALF_WIDTH,
+        fy - UNIT_HEIGHT,
+        UNIT_HALF_WIDTH * 2,
+        UNIT_HEIGHT,
+        14,
+      );
+      g.lineStyle(3, ok ? COLORS.or : COLORS.vermillon, 0.9);
+      g.strokeRoundedRect(
+        fx - UNIT_HALF_WIDTH,
+        fy - UNIT_HEIGHT,
+        UNIT_HALF_WIDTH * 2,
+        UNIT_HEIGHT,
+        14,
+      );
+      if (ok && fy > at.y + UNIT_HEIGHT / 2) {
+        // The drop to the ground under the point.
+        g.lineStyle(2, COLORS.or, 0.7);
+        g.lineBetween(fx, at.y, fx, fy - UNIT_HEIGHT);
+      }
       return;
     }
     // Trebuchet volley: the target on the ground, and an arrow for the side of the throw.

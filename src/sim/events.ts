@@ -126,4 +126,17 @@ export type SimEvent =
   | { readonly e: 'wallBuilt'; readonly x: number; readonly y: number }
   /** a tool could not be used there (a wall too far, on a unit, in the ground) */
   | { readonly e: 'toolRefused'; readonly weapon: WeaponId }
+  /** the miracle took the unit from (fromX, fromY) to (x, y), px, feet */
+  | {
+      readonly e: 'teleported';
+      readonly unitId: number;
+      readonly fromX: number;
+      readonly fromY: number;
+      readonly x: number;
+      readonly y: number;
+    }
+  /** a ladder was set up, its left edge at x, from y down h px */
+  | { readonly e: 'ladderPlaced'; readonly x: number; readonly y: number; readonly h: number }
+  /** a unit held up its banner */
+  | { readonly e: 'bannerRaised'; readonly unitId: number }
   | { readonly e: 'gameOver'; readonly winner: number };

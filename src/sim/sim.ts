@@ -30,6 +30,7 @@ import {
   settle,
   stepUnitPhysics,
   walk,
+  GRAVITY,
   UNIT_HALF_WIDTH,
   type Unit,
 } from './units/unit.ts';
@@ -504,7 +505,13 @@ function applyCommand(s: SimState, c: GameCommand, events: SimEvent[]): void {
         return;
       }
       if (ammo > 0) team.ammo[wi] = ammo - 1;
+      // The ladder and the banner are not the turn's action; the miracle ends the turn.
+      if (def.free) break;
       t.fired = true;
+      if (def.endsTurn) {
+        setPhase(s, 'resolution', 0, events);
+        break;
+      }
       const rt = s.rules.turn;
       const left = Math.min(t.phaseTicks, rt.retreatMaxTicks ?? t.phaseTicks);
       const after = rt.moveAfterShot ? Math.max(left, rt.retreatTicks) : rt.retreatTicks;
@@ -610,7 +617,11 @@ function advanceTick(s: SimState, phaseJustSet: boolean, events: SimEvent[]): vo
   stepCharge(s, events);
   for (const u of s.units) {
     if (!u.alive) continue;
+    const held = u.banner === true && !u.grounded && !u.climbing;
+    if (held) holdBanner(s, u);
     const r = stepUnitPhysics(u, s.terrain, s.rules.unit);
+    // The banner is folded once its bearer is down (or thrown about by a blow).
+    if (held && (u.grounded || u.knocked)) u.banner = false;
     if (r.fallDamage > 0) {
       u.hp = Math.max(0, u.hp - r.fallDamage);
       events.push({ e: 'unitDamaged', unitId: u.id, damage: r.fallDamage });
@@ -716,6 +727,24 @@ function advancePhase(
     case 'gameOver':
       break;
   }
+}
+
+/**
+ * A unit falling under its banner (GDD §4.4): its fall is slowed to the banner's speed, the wind
+ * carries it sideways, and the height it falls from is reset at every tick, so it lands unhurt.
+ */
+function holdBanner(s: SimState, u: Unit): void {
+  const b = s.rules.weapons.find((w) => w.banner)?.banner;
+  if (!b) return;
+  if (u.knocked) {
+    u.banner = false;
+    return;
+  }
+  if (u.vy > 0) u.vy = Math.min(u.vy, b.fallSpeed - GRAVITY);
+  const drift = s.turn.wind * b.windDrift;
+  u.vx += Math.max(-SUBPX / 8, Math.min(SUBPX / 8, drift - u.vx));
+  u.airPeakY = subToPx(u.y);
+  if (u.airFromY !== undefined) u.airFromY = u.airPeakY;
 }
 
 /** px per tick a unit goes up or down a rope */
@@ -914,6 +943,8 @@ function burnTurn(s: SimState, events: SimEvent[]): void {
 }
 
 function endTurn(s: SimState, events: SimEvent[]): void {
+  // A banner held up and never used is folded at the end of the turn.
+  for (const u of s.units) if (u.banner) u.banner = false;
   blessAtTurnEnd(s, events);
   burnTurn(s, events);
   delugeTurnEnd(s, events);
@@ -969,6 +1000,8 @@ function hashState(s: SimState): number {
     int((u.grounded ? 1 : 0) | (u.knocked ? 2 : 0) | (u.alive ? 4 : 0) | (u.climbing ? 8 : 0));
     // Only ever set with rules.turn.rememberWeapon: older hashes stay the same.
     if (u.weapon !== undefined) int(weaponIndexIn(s.rules, u.weapon));
+    // Only ever set with the banner: older hashes stay the same.
+    if (u.banner !== undefined) int(u.banner ? 1 : 0);
     // Only read with rules.unit.fallMinHeight: older hashes stay the same.
     if (s.rules.unit.fallMinHeight !== undefined) int(u.airFromY ?? u.airPeakY);
   }

@@ -122,6 +122,23 @@ const ART: Record<WeaponId, string> = {
     <path d="M18 30 L14 52 M32 30 L28 56 M46 30 L42 52" ${s(2.5)}/>
     <path d="M14 52 L11 45 L17 46 Z M28 56 L25 49 L31 50 Z M42 52 L39 45 L45 46 Z" fill="${C.stone}" ${s(1.2)}/>
     <path d="M18 30 L16 26 M18 30 L21 27 M32 30 L30 26 M32 30 L35 27 M46 30 L44 26 M46 30 L49 27" stroke="${C.red}" stroke-width="2.5"/>`,
+  miracle: `
+    <circle cx="32" cy="26" r="16" fill="${C.gold}" ${s(2)}/>
+    <path d="M32 2 L32 8 M32 44 L32 50 M8 26 L14 26 M50 26 L56 26 M15 9 L19 13 M45 39 L49 43 M49 9 L45 13 M19 39 L15 43" ${s(2)}/>
+    <path d="M24 30 Q32 20 40 30" fill="none" ${s(2)}/>
+    <path d="M18 62 Q20 46 32 46 Q44 46 46 62 Z" fill="${C.white}" ${s(2)}/>
+    <path d="M26 54 L38 54 M32 48 L32 60" stroke="${C.red}" stroke-width="2.5"/>`,
+  ladder: `
+    <path d="M20 6 L14 60 M44 6 L50 60" ${s(4)}/>
+    <path d="M20 6 L14 60 M44 6 L50 60" stroke="${C.wood}" stroke-width="2"/>
+    <path d="M19 14 L45 14 M18 25 L46 25 M17 36 L47 36 M16 47 L48 47 M15 57 L49 57" ${s(3)}/>
+    <path d="M19 14 L45 14 M18 25 L46 25 M17 36 L47 36 M16 47 L48 47" stroke="${C.ochre}" stroke-width="1.5"/>`,
+  banner: `
+    <line x1="14" y1="6" x2="14" y2="60" ${s(4)}/>
+    <line x1="14" y1="6" x2="14" y2="60" stroke="${C.wood}" stroke-width="2"/>
+    <path d="M14 10 L54 10 L54 34 L46 28 L38 34 L30 28 L22 34 L14 30 Z" fill="${C.blue}" ${s(2)}/>
+    <path d="M30 14 L34 22 L42 22 L36 27" fill="none" stroke="${C.gold}" stroke-width="3"/>
+    <circle cx="14" cy="5" r="3" fill="${C.gold}" ${s(1.2)}/>`,
   trebuchet: `
     <path d="M14 56 L30 22 L46 56" fill="none" ${s(4)}/>
     <path d="M14 56 L30 22 L46 56" fill="none" stroke="${C.wood}" stroke-width="2"/>

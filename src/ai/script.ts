@@ -12,7 +12,17 @@ export type AiMove =
   | { readonly kind: 'stay' }
   /** walks towards x (px) until there, stopped, or out of breath */
   | { readonly kind: 'walk'; readonly x: number }
-  | { readonly kind: 'jump'; readonly jump: 'forward' | 'back'; readonly dir: -1 | 1 }
+  | {
+      readonly kind: 'jump';
+      readonly jump: 'forward' | 'back';
+      readonly dir: -1 | 1;
+      /** the banner held up first, to come down unhurt (GDD §4.4) */
+      readonly banner?: boolean;
+    }
+  /** the miracle: set down at (x, y) px, the body's middle; it ends the turn */
+  | { readonly kind: 'miracle'; readonly x: number; readonly y: number }
+  /** a ladder set up against the wall on side `face`, then climbed; it ends the turn */
+  | { readonly kind: 'ladder'; readonly face: -1 | 1 }
   /**
    * « Grimper »: a rope up the wall (dir -1) or down the drop (1) on side `face`; it is the turn's
    * action and ends the turn (rules.unit.wallClimb), so no shot follows
@@ -55,6 +65,9 @@ type Stage =
   | 'face'
   | 'rope'
   | 'roping'
+  | 'banner'
+  | 'pray'
+  | 'ladder'
   | 'settle'
   | 'weapon'
   | 'aim'
@@ -129,22 +142,63 @@ export class TurnScript {
           this.go('walking');
           return [{ t: 'move', dir }];
         }
-        if (m.kind === 'rope') {
-          // Turned towards the wall first (on the spot: no walk spent), then the rope.
+        if (m.kind === 'rope' || m.kind === 'ladder') {
+          // Turned towards the wall first (on the spot: no walk spent), then the rope or ladder.
           if (u.facing !== m.face) {
             this.go('face');
             return [{ t: 'move', dir: m.face }];
           }
-          this.go('rope');
-          return [];
+          this.go(m.kind);
+          return m.kind === 'ladder' ? [{ t: 'selectWeapon', id: 'ladder' }] : [];
+        }
+        if (m.kind === 'miracle') {
+          this.go('pray');
+          return [{ t: 'selectWeapon', id: 'miracle' }];
+        }
+        if (m.kind === 'jump' && m.banner) {
+          this.go('banner');
+          return [
+            { t: 'selectWeapon', id: 'banner' },
+            { t: 'fire', power: 0 },
+          ];
         }
         this.go('settle');
         if (m.kind === 'jump') return [{ t: 'jump', kind: m.jump, dir: m.dir }];
         return [];
       }
-      case 'face':
+      case 'banner': {
+        const m = plan.move;
+        this.go('settle');
+        return m.kind === 'jump' ? [{ t: 'jump', kind: m.jump, dir: m.dir }] : [];
+      }
+      case 'pray': {
+        const m = plan.move;
+        this.go('done');
+        // Refused (somebody moved there): the turn is passed.
+        return m.kind === 'miracle'
+          ? [{ t: 'fireAt', x: m.x, y: m.y }, { t: 'skip' }]
+          : [{ t: 'skip' }];
+      }
+      case 'ladder':
+        if (t.turnHold > 0) return [];
+        // Set up, then climbed: the climb is the turn's action and ends it, as with the rope.
+        this.go('roping');
+        return [
+          { t: 'fire', power: 0 },
+          { t: 'climb', dir: -1 },
+        ];
+      case 'face': {
+        const m = plan.move;
+        if (m.kind === 'ladder') {
+          this.go('ladder');
+          return [
+            { t: 'move', dir: 0 },
+            { t: 'selectWeapon', id: 'ladder' },
+          ];
+        }
         this.go('rope');
         return [{ t: 'move', dir: 0 }];
+      }
       case 'rope': {
         const m = plan.move;
         if (m.kind !== 'rope' || t.turnHold > 0) return [];

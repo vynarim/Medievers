@@ -4,7 +4,7 @@
 // they did, and keeps the best. With nothing worth a shot, it closes in on the enemy. It sees
 // what its house sees: the enemy's chausse-trapes are taken out of its copy of the match.
 import { AI_SCORE, type AiLevel } from '../content/ai.ts';
-import { isProjectile, isTargeted, type WeaponDef } from '../content/weapons.ts';
+import { isProjectile, isTargeted, type WeaponDef, type WeaponId } from '../content/weapons.ts';
 import { classOf, mayUse, visibleMines } from '../sim/classes.ts';
 import { MAX_POWER } from '../sim/commands.ts';
 import type { SimEvent } from '../sim/events.ts';
@@ -15,7 +15,8 @@ import { createProjectile, stepProjectile } from '../sim/projectiles/projectile.
 import { DRAGON_HALF_HEIGHT, DRAGON_HALF_WIDTH } from '../content/dragon.ts';
 import { canPlace, canSwitchUnit, type Sim, type SimView } from '../sim/sim.ts';
 import type { SimState } from '../sim/state.ts';
-import type { Terrain } from '../sim/terrain/terrain.ts';
+import { isSolid, type Terrain } from '../sim/terrain/terrain.ts';
+import { ladderLook, teleportLanding } from '../sim/tools.ts';
 import { ropeTarget } from '../sim/units/climb.ts';
 import { UNIT_HALF_WIDTH, UNIT_HEIGHT, type Unit } from '../sim/units/unit.ts';
 import { shotSpeed } from '../sim/weapons/weapons.ts';
@@ -389,17 +390,87 @@ function movesFor(v: SimView, u: Readonly<Unit>, team: number, level: AiLevel): 
     if (m.kind === 'walk' && (m.x < 8 || m.x > width - 8)) continue;
     moves.push(m);
   }
-  // A rope up a wall that hems it in, or down a drop, on either side (« Grimper »).
+  // A rope up a wall that hems it in, or down a drop, on either side (« Grimper »); where there
+  // is no rope to throw up a wall, a ladder against it.
   if (level.positions >= 6) {
     for (const face of [toward, toward > 0 ? -1 : 1] as const) {
       for (const dir of [-1, 1] as const) {
         if (ropeTarget(v.terrain as Terrain, x, subToPx(u.y), face, dir, v.rules.unit)) {
           moves.push({ kind: 'rope', dir, face });
+        } else if (dir < 0 && has(v, team, 'ladder') && wallAhead(v, u, face)) {
+          moves.push({ kind: 'ladder', face });
         }
       }
     }
+    // A jump towards the enemy under the banner, to come down a drop unhurt.
+    if (has(v, team, 'banner'))
+      moves.push({ kind: 'jump', jump: 'forward', dir: toward, banner: true });
   }
+  // The water of the Déluge or the fire of the parchment coming for it: a miracle to the heights.
+  if (has(v, team, 'miracle') && inDanger(v, u)) moves.push(...miraclesFor(v, u));
   return moves;
+}
+
+/** The house still has some of weapon `id` in its arsenal. */
+function has(v: SimView, team: number, id: WeaponId): boolean {
+  const i = v.rules.weapons.findIndex((w) => w.id === id);
+  return i >= 0 && (v.teams[team]?.ammo[i] ?? 0) !== 0;
+}
+
+/** A wall stands within a ladder's reach on side `face`, higher than a step. */
+function wallAhead(v: SimView, u: Readonly<Unit>, face: -1 | 1): boolean {
+  const t = v.terrain as Terrain;
+  const x = subToPx(u.x);
+  const feet = subToPx(u.y);
+  for (let d = UNIT_HALF_WIDTH + 1; d <= ladderLook(v.rules.unit); d++) {
+    if (isSolid(t, x + face * d, feet - 60)) return true;
+  }
+  return false;
+}
+
+/** The water within three turns, or the fire of the parchment by the next round, reaches it. */
+function inDanger(v: SimView, u: Readonly<Unit>): boolean {
+  const flood = v.rules.deluge;
+  if (flood && (v.deluge || v.turn.number >= flood.startTurn - 3)) {
+    const line = Math.min(v.waterY, v.terrain.height) - 3 * flood.risePx;
+    if (subToPx(u.y) > line) return true;
+  }
+  const burn = v.rules.burn;
+  if (burn && v.burnPx > 0) {
+    const x = subToPx(u.x);
+    const edge = v.burnPx + burn.advancePx + UNIT_HALF_WIDTH;
+    if (x < edge || x > v.terrain.width - edge) return true;
+  }
+  return false;
+}
+
+/** Miracles to the three highest places of the map, away from the burnt ends. */
+function miraclesFor(v: SimView, u: Readonly<Unit>): AiMove[] {
+  const t = v.terrain as Terrain;
+  const margin = v.burnPx + (v.rules.burn?.advancePx ?? 0) + 60;
+  const tops: { x: number; y: number }[] = [];
+  for (let x = margin; x < t.width - margin; x += 40) {
+    let y = 0;
+    while (y < t.height && !isSolid(t, x, y)) y++;
+    if (y < t.height) tops.push({ x, y });
+  }
+  tops.sort((a, b) => a.y - b.y);
+  const out: AiMove[] = [];
+  for (const p of tops) {
+    if (out.length >= 3) break;
+    if (out.some((m) => m.kind === 'miracle' && Math.abs(m.x - p.x) < 200)) continue;
+    const at = { x: p.x, y: p.y - (UNIT_HEIGHT >> 1) - 1 };
+    if (teleportLanding(v, u.id, at.x, at.y)) out.push({ kind: 'miracle', ...at });
+  }
+  return out;
+}
+
+/** What the tools a move spends are worth keeping: a limited weapon used up for a move. */
+function moveCost(m: AiMove): number {
+  if (m.kind === 'miracle' || m.kind === 'ladder' || (m.kind === 'jump' && m.banner)) {
+    return AI_SCORE.toolCost;
+  }
+  return 0;
 }
 
 /** The units the house may send: the given one, or the nearest to the enemy if it may choose. */
@@ -553,12 +624,14 @@ export function planTurn(input: PlanInput): PlanResult {
       // Moving there and passing: what the move alone is worth, and, once there, a look around
       // for throws (on the sandbox's live match, before the turn goes on).
       const stay: AiPlan = { unitId, move, shot: null };
-      const score = play(box, stay, team, level, (at) => {
-        const u = at.units.find((x) => x.id === unitId);
-        if (u?.alive && at.turn.phase === 'action') {
-          candidates.push(...candidatesFrom(at, u, move, level, team));
-        }
-      });
+      const score =
+        -moveCost(move) +
+        play(box, stay, team, level, (at) => {
+          const u = at.units.find((x) => x.id === unitId);
+          if (u?.alive && at.turn.phase === 'action') {
+            candidates.push(...candidatesFrom(at, u, move, level, team));
+          }
+        });
       played++;
       consider(stay, score);
     }
@@ -569,7 +642,7 @@ export function planTurn(input: PlanInput): PlanResult {
   const shots: { plan: AiPlan; score: number }[] = [];
   for (const c of candidates.slice(0, level.candidates)) {
     const plan: AiPlan = { unitId: c.unitId, move: c.move, shot: c.shot };
-    shots.push({ plan, score: play(box, plan, team, level) });
+    shots.push({ plan, score: play(box, plan, team, level) - moveCost(c.move) });
     played++;
   }
   // The hand shakes: the best throws are tried a little off on each side as well, and count
@@ -594,7 +667,7 @@ export function planTurn(input: PlanInput): PlanResult {
       ),
     );
     played += 2;
-    consider(s.plan, (s.score + worst) / 2);
+    consider(s.plan, (s.score + worst - moveCost(s.plan.move)) / 2);
   });
   const chosen = best as { plan: AiPlan; score: number } | null;
   const plan = chosen?.plan ?? { unitId: v0.turn.activeUnitId, move: { kind: 'stay' }, shot: null };

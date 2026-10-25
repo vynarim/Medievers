@@ -141,3 +141,119 @@ describe('rain of arrows (GDD §4.2)', () => {
     expect(events.some((e) => e.e === 'terrainCarved')).toBe(true);
   });
 });
+
+describe('miracle (GDD §4.4)', () => {
+  it('sets the unit down on the free point clicked, on the ground below, and ends the turn', () => {
+    const sim = match(CALM, 300, [1000]);
+    const events = run(
+      sim,
+      [
+        { t: 'selectWeapon', id: 'miracle' },
+        { t: 'fireAt', x: 700, y: 300 },
+      ],
+      0,
+    );
+    expect(events.some((e) => e.e === 'teleported')).toBe(true);
+    expect(px(unit(sim, 1)?.x)).toBe(700);
+    expect(px(unit(sim, 1)?.y)).toBe(500);
+    expect(sim.view().turn.phase).toBe('resolution');
+    run(sim, [], 300);
+    expect(unit(sim, 1)?.hp).toBe(100);
+  });
+
+  it('is refused in the ground, on another unit or over the void, the action kept', () => {
+    const sim = match(CALM, 300, [1000]);
+    sim.step([{ t: 'selectWeapon', id: 'miracle' }]);
+    for (const at of [
+      { x: 700, y: 540 },
+      { x: 1000, y: 440 },
+    ]) {
+      const events = run(sim, [{ t: 'fireAt', ...at }], 0);
+      expect(events.some((e) => e.e === 'toolRefused')).toBe(true);
+    }
+    expect(sim.view().turn.phase).toBe('action');
+    expect(px(unit(sim, 1)?.x)).toBe(300);
+  });
+});
+
+describe('ladder (GDD §4.4)', () => {
+  /** A rock cliff from x = 360, up to y = 360 (140 px above the plain). */
+  function cliff(): Mask {
+    const mask = flatMask();
+    for (let y = 360; y < 500; y++) mask.data.fill(Material.Rock, y * 1200 + 360, y * 1200 + 700);
+    return mask;
+  }
+
+  it('is set against the wall in front without taking the action, then climbed', () => {
+    const sim = match(CALM, 320, [1000], cliff());
+    const events = run(
+      sim,
+      [
+        { t: 'selectWeapon', id: 'ladder' },
+        { t: 'aim', angle: 3584 },
+        { t: 'fire', power: 0 },
+      ],
+      0,
+    );
+    const placed = events.find((e) => e.e === 'ladderPlaced');
+    expect(placed).toMatchObject({ x: 351, y: 358 });
+    expect(sim.view().turn.phase).toBe('action');
+    expect(sim.view().turn.fired).toBe(false);
+    run(sim, [{ t: 'climb', dir: -1 }], 400);
+    expect(px(unit(sim, 1)?.y)).toBe(360);
+    expect(px(unit(sim, 1)?.x)).toBeGreaterThan(340);
+  });
+});
+
+describe('banner (GDD §4.4)', () => {
+  /** A plateau 300 px above the plain, left of x = 400. */
+  function plateau(): Mask {
+    const mask = flatMask();
+    for (let y = 200; y < 500; y++) mask.data.fill(Material.Rock, y * 1200, y * 1200 + 400);
+    return mask;
+  }
+
+  const walkOff = (sim: Sim): void => {
+    run(sim, [{ t: 'move', dir: 1 }], 60);
+    run(sim, [{ t: 'move', dir: 0 }], 400);
+  };
+
+  it('slows a fall to nothing hurtful, without taking the action', () => {
+    const plain = match(CALM, 370, [1000], plateau());
+    walkOff(plain);
+    expect(unit(plain, 1)?.hp).toBeLessThan(100);
+
+    const sim = match(CALM, 370, [1000], plateau());
+    run(
+      sim,
+      [
+        { t: 'selectWeapon', id: 'banner' },
+        { t: 'fire', power: 0 },
+      ],
+      0,
+    );
+    expect(sim.view().turn.fired).toBe(false);
+    walkOff(sim);
+    expect(px(unit(sim, 1)?.y)).toBe(500);
+    expect(unit(sim, 1)?.hp).toBe(100);
+    expect(unit(sim, 1)?.banner).toBe(false);
+  });
+
+  it('drifts with the wind', () => {
+    const windy = (wind: number): number => {
+      const sim = match(CALM, 370, [1000], plateau());
+      (sim.view() as { turn: { wind: number } }).turn.wind = wind;
+      run(
+        sim,
+        [
+          { t: 'selectWeapon', id: 'banner' },
+          { t: 'fire', power: 0 },
+        ],
+        0,
+      );
+      walkOff(sim);
+      return px(unit(sim, 1)?.x);
+    };
+    expect(windy(8)).toBeGreaterThan(windy(0) + 60);
+  });
+});

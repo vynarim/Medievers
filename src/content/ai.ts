@@ -100,6 +100,8 @@ export const AI_SCORE = {
   selfDeath: -100,
   /** Régicide: the enemy king's HP and death count this many times over */
   kingFactor: 3,
+  /** a limited tool spent on a move (the miracle, a ladder, a banner) */
+  toolCost: 6,
   /** per px nearer the nearest enemy, so that, with nothing to shoot, it closes in */
   approachPerPx: 0.02,
 } as const;

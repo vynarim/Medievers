@@ -73,6 +73,8 @@ export interface Unit {
   alive: boolean;
   /** clinging to a ladder (rules.unit.climbSpeed): grounded, but held by the ladder */
   climbing?: boolean;
+  /** holding up a banner for its next fall (GDD §4.4); only ever set with the banner */
+  banner?: boolean;
   /** the weapon this unit last chose (rules.turn.rememberWeapon) */
   weapon?: WeaponId;
 }

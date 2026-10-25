@@ -48,6 +48,22 @@ function weaponFields(w: WeaponDef): TuningField[] {
       field(`${p}.dig.radius`, 'tuning.digRadius', 'units.px', 1, 1, 15, 40),
     ];
   }
+  if (w.teleport) {
+    return [
+      ammo,
+      field(`${p}.teleport.reach`, 'tuning.teleportReach', 'units.px', 1, 50, 50, 5000),
+    ];
+  }
+  if (w.ladder) {
+    return [ammo, field(`${p}.ladder.height`, 'tuning.ladderHeight', 'units.px', 1, 10, 40, 600)];
+  }
+  if (w.banner) {
+    return [
+      ammo,
+      field(`${p}.banner.fallSpeed`, 'tuning.bannerFall', 'units.pxPerTick', SUB, 0.25, 0.25, 10),
+      field(`${p}.banner.windDrift`, 'tuning.bannerDrift', 'units.subPxPerTick', 1, 5, 0, 200),
+    ];
+  }
   if (w.charge) {
     return [
       ammo,
