@@ -207,10 +207,9 @@ const STYLE = `
 #ui .info { display: none; }
 #ui.phone .ambient { display: none !important; }
 #ui.phone .info { display: inline-flex; align-items: center; justify-content: center; flex: none;
-  width: 34px; height: 34px; margin: 0 0 0 8px; vertical-align: middle; border-radius: 50%;
-  font-family: var(--caps); font-size: 22px; line-height: 1; color: var(--ceruse);
-  background: var(--lapis); border: 2px solid var(--encre); box-shadow: inset 0 0 0 2px var(--or);
-  pointer-events: auto; cursor: pointer; }
+  width: 30px; height: 30px; margin: 0 0 0 8px; vertical-align: middle; border-radius: 50%;
+  font-family: var(--text); font-size: 20px; font-weight: bold; line-height: 1; color: var(--lapis);
+  background: var(--ceruse); border: 2px solid var(--azur); pointer-events: auto; cursor: pointer; }
 #ui .info-bubble { position: fixed; z-index: 30; width: max-content; max-width: min(440px, calc(100vw - 24px));
   padding: 10px 16px 12px; font-family: var(--text); font-size: 19px; line-height: 1.4; text-align: left;
   border-radius: 14px; }
