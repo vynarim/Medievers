@@ -57,6 +57,9 @@ const ICONS = {
   close: `<path d="M6 6 L18 18 M18 6 L6 18" fill="none"/>`,
   prev: `<path d="M15 5 L8 12 L15 19" fill="none"/>`,
   next: `<path d="M9 5 L16 12 L9 19" fill="none"/>`,
+  /** an open eye: look at the battlefield */
+  eye: `<path d="M2.5 12 Q12 3.5 21.5 12 Q12 20.5 2.5 12 Z" fill="none"/>
+    <circle cx="12" cy="12" r="3.2" fill="currentColor" stroke="none"/>`,
   home: `<path d="M3.5 11.5 L12 4 L20.5 11.5 M6 9.5 V20 H18 V9.5" fill="none"/>
     <path d="M10 20 V14.5 H14 V20" fill="none"/>`,
   newMatch: `<path d="M12 5 V19 M5 12 H19" fill="none"/>`,

@@ -4,6 +4,7 @@
 import { FONT_CAPS } from './fonts.ts';
 import { t } from './i18n.ts';
 import { button, el, shield } from './overlay.ts';
+import { setIcon } from './icons.ts';
 import { COLORS, css, cssAlpha } from './tokens.ts';
 import { scalableCss } from './ui-scale.ts';
 
@@ -722,14 +723,14 @@ export function showEndScreen(root: HTMLElement, opts: EndScreenOptions): () => 
   const actions = el('div', 'end-actions');
   const onReplay = opts.onReplay;
   if (onReplay) {
-    const replay = button(t('end.replay'));
+    const replay = setIcon(button(''), 'play', t('end.replay'));
     replay.addEventListener('click', () => onReplay());
     actions.append(replay);
   }
   // Closes the tapestry to look at the battlefield as the battle left it.
-  const look = button(t('end.look'));
+  const look = setIcon(button(''), 'eye', t('end.look'));
   look.addEventListener('click', () => screen.remove());
-  const restart = button(t('end.restart'), 'fire');
+  const restart = setIcon(button('', 'fire'), 'newMatch', t('end.restart'));
   restart.addEventListener('click', () => opts.onRestart());
   actions.append(look, restart);
   card.appendChild(actions);
