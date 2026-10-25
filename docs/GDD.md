@@ -88,7 +88,7 @@
 - **Noms tirés à chaque partie** (décidé le 2026-10-25) : en partie, chaque maison porte un nom burlesque tiré de la graine de la partie (le même chez les deux joueurs en ligne et dans les replays) : une bête (Hareng, Limace, Lapin Tueur, Hirondelle Chargée…) avec un émail (d'Azur, de Gueules…) et une attitude accordée (Rampant, Couchant, Enrhumée…) : « Maison du Hareng d'Or Enrhumé » (décidé le 2026-10-25 : jamais deux bêtes dans un nom ; deux maisons d'une partie n'ont jamais la même bête, le même émail ni la même attitude ; « des Trois … » est retiré). Forme courte sans « Maison de » dans les bandeaux et la fiche : « Hareng d'Or Enrhumé ». Listes dans `fr.json` (`house.*`), tirage dans `src/ui/house-names.ts`. La couleur de la maison ne change pas ; l'écran de préparation garde les noms héraldiques.
 - Éditeur de blason (P1) : 7 émaux héraldiques × ~20 meubles × 6 partitions.
 - Le blason est peint sur l'écu, la bannière, la tente de départ et le HUD.
-- Noms des unités : listes de prénoms médiévaux tirés aléatoirement (Godefroy, Aubri, Ermengarde…), éditables.
+- Noms des unités : listes de prénoms médiévaux tirés aléatoirement (Godefroy, Aubri, Ermengarde…), éditables. Programmé le 2026-10-25 (sur retour de playtest : 12 prénoms, toujours les mêmes) : 115 prénoms d'ancien français, de femmes et d'hommes (`UNIT_NAMES`, `src/content/factions.ts`), tirés à chaque partie depuis sa graine, comme les noms de maisons : jamais deux fois le même dans une partie, les mêmes chez les joueurs en ligne et dans les replays.
 
 ## 4. Arsenal
 

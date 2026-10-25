@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { houseName, houseShortName, nameHouses } from '../../src/ui/house-names.ts';
+import { UNIT_NAMES, unitName } from '../../src/content/factions.ts';
 import { t, variantCount } from '../../src/ui/i18n.ts';
 
 describe('house names', () => {
@@ -31,5 +32,19 @@ describe('house names', () => {
     nameHouses(null);
     expect(houseName(0)).toBe("Maison du Lion d'Or");
     expect(houseShortName(0)).toBe("Lion d'Or");
+  });
+
+  it('give the units first names drawn anew for each match, never twice in one (2026-10-25)', () => {
+    const ids = Array.from({ length: 24 }, (_, i) => i + 1);
+    nameHouses(42);
+    const a = ids.map(unitName);
+    expect(new Set(a).size).toBe(24);
+    for (const n of a) expect(UNIT_NAMES).toContain(n);
+    nameHouses(42);
+    expect(ids.map(unitName)).toEqual(a);
+    nameHouses(43);
+    expect(ids.map(unitName)).not.toEqual(a);
+    nameHouses(null);
+    expect(unitName(1)).toBe('Godefroy');
   });
 });

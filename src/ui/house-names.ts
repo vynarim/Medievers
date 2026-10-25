@@ -3,7 +3,7 @@
 // tincture and its attitude, « Maison du Hareng d'Or Rampant ».
 // Each has a short form for the HUD and the unit card, without « Maison de » (2026-10-25):
 // « Hareng d'Or Rampant ». Cosmetic: never read by the sim.
-import { FACTIONS } from '../content/factions.ts';
+import { FACTIONS, UNIT_NAMES, setUnitNames } from '../content/factions.ts';
 import { t, variantCount } from './i18n.ts';
 
 /** A beast of the word lists: gender, elided article (« de l' »), singular, plural. */
@@ -83,6 +83,7 @@ let names: Name[] = [];
 /** Draws the houses' names of the match played with `seed`; null: their heraldic names. */
 export function nameHouses(seed: number | null): void {
   names = [];
+  nameUnits(seed);
   if (seed === null || variantCount('house.beast') === 0) return;
   const roll = dice(seed ^ 0x9e3779b9);
   const taken: Taken = {
@@ -91,6 +92,24 @@ export function nameHouses(seed: number | null): void {
     'house.pose': new Set(),
   };
   for (let team = 0; team < FACTIONS.length; team++) names.push(draw(roll, taken));
+}
+
+/**
+ * The units' first names for the match played with `seed`: the list shuffled (Fisher-Yates)
+ * with a draw of their own, so no two units of a match share one; null: the list as it is.
+ */
+function nameUnits(seed: number | null): void {
+  if (seed === null) {
+    setUnitNames(null);
+    return;
+  }
+  const roll = dice(seed ^ 0x6e616d65);
+  const order = [...UNIT_NAMES];
+  for (let i = order.length - 1; i > 0; i--) {
+    const j = Math.floor(roll() * (i + 1));
+    [order[i], order[j]] = [order[j] ?? '', order[i] ?? ''];
+  }
+  setUnitNames(order);
 }
 
 /** The name of house `team` in this match, in full: for sentences (« la Maison du Hareng »). */
