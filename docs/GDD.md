@@ -250,6 +250,7 @@ Le dragon de la « vie du ciel » n'est plus un décor : il est dans la simulati
 
 ### 5 bis. Pluie et foudre (décidé et programmé le 2026-10-25, sur demande)
 - À chaque fin de tour par beau temps, 12 % de chances qu'il se mette à pleuvoir, pour 2 à 5 tours : les nuages virent au gris et la pluie tombe en biais, penchée par le vent (visuel seulement).
+- L'éclair reste à l'écran 3,2 s, dont 2,2 s à pleine intensité (2026-10-25, playtest : on le voyait à peine en 1,3 s).
 - À chaque fin de tour de pluie, 30 % de chances qu'**un éclair** frappe une colonne tirée au hasard (hors des 5 % de chaque bout), sur le sol ou l'eau : explosion de 35 PV dans un rayon de 45 px, avec cratère ; elle fait sauter les barils, éclater les reliquaires, etc. Elle part au premier instant du tour suivant.
 - Valeurs dans `src/content/weather.ts` (`MatchRules.weather`, absent des vieux logs : beau temps), tirages au PRNG du sim, réglables dans ⚙ Réglages (onglet Météo).
 
@@ -315,7 +316,7 @@ L'IA joue via `InputSource` et produit les mêmes commandes qu'un humain. Elle �
 | Pause / menu | Échap : menu Reprendre, Recommencer, Aide, Réglages. Le temps s'arrête aussi pendant l'aide et les réglages, pas pendant l'arsenal |
 
 ### 8.2 Tablette
-- **Pad virtuel** en bas à gauche (← → saut, saut arrière, **⟳ Viser** maintenu : la visée fait le tour complet et l'unité se retourne quand elle passe derrière elle), boutons **Arsenal**, **Passer** et **Tir** en bas à droite, **Aide**, **Réglages** et **Pause** en haut à droite.
+- **Pad virtuel** en bas à gauche (← → saut, saut arrière, **⟳ Viser** maintenu : la visée fait le tour complet et l'unité se retourne quand elle passe derrière elle), boutons **Arsenal**, **Passer** et **Tir** en bas à droite, **Aide**, **Musique** (♪, depuis le 2026-10-25, à la place de Réglages, ouverts depuis le menu Pause) et **Pause** en haut à droite.
 - **Pointe de visée** : glisser la pointe rouge de la flèche de visée oriente le tir, sans tirer.
 - **Drag-to-aim** : glisser depuis l'unité active. Une ligne pointillée enluminée prolonge la trajectoire, avec une longueur limitée (passif Archer ×2).
 - **Mode jauge** : roue d'angle autour de l'unité et bouton Tir maintenu pour la puissance.
@@ -335,7 +336,7 @@ L'IA joue via `InputSource` et produit les mêmes commandes qu'un humain. Elle �
 - **Arsenal** : grille d'icônes dans un cadre architecturé (arcades), avec les munitions en chiffres romains ou arabes (option).
 - **Bulle d'objet** (décidé le 2026-10-24) : un clic (ou un appui) sur un baril, un reliquaire, la cuisine de campagne, une bête des marges ou un pot posé ouvre une bulle au-dessus de lui : son nom et ce qu'il fait, avec les valeurs de la partie. Elle le suit, se ferme d'un clic ou quand l'objet disparaît. Un reliquaire piégé n'est jamais signalé. Chaque arme de l'arsenal a aussi une phrase qui dit à quoi elle sert.
 - **Dégâts** : chiffres en écriture gothique qui s'élèvent et s'estompent.
-- **Aide** (décidé le 2026-10-24) : le bouton Aide ouvre un **tutoriel illustré** en quelques pages courtes (le but, un tour de jeu, viser et tirer, les armes, le vent, la caméra, les raccourcis), avec un schéma par page ; on y navigue par Précédent / Suivant.
+- **Aide** (décidé le 2026-10-24) : le bouton Aide ouvre un **tutoriel illustré** en quelques pages courtes (le but, un tour de jeu, viser et tirer, les armes, le vent, la caméra, les raccourcis), avec un schéma par page ; on y navigue par Précédent / Suivant. **Mise à jour du 2026-10-25** : neuf pages d'**aide de base**, puis une **aide avancée** de douze sujets en texte (préparer son tour, tirs, pots et bêtes, faucon et frappes du ciel, mêlée, outils, machines, tours, eau-feu-ciel, reliquaires-barils-cuisine, règles de la partie, clavier), ouverte depuis chaque page de base par « Aide avancée », avec son sommaire (`src/ui/tutorial.ts`, clés `tuto.adv.*`).
 - **Écrans** : titre (page enluminée avec lettrine animée), nouvelle partie, équipes et blasons, options, crédits, fin de partie (scène de triomphe peinte et tableau des exploits).
 
 ## 10. Cartes (V1 : 6, P1 : +4)

@@ -181,8 +181,8 @@ const EDGE_SCROLL_SPEED = 900;
 /** ms an explosion burst lasts */
 const BURST_MS = 520;
 /** ms a lightning bolt stays on screen, ms it holds full before fading, ms it strikes again */
-const BOLT_MS = 1300;
-const BOLT_HOLD_MS = 800;
+const BOLT_MS = 3200;
+const BOLT_HOLD_MS = 2200;
 const BOLT_RESTRIKE_MS = 260;
 /** px from the body centre to the middle of the aim arrowhead, which can be dragged */
 const AIM_TIP = 172;

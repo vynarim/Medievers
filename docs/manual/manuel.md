@@ -124,7 +124,7 @@ Toutes les armes sont jouables {{st:jeu}}. Les munitions limitées se regagnent 
 
 La **masse d'armes** est jouable {{st:jeu}} : le bouton devient « Frapper ». Elle se charge comme un tir : maintenez « Frapper » (ou Espace), la jauge se remplit, relâchez pour frapper, à 34 pixels devant vous dans la direction visée. Les dégâts sont toujours les mêmes ; plus la jauge est pleine, plus l'ennemi vole loin (jauge vide : un cinquième de la distance). Sans rien à frapper à portée dans la direction visée, le bouton **Frapper** reste grisé : on ne gâche pas son action à battre l'air. 
 
-L'**épée** et la **charge à l'écu** sont jouables aussi {{st:jeu}}. L'épée frappe aussitôt, droit devant, du côté où vous regardez (une pression sur ← ou → vous retourne sans rien coûter) ; comme la masse, elle refuse de battre l'air. La charge, au bouton « Charger », vous lance sur 120 pixels droit devant : chaque ennemi (ou ami !) que votre écu rencontre perd 20 PV et culbute devant vous. Elle s'arrête contre un mur ou au bord d'un vide.
+L'**épée** et la **charge à l'écu** sont jouables aussi {{st:jeu}}. L'épée frappe aussitôt, d'un moulinet, à droite et à gauche à la fois ; comme la masse, elle refuse de battre l'air (il suffit d'un ennemi d'un côté ou de l'autre). La charge, au bouton « Charger », vous lance sur 120 pixels droit devant : chaque ennemi (ou ami !) que votre écu rencontre perd 20 PV et culbute devant vous. Elle s'arrête contre un mur ou au bord d'un vide.
 
 | Arme | Dégâts | Recul | À savoir |
 |---|---|---|---|
@@ -342,7 +342,7 @@ En bas à droite, les armes :
 - **Passer** (le sablier) : finir son tour sans tirer ; après le tir, il devient **Fin du tour** ;
 - **Tirer** est aux couleurs de la maison qui joue : on sait toujours à qui c'est le tour. Maintenir pour charger la puissance, relâcher pour tirer. Une jauge pleine repart de zéro : rien ne part tout seul, il faut lâcher au bon moment.
 
-Au-dessus, le cartouche de l'arme en main montre la jauge de puissance ; sur téléphone tenu en hauteur, c'est le bouton Tirer lui-même qui se remplit d'or. En haut à droite : **plein écran** (quatre flèches vers les coins, comme F11 ; un second appui en sort ; absent sur téléphone), **recentrer** (revenir au zoom par défaut et recentrer ; il n'apparaît que lorsque vous avez zoomé ou déplacé la vue), **?** (l'aide : un petit tutoriel illustré en sept pages : le but, le tour, se déplacer, viser, tirer, le vent, la caméra), **la roue dentée** (les réglages) et **Pause** (trois traits ; sur téléphone, il donne aussi l'aide et les réglages). En haut au centre, la bannière du titre montre le vent et le numéro du tour ; en haut à gauche, les bandeaux des maisons, celui de la maison qui joue brillant à sa couleur. La souris posée contre un bord de l'écran fait défiler la carte. Le menu de pause (aussi sur Échap) propose de reprendre, de recommencer la partie, de lire l'aide ou d'ouvrir les réglages ; le temps est arrêté tant qu'il est ouvert, comme pendant l'aide et les réglages.
+Pendant la charge, c'est le bouton Tirer lui-même qui se remplit d'or. En haut à droite : **plein écran** (quatre flèches vers les coins, comme F11 ; un second appui en sort ; absent sur téléphone), **recentrer** (revenir au zoom par défaut et recentrer ; il n'apparaît que lorsque vous avez zoomé ou déplacé la vue), **?** (l'aide : neuf pages illustrées pour l'essentiel, puis une **aide avancée** en douze sujets, ouverte depuis n'importe quelle page), **la note de musique** (coupe ou remet la musique) et **Pause** (trois traits ; sur téléphone, il donne aussi l'aide et les réglages). En haut au centre, la bannière du titre montre le vent et le numéro du tour ; en haut à gauche, les bandeaux des maisons, celui de la maison qui joue brillant à sa couleur. La souris posée contre un bord de l'écran fait défiler la carte. Le menu de pause (aussi sur Échap) propose de reprendre, de recommencer la partie, de lire l'aide ou d'ouvrir les réglages ; le temps est arrêté tant qu'il est ouvert, comme pendant l'aide et les réglages.
 
 On peut aussi viser « à la fronde » : appuyer sur son combattant, tirer franchement en arrière (le trait devient rouge quand le tir est armé), relâcher. Un simple clic sur le combattant ne tire jamais, et revenir près de lui avant de relâcher annule le tir.
 
@@ -350,7 +350,7 @@ On peut aussi viser « à la fronde » : appuyer sur son combattant, tirer franc
 
 Au-dessus de chaque combattant, une petite étiquette porte son nom, et une fine barre à ses couleurs montre ce qui lui reste de vie. À la souris, il suffit de passer sur un combattant pour voir sa classe et ses points de vie exacts.
 
-Un clic sur n'importe quel combattant ouvre sa fiche : nom, maison, points de vie, état (joue ce tour, attend, en l'air, tombé), classe, talent et contrepartie, un rappel des règles de marche, de chute et de mort, et, pour le combattant qui joue, l'arme en main avec ses caractéristiques.
+Un clic sur n'importe quel combattant ouvre sa fiche : nom, maison, points de vie, état (joue ce tour, attend, en l'air, tombé), classe, talent et contrepartie, et, pour le combattant qui joue, l'arme en main avec ses caractéristiques. Pendant le tour d'une autre maison, la fiche d'un de vos combattants propose **Préparer une arme…**.
 
 ### Les bulles d'objets {{st:jeu}}
 

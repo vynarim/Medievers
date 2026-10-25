@@ -208,6 +208,13 @@ const STYLE = `
 #ui .tuto-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 12px;
   flex: none; }
 #ui .tuto-count { font-family: var(--caps); font-size: 16px; }
+/* Between Previous and Next: the page count, and the way to the advanced help. */
+#ui .tuto-mid { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+#ui button.tuto-more { min-height: 32px; padding: 2px 12px; font-size: 14px; background: none;
+  box-shadow: none; border-style: dashed; }
+#ui .tuto-topics { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 8px; }
+#ui .tuto-topics button { text-align: left; font-size: 16px; }
 #ui .help p, #ui .pause p { font-size: 17px; line-height: 1.5; margin: 0 0 10px; }
 #ui .pause { min-width: 360px; text-align: center; }
 #ui .pause .actions { flex-direction: column; align-items: stretch; }

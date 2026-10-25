@@ -113,42 +113,108 @@ const DRAWINGS: readonly string[] = [
     <circle cx="420" cy="30" r="8" fill="none" stroke="${C.ink}" stroke-width="3"/>`),
 ];
 
-/** Fills `panel` with the tutorial, starting at page 1. */
+/** Topics of the advanced help, after the basic pages: text only (tuto.adv.N.*). */
+const ADVANCED_TOPICS = 12;
+
+/** The page shown: a basic one, the advanced help's contents, or one of its topics. */
+type Page =
+  | { readonly kind: 'basic'; readonly n: number }
+  | { readonly kind: 'index' }
+  | { readonly kind: 'topic'; readonly n: number };
+
+/** The text of an i18n key, one paragraph per line, icons drawn in. */
+function paragraphs(key: string): HTMLElement {
+  const body = el('div', 'tuto-body');
+  for (const line of t(key).split('\n')) {
+    const p = el('p');
+    p.append(...withIcons(line));
+    body.append(p);
+  }
+  return body;
+}
+
+/**
+ * Fills `panel` with the help: the basic tutorial, page 1 first, then the advanced help, reached
+ * from any basic page and from the last one.
+ */
 export function renderTutorial(panel: HTMLElement, close: () => void): void {
-  let page = 0;
   const count = DRAWINGS.length;
-  const show = (): void => {
-    const n = page + 1;
-    const pic = el('div', 'tuto-pic');
-    pic.innerHTML = DRAWINGS[page] ?? '';
-    const prev = setIcon(button(''), 'prev', t('tuto.prev'));
-    prev.disabled = page === 0;
-    prev.addEventListener('click', () => {
-      page = Math.max(0, page - 1);
-      show();
-    });
-    const next = button('');
-    if (page === count - 1) next.textContent = t('tuto.done');
-    else next.append(el('span', 'label', t('tuto.next')), icon('next'));
-    next.classList.add('has-icon');
-    next.addEventListener('click', () => {
-      if (page === count - 1) close();
-      else {
-        page++;
-        show();
-      }
-    });
-    const nav = el('div', 'tuto-nav');
-    nav.append(prev, el('span', 'tuto-count', t('tuto.count', { n, count })), next);
+  const go = (page: Page): void => {
     const closeBtn = setIcon(button('', 'close'), 'close');
     closeBtn.addEventListener('click', close);
-    const body = el('div', 'tuto-body');
-    for (const line of t(`tuto.${n}.body`).split('\n')) {
-      const p = el('p');
-      p.append(...withIcons(line));
-      body.append(p);
+    const nav = el('div', 'tuto-nav');
+    const step = (label: string, ico: 'prev' | 'next', to: Page | null): HTMLButtonElement => {
+      const b = button('');
+      if (ico === 'prev') setIcon(b, 'prev', label);
+      else b.append(el('span', 'label', label), icon('next'));
+      b.classList.add('has-icon');
+      b.disabled = to === null;
+      if (to) b.addEventListener('click', () => go(to));
+      return b;
+    };
+    const more = (): HTMLButtonElement => {
+      const b = button(t('tuto.more'), 'tuto-more');
+      b.addEventListener('click', () => go({ kind: 'index' }));
+      return b;
+    };
+    if (page.kind === 'basic') {
+      const n = page.n;
+      const pic = el('div', 'tuto-pic');
+      pic.innerHTML = DRAWINGS[n - 1] ?? '';
+      const prev = step(t('tuto.prev'), 'prev', n > 1 ? { kind: 'basic', n: n - 1 } : null);
+      let next: HTMLButtonElement;
+      if (n === count) {
+        next = button(t('tuto.done'));
+        next.addEventListener('click', close);
+      } else {
+        next = step(t('tuto.next'), 'next', { kind: 'basic', n: n + 1 });
+      }
+      const middle = el('div', 'tuto-mid');
+      middle.append(el('span', 'tuto-count', t('tuto.count', { n, count })), more());
+      nav.append(prev, middle, next);
+      panel.replaceChildren(
+        closeBtn,
+        el('h2', '', t(`tuto.${n}.title`)),
+        pic,
+        paragraphs(`tuto.${n}.body`),
+        nav,
+      );
+      return;
     }
-    panel.replaceChildren(closeBtn, el('h2', '', t(`tuto.${n}.title`)), pic, body, nav);
+    if (page.kind === 'index') {
+      const list = el('div', 'tuto-topics');
+      for (let k = 1; k <= ADVANCED_TOPICS; k++) {
+        const b = button(t(`tuto.adv.${k}.title`));
+        b.addEventListener('click', () => go({ kind: 'topic', n: k }));
+        list.append(b);
+      }
+      const body = el('div', 'tuto-body');
+      body.append(el('p', '', t('tuto.adv.intro')), list);
+      nav.append(step(t('tuto.adv.back'), 'prev', { kind: 'basic', n: 1 }));
+      panel.replaceChildren(closeBtn, el('h2', '', t('tuto.adv.title')), body, nav);
+      return;
+    }
+    const n = page.n;
+    const prev = step(
+      n > 1 ? t('tuto.prev') : t('tuto.adv.index'),
+      'prev',
+      n > 1 ? { kind: 'topic', n: n - 1 } : { kind: 'index' },
+    );
+    const next =
+      n < ADVANCED_TOPICS
+        ? step(t('tuto.next'), 'next', { kind: 'topic', n: n + 1 })
+        : step(t('tuto.adv.index'), 'next', { kind: 'index' });
+    const middle = el('div', 'tuto-mid');
+    const index = button(t('tuto.adv.index'), 'tuto-more');
+    index.addEventListener('click', () => go({ kind: 'index' }));
+    middle.append(el('span', 'tuto-count', t('tuto.count', { n, count: ADVANCED_TOPICS })), index);
+    nav.append(prev, middle, next);
+    panel.replaceChildren(
+      closeBtn,
+      el('h2', '', t(`tuto.adv.${n}.title`)),
+      paragraphs(`tuto.adv.${n}.body`),
+      nav,
+    );
   };
-  show();
+  go({ kind: 'basic', n: 1 });
 }
