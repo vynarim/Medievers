@@ -12,7 +12,7 @@ import {
   type MatchSetup,
   type Player,
 } from '../app/match-setup.ts';
-import { AI_LEVEL_IDS } from '../content/ai.ts';
+import { AI_LEVEL_IDS, type AiLevelId } from '../content/ai.ts';
 import { loadLastReplay, parseLog } from '../app/autosave.ts';
 import type { GameLog } from '../sim/log.ts';
 import { t } from './i18n.ts';
@@ -36,7 +36,7 @@ const STYLE = `
 #ui .setup select { font: inherit; font-size: 16px; min-height: 48px; padding: 4px; pointer-events: auto;
   width: 118px; border: 2px solid var(--encre); border-radius: 4px; background: var(--ceruse);
   color: var(--encre); }
-#ui .setup select.player { width: 168px; font-family: var(--caps); }
+#ui .setup select.player { width: 196px; font-family: var(--caps); }
 #ui .setup .tools { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
 #ui .setup .tools button, #ui .setup .start button { white-space: nowrap; flex: none; }
 #ui .setup .tools .note { flex: 1 1 auto; margin: 0 0 0 8px; font-size: 15px; }
@@ -61,7 +61,7 @@ const STYLE = `
 #ui.phone .setup .scheme b { font-size: 16px; }
 #ui.phone .setup .house { flex-wrap: wrap; padding: 8px 0; }
 #ui.phone .setup .house > * { order: 2; }
-#ui.phone .setup .house .name { order: 0; flex: 1 1 calc(100% - 50px); }
+#ui.phone .setup .house .name { order: 0; flex: 1 1 calc(100% - 60px); min-width: 0; }
 #ui.phone .setup .house button.drop { order: 1; }
 #ui.phone .setup select { flex: 1 1 30%; min-width: 0; width: auto; }
 #ui.phone .setup select.player { flex: 1 1 100%; width: auto; }
@@ -152,7 +152,10 @@ export function showSetupScreen(
       const who = el('select', 'player');
       who.title = t('setup.player');
       for (const id of ['human', ...AI_LEVEL_IDS] as Player[]) {
-        const o = el('option', '', t(`setup.player.${id}`));
+        // The AI's levels go from the easiest to the hardest: one to three stars.
+        const k = AI_LEVEL_IDS.indexOf(id as AiLevelId);
+        const stars = k < 0 ? '' : ` ${'★'.repeat(k + 1)}${'☆'.repeat(AI_LEVEL_IDS.length - k - 1)}`;
+        const o = el('option', '', `${t(`setup.player.${id}`)}${stars}`);
         o.value = id;
         o.selected = id === players[h];
         who.append(o);

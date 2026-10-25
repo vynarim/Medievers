@@ -1460,7 +1460,7 @@
   "online.error.format": "Un code a six signes, par exemple K7M-2QX.",
   "setup.houses": "Les maisons et leurs combattants",
   "setup.unit": "Combattant {n}",
-  "setup.player": "Qui mène cette maison : vous, ou l'IA à l'un de ses niveaux",
+  "setup.player": "Qui mène cette maison : vous, ou l'IA, de ★ (Écuyer, le plus facile) à ★★★ (Connétable, le plus redoutable)",
   "setup.player.human": "Vous",
   "setup.player.squire": "IA Écuyer",
   "setup.player.knight": "IA Chevalier",
