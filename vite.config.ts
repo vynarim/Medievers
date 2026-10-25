@@ -42,6 +42,9 @@ export default defineConfig(({ command }) => ({
   resolve: {
     alias: [{ find: /^@firebase\/app$/, replacement: firebaseApp }],
   },
+  // Always the same port, open to the local network (a tablet on the Wi-Fi): the Firebase web
+  // key only answers the addresses it lists, so the dev server must not wander to another port.
+  server: { port: 5173, strictPort: true, host: true },
   build: {
     target: 'es2023',
     chunkSizeWarningLimit: 2000,
