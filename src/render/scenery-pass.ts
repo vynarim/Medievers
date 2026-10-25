@@ -25,6 +25,9 @@ export const PASS_GROUND = crest(420, 20, 4, 0.4);
 /** Crest of the high pastures further back, at the foot of the crags. */
 const PASS_PASTURE = crest(330, 26, 3, 1.1);
 
+/** px: the highest a summit may reach in the far texture, its snow and ink included */
+const CRAG_TOP = 24;
+
 /** A mule under its pack: long ears, a striped load roped on its back. */
 function mule(ctx: Ctx, x: number, feet: number, f: number, s: number): void {
   const coat = COLORS.terreOmbre;
@@ -304,19 +307,19 @@ function pilgrim(ctx: Ctx, x: number, feet: number, cloak: number): void {
 
 export function drawFarPass(ctx: Ctx): void {
   ctx.clearRect(0, 0, FAR_W, FAR_H);
-  // The high range, pale with distance.
+  // The high range, pale with distance: no summit above CRAG_TOP, or the texture would cut it.
   layer(ctx, 0.5, (l) => {
     for (const [x, w, h] of [
-      [150, 420, 380],
-      [520, 360, 300],
-      [900, 480, 430],
-      [1350, 380, 330],
-      [1780, 520, 460],
-      [2250, 400, 350],
-      [2650, 460, 410],
-      [3050, 380, 320],
+      [150, 420, 300],
+      [520, 360, 250],
+      [900, 480, 340],
+      [1350, 380, 270],
+      [1780, 520, 350],
+      [2250, 400, 285],
+      [2650, 460, 320],
+      [3050, 380, 260],
     ] as const) {
-      cragWrapped(l, x, 380, w, h, COLORS.azur);
+      cragWrapped(l, x, 380, w, Math.min(h, Math.floor((380 - CRAG_TOP) / 1.08)), COLORS.azur);
     }
   });
   // The nearer crags and the high pastures at their feet.
