@@ -129,7 +129,8 @@ export class TurnScript {
           passed ||
           this.still >= WALK_STUCK ||
           t.walkDir === 0 ||
-          !u.grounded
+          // Out of breath (rules.unit.moveBudget).
+          (v.rules.unit.moveBudget !== undefined && t.moveLeft === 0)
         ) {
           this.go('settle');
           return [{ t: 'move', dir: 0 }];

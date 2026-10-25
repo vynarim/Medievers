@@ -129,6 +129,34 @@ describe('the AI turn (GDD §7.2)', () => {
   });
 });
 
+describe('the AI script', () => {
+  it('walks its unit to a point a walk away, on every map theme (BACKLOG 5.2)', () => {
+    for (const theme of MAP_THEMES) {
+      const setup = defaultSetup(false);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { placementTicks, ...turn } = rulesFor(setup, {}).turn;
+      const rules = { ...rulesFor(setup, {}), turn };
+      const built = buildMap(theme, 5);
+      const sim = new Sim(matchConfig(built, setup, rules), 5, built.mask);
+      for (let i = 0; i < 3000 && sim.view().turn.phase !== 'action'; i++) sim.step();
+      const v = sim.view();
+      const u = v.units.find((x) => x.id === v.turn.activeUnitId);
+      const x0 = (u?.x ?? 0) >> 8;
+      // Towards the middle of the map, 120 px.
+      const target = x0 + (x0 < v.terrain.width / 2 ? 120 : -120);
+      const plan: AiPlan = {
+        unitId: v.turn.activeUnitId,
+        move: { kind: 'walk', x: target },
+        shot: null,
+      };
+      const script = new TurnScript(plan, SANDBOX_PACE);
+      for (let i = 0; i < 600 && !script.moved; i++) sim.step(script.next(sim.view()));
+      const x = (sim.view().units.find((w) => w.id === plan.unitId)?.x ?? 0) >> 8;
+      expect(Math.abs(x - target)).toBeLessThanOrEqual(4);
+    }
+  });
+});
+
 describe('the AI controller', () => {
   it('places its units and plays whole turns, house against house, on every map theme', () => {
     for (const theme of MAP_THEMES) {
