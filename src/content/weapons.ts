@@ -19,7 +19,8 @@ export type WeaponId =
   | 'arrowRain'
   | 'miracle'
   | 'ladder'
-  | 'banner';
+  | 'banner'
+  | 'flamingPig';
 
 /** Fragments a cluster weapon throws when it bursts (pot de poix, GDD §4.1). */
 export interface FragmentDef {
@@ -118,6 +119,18 @@ export interface BannerDef {
   readonly windDrift: number;
 }
 
+/** Cochon enflammé (GDD §4.1): a beast let loose that trots on by itself, then goes up. */
+export interface WalkerDef {
+  /** sub-px/tick it trots at */
+  readonly speed: number;
+  /** ticks before it goes up of itself */
+  readonly fuse: number;
+  /** sub-px/tick: the speed of its hop over what blocks its way */
+  readonly hop: number;
+  /** px: the highest step it trots up without a hop */
+  readonly maxStep: number;
+}
+
 export interface WeaponDef {
   readonly id: WeaponId;
   /** behaviour implemented in src/sim/weapons */
@@ -133,7 +146,8 @@ export interface WeaponDef {
     | 'strike'
     | 'teleport'
     | 'ladder'
-    | 'banner';
+    | 'banner'
+    | 'walker';
   /** px; 0 = point projectile */
   readonly projectileRadius: number;
   /** percent of wind acceleration applied (GDD §4.1 « Vent ») */
@@ -200,6 +214,7 @@ export interface WeaponDef {
   readonly free?: boolean;
   /** Using it ends the turn at once (the miracle). */
   readonly endsTurn?: boolean;
+  readonly walker?: WalkerDef;
   readonly teleport?: TeleportDef;
   readonly ladder?: LadderDef;
   readonly banner?: BannerDef;
@@ -434,6 +449,18 @@ export const WEAPONS: readonly WeaponDef[] = [
     knockbackPct: 30,
     ammo: 1,
     strike: { count: 12, spacing: 14, speed: 2 * 256, range: 1600, height: 300 },
+  },
+  {
+    // Cochon enflammé (2026-10-25): let loose on the facing side, it trots at 2 px a tick, hops
+    // over walls, and goes up at a second press of Fire, or after 8 s, or when a blast reaches it.
+    id: 'flamingPig',
+    behavior: 'walker',
+    ...TOOL,
+    damage: 70,
+    explosionRadius: 90,
+    knockbackPct: 100,
+    ammo: 1,
+    walker: { speed: 2 * 256, fuse: 8 * 60, hop: 7 * 256, maxStep: 8 },
   },
   {
     // Miracle (2026-10-25): the unit is set down on the free point clicked (or along the aim, as

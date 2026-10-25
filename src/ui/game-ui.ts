@@ -558,6 +558,8 @@ export class GameUi {
     }
     // Online, the other player's turns are watched, not played.
     const ours = this.mine(view.turn.activeTeam);
+    // A flaming pig let loose: Fire sets it off, after the shot too.
+    const pig = view.walkers.some((w) => w.ownerId === view.turn.activeUnitId);
     for (const b of this.actionButtons) {
       const when = b.dataset.when;
       // Not the player's house (the AI's, or online the other player's): nothing to press.
@@ -577,7 +579,9 @@ export class GameUi {
                     ? phase !== 'action'
                     : when === 'end'
                       ? !canMove
-                      : phase !== 'action' || (b === this.fire && this.strikeRefused));
+                      : b === this.fire && pig
+                        ? false
+                        : phase !== 'action' || (b === this.fire && this.strikeRefused));
     }
     // Before the shot it passes the turn; after it, it ends the turn.
     const skipLabel = phase === 'retreat' ? t('ui.endTurn') : t('ui.skip');
@@ -609,7 +613,7 @@ export class GameUi {
       this.arsenalButton.title = t(`weapons.${view.turn.weapon}`);
     }
     // Fire says what the weapon does: strike, dig, set, build…
-    const fireLabel = t(`ui.fire.${def?.behavior ?? 'directHit'}`);
+    const fireLabel = pig ? t('ui.fire.detonate') : t(`ui.fire.${def?.behavior ?? 'directHit'}`);
     if (this.fireLabel.textContent !== fireLabel) this.fireLabel.textContent = fireLabel;
     if (power !== this.firePower) {
       this.firePower = power;

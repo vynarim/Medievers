@@ -64,6 +64,15 @@ function weaponFields(w: WeaponDef): TuningField[] {
       field(`${p}.banner.windDrift`, 'tuning.bannerDrift', 'units.subPxPerTick', 1, 5, 0, 200),
     ];
   }
+  if (w.walker) {
+    return [
+      ammo,
+      field(`${p}.damage`, 'tuning.damage', 'units.hp', 1, 1, 0, 200),
+      field(`${p}.explosionRadius`, 'tuning.explosionRadius', 'units.px', 1, 1, 1, 300),
+      field(`${p}.walker.speed`, 'tuning.walkerSpeed', 'units.pxPerTick', SUB, 0.25, 0.25, 8),
+      field(`${p}.walker.fuse`, 'tuning.walkerFuse', 'units.seconds', TPS, 1, 1, 20),
+    ];
+  }
   if (w.charge) {
     return [
       ammo,

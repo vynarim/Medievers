@@ -137,6 +137,8 @@ export type SimEvent =
     }
   /** a ladder was set up, its left edge at x, from y down h px */
   | { readonly e: 'ladderPlaced'; readonly x: number; readonly y: number; readonly h: number }
+  /** a flaming pig went up (blast queued), or fizzled out in the water or off the map */
+  | { readonly e: 'walkerGone'; readonly id: number; readonly fizzled: boolean }
   /** a unit held up its banner */
   | { readonly e: 'bannerRaised'; readonly unitId: number }
   | { readonly e: 'gameOver'; readonly winner: number };

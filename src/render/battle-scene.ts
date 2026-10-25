@@ -533,6 +533,12 @@ export class BattleScene extends Phaser.Scene {
       // A point counts with a unit's label above it: lower it so the shot itself is framed.
       points.push({ x, y: y + 150 });
     }
+    // A flaming pig trotting is followed like a shot.
+    const pig = v.walkers[0];
+    if (!shot && pig) {
+      const [x, y] = this.pos(`w${pig.id}`, alpha, pig.x, pig.y);
+      points.push({ x, y: y + 150 });
+    }
     const { width, height } = this.scale;
     const u = uiScale(width, height);
     const phone = isPhonePortrait(width, height);
@@ -547,7 +553,7 @@ export class BattleScene extends Phaser.Scene {
     const [ax, ay] = this.pos(`u${active.id}`, alpha, active.x, active.y);
     const near: Point[] = [{ x: ax, y: ay }];
     const last = points[points.length - 1];
-    if (shot && last) near.push(last);
+    if ((shot || pig) && last) near.push(last);
     return frame(near, width, height, margins, floor, closest);
   }
 
@@ -1168,6 +1174,7 @@ export class BattleScene extends Phaser.Scene {
     for (const u of v.units) put(`u${u.id}`, u.x, u.y);
     for (const s of v.shots) put(`s${s.projectile.id}`, s.projectile.x, s.projectile.y);
     for (const c of v.crates) put(`c${c.id}`, c.x, c.y);
+    for (const w of v.walkers) put(`w${w.id}`, w.x, w.y);
     if (v.dragon) put(`d${v.dragon.id}`, v.dragon.x, v.dragon.y);
     if (v.unicorn) put(`n${v.unicorn.id}`, v.unicorn.x, v.unicorn.y);
     for (const key of this.interp.keys()) if (!seen.has(key)) this.interp.delete(key);
@@ -1354,8 +1361,42 @@ export class BattleScene extends Phaser.Scene {
       }
     }
 
+    this.drawWalkers(g, alpha, time);
     this.drawBursts(g, time);
     this.drawHalos(g, time);
+  }
+
+  /** Flaming pigs: a pink pig trotting, its back on fire. */
+  private drawWalkers(g: Phaser.GameObjects.Graphics, alpha: number, time: number): void {
+    for (const w of this.sim.view().walkers) {
+      const [x, y] = this.pos(`w${w.id}`, alpha, w.x, w.y);
+      const d = w.dir;
+      const step = w.grounded ? Math.sin(time / 50) * 4 : 0;
+      // Legs, two by two, trotting.
+      g.lineStyle(4, COLORS.encre, 1);
+      for (const [lx, phase] of [
+        [-8, 1],
+        [8, -1],
+      ] as const) {
+        g.lineBetween(x + lx * d, y - 8, x + lx * d + step * phase, y);
+      }
+      g.fillStyle(COLORS.roseGarance, 1);
+      g.lineStyle(3, COLORS.encre, 1);
+      g.fillEllipse(x, y - 13, 30, 18);
+      g.strokeEllipse(x, y - 13, 30, 18);
+      g.fillCircle(x + d * 15, y - 17, 7);
+      g.strokeCircle(x + d * 15, y - 17, 7);
+      g.fillStyle(COLORS.carnation, 1);
+      g.fillEllipse(x + d * 21, y - 16, 5, 6);
+      g.fillStyle(COLORS.encre, 1);
+      g.fillCircle(x + d * 15, y - 19, 1.5);
+      // The fire on its back.
+      const flicker = 1 + Math.sin(time / 35 + w.id) * 0.25;
+      g.fillStyle(COLORS.vermillon, 0.95);
+      g.fillTriangle(x - 10, y - 20, x + 6, y - 20, x - 4 * d, y - 20 - 22 * flicker);
+      g.fillStyle(COLORS.or, 0.95);
+      g.fillTriangle(x - 6, y - 20, x + 3, y - 20, x - 2 * d, y - 20 - 13 * flicker);
+    }
   }
 
   /** The miracle: a beam of gilt light where the unit vanished and where it stands now. */

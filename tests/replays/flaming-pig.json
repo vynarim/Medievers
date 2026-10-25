@@ -1,0 +1,696 @@
+{
+ "version": 1,
+ "config": {
+  "rules": {
+   "turn": {
+    "transitionTicks": 120,
+    "actionTicks": 2700,
+    "retreatTicks": 180,
+    "maxResolutionTicks": 1800,
+    "settleTicks": 120,
+    "moveAfterShot": true,
+    "retreatMaxTicks": 2700,
+    "freeSelect": true,
+    "noRepeat": true,
+    "rememberWeapon": true,
+    "faceInwardPct": 25
+   },
+   "unitsPerTeam": 4,
+   "startHp": 100,
+   "unit": {
+    "walkSpeed": 384,
+    "maxStep": 12,
+    "slopeWindow": 7,
+    "jumpForward": {
+     "vx": 2100,
+     "vy": -2304
+    },
+    "jumpBack": {
+     "vx": 256,
+     "vy": -2688
+    },
+    "fallSafeHeight": 160,
+    "fallPxPerHp": 8,
+    "fallMaxDamage": 30,
+    "steepFall": true,
+    "fallMinHeight": 40,
+    "fallMinDamage": 5,
+    "moveBudget": 280,
+    "slopeTakeoff": true,
+    "jumpHeadroom": 40,
+    "jumpGrace": 20,
+    "turnTicks": 12,
+    "climbSpeed": 256,
+    "climbCostPct": 50,
+    "ladderReach": 28,
+    "ladderEndsTurn": true,
+    "ladderIsAction": true,
+    "wallClimb": 220
+   },
+   "wind": {
+    "max": 0,
+    "accelPerUnit": 2
+   },
+   "explosion": {
+    "knockbackPerHp": 40,
+    "liftPct": 35
+   },
+   "weapons": [
+    {
+     "id": "bow",
+     "behavior": "directHit",
+     "projectileRadius": 0,
+     "windPct": 100,
+     "maxSpeed": 6144,
+     "damage": 35,
+     "explosionRadius": 0,
+     "chipRadius": 3,
+     "knockbackPct": 60,
+     "bouncePct": 0,
+     "defaultFuse": 0,
+     "ammo": -1
+    },
+    {
+     "id": "fireArrow",
+     "behavior": "directHit",
+     "flames": true,
+     "projectileRadius": 0,
+     "windPct": 100,
+     "maxSpeed": 6144,
+     "damage": 40,
+     "explosionRadius": 0,
+     "chipRadius": 3,
+     "knockbackPct": 60,
+     "bouncePct": 0,
+     "defaultFuse": 0,
+     "ammo": 0,
+     "crateAmmo": 3
+    },
+    {
+     "id": "sling",
+     "thrown": true,
+     "behavior": "directHit",
+     "projectileRadius": 2,
+     "windPct": 100,
+     "maxSpeed": 5120,
+     "damage": 25,
+     "explosionRadius": 0,
+     "chipRadius": 5,
+     "knockbackPct": 250,
+     "bouncePct": 0,
+     "defaultFuse": 0,
+     "ammo": -1
+    },
+    {
+     "id": "greekFire",
+     "thrown": true,
+     "flames": true,
+     "behavior": "fusedBouncer",
+     "projectileRadius": 5,
+     "windPct": 0,
+     "maxSpeed": 4608,
+     "damage": 45,
+     "explosionRadius": 60,
+     "knockbackPct": 100,
+     "bouncePct": 45,
+     "defaultFuse": 60,
+     "ammo": 3,
+     "fuseTurns": 180
+    },
+    {
+     "id": "crossbow",
+     "behavior": "directHit",
+     "projectileRadius": 0,
+     "windPct": 40,
+     "maxSpeed": 7680,
+     "damage": 45,
+     "explosionRadius": 0,
+     "chipRadius": 4,
+     "knockbackPct": 80,
+     "bouncePct": 0,
+     "defaultFuse": 0,
+     "ammo": 2,
+     "fixedPower": true
+    },
+    {
+     "id": "pitchPot",
+     "thrown": true,
+     "behavior": "cluster",
+     "projectileRadius": 5,
+     "windPct": 0,
+     "maxSpeed": 4352,
+     "damage": 30,
+     "explosionRadius": 50,
+     "knockbackPct": 100,
+     "bouncePct": 40,
+     "defaultFuse": 180,
+     "ammo": 1,
+     "fragments": {
+      "count": 5,
+      "damage": 15,
+      "radius": 30,
+      "speed": 1536
+     }
+    },
+    {
+     "id": "mace",
+     "behavior": "melee",
+     "projectileRadius": 0,
+     "windPct": 0,
+     "maxSpeed": 0,
+     "damage": 30,
+     "explosionRadius": 0,
+     "knockbackPct": 320,
+     "bouncePct": 0,
+     "defaultFuse": 0,
+     "ammo": -1,
+     "reach": 34,
+     "knockbackMinPct": 20,
+     "needsTarget": true
+    },
+    {
+     "id": "sword",
+     "behavior": "melee",
+     "projectileRadius": 0,
+     "windPct": 0,
+     "maxSpeed": 0,
+     "damage": 25,
+     "explosionRadius": 0,
+     "knockbackPct": 100,
+     "bouncePct": 0,
+     "defaultFuse": 0,
+     "ammo": -1,
+     "reach": 34,
+     "frontal": true,
+     "needsTarget": true
+    },
+    {
+     "id": "shieldCharge",
+     "behavior": "charge",
+     "projectileRadius": 0,
+     "windPct": 0,
+     "maxSpeed": 0,
+     "damage": 20,
+     "explosionRadius": 0,
+     "knockbackPct": 250,
+     "bouncePct": 0,
+     "defaultFuse": 0,
+     "ammo": -1,
+     "charge": {
+      "distance": 120,
+      "speed": 1536
+     }
+    },
+    {
+     "id": "pick",
+     "behavior": "dig",
+     "projectileRadius": 0,
+     "windPct": 0,
+     "maxSpeed": 0,
+     "damage": 0,
+     "explosionRadius": 0,
+     "knockbackPct": 0,
+     "bouncePct": 0,
+     "defaultFuse": 0,
+     "ammo": 2,
+     "dig": {
+      "ticks": 180,
+      "speed": 128,
+      "radius": 17,
+      "along": "down"
+     }
+    },
+    {
+     "id": "sap",
+     "behavior": "dig",
+     "projectileRadius": 0,
+     "windPct": 0,
+     "maxSpeed": 0,
+     "damage": 0,
+     "explosionRadius": 0,
+     "knockbackPct": 0,
+     "bouncePct": 0,
+     "defaultFuse": 0,
+     "ammo": 2,
+     "dig": {
+      "ticks": 240,
+      "speed": 192,
+      "radius": 17,
+      "along": "aim",
+      "needsMatter": true
+     }
+    },
+    {
+     "id": "caltrop",
+     "behavior": "mine",
+     "projectileRadius": 0,
+     "windPct": 0,
+     "maxSpeed": 0,
+     "damage": 40,
+     "explosionRadius": 50,
+     "knockbackPct": 100,
+     "bouncePct": 0,
+     "defaultFuse": 0,
+     "ammo": 2,
+     "mine": {
+      "armTicks": 120,
+      "triggerRadius": 8,
+      "chainDelay": 8
+     }
+    },
+    {
+     "id": "stoneWall",
+     "behavior": "build",
+     "projectileRadius": 0,
+     "windPct": 0,
+     "maxSpeed": 0,
+     "damage": 0,
+     "explosionRadius": 0,
+     "knockbackPct": 0,
+     "bouncePct": 0,
+     "defaultFuse": 120,
+     "ammo": 2,
+     "wall": {
+      "short": 48,
+      "medium": 80,
+      "long": 120,
+      "thickness": 14,
+      "reach": 320,
+      "fall": true
+     }
+    },
+    {
+     "id": "trebuchet",
+     "behavior": "strike",
+     "projectileRadius": 6,
+     "windPct": 0,
+     "maxSpeed": 0,
+     "damage": 30,
+     "explosionRadius": 45,
+     "knockbackPct": 100,
+     "bouncePct": 0,
+     "defaultFuse": 0,
+     "ammo": 1,
+     "strike": {
+      "count": 5,
+      "spacing": 28,
+      "speed": 768,
+      "range": 1600,
+      "height": 300
+     }
+    },
+    {
+     "id": "arrowRain",
+     "behavior": "strike",
+     "projectileRadius": 0,
+     "windPct": 100,
+     "maxSpeed": 0,
+     "damage": 10,
+     "explosionRadius": 0,
+     "knockbackPct": 30,
+     "bouncePct": 0,
+     "defaultFuse": 0,
+     "chipRadius": 3,
+     "ammo": 1,
+     "strike": {
+      "count": 12,
+      "spacing": 14,
+      "speed": 512,
+      "range": 1600,
+      "height": 300
+     }
+    },
+    {
+     "id": "flamingPig",
+     "behavior": "walker",
+     "projectileRadius": 0,
+     "windPct": 0,
+     "maxSpeed": 0,
+     "damage": 70,
+     "explosionRadius": 90,
+     "knockbackPct": 100,
+     "bouncePct": 0,
+     "defaultFuse": 0,
+     "ammo": 2,
+     "walker": {
+      "speed": 512,
+      "fuse": 480,
+      "hop": 1792,
+      "maxStep": 8
+     }
+    },
+    {
+     "id": "miracle",
+     "behavior": "teleport",
+     "projectileRadius": 0,
+     "windPct": 0,
+     "maxSpeed": 0,
+     "damage": 0,
+     "explosionRadius": 0,
+     "knockbackPct": 0,
+     "bouncePct": 0,
+     "defaultFuse": 0,
+     "ammo": 1,
+     "endsTurn": true,
+     "teleport": {
+      "reach": 900
+     }
+    },
+    {
+     "id": "ladder",
+     "behavior": "ladder",
+     "projectileRadius": 0,
+     "windPct": 0,
+     "maxSpeed": 0,
+     "damage": 0,
+     "explosionRadius": 0,
+     "knockbackPct": 0,
+     "bouncePct": 0,
+     "defaultFuse": 0,
+     "ammo": 2,
+     "free": true,
+     "ladder": {
+      "height": 200
+     }
+    },
+    {
+     "id": "banner",
+     "behavior": "banner",
+     "projectileRadius": 0,
+     "windPct": 0,
+     "maxSpeed": 0,
+     "damage": 0,
+     "explosionRadius": 0,
+     "knockbackPct": 0,
+     "bouncePct": 0,
+     "defaultFuse": 0,
+     "ammo": 3,
+     "free": true,
+     "banner": {
+      "fallSpeed": 512,
+      "windDrift": 40
+     }
+    }
+   ],
+   "kitchen": {
+    "healHp": 30,
+    "chanceStartPermille": 250,
+    "chanceDecayPct": 80,
+    "chanceFloorPermille": 20,
+    "lifeRounds": 2,
+    "placeTolerancePct": 10
+   },
+   "burn": {
+    "startRound": 2,
+    "advancePx": 60,
+    "damage": 20,
+    "endWhenMet": true
+   },
+   "barrels": {
+    "count": 5,
+    "damage": 40,
+    "radius": 70,
+    "chainDelay": 8
+   },
+   "crates": {
+    "chancePermille": 300,
+    "maxOnMap": 3,
+    "trapPermille": 100,
+    "balmPermille": 350,
+    "balmHp": 25,
+    "fallSpeed": 256,
+    "windDrift": 20,
+    "blastDamage": 15,
+    "blastRadius": 40,
+    "trapDamage": 20,
+    "trapRadius": 40,
+    "angelLift": 300
+   },
+   "beasts": {
+    "spawnPermille": 80,
+    "hareStep": 300,
+    "snailStep": 60,
+    "hareClimb": 40,
+    "kickDamage": 15,
+    "kickSpeed": 2400,
+    "slimeTurns": 2,
+    "biteDamage": 3,
+    "biteTurns": 3
+   },
+   "dragon": {
+    "spawnPermille": 120,
+    "speed": 512,
+    "diveSpeed": 3072,
+    "clearance": 100,
+    "swing": 240,
+    "swingTicks": 420
+   },
+   "unicorn": {
+    "spawnPermille": 25,
+    "speed": 1024
+   },
+   "classes": {
+    "knight": {
+     "blastTakenPct": 75,
+     "jumpPct": 84
+    },
+    "archer": {
+     "previewPct": 200
+    },
+    "slinger": {
+     "throwPct": 115,
+     "hpDelta": -10
+    },
+    "sapper": {
+     "digPct": 200
+    },
+    "cleric": {
+     "blessHp": 10,
+     "blessRadius": 120
+    },
+    "king": {
+     "auraPct": 110,
+     "auraRadius": 200,
+     "hpDelta": -20
+    }
+   },
+   "deluge": {
+    "startTurn": 20,
+    "startTicks": 54000,
+    "risePx": 48,
+    "damage": 0,
+    "wetDamage": 20
+   },
+   "weather": {
+    "rainPermille": 120,
+    "rainTurnsMin": 2,
+    "rainTurnsMax": 5,
+    "lightningPermille": 300,
+    "damage": 35,
+    "radius": 45
+   },
+   "flames": {
+    "count": 6,
+    "turns": 3,
+    "damagePerTick": 3,
+    "maxPerTurn": 10,
+    "radius": 8
+   },
+   "structures": {
+    "defs": {
+     "tower": {
+      "hp": 240,
+      "weaponPct": {
+       "bow": 25,
+       "fireArrow": 25,
+       "crossbow": 25,
+       "sling": 40,
+       "mace": 50,
+       "greekFire": 100,
+       "pitchPot": 80
+      },
+      "defaultPct": 100
+     },
+     "woodTower": {
+      "hp": 140,
+      "weaponPct": {
+       "bow": 50,
+       "fireArrow": 50,
+       "crossbow": 60,
+       "sling": 50,
+       "mace": 100,
+       "greekFire": 200,
+       "pitchPot": 200
+      },
+      "defaultPct": 100
+     },
+     "wall": {
+      "hp": 160,
+      "weaponPct": {
+       "bow": 25,
+       "fireArrow": 25,
+       "crossbow": 25,
+       "sling": 40,
+       "mace": 50,
+       "greekFire": 100,
+       "pitchPot": 80
+      },
+      "defaultPct": 100
+     },
+     "bridge": {
+      "hp": 90,
+      "weaponPct": {
+       "bow": 50,
+       "fireArrow": 50,
+       "crossbow": 60,
+       "sling": 50,
+       "mace": 100,
+       "greekFire": 200,
+       "pitchPot": 200
+      },
+      "defaultPct": 100
+     },
+     "scaffold": {
+      "hp": 60,
+      "weaponPct": {
+       "bow": 50,
+       "fireArrow": 50,
+       "crossbow": 60,
+       "sling": 50,
+       "mace": 100,
+       "greekFire": 200,
+       "pitchPot": 200
+      },
+      "defaultPct": 100
+     }
+    },
+    "crackedPct": 66,
+    "ruinPct": 33,
+    "blockSize": 32,
+    "rubblePct": 40,
+    "crushPxPerHp": 4,
+    "crushMin": 10,
+    "crushMax": 40,
+    "towerHeight": 320,
+    "supportPct": 50,
+    "woodTowerHeight": 220,
+    "burnTurns": 4
+   }
+  },
+  "teams": [
+   {
+    "spawns": [
+     300
+    ]
+   },
+   {
+    "spawns": [
+     760
+    ]
+   }
+  ]
+ },
+ "seed": 1347,
+ "mapId": "flat",
+ "commands": [
+  [
+   121,
+   {
+    "t": "selectWeapon",
+    "id": "stoneWall"
+   }
+  ],
+  [
+   121,
+   {
+    "t": "setFuse",
+    "seconds": 1
+   }
+  ],
+  [
+   121,
+   {
+    "t": "aim",
+    "angle": 1024
+   }
+  ],
+  [
+   121,
+   {
+    "t": "fireAt",
+    "x": 450,
+    "y": 470
+   }
+  ],
+  [
+   3063,
+   {
+    "t": "skip"
+   }
+  ],
+  [
+   3304,
+   {
+    "t": "selectWeapon",
+    "id": "flamingPig"
+   }
+  ],
+  [
+   3304,
+   {
+    "t": "aim",
+    "angle": 0
+   }
+  ],
+  [
+   3304,
+   {
+    "t": "fire",
+    "power": 0
+   }
+  ],
+  [
+   3505,
+   {
+    "t": "fire",
+    "power": 0
+   }
+  ],
+  [
+   6246,
+   {
+    "t": "skip"
+   }
+  ],
+  [
+   6487,
+   {
+    "t": "selectWeapon",
+    "id": "flamingPig"
+   }
+  ],
+  [
+   6487,
+   {
+    "t": "aim",
+    "angle": 0
+   }
+  ],
+  [
+   6487,
+   {
+    "t": "fire",
+    "power": 0
+   }
+  ],
+  [
+   9429,
+   {
+    "t": "skip"
+   }
+  ]
+ ],
+ "endTick": 9549,
+ "description": "Cochon enflammé (GDD §4.1): a short wall set up, a pig let loose that hops over it and is set off by the enemy, then a second one left to go up at the end of its fuse.",
+ "expectedHash": "f0bbdc84"
+}

@@ -815,6 +815,56 @@ const SCRIPTS: readonly Script[] = [
       ]);
     },
   },
+  {
+    name: 'flaming-pig',
+    description:
+      'Cochon enflammé (GDD §4.1): a short wall set up, a pig let loose that hops over it and ' +
+      'is set off by the enemy, then a second one left to go up at the end of its fuse.',
+    mapId: 'flat',
+    seed: 1347,
+    config: {
+      rules: {
+        ...NO_PLACEMENT,
+        wind: { ...NO_PLACEMENT.wind, max: 0 },
+        weapons: NO_PLACEMENT.weapons.map((w) => (w.id === 'flamingPig' ? { ...w, ammo: 2 } : w)),
+      },
+      teams: [{ spawns: [300] }, { spawns: [760] }],
+    },
+    play: (r) => {
+      const ours = (cmds: Parameters<Recorder['step']>[0], then?: number): void => {
+        r.until('action');
+        r.step(cmds);
+        if (then !== undefined) {
+          r.steps(then);
+          r.step([{ t: 'fire', power: 0 }]);
+        }
+        r.until('transition');
+        r.until('action');
+        r.step([{ t: 'skip' }]);
+        r.until('transition');
+      };
+      const ground = (r.sim.view().units[0]?.y ?? 0) >> 8;
+      ours([
+        { t: 'selectWeapon', id: 'stoneWall' },
+        { t: 'setFuse', seconds: 1 },
+        { t: 'aim', angle: 1024 },
+        { t: 'fireAt', x: 450, y: ground - 30 },
+      ]);
+      ours(
+        [
+          { t: 'selectWeapon', id: 'flamingPig' },
+          { t: 'aim', angle: 0 },
+          { t: 'fire', power: 0 },
+        ],
+        200,
+      );
+      ours([
+        { t: 'selectWeapon', id: 'flamingPig' },
+        { t: 'aim', angle: 0 },
+        { t: 'fire', power: 0 },
+      ]);
+    },
+  },
 ];
 
 const force = process.argv.includes('--force');

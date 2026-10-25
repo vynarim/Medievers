@@ -1635,5 +1635,17 @@
   "quip.weapon.banner.1": "{name} brandit la bannière de la {house}. Le vent salue.",
   "quip.weapon.banner.2": "{name} : « Si je tombe, que ce soit avec élégance. »",
   "quip.weapon.banner.3": "La bannière se déploie. Le héraut en pleure d'émotion.",
-  "units.subPxPerTick": "1/256 px/instant"
+  "units.subPxPerTick": "1/256 px/instant",
+  "weapons.flamingPig": "Cochon enflammé",
+  "weapons.flamingPig.desc": "Lâché devant vous, il trotte tout seul, saute les obstacles, et explose quand vous appuyez de nouveau sur le bouton, ou au bout de 8 s.",
+  "ui.fire.walker": "Lâcher",
+  "ui.fire.detonate": "Faire sauter",
+  "weapon.walker": "Explose sur ordre, ou au bout de {s} s",
+  "hud.hint.walker": "Choisir le côté (une pression sur ← →, ou la pointe rouge) · Espace ou « Lâcher » : le cochon part ; Espace ou « Faire sauter » de nouveau : il explose",
+  "tuning.walkerSpeed": "Vitesse du cochon",
+  "tuning.walkerFuse": "Mèche du cochon",
+  "quip.weapon.flamingPig.1": "{name} lâche le cochon. Le cochon, lui, n'a rien demandé.",
+  "quip.weapon.flamingPig.2": "Un cochon en flammes trotte vers l'ennemi. Les théologiens n'ont pas d'avis.",
+  "quip.weapon.flamingPig.3": "{name} : « Va, porc de la {house}, et fais ton devoir ! »",
+  "quip.weapon.flamingPig.4": "Le cochon part au trot. Il sent déjà le jambon fumé."
 }

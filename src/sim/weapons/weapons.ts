@@ -34,6 +34,7 @@ import { MAX_POWER } from '../commands.ts';
 import { damageDealtPct, throwPct, type ClassView } from '../classes.ts';
 import { igniteStructureAt, shotHitsStructure } from '../structures.ts';
 import { flameAt } from '../flames.ts';
+import { letLoose } from '../walkers.ts';
 import {
   buildWall,
   launchStrike,
@@ -114,6 +115,11 @@ export function fire(
       damagePct: pct,
       hit: [],
     };
+    return true;
+  }
+  if (def.behavior === 'walker') {
+    if (!letLoose(state, u, def, id, pct)) return false;
+    events.push({ e: 'shotFired', shotId: id, weapon: def.id });
     return true;
   }
   if (def.behavior === 'dig') {

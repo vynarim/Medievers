@@ -122,6 +122,16 @@ const ART: Record<WeaponId, string> = {
     <path d="M18 30 L14 52 M32 30 L28 56 M46 30 L42 52" ${s(2.5)}/>
     <path d="M14 52 L11 45 L17 46 Z M28 56 L25 49 L31 50 Z M42 52 L39 45 L45 46 Z" fill="${C.stone}" ${s(1.2)}/>
     <path d="M18 30 L16 26 M18 30 L21 27 M32 30 L30 26 M32 30 L35 27 M46 30 L44 26 M46 30 L49 27" stroke="${C.red}" stroke-width="2.5"/>`,
+  flamingPig: `
+    <ellipse cx="30" cy="38" rx="20" ry="12" fill="${C.rose}" ${s(2.5)}/>
+    <circle cx="50" cy="34" r="8" fill="${C.rose}" ${s(2)}/>
+    <ellipse cx="57" cy="36" rx="3" ry="2.5" fill="${C.flesh}" ${s(1.2)}/>
+    <path d="M46 26 L49 20 L52 27" fill="${C.rose}" ${s(1.5)}/>
+    <circle cx="50" cy="32" r="1.3" fill="${INK}"/>
+    <path d="M16 48 L15 56 M24 49 L24 57 M36 49 L37 57 M44 47 L46 55" ${s(3)}/>
+    <path d="M10 36 Q4 32 8 28" fill="none" ${s(2)}/>
+    <path d="M18 28 Q14 14 22 8 Q22 18 28 16 Q26 6 34 2 Q34 14 40 14 Q42 22 36 28 Z" fill="${C.red}" ${s(1.5)}/>
+    <path d="M24 26 Q22 18 26 14 Q28 20 32 18 Q34 24 30 27 Z" fill="${C.gold}"/>`,
   miracle: `
     <circle cx="32" cy="26" r="16" fill="${C.gold}" ${s(2)}/>
     <path d="M32 2 L32 8 M32 44 L32 50 M8 26 L14 26 M50 26 L56 26 M15 9 L19 13 M45 39 L49 43 M49 9 L45 13 M19 39 L15 43" ${s(2)}/>

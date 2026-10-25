@@ -240,6 +240,19 @@ describe('the AI rope', () => {
     expect(px(cliff, 1, 'y')).toBe(600);
     expect(cliff.view().units.find((u) => u.id === 1)?.hp).toBe(100);
 
+    // Flaming pig: let loose and set off by the enemy.
+    const pig = duel(400, 800);
+    const { plan } = planTurn({
+      state: pig.snapshot(),
+      team: 0,
+      level: { ...STILL, weapons: ['flamingPig'] },
+      seed: 1,
+    });
+    expect(plan.shot?.weapon).toBe('flamingPig');
+    expect(plan.shot?.detonate).toBeGreaterThan(0);
+    playOut(pig, plan);
+    expect(pig.view().units.find((u) => u.id === 2)?.hp ?? 100).toBeLessThan(50);
+
     // Miracle: up onto the cliff, from the plain.
     const miracle = duel(300, 1400);
     playOut(miracle, { unitId: 1, move: { kind: 'miracle', x: 1000, y: 400 }, shot: null });

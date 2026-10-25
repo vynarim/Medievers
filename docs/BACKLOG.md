@@ -83,7 +83,7 @@ La priorité est le moteur : simulation, règles, réseau, IA. Jusqu'au lot 9, t
 ## M4 — Arsenal complet
 | # | Tâche | CA |
 |---|---|---|
-| 4.1 | Arbalète, pot de poix, cochon enflammé | Un replay de référence par arme |
+| 4.1 | Arbalète, pot de poix, cochon enflammé | Un replay de référence par arme — fait le 2026-10-25 (replays `crossbow`, `pitch-pot`, `flaming-pig`) |
 | 4.2 | Ruche, faucon | idem |
 | 4.3 | Volée de trébuchet, pluie de flèches | idem — fait le 2026-10-25 (replays `trebuchet`, `arrow-rain`) |
 | 4.4 | Épée, masse, charge à l'écu | idem — fait le 2026-10-25 (replays `mace`, `sword-charge`) |

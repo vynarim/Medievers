@@ -198,6 +198,13 @@ export class LocalControls {
       out.push({ t: 'skip' });
       return out;
     }
+    // A flaming pig of this unit trotting: a press of Fire sets it off (GDD §4.1).
+    if (input.firePressed && view.walkers.some((w) => w.ownerId === unit.id)) {
+      out.push({ t: 'fire', power: 0 });
+      this.charging = false;
+      this.power = 0;
+      return out;
+    }
 
     if (turn.phase !== 'action') {
       this.charging = false;

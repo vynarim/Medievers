@@ -119,6 +119,28 @@ export interface Charge {
   readonly hit: number[];
 }
 
+/** A flaming pig let loose (GDD §4.1), trotting on by itself. */
+export interface Walker {
+  readonly id: number;
+  /** unit that let it loose */
+  readonly ownerId: number;
+  readonly weapon: WeaponId;
+  /** sub-px: middle of its feet */
+  x: number;
+  y: number;
+  /** sub-px/tick, while in the air */
+  vx: number;
+  vy: number;
+  dir: -1 | 1;
+  grounded: boolean;
+  /** ticks before it goes up */
+  fuse: number;
+  /** hops in a row that took it nowhere: at the third, it turns round */
+  hops: number;
+  /** percent of the weapon's damage (king's aura) */
+  readonly damagePct: number;
+}
+
 /** A chausse-trape on the ground (GDD §4.4), seen only by its own house. */
 export interface Mine {
   readonly id: number;
@@ -307,6 +329,8 @@ export interface SimState {
   dig: Dig | null;
   /** the shield charge under way; null otherwise */
   charge: Charge | null;
+  /** flaming pigs let loose, sorted by id */
+  walkers: Walker[];
   /** sorted by id */
   mines: Mine[];
   /** units still to be placed, the next one first; empty once the battle has begun */

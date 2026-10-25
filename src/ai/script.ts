@@ -37,6 +37,8 @@ export interface AiShot {
   readonly power: number;
   /** a weapon aimed at a point (the trebuchet volley): that point, px */
   readonly at?: { readonly x: number; readonly y: number };
+  /** the flaming pig: ticks after it is let loose at which Fire sets it off */
+  readonly detonate?: number;
 }
 
 /** A turn of the AI: which unit, where it goes, what it shoots; no shot passes the turn. */
@@ -266,10 +268,18 @@ export class TurnScript {
           shot.at ? { t: 'fireAt', x: shot.at.x, y: shot.at.y } : { t: 'fire', power: shot.power },
         ];
       }
-      case 'after':
+      case 'after': {
+        const at = plan.shot?.detonate;
+        if (at !== undefined) {
+          // The pig trots on; Fire sets it off at the planned moment, then the turn ends.
+          if (this.ticks < at) return [];
+          this.go('done');
+          return [{ t: 'fire', power: 0 }, { t: 'skip' }];
+        }
         if (this.ticks < this.pace.afterShot) return [];
         this.go('done');
         return [{ t: 'skip' }];
+      }
       case 'done':
         return [];
     }

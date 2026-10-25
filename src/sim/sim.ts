@@ -45,6 +45,7 @@ import { kitchenTurn, inKitchen, stepKitchen, useKitchen } from './kitchen.ts';
 import { blowAngle, fire, stepCharge, stepShots, strikeHasTarget } from './weapons/weapons.ts';
 import { blastReachesMines, stepDig, stepMines } from './tools.ts';
 import { weatherTurnEnd } from './weather.ts';
+import { blastReachesWalkers, detonateWalkers, stepWalkers } from './walkers.ts';
 import { isTargeted, type WeaponId } from '../content/weapons.ts';
 import { MAX_POWER } from './commands.ts';
 import { delugeTurnEnd, drownThings, drownUnits, hasWater, underWater } from './deluge.ts';
@@ -209,6 +210,7 @@ function createState(config: MatchConfig, seed: number, mask: Mask): SimState {
     pots: [],
     dig: null,
     charge: null,
+    walkers: [],
     mines: [],
     // One unit per house in turn: first units of every house, then the second ones…
     placing: placing
@@ -397,6 +399,14 @@ function applyCommand(s: SimState, c: GameCommand, events: SimEvent[]): void {
   }
   const canAct = t.phase === 'action';
   const canMove = canAct || t.phase === 'retreat';
+  // Fire again while a flaming pig trots: it goes up (GDD §4.1), until the turn is over.
+  if (
+    c.t === 'fire' &&
+    (canMove || t.phase === 'resolution') &&
+    detonateWalkers(s, t.activeUnitId, events)
+  ) {
+    return;
+  }
   if (c.t === 'selectUnit') {
     selectUnit(s, c.unitId);
     return;
@@ -615,6 +625,7 @@ function advanceTick(s: SimState, phaseJustSet: boolean, events: SimEvent[]): vo
 
   stepDig(s, events);
   stepCharge(s, events);
+  stepWalkers(s, events);
   for (const u of s.units) {
     if (!u.alive) continue;
     const held = u.banner === true && !u.grounded && !u.climbing;
@@ -654,6 +665,7 @@ function advanceTick(s: SimState, phaseJustSet: boolean, events: SimEvent[]): vo
     blastReachesUnicorn(s, e, events);
     blastMovesPots(s, e);
     blastReachesMines(s, e, events);
+    blastReachesWalkers(s, e, events);
     spawnFlames(s, e);
     blastHitsStructures(s, e, events);
     // A blast that reaches the kitchen counts as a touch (GDD §4.9).
@@ -883,6 +895,7 @@ function settled(s: SimState): boolean {
     s.blocks.length === 0 &&
     s.dig === null &&
     s.charge === null &&
+    s.walkers.length === 0 &&
     !dragonBusy(s) &&
     s.lift === null &&
     s.units.every(atRest)
@@ -1094,6 +1107,14 @@ function hashState(s: SimState): number {
   if (s.rules.weapons.some((w) => w.charge)) {
     const c = s.charge;
     for (const v of c ? [c.id, c.unitId, c.dir, c.left, c.damagePct, ...c.hit] : [-1]) int(v);
+  }
+  if (s.rules.weapons.some((w) => w.walker)) {
+    int(s.walkers.length);
+    for (const w of s.walkers) {
+      for (const v of [w.id, w.ownerId, w.x, w.y, w.vx, w.vy, w.dir, w.fuse, w.hops, w.damagePct])
+        int(v);
+      int(w.grounded ? 1 : 0);
+    }
   }
   if (s.rules.weapons.some((w) => w.mine)) {
     int(s.mines.length);

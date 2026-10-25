@@ -257,3 +257,62 @@ describe('banner (GDD §4.4)', () => {
     expect(windy(8)).toBeGreaterThan(windy(0) + 60);
   });
 });
+
+describe('flaming pig (GDD §4.1)', () => {
+  const loose = (sim: Sim): SimEvent[] =>
+    run(
+      sim,
+      [
+        { t: 'selectWeapon', id: 'flamingPig' },
+        { t: 'aim', angle: 0 },
+        { t: 'fire', power: 0 },
+      ],
+      0,
+    );
+
+  it('trots on by itself at 2 px a tick and goes up at a second press of Fire', () => {
+    const sim = match(CALM, 300, [600]);
+    loose(sim);
+    expect(sim.view().walkers).toHaveLength(1);
+    run(sim, [], 60);
+    const x = px(sim.view().walkers[0]?.x);
+    expect(x).toBeGreaterThan(400);
+    expect(x).toBeLessThan(460);
+    run(sim, [], 80);
+    const events = run(sim, [{ t: 'fire', power: 0 }], 2);
+    expect(events.some((e) => e.e === 'walkerGone')).toBe(true);
+    expect(events.some((e) => e.e === 'explosion')).toBe(true);
+    expect(unit(sim, 2)?.hp).toBeLessThan(60);
+    expect(sim.view().walkers).toHaveLength(0);
+  });
+
+  it('goes up by itself at the end of its fuse', () => {
+    const short: MatchRules = {
+      ...CALM,
+      weapons: CALM.weapons.map((w) =>
+        w.walker ? { ...w, walker: { ...w.walker, fuse: 120 } } : w,
+      ),
+    };
+    const sim = match(short, 300, [1100]);
+    loose(sim);
+    expect(run(sim, [], 117).some((e) => e.e === 'explosion')).toBe(false);
+    expect(run(sim, [], 4).some((e) => e.e === 'explosion')).toBe(true);
+  });
+
+  it('hops over a low wall, and turns round at a high one', () => {
+    const mask = flatMask();
+    // A low wall 20 px high at x = 400, a high one 200 px high at x = 700.
+    for (let y = 480; y < 500; y++) mask.data.fill(Material.Rock, y * 1200 + 400, y * 1200 + 410);
+    for (let y = 300; y < 500; y++) mask.data.fill(Material.Rock, y * 1200 + 700, y * 1200 + 720);
+    const sim = match(CALM, 300, [1100], mask);
+    loose(sim);
+    let farthest = 0;
+    for (let i = 0; i < 400; i++) {
+      sim.step();
+      farthest = Math.max(farthest, px(sim.view().walkers[0]?.x));
+    }
+    expect(farthest).toBeGreaterThan(450);
+    expect(farthest).toBeLessThan(700);
+    expect(px(sim.view().walkers[0]?.x)).toBeLessThan(farthest);
+  });
+});

@@ -13,7 +13,7 @@ import { SUBPX, mulQ14, subToPx } from '../sim/math/fixed.ts';
 import { createPrng, nextRange, type PrngState } from '../sim/math/prng.ts';
 import { createProjectile, stepProjectile } from '../sim/projectiles/projectile.ts';
 import { DRAGON_HALF_HEIGHT, DRAGON_HALF_WIDTH } from '../content/dragon.ts';
-import { canPlace, canSwitchUnit, type Sim, type SimView } from '../sim/sim.ts';
+import { Sim, canPlace, canSwitchUnit, type SimView } from '../sim/sim.ts';
 import type { SimState } from '../sim/state.ts';
 import { isSolid, type Terrain } from '../sim/terrain/terrain.ts';
 import { ladderLook, teleportLanding } from '../sim/tools.ts';
@@ -334,6 +334,7 @@ function weaponsFor(v: SimView, u: Readonly<Unit>, level: AiLevel): WeaponDef[] 
     if (!mayUse(v as SimState, u as Unit, w as WeaponDef)) return false;
     return (
       isProjectile(w as WeaponDef) ||
+      w.behavior === 'walker' ||
       w.behavior === 'melee' ||
       w.behavior === 'charge' ||
       w.behavior === 'strike'
@@ -567,6 +568,8 @@ function candidatesFrom(
           guess: guessWorth(at, def, e, 0),
         });
       }
+    } else if (def.walker) {
+      out.push(...pigsFrom(at, u, move, def, team));
     } else if (def.charge) {
       // A run at the enemies standing level with it, within its length: towards each side once.
       const run = def.charge.distance + 2 * UNIT_HALF_WIDTH;
@@ -601,6 +604,55 @@ function candidatesFrom(
         });
       }
     }
+  }
+  return out;
+}
+
+/**
+ * The flaming pig let loose on each side where enemies stand: its trot followed on a copy of
+ * the match, it is set off at the moment it comes nearest an enemy, if within its blast.
+ */
+function pigsFrom(
+  at: SimView,
+  u: Readonly<Unit>,
+  move: AiMove,
+  def: WeaponDef,
+  team: number,
+): Candidate[] {
+  const out: Candidate[] = [];
+  const w = def.walker;
+  if (!w) return out;
+  const reach = def.explosionRadius * SUBPX;
+  const range = (w.speed * w.fuse) / SUBPX + def.explosionRadius;
+  for (const dir of [-1, 1] as const) {
+    const ahead = enemiesOf(at, team).filter((e) => {
+      const dx = (subToPx(e.x) - subToPx(u.x)) * dir;
+      return dx > 0 && dx < range;
+    });
+    if (ahead.length === 0) continue;
+    const probe = Sim.fromState(structuredClone(at as SimState));
+    probe.step([
+      { t: 'selectWeapon', id: def.id },
+      { t: 'aim', angle: dir > 0 ? 0 : 2048 },
+      { t: 'fire', power: 0 },
+    ]);
+    let best: { tick: number; miss: number; target: Readonly<Unit> } | null = null;
+    for (let tick = 1; tick < w.fuse; tick++) {
+      const pig = probe.view().walkers[0];
+      if (!pig) break;
+      for (const e of ahead) {
+        const m = Math.hypot(pig.x - e.x, pig.y - e.y);
+        if (m < reach && (!best || m < best.miss)) best = { tick, miss: m, target: e };
+      }
+      probe.step();
+    }
+    if (!best) continue;
+    out.push({
+      unitId: u.id,
+      move,
+      shot: { weapon: def.id, angle: dir > 0 ? 0 : 2048, power: 0, detonate: best.tick },
+      guess: guessWorth(at, def, best.target, best.miss),
+    });
   }
   return out;
 }
