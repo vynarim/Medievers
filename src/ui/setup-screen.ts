@@ -41,6 +41,13 @@ const STYLE = `
 #ui .setup .tools button, #ui .setup .start button { white-space: nowrap; flex: none; }
 #ui .setup .tools .note { flex: 1 1 auto; margin: 0 0 0 8px; font-size: 15px; }
 #ui .setup .start { margin-top: 12px; display: flex; justify-content: flex-end; gap: 8px; }
+#ui .setup .start.others { margin-top: 4px; justify-content: flex-start; flex-wrap: wrap; }
+/* A house leaves the match: a small round « − », at the end of its row. */
+#ui .setup .house button.drop { margin-left: auto; width: 36px; height: 36px; min-width: 36px;
+  min-height: 36px; padding: 0; border-radius: 50%; font-family: var(--text); font-size: 22px;
+  line-height: 1; color: var(--vermillon); background: var(--ceruse); border: 2px solid var(--vermillon);
+  box-shadow: none; }
+#ui .setup .house button.drop:hover { background: var(--velin); }
 /* On a phone held upright: the choices wrap, their descriptions behind a « ? ». */
 #ui.phone .setup { padding-left: 14px; padding-right: 14px; }
 #ui.phone .setup .row { flex-wrap: wrap; gap: 6px; }
@@ -48,7 +55,9 @@ const STYLE = `
   min-height: 48px; }
 #ui.phone .setup .scheme b { font-size: 16px; }
 #ui.phone .setup .house { flex-wrap: wrap; padding: 8px 0; }
-#ui.phone .setup .house .name { flex: 1 1 100%; }
+#ui.phone .setup .house > * { order: 2; }
+#ui.phone .setup .house .name { order: 0; flex: 1 1 calc(100% - 50px); }
+#ui.phone .setup .house button.drop { order: 1; }
 #ui.phone .setup select { flex: 1 1 30%; min-width: 0; width: auto; }
 #ui.phone .setup select.player { flex: 1 1 100%; width: auto; }
 #ui.phone .setup .tools { flex-wrap: wrap; justify-content: center; }
@@ -183,6 +192,16 @@ export function showSetupScreen(
       more.disabled = lineup.length >= MAX_UNITS;
       more.addEventListener('click', () => setLineup([...lineup, 'knight']));
       row.append(less, more);
+      // This house leaves the match: a small round « − » at the end of its row.
+      const drop = button('−', 'drop');
+      drop.title = t('setup.houseDrop');
+      drop.disabled = setup.lineups.length <= MIN_HOUSES;
+      drop.addEventListener('click', () => {
+        const players = playersOf(setup).filter((_, k) => k !== h);
+        const lineups = setup.lineups.filter((_, k) => k !== h);
+        update({ ...setup, lineups, players });
+      });
+      row.append(drop);
       panel.append(row);
     });
     const regicide = button(
@@ -205,22 +224,21 @@ export function showSetupScreen(
     addHouse.addEventListener('click', () =>
       update({ ...setup, lineups: [...setup.lineups, setup.lineups[0] ?? ['knight']] }),
     );
-    const removeHouse = button(t('setup.houseLess'));
-    removeHouse.disabled = setup.lineups.length <= MIN_HOUSES;
-    removeHouse.addEventListener('click', () =>
-      update({ ...setup, lineups: setup.lineups.slice(0, -1) }),
-    );
     houses.append(
       addHouse,
-      removeHouse,
-      regicide,
-      turnLength,
       el('p', 'note ambient', t('setup.note')),
       infoButton(() => [t('setup.note')]),
     );
     panel.append(houses);
 
-    const start = el('div', 'start');
+    // How the match runs, apart from who fights it.
+    panel.append(el('h3', '', t('setup.options')));
+    const options = el('div', 'tools');
+    options.append(regicide, turnLength);
+    panel.append(options);
+
+    // The other ways to play: watch a replay, or play online.
+    const others = el('div', 'start others');
     if (onWatch) {
       // The replays (GDD §6): the last match played to its end, or one saved as a JSON file.
       const last = loadLastReplay();
@@ -230,7 +248,7 @@ export function showSetupScreen(
           close();
           onWatch(last);
         });
-        start.append(watch);
+        others.append(watch);
       }
       const file = el('input');
       file.type = 'file';
@@ -251,7 +269,7 @@ export function showSetupScreen(
       });
       const load = button(t('setup.import'));
       load.addEventListener('click', () => file.click());
-      start.append(file, load);
+      others.append(file, load);
     }
     if (online) {
       const host = button(t('setup.onlineHost'));
@@ -266,8 +284,10 @@ export function showSetupScreen(
         close();
         online.join();
       });
-      start.append(host, join);
+      others.append(host, join);
     }
+    if (others.childElementCount > 0) panel.append(el('h3', '', t('setup.others')), others);
+    const start = el('div', 'start');
     const go = button(t('setup.start'), 'fire');
     go.addEventListener('click', () => {
       close();
