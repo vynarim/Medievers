@@ -246,16 +246,16 @@ export class GameUi {
     this.resetView.title = t('tip.resetView');
     // Not on a phone held upright (overlay.ts): the page already fills it.
     if (document.fullscreenEnabled) sys.append(this.fullscreenButton());
-    const helpButton = this.click(button('?', 'icon'), () => this.toggle(this.help));
+    // On a phone held upright, help and settings are reached from the pause menu, which shows
+    // as its three strokes alone (overlay.ts).
+    const helpButton = this.click(button('?', 'icon help'), () => this.toggle(this.help));
     helpButton.title = t('ui.help');
-    const settingsButton = this.click(button('⚙', 'icon'), () => this.openSettings());
+    const settingsButton = this.click(button('⚙', 'icon settings'), () => this.openSettings());
     settingsButton.title = t('ui.settings');
-    sys.append(
-      this.resetView,
-      helpButton,
-      settingsButton,
-      this.click(button(`☰ ${t('ui.pause')}`), () => this.toggle(this.pause)),
-    );
+    const pauseButton = this.click(button('☰', 'menu'), () => this.toggle(this.pause));
+    pauseButton.title = t('ui.pause');
+    pauseButton.append(el('span', 'label', ` ${t('ui.pause')}`));
+    sys.append(this.resetView, helpButton, settingsButton, pauseButton);
 
     this.veil = el('div', 'veil hidden');
     this.veil.addEventListener('pointerdown', () => this.show(null));

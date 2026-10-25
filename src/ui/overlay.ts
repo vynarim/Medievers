@@ -220,17 +220,24 @@ const STYLE = `
 html.phone #game { height: calc(100% - var(--bar-h, 0px)); }
 #ui.phone .modal { max-height: calc(100vh - 24px); padding: 16px 18px 18px; }
 #ui.phone .actions { justify-content: center; }
-#ui.phone .hud-teams { top: 76px; max-width: calc(100vw - 190px); }
-#ui.phone .team { min-width: 0; padding-right: 8px; }
-#ui.phone .team .hp { width: 48px; }
-#ui.phone .hud-wind { top: 76px; left: auto; right: 12px; transform: none; padding: 4px 12px 6px;
+#ui.phone .sys { flex-direction: column; align-items: flex-end; }
+#ui.phone .sys .fullscreen, #ui.phone .sys .help, #ui.phone .sys .settings,
+  #ui.phone .sys .menu .label { display: none; }
+#ui.phone .sys .menu { font-family: var(--text); font-size: 30px; min-width: 64px; min-height: 64px;
+  padding: 0; }
+/* One line on top: the houses, the wind and the turn, the menu. */
+#ui.phone .hud-teams { max-width: none; width: auto; right: 262px; }
+#ui.phone .team { min-width: 0; padding: 4px 8px 4px 6px; }
+#ui.phone .team .name { white-space: normal; line-height: 1.1; overflow: visible; text-overflow: clip; }
+#ui.phone .team .hp { width: 44px; }
+#ui.phone .hud-wind { top: 12px; left: auto; right: 90px; transform: none; padding: 4px 12px 6px;
   flex-direction: column; align-items: stretch; gap: 6px; }
 #ui.phone .hud-wind .game-title { display: none; }
-#ui.phone .hud-wind .wind-row, #ui.phone .hud-wind .turn-row { padding-left: 0; border-left: 0; }
+#ui.phone .hud-wind .wind-row, #ui.phone .hud-wind .turn-row { padding-left: 0; border-left: 0;
+  width: 130px; }
 #ui.phone .hud-wind .turn-row { min-width: 0; }
 #ui.phone .hud-wind .turn { font-size: 28px; text-align: center; }
-#ui.phone .hud-timer { top: 196px; width: 80px; height: 80px; }
-#ui.phone .sys .fullscreen { display: none; }
+#ui.phone .hud-timer { top: 136px; width: 80px; height: 80px; }
 #ui.phone .hud-weapon { right: 50%; bottom: calc(var(--bar-h, 0px) + 8px); transform: translateX(50%);
   width: min(var(--col), calc(100vw - 24px)); }
 #ui.phone .hud-weapon .hint { display: none; }
