@@ -38,6 +38,8 @@ stricte touche aussi les autres jeux.
 | `pnpm run check` | lint, typecheck, Vitest, rejeu des replays, sondes de déterminisme dans les navigateurs | oui |
 | `pnpm run build` | build statique `dist/` | oui |
 
+**Build qui ne trouve plus `phaser` (constaté le 2026-10-25)** : depuis le dossier OneDrive, `vite build` échoue sur « Rolldown failed to resolve import "phaser" », même sur un commit qui se construisait une heure avant ; le résolveur de Vite ne suit plus les jonctions de `node_modules` vers le magasin pnpm (Node et Rolldown seul les suivent). Contournement : cloner le commit poussé hors de OneDrive (`git clone -q . <scratchpad>/mv-build`, `pnpm install --frozen-lockfile`, `pnpm exec vite build`), vérifier le hash dans `dist/`, et lancer `firebase deploy --only hosting:medieverse` depuis ce clone. Le commit déployé reste identifiable, l'arbre du clone est propre.
+
 ## Ne jamais committer
 
 `dist/` · `node_modules/` · `.firebase/` · `.claude/settings.local.json` · `.playwright-mcp/`
