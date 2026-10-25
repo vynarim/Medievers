@@ -11,7 +11,6 @@ import { ANGLE_FULL, cosQ14 } from './math/angle.ts';
 import { isqrt } from './math/isqrt.ts';
 import { nextRange } from './math/prng.ts';
 import type { SimState } from './state.ts';
-import { isSolid } from './terrain/terrain.ts';
 import { UNIT_HEIGHT } from './units/unit.ts';
 
 /** px: a unit's middle, above its feet, where the dragon bites */
@@ -32,9 +31,13 @@ function flightY(s: SimState, x: number, clearance: number): number {
   const x0 = Math.max(0, Math.min(t.width - 1, x - DRAGON_HALF_WIDTH));
   const x1 = Math.max(0, Math.min(t.width - 1, x + DRAGON_HALF_WIDTH));
   let top = t.height;
+  // Read straight from the pixels (x0..x1 are on the map): run every tick, it must be cheap.
+  const solid = t.rules.solid;
+  const data = t.data;
+  const w = t.width;
   for (let cx = x0; cx <= x1; cx += GROUND_SAMPLE) {
-    for (let y = 0; y < top; y++) {
-      if (isSolid(t, cx, y)) {
+    for (let y = 0, i = cx; y < top; y++, i += w) {
+      if (solid[data[i] ?? 0]) {
         top = y;
         break;
       }

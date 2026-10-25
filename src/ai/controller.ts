@@ -99,7 +99,8 @@ export class AiController {
     const prng = createPrng(seed);
     const [lo, hi] = level.thinkMs;
     this.thinkTicks = Math.round((nextRange(prng, lo, hi) * this.opts.ticksPerSecond) / 1000);
-    const input: PlanInput = { state: structuredClone(v) as SimState, team, level, seed };
+    // The match as it stands: the planner copies it (a worker by posting it, planTurn itself).
+    const input: PlanInput = { state: v as SimState, team, level, seed };
     const turn = this.turn;
     try {
       const out = this.opts.planner(input);

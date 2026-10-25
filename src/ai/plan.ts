@@ -24,11 +24,15 @@ import { SANDBOX_PACE, TurnScript, type AiMove, type AiPlan, type AiShot } from 
 const MUZZLE = 20;
 /** ticks a sweep follows a throw at most */
 const FLIGHT_MAX = 480;
+/** ticks of stillness after which a play with only the dragon moving is over */
+const QUIET_TICKS = 30;
 /** ticks a candidate is played for at most, to the end of its turn */
 const PLAY_MAX = 2400;
 /** BAM: the sweep goes from a little under level on one side to the same on the other */
 const SWEEP_FROM = 1792;
 const SWEEP_TO = 4352;
+/** the best throws also tried a little off, on each side (the shake of the hand) */
+const ROBUST = 3;
 /** enemies a throw is searched for more finely, the nearest the sweep came first */
 const REFINED = 2;
 /** px: walks tried, towards the enemy first, then away */
@@ -342,6 +346,7 @@ function play(box: Sandbox, plan: AiPlan, team: number, look?: (v: SimView) => v
   const drowned = new Set<number>();
   const turn = before.turn.number;
   let looked = false;
+  let quiet = 0;
   for (let i = 0; i < PLAY_MAX; i++) {
     const v = sim.view();
     if (!looked && script.moved) {
@@ -352,9 +357,73 @@ function play(box: Sandbox, plan: AiPlan, team: number, look?: (v: SimView) => v
     for (const e of events) if (e.e === 'unitDied' && e.cause === 'drowned') drowned.add(e.unitId);
     const after = sim.view();
     if (after.turn.phase === 'gameOver' || after.turn.number !== turn) break;
+    // A dragon crossing the sky holds the turn's end for half a minute: once the move has been
+    // played and all is still but the dragon (not swooping), what it did is known already.
+    quiet = script.done && after.dragon?.prey === 0 && stillBut(after) ? quiet + 1 : 0;
+    if (quiet >= QUIET_TICKS) break;
   }
   if (!looked) look?.(sim.view());
   return scoreOutcome(before, sim.view(), team, plan.unitId, drowned);
+}
+
+/** Nothing moves but the dragon: no shot, blast, falling block, digging, nor unit in motion. */
+function stillBut(v: SimView): boolean {
+  return (
+    v.shots.length === 0 &&
+    v.explosions.items.length === 0 &&
+    v.blocks.length === 0 &&
+    v.dig === null &&
+    v.units.every((u) => !u.alive || (u.grounded && u.vx === 0 && u.vy === 0))
+  );
+}
+
+/** The throws, blows and volleys worth trying from where unit `u` stands after `move`. */
+function candidatesFrom(
+  at: SimView,
+  u: Readonly<Unit>,
+  move: AiMove,
+  level: AiLevel,
+  team: number,
+): Candidate[] {
+  const out: Candidate[] = [];
+  const unitId = u.id;
+  for (const def of weaponsFor(at, u, level)) {
+    if (isProjectile(def)) {
+      for (const t of throwsAt(at, u, def, level, team)) {
+        out.push({ unitId, move, shot: t.shot, guess: guessWorth(at, def, t.target, t.miss) });
+      }
+    } else if (def.behavior === 'melee') {
+      const reach = (def.reach ?? 30) + 16;
+      for (const e of enemiesOf(at, team)) {
+        const dx = subToPx(e.x) - subToPx(u.x);
+        const dy = subToPx(centreY(e)) - subToPx(centreY(u));
+        if (Math.abs(dx) > reach || Math.abs(dy) > 50) continue;
+        out.push({
+          unitId,
+          move,
+          shot: { weapon: def.id, angle: atan2Bam(dy, dx), power: MAX_POWER },
+          guess: guessWorth(at, def, e, 0),
+        });
+      }
+    } else if (isTargeted(def) && move.kind === 'stay') {
+      // A volley from off the map: on each enemy, from the side it stands on.
+      for (const e of enemiesOf(at, team)) {
+        const ex = subToPx(e.x);
+        out.push({
+          unitId,
+          move,
+          shot: {
+            weapon: def.id,
+            angle: ex >= subToPx(u.x) ? 3584 : 2560,
+            power: MAX_POWER,
+            at: { x: ex, y: subToPx(e.y) },
+          },
+          guess: guessWorth(at, def, e, 0) * 0.8,
+        });
+      }
+    }
+  }
+  return out;
 }
 
 /** The AI's plan for its house's turn. */
@@ -373,65 +442,47 @@ export function planTurn(input: PlanInput): PlanResult {
     const unit = v0.units.find((u) => u.id === unitId);
     if (!unit) continue;
     for (const move of movesFor(v0, unit, team, level)) {
-      // Moving there and passing: what the move alone is worth, and a look around from there.
+      // Moving there and passing: what the move alone is worth, and, once there, a look around
+      // for throws (on the sandbox's live match, before the turn goes on).
       const stay: AiPlan = { unitId, move, shot: null };
-      let seen: SimView | null = null;
-      const score = play(box, stay, team, (v) => {
-        seen = structuredClone(v);
+      const score = play(box, stay, team, (at) => {
+        const u = at.units.find((x) => x.id === unitId);
+        if (u?.alive && at.turn.phase === 'action') {
+          candidates.push(...candidatesFrom(at, u, move, level, team));
+        }
       });
       played++;
       consider(stay, score);
-      const at = seen as SimView | null;
-      const u = at?.units.find((x) => x.id === unitId);
-      if (!at || !u?.alive || at.turn.phase !== 'action') continue;
-      for (const def of weaponsFor(at, u, level)) {
-        if (isProjectile(def)) {
-          for (const t of throwsAt(at, u, def, level, team)) {
-            candidates.push({
-              unitId,
-              move,
-              shot: t.shot,
-              guess: guessWorth(at, def, t.target, t.miss),
-            });
-          }
-        } else if (def.behavior === 'melee') {
-          const reach = (def.reach ?? 30) + 16;
-          for (const e of enemiesOf(at, team)) {
-            const dx = subToPx(e.x) - subToPx(u.x);
-            const dy = subToPx(centreY(e)) - subToPx(centreY(u));
-            if (Math.abs(dx) > reach || Math.abs(dy) > 50) continue;
-            const angle = atan2Bam(dy, dx);
-            candidates.push({
-              unitId,
-              move,
-              shot: { weapon: def.id, angle, power: MAX_POWER },
-              guess: guessWorth(at, def, e, 0),
-            });
-          }
-        } else if (isTargeted(def) && move.kind === 'stay') {
-          // A volley from off the map: on each enemy, from the side it stands on.
-          for (const e of enemiesOf(at, team)) {
-            const ex = subToPx(e.x);
-            const angle = ex >= subToPx(u.x) ? 3584 : 2560;
-            candidates.push({
-              unitId,
-              move,
-              shot: { weapon: def.id, angle, power: MAX_POWER, at: { x: ex, y: subToPx(e.y) } },
-              guess: guessWorth(at, def, e, 0) * 0.8,
-            });
-          }
-        }
-      }
     }
   }
 
   // The most promising throws, played to the end of the turn.
   candidates.sort((a, b) => b.guess - a.guess);
+  const shots: { plan: AiPlan; score: number }[] = [];
   for (const c of candidates.slice(0, level.candidates)) {
     const plan: AiPlan = { unitId: c.unitId, move: c.move, shot: c.shot };
-    consider(plan, play(box, plan, team));
+    shots.push({ plan, score: play(box, plan, team) });
     played++;
   }
+  // The hand shakes: the best throws are tried a little off on each side as well, and count
+  // for the mean of their own score and the worse of the two, so that a throw that would burn
+  // its own side if slightly off is not taken.
+  shots.sort((a, b) => b.score - a.score);
+  shots.forEach((s, i) => {
+    const shot = s.plan.shot;
+    if (i >= ROBUST || !shot || shot.at || level.angleNoise === 0) {
+      consider(s.plan, s.score);
+      return;
+    }
+    const off = Math.round((level.angleNoise * 2) / 3);
+    const worst = Math.min(
+      ...[-off, off].map((d) =>
+        play(box, { ...s.plan, shot: { ...shot, angle: (shot.angle + d) & ANGLE_MASK } }, team),
+      ),
+    );
+    played += 2;
+    consider(s.plan, (s.score + worst) / 2);
+  });
   const chosen = best as { plan: AiPlan; score: number } | null;
   const plan = chosen?.plan ?? { unitId: v0.turn.activeUnitId, move: { kind: 'stay' }, shot: null };
   return { plan: shaken(plan, level, createPrng(input.seed)), score: chosen?.score ?? 0, played };

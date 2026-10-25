@@ -78,8 +78,9 @@ function playGame(theme: MapTheme, seed: number, gameLevels: readonly AiLevelId[
   let weapon = '';
   // Damage counts as the AI's own doing between its shot and the end of its turn.
   let shooting = false;
-  // Each unit's x at the end of its last turns, to find the ones that never move.
-  const moves = new Map<number, number[]>();
+  // Turns in a row each unit meant to walk and could not move, to find the ones stuck (GDD §10).
+  const blocked = new Map<number, number>();
+  let turnX = 0;
   const stuck: { unitId: number; x: number; turn: number }[] = [];
   let error: string | undefined;
   try {
@@ -89,6 +90,7 @@ function playGame(theme: MapTheme, seed: number, gameLevels: readonly AiLevelId[
       const active = v.turn.activeUnitId;
       const team = v.turn.activeTeam;
       const turn = v.turn.number;
+      if (v.turn.phase === 'transition') turnX = v.units.find((u) => u.id === active)?.x ?? 0;
       const cmds = ctrl.poll(tick, v);
       for (const c of cmds) commands.push([tick, c]);
       const events = sim.step(cmds);
@@ -110,15 +112,11 @@ function playGame(theme: MapTheme, seed: number, gameLevels: readonly AiLevelId[
           weapon = '';
           shooting = false;
           const u = sim.view().units.find((x) => x.id === active);
-          if (u?.alive) {
-            const xs = moves.get(active) ?? [];
-            xs.push(u.x);
-            moves.set(active, xs);
-            const last = xs.slice(-4);
-            if (last.length === 4 && last.every((x) => Math.abs(x - (last[0] ?? 0)) < 2 * 256)) {
-              stuck.push({ unitId: active, x: u.x >> 8, turn });
-              moves.set(active, []);
-            }
+          const plan = ctrl.last?.plan;
+          if (u?.alive && plan?.unitId === active && plan.move.kind === 'walk') {
+            const n = Math.abs(u.x - turnX) < 2 * 256 ? (blocked.get(active) ?? 0) + 1 : 0;
+            blocked.set(active, n);
+            if (n === 3) stuck.push({ unitId: active, x: u.x >> 8, turn });
           }
         }
       }
