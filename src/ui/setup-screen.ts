@@ -15,6 +15,7 @@ import {
 import { AI_LEVEL_IDS, type AiLevelId } from '../content/ai.ts';
 import { t } from './i18n.ts';
 import { button, el, infoButton, shield, uiRoot } from './overlay.ts';
+import { playerArt } from './player-art.ts';
 import { css } from './tokens.ts';
 
 const STYLE = `
@@ -35,6 +36,8 @@ const STYLE = `
   width: 118px; border: 2px solid var(--encre); border-radius: 4px; background: var(--ceruse);
   color: var(--encre); }
 #ui .setup select.player { width: 196px; font-family: var(--caps); }
+#ui .setup .player-pick { display: flex; align-items: center; gap: 6px; flex: none; }
+#ui .setup .player-pick .face { flex: none; line-height: 0; }
 #ui .setup .tools { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
 #ui .setup .tools button, #ui .setup .start button { white-space: nowrap; flex: none; }
 #ui .setup .tools .note { flex: 1 1 auto; margin: 0 0 0 8px; font-size: 15px; }
@@ -62,7 +65,8 @@ const STYLE = `
 #ui.phone .setup .house .name { order: 0; flex: 1 1 calc(100% - 60px); min-width: 0; }
 #ui.phone .setup .house button.drop { order: 1; }
 #ui.phone .setup select { flex: 1 1 30%; min-width: 0; width: auto; }
-#ui.phone .setup select.player { flex: 1 1 100%; width: auto; }
+#ui.phone .setup .player-pick { flex: 1 1 100%; }
+#ui.phone .setup select.player { flex: 1 1 auto; min-width: 0; width: auto; }
 #ui.phone .setup .tools { flex-wrap: wrap; justify-content: center; }
 #ui.phone .setup .tools button { flex: 1 1 40%; }
 #ui.phone .setup .start { flex-wrap: wrap; justify-content: center; }
@@ -173,7 +177,12 @@ export function showSetupScreen(
         });
         update({ ...setup, players: next });
       });
-      row.append(who);
+      // Beside it, who that is: the village idiot (you) or a helm of rivets (the AI).
+      const face = el('span', 'face');
+      face.innerHTML = playerArt(players[h] === 'human' ? 'human' : 'ai');
+      const pick = el('div', 'player-pick');
+      pick.append(face, who);
+      row.append(pick);
       const setLineup = (next: ClassId[]): void => {
         const lineups = setup.lineups.map((l, k) => (k === h ? next : [...l]));
         update({ ...setup, lineups });
