@@ -11,7 +11,9 @@ import {
   type Chord,
 } from '../content/music.ts';
 
-const KEY = 'medieverse.music.v1';
+const KEY = 'medieverse.music.v2';
+/** The first settings (2026-10-25): their volume was the old default, only on/off is kept. */
+const OLD_KEY = 'medieverse.music.v1';
 
 export interface MusicSettings {
   /** the music plays */
@@ -22,7 +24,10 @@ export interface MusicSettings {
 
 export function loadMusicSettings(): MusicSettings {
   try {
-    const raw: unknown = JSON.parse(localStorage.getItem(KEY) ?? 'null');
+    const old: unknown = JSON.parse(localStorage.getItem(OLD_KEY) ?? 'null');
+    const raw: unknown =
+      JSON.parse(localStorage.getItem(KEY) ?? 'null') ??
+      (old && typeof old === 'object' ? { on: (old as { on?: unknown }).on } : null);
     if (raw && typeof raw === 'object') {
       const r = raw as { on?: unknown; volume?: unknown };
       return {
@@ -262,7 +267,7 @@ class Music {
   }
 
   private gainOf(volume: number): number {
-    // Loudness grows faster than the slider: its low end stays usable. At 35, peaks near 0.12.
+    // Loudness grows faster than the slider: its low end stays usable. At 25, peaks near 0.07.
     return 0.9 * (volume / 100) ** 1.5;
   }
 

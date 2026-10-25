@@ -135,4 +135,4 @@ export const EIGHTHS_PER_BAR = 6;
 export const EIGHTH_SECONDS = 0.2;
 
 /** Default loudness of the music, 0 to 100: discreet, under the sound effects. */
-export const DEFAULT_MUSIC_VOLUME = 35;
+export const DEFAULT_MUSIC_VOLUME = 25;
