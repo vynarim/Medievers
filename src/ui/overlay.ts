@@ -237,7 +237,9 @@ html.phone #game { height: calc(100% - var(--bar-h, 0px)); }
   width: 130px; }
 #ui.phone .hud-wind .turn-row { min-width: 0; }
 #ui.phone .hud-wind .turn { font-size: 28px; text-align: center; }
-#ui.phone .hud-timer { top: 136px; width: 80px; height: 80px; }
+#ui.phone .hud-timer { top: 88px; right: 12px; width: 76px; height: 76px; }
+/* The default-view button, when shown, under the hourglass. */
+#ui.phone .sys .reset { position: absolute; top: 160px; right: 0; }
 #ui.phone .hud-weapon { right: 50%; bottom: calc(var(--bar-h, 0px) + 8px); transform: translateX(50%);
   width: min(var(--col), calc(100vw - 24px)); }
 #ui.phone .hud-weapon .hint { display: none; }

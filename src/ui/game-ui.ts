@@ -241,7 +241,7 @@ export class GameUi {
     bar.append(pad, el('div', 'sep'), arms, el('div', 'sep'), switchUnit, this.skip);
     const sys = el('div', 'sys');
     // Shown only away from the default view (showResetView).
-    this.resetView = this.click(button(t('ui.resetView'), 'icon hidden'), () => opts.resetView());
+    this.resetView = this.click(button(t('ui.resetView'), 'icon reset hidden'), () => opts.resetView());
     this.resetView.title = t('tip.resetView');
     // Not on a phone held upright (overlay.ts): the page already fills it.
     if (document.fullscreenEnabled) sys.append(this.fullscreenButton());
