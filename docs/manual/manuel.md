@@ -135,7 +135,7 @@ L'**épée** et la **charge à l'écu** sont jouables aussi {{st:jeu}}. L'épée
 
 | Outil | Effet | Munitions |
 |---|---|---|
-| **Grappin** | Une corde pour se balancer, la lâcher et la relancer en l'air | 5 |
+| **Grappin** {{st:jeu}} | Visez un plafond ou un rebord, « Accrocher » : vous pendez au bout de la corde (400 px au plus). ← → donnent de l'élan, ↑ ↓ (ou les boutons ↑ et ↓ de l'écran) remontent et descendent la corde ; remonté jusqu'à un rebord, vous vous hissez dessus. Un saut lâche la corde ; en l'air, « Accrocher » la relance gratuitement. Ce n'est pas votre action : vous pouvez tirer ensuite | 5 |
 | **Mur de pierres** {{st:jeu}} | Cliquez sur la carte pour poser un bloc de pierre taillée, jusqu'à 320 px de vous ; la pierre est lourde : il tombe tout droit jusqu'au sol, où son contour s'affiche. La visée le tourne (par pas de 22,5°), les boutons 1 à 3 choisissent sa longueur (48, 80 ou 120 px). Son contour s'affiche sous la souris, en rouge là où il ne peut pas aller (trop loin, sur un combattant, en pleine terre) : le mur n'est alors pas posé et vous le gardez | 2 |
 | **Bannière** {{st:jeu}} | « Brandir », puis sautez ou marchez dans le vide (ou brandissez-la en pleine chute) : on descend lentement, porté par le vent, et l'on atterrit sans se blesser. Brandir la bannière n'est pas votre action : vous pouvez encore tirer | 3 |
 | **Pioche** {{st:jeu}} | « Creuser » : creuse droit vers le bas pendant 3 s, environ 90 px dans la terre (180 pour un Sapeur), plus lentement dans la pierre, pas du tout dans la roche. Le temps du tour s'arrête pendant qu'on creuse | 2 |

@@ -267,6 +267,20 @@ describe('the AI rope', () => {
       expect(sim.view().units.find((u) => u.id === 2)?.hp ?? 100).toBeLessThan(100);
     }
 
+    // Grapple: out of a shaft 300 px deep, hoisted at its lip.
+    const shaft = flatMask();
+    const deep: Mask = { width: 2000, height: 1000, data: new Uint8Array(2000 * 1000) };
+    deep.data.set(shaft.data);
+    for (let y = 800; y < 1000; y++) deep.data.fill(Material.Earth, y * 2000, (y + 1) * 2000);
+    for (let y = 600; y < 900; y++) deep.data.fill(Material.Air, y * 2000 + 380, y * 2000 + 420);
+    const pit = new Sim({ rules: RULES, teams: [{ spawns: [400] }, { spawns: [1400] }] }, 3, deep);
+    for (let i = 0; i < 1000 && pit.view().turn.phase !== 'action'; i++) pit.step();
+    expect(px(pit, 1, 'y')).toBe(900);
+    const out = planTurn({ state: pit.snapshot(), team: 0, level: STILL, seed: 1 });
+    expect(out.plan.move.kind).toBe('grapple');
+    playOut(pit, out.plan);
+    expect(px(pit, 1, 'y')).toBe(600);
+
     // Miracle: up onto the cliff, from the plain.
     const miracle = duel(300, 1400);
     playOut(miracle, { unitId: 1, move: { kind: 'miracle', x: 1000, y: 400 }, shot: null });

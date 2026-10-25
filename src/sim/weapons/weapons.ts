@@ -36,6 +36,7 @@ import { igniteStructureAt, shotHitsStructure } from '../structures.ts';
 import { flameAt } from '../flames.ts';
 import { letLoose } from '../walkers.ts';
 import { breakHive } from '../swarms.ts';
+import { shootHook } from '../rope.ts';
 import {
   buildWall,
   launchStrike,
@@ -139,6 +140,12 @@ export function fire(
       ...damagePct,
     });
     events.push({ e: 'shotFired', shotId: id, weapon: def.id });
+    return true;
+  }
+  if (def.behavior === 'rope') {
+    if (!shootHook(state, u, def, events)) return false;
+    events.push({ e: 'shotFired', shotId: id, weapon: def.id });
+    events.push({ e: 'shotEnded', shotId: id });
     return true;
   }
   if (def.behavior === 'walker') {

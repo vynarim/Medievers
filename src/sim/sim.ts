@@ -47,6 +47,7 @@ import { blastReachesMines, stepDig, stepMines } from './tools.ts';
 import { weatherTurnEnd } from './weather.ts';
 import { blastReachesWalkers, detonateWalkers, stepWalkers } from './walkers.ts';
 import { stepSwarms } from './swarms.ts';
+import { letGo, swing } from './rope.ts';
 import { isTargeted, type WeaponId } from '../content/weapons.ts';
 import { MAX_POWER } from './commands.ts';
 import { delugeTurnEnd, drownThings, drownUnits, hasWater, underWater } from './deluge.ts';
@@ -248,6 +249,10 @@ function teamAlive(s: SimState, team: TeamState): boolean {
 }
 
 function setPhase(s: SimState, phase: Phase, ticks: number, events: SimEvent[]): void {
+  // The rope is let go once the turn's moves are over.
+  if (s.turn.grapple && phase !== 'action' && phase !== 'retreat') {
+    letGo(s, unitById(s, s.turn.activeUnitId), events);
+  }
   s.turn.phase = phase;
   s.turn.phaseTicks = ticks;
   s.turn.resolutionTicks = 0;
@@ -415,6 +420,15 @@ function applyCommand(s: SimState, c: GameCommand, events: SimEvent[]): void {
   }
   const u = unitById(s, t.activeUnitId);
   if (!u?.alive || !canMove) return;
+  // Hanging from the grappling hook: ↑ ↓ haul the rope in or pay it out, a jump lets go.
+  if (t.grapple && c.t === 'climb') {
+    t.climbDir = c.dir;
+    return;
+  }
+  if (t.grapple && c.t === 'jump') {
+    letGo(s, u, events);
+    return;
+  }
   // On its way up or down a ladder that ends the turn, the unit only climbs (GDD §4.4).
   if (s.rules.unit.ladderEndsTurn && t.climbDir !== 0) return;
   // In its shell (snail trick): no walking nor jumping this turn, shooting is fine.
@@ -507,7 +521,9 @@ function applyCommand(s: SimState, c: GameCommand, events: SimEvent[]): void {
       const wi = weaponIndexIn(s.rules, t.weapon);
       const ammo = team?.ammo[wi] ?? 0;
       const def = weaponDefIn(s.rules, t.weapon);
-      if (!team || ammo === 0 || !mayUse(s, u, def)) return;
+      // Shot again in the air, the grapple costs nothing more (GDD §4.4).
+      const flying = def.rope !== undefined && t.ropeFlight === true;
+      if (!team || (ammo === 0 && !flying) || !mayUse(s, u, def)) return;
       // A clicked point only means something to a weapon aimed at a point.
       if (c.t === 'fireAt' && !isTargeted(def)) return;
       if (t.fuse === 0) t.fuse = def.defaultFuse;
@@ -516,7 +532,7 @@ function applyCommand(s: SimState, c: GameCommand, events: SimEvent[]): void {
         events.push({ e: 'toolRefused', weapon: def.id });
         return;
       }
-      if (ammo > 0) team.ammo[wi] = ammo - 1;
+      if (ammo > 0 && !flying) team.ammo[wi] = ammo - 1;
       // The ladder and the banner are not the turn's action; the miracle ends the turn.
       if (def.free) break;
       t.fired = true;
@@ -545,7 +561,9 @@ function advanceTick(s: SimState, phaseJustSet: boolean, events: SimEvent[]): vo
 
   const budgeted = s.rules.unit.moveBudget !== undefined;
   if (t.turnHold > 0) t.turnHold--;
-  else if (
+  else if (t.grapple) {
+    // Hanging from the hook: the swing is done with the units' physics below.
+  } else if (
     active?.alive &&
     t.walkDir !== 0 &&
     (t.phase === 'action' || t.phase === 'retreat') &&
@@ -630,6 +648,10 @@ function advanceTick(s: SimState, phaseJustSet: boolean, events: SimEvent[]): vo
   stepWalkers(s, events);
   for (const u of s.units) {
     if (!u.alive) continue;
+    if (t.grapple && u.id === t.activeUnitId) {
+      swing(s, u, weaponDefIn(s.rules, 'grapple'), events);
+      continue;
+    }
     const held = u.banner === true && !u.grounded && !u.climbing;
     if (held) holdBanner(s, u);
     const r = stepUnitPhysics(u, s.terrain, s.rules.unit);
@@ -646,6 +668,8 @@ function advanceTick(s: SimState, phaseJustSet: boolean, events: SimEvent[]): vo
     }
   }
 
+  // Down on the ground again: the next grapple is a new one.
+  if (t.ropeFlight && !t.grapple && active?.grounded) t.ropeFlight = false;
   drownUnits(s, events);
   stepShots(s, events);
   stepSwarms(s, events);
@@ -1108,6 +1132,11 @@ function hashState(s: SimState): number {
   if (s.rules.weapons.some((w) => w.dig)) {
     const g = s.dig;
     for (const v of g ? [g.id, g.unitId, g.dx, g.dy, g.x, g.y, g.speed, g.ticksLeft] : [-1]) int(v);
+  }
+  if (s.rules.weapons.some((w) => w.rope)) {
+    const g = t.grapple;
+    for (const v of g ? [g.x, g.y, g.len] : [-1]) int(v);
+    int(t.ropeFlight ? 1 : 0);
   }
   if (s.rules.weapons.some((w) => w.charge)) {
     const c = s.charge;

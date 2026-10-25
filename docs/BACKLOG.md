@@ -87,7 +87,7 @@ La priorité est le moteur : simulation, règles, réseau, IA. Jusqu'au lot 9, t
 | 4.2 | Ruche, faucon | idem — fait le 2026-10-25 (replay `hive-falcon`) |
 | 4.3 | Volée de trébuchet, pluie de flèches | idem — fait le 2026-10-25 (replays `trebuchet`, `arrow-rain`) |
 | 4.4 | Épée, masse, charge à l'écu | idem — fait le 2026-10-25 (replays `mace`, `sword-charge`) |
-| 4.5 | Grappin (V1 : un seul ancrage) et escalade au grappin (GDD §4.4 : sortir d'un trou, monter sur un rempart ; 10 PV, fin du tour) | idem ; un combattant au fond d'un trou de 300 px en sort |
+| 4.5 | Grappin (V1 : un seul ancrage) et escalade au grappin (GDD §4.4 : sortir d'un trou, monter sur un rempart ; 10 PV, fin du tour) | idem ; un combattant au fond d'un trou de 300 px en sort — fait le 2026-10-25 (replay `grapple`, test du trou de 300 px ; escalade sans les 10 PV, à confirmer) |
 | 4.6 | Mur de pierres, échelle, bannière | idem — fait le 2026-10-25 (replays `stone-wall`, `ladder-banner-miracle`) |
 | 4.7 | Pioche, sape, chausse-trape (visibilité par équipe), miracle | idem — fait le 2026-10-25 (replays `pick-sap`, `caltrop`, `ladder-banner-miracle`) |
 | 4.8 | UI d'arsenal (greybox) + munitions | Accessible au clavier et au tactile |

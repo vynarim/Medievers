@@ -145,6 +145,10 @@ export type SimEvent =
   | { readonly e: 'stung'; readonly unitId: number }
   /** a swarm scattered */
   | { readonly e: 'swarmGone'; readonly id: number }
+  /** the grappling hook caught the ground at (x, y) px; the unit hangs from it */
+  | { readonly e: 'hooked'; readonly unitId: number; readonly x: number; readonly y: number }
+  /** the unit let go of its rope */
+  | { readonly e: 'unhooked'; readonly unitId: number }
   /** a unit held up its banner */
   | { readonly e: 'bannerRaised'; readonly unitId: number }
   | { readonly e: 'gameOver'; readonly winner: number };

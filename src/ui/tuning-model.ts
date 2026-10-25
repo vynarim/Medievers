@@ -48,6 +48,14 @@ function weaponFields(w: WeaponDef): TuningField[] {
       field(`${p}.dig.radius`, 'tuning.digRadius', 'units.px', 1, 1, 15, 40),
     ];
   }
+  if (w.rope) {
+    return [
+      ammo,
+      field(`${p}.rope.length`, 'tuning.ropeLength', 'units.px', 1, 10, 50, 1200),
+      field(`${p}.rope.climbSpeed`, 'tuning.ropeHaul', 'units.pxPerTick', SUB, 0.25, 0.25, 10),
+      field(`${p}.rope.pump`, 'tuning.ropePump', 'units.subPxPerTick2', 1, 1, 0, 100),
+    ];
+  }
   if (w.teleport) {
     return [
       ammo,

@@ -22,7 +22,8 @@ export type WeaponId =
   | 'banner'
   | 'flamingPig'
   | 'beehive'
-  | 'falcon';
+  | 'falcon'
+  | 'grapple';
 
 /** Fragments a cluster weapon throws when it bursts (pot de poix, GDD §4.1). */
 export interface FragmentDef {
@@ -161,6 +162,18 @@ export interface HomingDef {
   readonly reach: number;
 }
 
+/** Grappin (GDD §4.4): a rope shot at the ground above, to swing from, let go and shoot again. */
+export interface RopeDef {
+  /** px: the farthest the hook catches */
+  readonly length: number;
+  /** px: the shortest the rope is hauled in to */
+  readonly minLength: number;
+  /** sub-px/tick the rope is hauled in or paid out by */
+  readonly climbSpeed: number;
+  /** sub-px/tick²: the push of ← → as the unit swings */
+  readonly pump: number;
+}
+
 export interface WeaponDef {
   readonly id: WeaponId;
   /** behaviour implemented in src/sim/weapons */
@@ -179,7 +192,8 @@ export interface WeaponDef {
     | 'banner'
     | 'walker'
     | 'hive'
-    | 'homing';
+    | 'homing'
+    | 'rope';
   /** px; 0 = point projectile */
   readonly projectileRadius: number;
   /** percent of wind acceleration applied (GDD §4.1 « Vent ») */
@@ -249,6 +263,7 @@ export interface WeaponDef {
   readonly walker?: WalkerDef;
   readonly hive?: HiveDef;
   readonly homing?: HomingDef;
+  readonly rope?: RopeDef;
   readonly teleport?: TeleportDef;
   readonly ladder?: LadderDef;
   readonly banner?: BannerDef;
@@ -536,6 +551,17 @@ export const WEAPONS: readonly WeaponDef[] = [
     defaultFuse: 0,
     ammo: 1,
     homing: { speed: 8 * 256, turn: 80, rise: 16, windDrift: 24, ticks: 6 * 60, reach: 1200 },
+  },
+  {
+    // Grappin (2026-10-25): a hook shot along the aim catches the first ground within 400 px;
+    // the unit hangs and swings from it (← → push, ↑ ↓ haul in or pay out), lets go with a
+    // jump, and may shoot it again in the air. Not the turn's action: a shot may follow.
+    id: 'grapple',
+    behavior: 'rope',
+    ...TOOL,
+    ammo: 5,
+    free: true,
+    rope: { length: 400, minLength: 30, climbSpeed: 3 * 256, pump: 12 },
   },
   {
     // Miracle (2026-10-25): the unit is set down on the free point clicked (or along the aim, as

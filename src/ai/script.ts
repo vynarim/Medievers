@@ -24,6 +24,11 @@ export type AiMove =
   /** a ladder set up against the wall on side `face`, then climbed; it ends the turn */
   | { readonly kind: 'ladder'; readonly face: -1 | 1 }
   /**
+   * the grappling hook shot along `angle`, the rope hauled in for at most `haul` ticks (a ledge
+   * at the hook hoists the unit onto it), then let go with a jump
+   */
+  | { readonly kind: 'grapple'; readonly angle: number; readonly haul: number }
+  /**
    * « Grimper »: a rope up the wall (dir -1) or down the drop (1) on side `face`; it is the turn's
    * action and ends the turn (rules.unit.wallClimb), so no shot follows
    */
@@ -70,6 +75,8 @@ type Stage =
   | 'banner'
   | 'pray'
   | 'ladder'
+  | 'hook'
+  | 'hauling'
   | 'settle'
   | 'weapon'
   | 'aim'
@@ -153,6 +160,13 @@ export class TurnScript {
           this.go(m.kind);
           return m.kind === 'ladder' ? [{ t: 'selectWeapon', id: 'ladder' }] : [];
         }
+        if (m.kind === 'grapple') {
+          this.go('hook');
+          return [
+            { t: 'selectWeapon', id: 'grapple' },
+            { t: 'aim', angle: m.angle },
+          ];
+        }
         if (m.kind === 'miracle') {
           this.go('pray');
           return [{ t: 'selectWeapon', id: 'miracle' }];
@@ -172,6 +186,26 @@ export class TurnScript {
         const m = plan.move;
         this.go('settle');
         return m.kind === 'jump' ? [{ t: 'jump', kind: m.jump, dir: m.dir }] : [];
+      }
+      case 'hook':
+        this.go('hauling');
+        return [
+          { t: 'fire', power: 0 },
+          { t: 'climb', dir: -1 },
+        ];
+      case 'hauling': {
+        const m = plan.move;
+        // Hoisted onto a ledge, or never caught: on to the shot.
+        if (!t.grapple) {
+          this.go('settle');
+          return [{ t: 'climb', dir: 0 }];
+        }
+        if (m.kind === 'grapple' && this.ticks < m.haul) return [];
+        this.go('settle');
+        return [
+          { t: 'climb', dir: 0 },
+          { t: 'jump', kind: 'forward' },
+        ];
       }
       case 'pray': {
         const m = plan.move;

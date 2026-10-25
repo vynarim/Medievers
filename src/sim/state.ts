@@ -208,6 +208,16 @@ export interface TurnState {
   climbDir: -1 | 0 | 1;
   /** px: where the rope up or down a wall takes the active unit (rules.unit.wallClimb); null otherwise */
   rope: { readonly x: number; readonly y: number } | null;
+  /**
+   * the grappling hook (GDD §4.4): px of the point it caught, and the rope's length in 1/16 px;
+   * null when the active unit hangs from none. Only ever set with the grapple.
+   */
+  grapple?: { readonly x: number; readonly y: number; len: number } | null;
+  /**
+   * the grapple was used since the unit last stood on the ground: shooting it again in the air
+   * costs nothing more (GDD §4.4). Only ever set with the grapple.
+   */
+  ropeFlight?: boolean;
   /** ticks left turning round on the spot before walking (rules.unit.turnTicks) */
   turnHold: number;
   /** sub-px of walking left this turn (rules.unit.moveBudget); unused when there is no budget */

@@ -1720,6 +1720,18 @@ export class BattleScene extends Phaser.Scene {
   /** The rope a unit goes up or down a wall on, from the edge of the wall to its hands. */
   private drawRope(g: Phaser.GameObjects.Graphics, alpha: number): void {
     const v = this.sim.view();
+    const hook = v.turn.grapple;
+    const active = v.units.find((x) => x.id === v.turn.activeUnitId);
+    if (hook && active) {
+      // The grappling hook's rope, from the middle of the body to the iron hook in the ground.
+      const [x, y] = this.pos(`u${active.id}`, alpha, active.x, active.y);
+      g.lineStyle(5, COLORS.encre, 1);
+      g.lineBetween(hook.x, hook.y, x, y - UNIT_HEIGHT / 2);
+      g.lineStyle(3, COLORS.ocre, 1);
+      g.lineBetween(hook.x, hook.y, x, y - UNIT_HEIGHT / 2);
+      g.lineStyle(3, COLORS.encre, 1);
+      g.strokeCircle(hook.x, hook.y, 5);
+    }
     const rope = v.turn.rope;
     const u = v.units.find((x) => x.id === v.turn.activeUnitId);
     if (!rope || !u) return;

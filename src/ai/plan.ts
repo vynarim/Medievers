@@ -17,6 +17,7 @@ import { Sim, canPlace, canSwitchUnit, type SimView } from '../sim/sim.ts';
 import type { SimState } from '../sim/state.ts';
 import { isSolid, type Terrain } from '../sim/terrain/terrain.ts';
 import { ladderLook, teleportLanding } from '../sim/tools.ts';
+import { hookPoint, ledgeBeside } from '../sim/rope.ts';
 import { ropeTarget } from '../sim/units/climb.ts';
 import { UNIT_HALF_WIDTH, UNIT_HEIGHT, type Unit } from '../sim/units/unit.ts';
 import { shotSpeed } from '../sim/weapons/weapons.ts';
@@ -418,6 +419,9 @@ function movesFor(v: SimView, u: Readonly<Unit>, team: number, level: AiLevel): 
         }
       }
     }
+    // The grappling hook, up out of a pit or onto a height: shot straight up, or a little
+    // towards either side, and hauled in (hoisted at a ledge, else let go at the top).
+    if (has(v, team, 'grapple')) moves.push(...grapplesFor(v, u));
     // A jump towards the enemy under the banner, to come down a drop unhurt.
     if (has(v, team, 'banner'))
       moves.push({ kind: 'jump', jump: 'forward', dir: toward, banner: true });
@@ -425,6 +429,38 @@ function movesFor(v: SimView, u: Readonly<Unit>, team: number, level: AiLevel): 
   // The water of the Déluge or the fire of the parchment coming for it: a miracle to the heights.
   if (has(v, team, 'miracle') && inDanger(v, u)) moves.push(...miraclesFor(v, u));
   return moves;
+}
+
+/** BAM between two aims the AI tries the grappling hook at, from nearly level left to right */
+const GRAPPLE_STEP = 2;
+/** ticks it hauls the rope in at most before letting go */
+const GRAPPLE_HAUL = 240;
+/** grappling hooks tried: the highest ledges it can be hoisted onto */
+const GRAPPLES = 2;
+
+/**
+ * The grappling hook shot at the lip of a ledge it can be hoisted onto, the highest ones first
+ * (out of a pit, onto a height); swinging is left to the players.
+ */
+function grapplesFor(v: SimView, u: Readonly<Unit>): AiMove[] {
+  const rope = v.rules.weapons.find((w) => w.rope)?.rope;
+  if (!rope) return [];
+  const t = v.terrain as Terrain;
+  const found: { angle: number; x: number; y: number }[] = [];
+  for (let a = 2112; a <= 4032; a += GRAPPLE_STEP) {
+    const p = hookPoint(t, u, a, rope);
+    const spot = p && ledgeBeside(t, p.x, p.y);
+    // Only somewhere higher than where it stands.
+    if (spot && spot.y < subToPx(u.y) - 20) found.push({ angle: a, ...spot });
+  }
+  found.sort((a, b) => a.y - b.y);
+  const out: AiMove[] = [];
+  for (const f of found) {
+    if (out.length >= GRAPPLES) break;
+    if (out.some((m) => m.kind === 'grapple' && Math.abs(m.angle - f.angle) < 64)) continue;
+    out.push({ kind: 'grapple', angle: f.angle, haul: GRAPPLE_HAUL });
+  }
+  return out;
 }
 
 /** The house still has some of weapon `id` in its arsenal. */
@@ -483,7 +519,12 @@ function miraclesFor(v: SimView, u: Readonly<Unit>): AiMove[] {
 
 /** What the tools a move spends are worth keeping: a limited weapon used up for a move. */
 function moveCost(m: AiMove): number {
-  if (m.kind === 'miracle' || m.kind === 'ladder' || (m.kind === 'jump' && m.banner)) {
+  if (
+    m.kind === 'miracle' ||
+    m.kind === 'ladder' ||
+    m.kind === 'grapple' ||
+    (m.kind === 'jump' && m.banner)
+  ) {
     return AI_SCORE.toolCost;
   }
   return 0;

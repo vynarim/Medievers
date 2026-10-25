@@ -146,6 +146,13 @@ const ART: Record<WeaponId, string> = {
     <path d="M38 22 L43 23 L38 25 Z" fill="${C.gold}" ${s(1)}/>
     <circle cx="35" cy="22" r="1.2" fill="${INK}"/>
     <path d="M14 26 L20 24 M48 22 L52 21 M12 22 L16 21" ${s(1.2)}/>`,
+  grapple: `
+    <path d="M32 30 L32 12 M32 30 Q20 32 18 22 M32 30 Q44 32 46 22" fill="none" ${s(4)}/>
+    <path d="M32 30 L32 12 M32 30 Q20 32 18 22 M32 30 Q44 32 46 22" fill="none" stroke="${C.stone}" stroke-width="2"/>
+    <path d="M18 22 L15 25 M46 22 L49 25" ${s(2.5)}/>
+    <circle cx="32" cy="10" r="3" fill="none" ${s(2)}/>
+    <path d="M32 33 Q26 42 34 48 Q42 54 30 60" fill="none" ${s(3.5)}/>
+    <path d="M32 33 Q26 42 34 48 Q42 54 30 60" fill="none" stroke="${C.ochre}" stroke-width="1.8"/>`,
   miracle: `
     <circle cx="32" cy="26" r="16" fill="${C.gold}" ${s(2)}/>
     <path d="M32 2 L32 8 M32 44 L32 50 M8 26 L14 26 M50 26 L56 26 M15 9 L19 13 M45 39 L49 43 M49 9 L45 13 M19 39 L15 43" ${s(2)}/>

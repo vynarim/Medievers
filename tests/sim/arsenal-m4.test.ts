@@ -384,3 +384,72 @@ describe('falcon (GDD §4.1)', () => {
     expect(land(10)).toBeGreaterThan(land(0));
   });
 });
+
+describe('grapple (GDD §4.4)', () => {
+  it('catches the ground above, swings, lets go with a jump, without taking the action', () => {
+    const mask = flatMask();
+    // A rock ceiling from y = 200 to 220, over x 300 to 800; the unit stands left of it.
+    for (let y = 200; y < 220; y++) mask.data.fill(Material.Rock, y * 1200 + 300, y * 1200 + 800);
+    const sim = match(CALM, 240, [1000], mask);
+    const events = run(
+      sim,
+      [
+        { t: 'selectWeapon', id: 'grapple' },
+        { t: 'aim', angle: 3584 },
+        { t: 'fire', power: 0 },
+      ],
+      0,
+    );
+    expect(events.find((e) => e.e === 'hooked')).toMatchObject({ y: 219 });
+    expect(sim.view().turn.fired).toBe(false);
+    // Hauled in: up it goes.
+    run(sim, [{ t: 'climb', dir: -1 }], 90);
+    expect(px(unit(sim, 1)?.y)).toBeLessThan(420);
+    // A push to the right swings it.
+    run(
+      sim,
+      [
+        { t: 'climb', dir: 0 },
+        { t: 'move', dir: 1 },
+      ],
+      40,
+    );
+    expect(px(unit(sim, 1)?.x)).toBeGreaterThan(260);
+    // A jump lets go: it falls, and lands.
+    run(
+      sim,
+      [
+        { t: 'move', dir: 0 },
+        { t: 'jump', kind: 'forward' },
+      ],
+      200,
+    );
+    expect(sim.view().turn.grapple).toBeNull();
+    expect(px(unit(sim, 1)?.y)).toBe(500);
+    const i = CALM.weapons.findIndex((w) => w.id === 'grapple');
+    expect(sim.view().teams[0]?.ammo[i]).toBe(4);
+  });
+
+  it('gets a unit out of a pit 300 px deep (BACKLOG 4.5)', () => {
+    const tall: Mask = { width: 1200, height: 900, data: new Uint8Array(1200 * 900) };
+    for (let y = 500; y < 900; y++) tall.data.fill(Material.Earth, y * 1200, (y + 1) * 1200);
+    // A shaft 40 px wide and 300 px deep at x 280 to 320.
+    for (let y = 500; y < 800; y++) tall.data.fill(Material.Air, y * 1200 + 280, y * 1200 + 320);
+    const sim = match(CALM, 300, [1000], tall);
+    expect(px(unit(sim, 1)?.y)).toBe(800);
+    // At the lip of the right-hand wall, just below the rim.
+    run(
+      sim,
+      [
+        { t: 'selectWeapon', id: 'grapple' },
+        { t: 'aim', angle: 3124 },
+        { t: 'fire', power: 0 },
+      ],
+      0,
+    );
+    expect(sim.view().turn.grapple).toBeTruthy();
+    run(sim, [{ t: 'climb', dir: -1 }], 150);
+    expect(px(unit(sim, 1)?.y)).toBe(500);
+    expect(unit(sim, 1)?.grounded).toBe(true);
+  });
+});

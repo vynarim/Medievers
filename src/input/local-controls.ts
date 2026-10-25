@@ -148,7 +148,8 @@ export class LocalControls {
     }
     // At a ladder, a press of ↑ or ↓ (key or button) climbs instead of aiming (GDD §4.4). Climbing
     // is a choice: walking up to a ladder with ↑ or ↓ already held (aiming) does not take it.
-    const onLadder = canClimb(view.terrain, unit, view.rules.unit);
+    // Hanging from the grappling hook, ↑ ↓ haul the rope in or pay it out, as on a ladder.
+    const onLadder = canClimb(view.terrain, unit, view.rules.unit) || !!view.turn.grapple;
     const held = this.climbSent === -1 ? input.up : this.climbSent === 1 ? input.down : false;
     const keyClimb: -1 | 0 | 1 = !onLadder
       ? 0

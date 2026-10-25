@@ -30,7 +30,8 @@ const isTool = (b: string | undefined): boolean =>
   b === 'build' ||
   b === 'teleport' ||
   b === 'ladder' ||
-  b === 'banner';
+  b === 'banner' ||
+  b === 'rope';
 
 export class Commentary {
   private readonly hud: Hud;

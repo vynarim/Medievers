@@ -1668,5 +1668,16 @@
   "quip.weapon.falcon.3": "{name} siffle. Le faucon part, et le gant reste. Pour une fois.",
   "quip.stung.1": "{name} est piqué. Il danse une gigue involontaire.",
   "quip.stung.2": "Les abeilles ont trouvé {name}. Elles ne le lâcheront pas de sitôt.",
-  "quip.stung.3": "{name} : « Ouille ! Ouille ! C'est de la sorcellerie apicole ! »"
+  "quip.stung.3": "{name} : « Ouille ! Ouille ! C'est de la sorcellerie apicole ! »",
+  "weapons.grapple": "Grappin",
+  "weapons.grapple.desc": "Un crochet lancé dans la visée s'accroche au premier sol à portée ; on s'y balance, on remonte la corde, on lâche d'un saut, on le relance en l'air.",
+  "weapon.rope": "Portée : {px} px ; ne prend pas l'action du tour ; le relancer en l'air ne coûte rien",
+  "ui.fire.rope": "Accrocher",
+  "hud.hint.rope": "Viser un plafond ou un rebord · « Accrocher » · ← → : se balancer · {i:jumpUp} / ↑ ↓ : remonter, descendre · saut : lâcher ; « Accrocher » de nouveau en l'air",
+  "tuning.ropeLength": "Longueur de la corde",
+  "tuning.ropeHaul": "Vitesse pour remonter la corde",
+  "tuning.ropePump": "Élan donné par ← →",
+  "quip.weapon.grapple.1": "{name} lance le grappin. Il ne sait pas encore à quoi il s'accroche.",
+  "quip.weapon.grapple.2": "{name} se balance au bout d'une corde. Les singes des marges applaudissent.",
+  "quip.weapon.grapple.3": "{name} : « Je l'ai vu faire dans un bestiaire ! »"
 }

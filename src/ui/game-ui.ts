@@ -736,6 +736,7 @@ export class GameUi {
   private onLadder(): boolean {
     const v = this.view;
     const u = v?.units.find((x) => x.id === v.turn.activeUnitId);
+    if (v?.turn.grapple) return true;
     return v !== null && u !== undefined && u.alive && canClimb(v.terrain, u, v.rules.unit);
   }
 

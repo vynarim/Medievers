@@ -13,6 +13,8 @@ import { KITCHEN_RULES } from '../src/content/kitchen.ts';
 import { CLASSIC_RULES, type MatchRules } from '../src/content/rules.ts';
 import { formatHash, type MatchConfig, type ReplayFile } from '../src/sim/index.ts';
 import { loadMask } from './lib/maps-node.ts';
+import { hookPoint, ledgeBeside } from '../src/sim/rope.ts';
+import type { Terrain } from '../src/sim/terrain/terrain.ts';
 import { Recorder } from './lib/recorder.ts';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -901,6 +903,65 @@ const SCRIPTS: readonly Script[] = [
         { t: 'selectWeapon', id: 'falcon' },
         { t: 'fireAt', x: 700, y: ground - 40 },
       ]);
+    },
+  },
+  {
+    name: 'grapple',
+    description:
+      'Grappin (GDD §4.4): a tall stone wall set up, then the hook shot at its lip and the rope ' +
+      'hauled in until the unit hoists itself onto it; the turn goes on, and an arrow follows.',
+    mapId: 'flat',
+    seed: 1270,
+    config: {
+      rules: {
+        ...NO_PLACEMENT,
+        wind: { ...NO_PLACEMENT.wind, max: 0 },
+      },
+      teams: [{ spawns: [300] }, { spawns: [900] }],
+    },
+    play: (r) => {
+      const ours = (cmds: Parameters<Recorder['step']>[0]): void => {
+        r.until('action');
+        r.step(cmds);
+        r.until('transition');
+        r.until('action');
+        r.step([{ t: 'skip' }]);
+        r.until('transition');
+      };
+      const ground = (r.sim.view().units[0]?.y ?? 0) >> 8;
+      ours([
+        { t: 'selectWeapon', id: 'stoneWall' },
+        { t: 'setFuse', seconds: 3 },
+        { t: 'aim', angle: 1024 },
+        { t: 'fireAt', x: 400, y: ground - 60 },
+      ]);
+      r.until('action');
+      // The aim at the wall's lip, from where the unit stands at its foot.
+      const v = r.sim.view();
+      const u = v.units[0];
+      const rope = v.rules.weapons.find((w) => w.rope)?.rope;
+      let angle = 3072;
+      for (let a = 2112; u && rope && a <= 4032; a += 2) {
+        const p = hookPoint(v.terrain as Terrain, u, a, rope);
+        if (p && ledgeBeside(v.terrain as Terrain, p.x, p.y)) {
+          angle = a;
+          break;
+        }
+      }
+      r.step([
+        { t: 'selectWeapon', id: 'grapple' },
+        { t: 'aim', angle },
+        { t: 'fire', power: 0 },
+        { t: 'climb', dir: -1 },
+      ]);
+      r.steps(240);
+      r.step([
+        { t: 'climb', dir: 0 },
+        { t: 'selectWeapon', id: 'bow' },
+        { t: 'aim', angle: 3700 },
+        { t: 'fire', power: 900 },
+      ]);
+      r.until('transition');
     },
   },
 ];
