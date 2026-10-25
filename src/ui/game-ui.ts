@@ -26,16 +26,8 @@ import {
 } from './tuning-model.ts';
 import { weaponLines } from './weapon-info.ts';
 import { weaponArt } from './weapon-art.ts';
-import { audio, SOUND_MODES, type SoundMode } from '../render/audio.ts';
-import type { IconName } from './icons.ts';
-
-/** The ♪ button's face for each sound mode. */
-const SOUND_ICON: Readonly<Record<SoundMode, IconName>> = {
-  all: 'soundAll',
-  music: 'musicOn',
-  sfx: 'sfxOnly',
-  none: 'soundOff',
-};
+import { audio, SOUND_MODES } from '../render/audio.ts';
+import { soundButton as makeSoundButton, SOUND_ICON } from './sound-button.ts';
 
 const STORAGE_KEY = 'medieverse.tuning.v1';
 
@@ -133,6 +125,8 @@ export class GameUi {
   private readonly tip: HTMLElement;
   private readonly help: HTMLElement;
   private readonly settings: HTMLElement;
+  /** the player's own settings (the sound), which apply at once */
+  private readonly options: HTMLElement;
   private readonly pause: HTMLElement;
   /** the veil behind the online error */
   private readonly netVeil: HTMLElement;
@@ -152,8 +146,6 @@ export class GameUi {
   private readonly prepared = new Map<number, { unitId: number; weapon: WeaponId }>();
   /** the unit whose weapon the arsenal prepares (null: the arsenal of the playing unit) */
   private preparing: number | null = null;
-  /** redraws the sound button after a change made in the settings */
-  private showSound: () => void = () => undefined;
   /** settings tab last shown, kept while the page lives */
   private settingsTab = 0;
   private cardSignature = '';
@@ -315,18 +307,7 @@ export class GameUi {
     );
     helpButton.title = t('ui.help');
     // The sound's round: music and effects, music alone, effects alone, silence.
-    const soundButton = button('', 'icon sys-music');
-    const showSound = (): void => {
-      const mode = audio.current.mode;
-      setIcon(soundButton, SOUND_ICON[mode]);
-      soundButton.title = t('sound.tip', { now: t(`sound.mode.${mode}`) });
-    };
-    this.click(soundButton, () => {
-      audio.cycle();
-      showSound();
-    });
-    showSound();
-    this.showSound = showSound;
+    const soundButton = makeSoundButton('icon sys-music');
     const pauseButton = this.click(setIcon(button('', 'menu'), 'menu', t('ui.pause')), () =>
       this.toggle(this.pause),
     );
@@ -342,6 +323,7 @@ export class GameUi {
     this.tip = el('div', 'tip panel hidden');
     this.help = this.modal('help');
     this.settings = this.modal();
+    this.options = this.modal('options');
     this.pause = this.modal('pause');
     const pauseActions = el('div', 'actions');
     pauseActions.append(
@@ -359,7 +341,7 @@ export class GameUi {
     const pauseMore = el('div', 'thirds');
     pauseMore.append(
       this.click(setIcon(button(''), 'help', t('ui.help')), () => this.show(this.help)),
-      this.click(setIcon(button(''), 'settings', t('ui.settings')), () => this.openSettings()),
+      this.click(setIcon(button(''), 'settings', t('ui.settings')), () => this.openOptions()),
       this.click(setIcon(button(''), 'home', t('pause.title.screen')), () => {
         this.show(null);
         this.opts.title();
@@ -410,6 +392,7 @@ export class GameUi {
       this.arsenal,
       this.help,
       this.settings,
+      this.options,
       this.pause,
       this.netVeil,
       this.netStatus,
@@ -520,7 +503,7 @@ export class GameUi {
 
   /** Shows one modal (or none), with the veil behind it. */
   private show(panel: HTMLElement | null): void {
-    for (const p of [this.arsenal, this.help, this.settings, this.pause]) {
+    for (const p of [this.arsenal, this.help, this.settings, this.options, this.pause]) {
       p.classList.toggle('hidden', p !== panel);
     }
     this.veil.classList.toggle('hidden', panel === null);
@@ -869,39 +852,24 @@ export class GameUi {
     return lines;
   }
 
-  private openSettings(): void {
-    if (this.open === this.settings) {
+  /**
+   * The player's settings, which stay with the game: the sound. They apply at once and the match
+   * goes on where it was; the test settings, which start the match again, are a door further.
+   */
+  private openOptions(): void {
+    if (this.open === this.options) {
       this.show(null);
       return;
     }
-    const overrides = new Map<string, number>(Object.entries(loadOverrides()));
-    const asObject = (): TuningOverrides => Object.fromEntries(overrides);
-    const base: MatchRules = CLASSIC_RULES;
-    this.settings.replaceChildren(
-      this.closeButton(),
-      el('h2', '', t('tuning.title')),
-      el('p', 'note', t('tuning.note')),
-    );
-    // One tab per group, so the panel never needs a long scroll.
-    const tabs = el('div', 'tabs');
-    const pages: HTMLElement[] = [];
-    const showTab = (n: number): void => {
-      this.settingsTab = n;
-      pages.forEach((p, k) => p.classList.toggle('hidden', k !== n));
-      tabs.querySelectorAll('button').forEach((b, k) => b.classList.toggle('on', k === n));
-    };
-    this.settings.append(tabs);
-    // The sound first: it changes at once, without starting the match again.
-    tabs.append(this.click(button(t('sound.tab')), () => showTab(0)));
+    this.options.replaceChildren(this.closeButton(), el('h2', '', t('options.title')));
+    this.options.append(el('h3', '', t('sound.tab')));
     const sound = el('div', 'music-page');
-    pages.push(sound);
     const modes = el('div', 'sound-modes');
     const modeButtons = SOUND_MODES.map((m) => {
       const b = setIcon(button(''), SOUND_ICON[m], t(`sound.mode.${m}`));
       b.addEventListener('click', () => {
         audio.set({ mode: m });
         show();
-        this.showSound();
       });
       modes.append(b);
       return b;
@@ -944,7 +912,38 @@ export class GameUi {
     };
     sound.append(modes, musicSlider.row, sfxSlider.row, el('p', 'note', t('music.note')));
     show();
-    this.settings.append(sound);
+    this.options.append(sound);
+    const actions = el('div', 'actions');
+    actions.append(
+      this.click(button(t('options.done')), () => this.show(null)),
+      this.click(button(t('options.tuning')), () => this.openSettings()),
+    );
+    this.options.append(actions);
+    this.show(this.options);
+  }
+
+  private openSettings(): void {
+    if (this.open === this.settings) {
+      this.show(null);
+      return;
+    }
+    const overrides = new Map<string, number>(Object.entries(loadOverrides()));
+    const asObject = (): TuningOverrides => Object.fromEntries(overrides);
+    const base: MatchRules = CLASSIC_RULES;
+    this.settings.replaceChildren(
+      this.closeButton(),
+      el('h2', '', t('tuning.title')),
+      el('p', 'note', t('tuning.note')),
+    );
+    // One tab per group, so the panel never needs a long scroll.
+    const tabs = el('div', 'tabs');
+    const pages: HTMLElement[] = [];
+    const showTab = (n: number): void => {
+      this.settingsTab = n;
+      pages.forEach((p, k) => p.classList.toggle('hidden', k !== n));
+      tabs.querySelectorAll('button').forEach((b, k) => b.classList.toggle('on', k === n));
+    };
+    this.settings.append(tabs);
     for (const group of tuningGroups(base)) {
       const n = pages.length;
       tabs.append(this.click(button(t(group.titleKey)), () => showTab(n)));

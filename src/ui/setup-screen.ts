@@ -16,6 +16,7 @@ import {
 import { AI_LEVEL_IDS, type AiLevelId } from '../content/ai.ts';
 import { t } from './i18n.ts';
 import { button, el, infoButton, shield, uiRoot } from './overlay.ts';
+import { soundButton } from './sound-button.ts';
 import { playerArt } from './player-art.ts';
 import { icon, setIcon } from './icons.ts';
 import { css } from './tokens.ts';
@@ -67,6 +68,7 @@ const STYLE = `
 /* The match's code, top right, beside the title: whoever has it can join. */
 #ui .setup .title { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 4px 16px; }
 #ui .setup .title h2 { flex: 1 1 auto; }
+#ui .setup .title .setup-sound { order: 3; align-self: flex-start; }
 #ui .setup .title .code { display: flex; align-items: center; gap: 8px; font-size: 15px;
   padding-top: 6px; }
 #ui .setup .title .code b { font-family: var(--caps); font-weight: normal; font-size: 24px;
@@ -185,6 +187,8 @@ export function showSetupScreen(
   const root = uiRoot();
   setupStyles();
   let setup = fixSetup(initial);
+  // The sound, at hand before the battle: made once, put back at each render.
+  const sound = soundButton('icon setup-sound');
   const veil = el('div', 'veil');
   const panel = el('div', 'modal panel setup');
   // The room for friends: opened with the screen, kept while it is open; unused, it goes.
@@ -265,7 +269,7 @@ export function showSetupScreen(
     openLobby();
     // The match's code, top right, always: whoever has it can join.
     const title = el('div', 'title');
-    title.append(el('h2', '', t('setup.title')));
+    title.append(el('h2', '', t('setup.title')), sound);
     if (online) {
       const box = el('div', 'code');
       if (code) {

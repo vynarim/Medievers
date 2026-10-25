@@ -53,6 +53,7 @@ const STYLE = `
   border: 6px solid transparent; border-top: 9px solid var(--encre); border-bottom: 0; }
 #ui .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 12px; }
 #ui .tabs button { min-height: 40px; font-size: 16px; }
+#ui .options { width: min(620px, calc(100vw - 32px)); }
 #ui .sound-modes { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 12px; }
 #ui .sound-modes button { font-size: 15px; }
 #ui .music-row label { min-width: 90px; }
@@ -203,11 +204,22 @@ const STYLE = `
   display: flex; flex-direction: column; overflow: hidden; }
 #ui .help .tuto-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
 #ui .help .tuto-body p:last-child { margin-bottom: 0; }
+/* The text read like a page of the manuscript: a red initial, roomy lines. */
+#ui .help .tuto-body p { font-size: 18px; line-height: 1.6; text-align: justify; hyphens: auto; }
+#ui .help .tuto-body:not(.plain) p:first-of-type::first-letter { float: left; font-family: var(--title);
+  color: var(--vermillon); font-size: 3em; line-height: 0.85; margin: 6px 8px 0 0; }
+#ui .help .tuto-list { margin: 0 0 10px; padding-left: 20px; font-size: 17px; line-height: 1.45; }
+#ui .help .tuto-list li { margin: 0 0 5px; }
+#ui .help .tuto-list li::marker { color: var(--vermillon); }
+#ui .help .tuto-list b { font-family: var(--caps); font-weight: normal; color: var(--lapis); }
+#ui .help .tuto-art { float: right; margin: 2px 0 8px 14px; line-height: 0;
+  filter: drop-shadow(0 2px 0 var(--gilt)); }
 #ui .help .close { position: absolute; top: 6px; right: 6px; margin: 0; }
 #ui .help h2 { padding-right: 64px; flex: none; }
 #ui .help .tuto-pic { flex: none; }
 #ui .tuto-pic svg { display: block; width: 100%; max-height: 32vh; margin: 0 auto 10px;
   border: 2px solid var(--encre); box-shadow: inset 0 0 0 2px var(--or); }
+#ui .help .tuto-strip svg { width: auto; height: 18vh; max-width: 100%; margin: 10px auto 0; }
 #ui .tuto-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 12px;
   flex: none; }
 #ui .tuto-count { font-family: var(--caps); font-size: 16px; }
@@ -217,7 +229,9 @@ const STYLE = `
   box-shadow: none; border-style: dashed; }
 #ui .tuto-topics { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
   gap: 8px; }
-#ui .tuto-topics button { text-align: left; font-size: 16px; }
+#ui .tuto-topics button { display: flex; align-items: center; gap: 10px; text-align: left;
+  font-size: 16px; padding: 6px 10px; }
+#ui .tuto-topics button .art { line-height: 0; flex: none; }
 #ui .help p, #ui .pause p { font-size: 17px; line-height: 1.5; margin: 0 0 10px; }
 #ui .pause { min-width: 360px; text-align: center; }
 #ui .pause .actions { flex-direction: column; align-items: stretch; }

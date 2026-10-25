@@ -264,7 +264,7 @@ Pour que les parties ne s'éternisent pas, **le Déluge** arrive après 20 tours
 **Jouer en ligne** {{st:jeu}} : le jeu se joue sur https://medieverse-06.web.app, de 2 à 4 joueurs, chacun sur son appareil.
 
 1. **Celui qui prépare la partie** choisit la carte, les règles et les maisons. Le **code de la partie**, six signes (par exemple `K7M-2QX`), est toujours affiché en haut à droite de l'écran, avec **Copier le code** : il le transmet à ses copains, par message ou de vive voix. Joué seul contre l'IA, le code ne sert simplement à rien.
-2. **Chaque copain** ouvre le jeu, touche **Rejoindre une partie…** et saisit le code. Il reçoit une maison (la première tenue par l'IA, sinon une maison de plus) et **choisit ses combattants** sur son propre appareil, puis attend : « Vous êtes à la table ». On peut aussi régler d'avance une maison sur **Un copain** : sa ligne rappelle le code à lui donner.
+2. **Chaque copain** ouvre le jeu, touche **Rejoindre une partie…** et saisit le code (le tiret se met tout seul ; un signe qu'aucun code ne contient, comme 0, 1, I, L ou O, est signalé aussitôt). Il reçoit une maison (la première tenue par l'IA, sinon une maison de plus) et **choisit ses combattants** sur son propre appareil, puis attend : « Vous êtes à la table ». On peut aussi régler d'avance une maison sur **Un copain** : sa ligne rappelle le code à lui donner.
 3. Sur l'écran de celui qui prépare, la ligne de chaque maison de copain montre les combattants qu'il a choisis ; sa tête porte un sablier, puis une coche verte quand son joueur est arrivé. **À la bataille !** reste grisé, avec « En attente de N copain(s)… », jusqu'à ce que tous soient là. Il le touche alors, et la bataille s'ouvre chez tout le monde.
 
 Pendant le tour des autres, on regarde : leurs gestes arrivent avec une demi-seconde de retard. Les maisons de l'IA sont calculées sur l'appareil de celui qui a préparé la partie. Chacun ne voit que ses propres chausse-trapes. La pause, l'aide et les réglages arrêtent le jeu pour tous. Si la page se recharge, le jeu retrouve la partie tout seul et rattrape ce qui s'est passé. Si un joueur quitte la partie en cours, elle s'arrête pour tous.
@@ -296,7 +296,7 @@ L'IA joue avec les mêmes règles et les mêmes commandes que vous : elle choisi
 
 ### La musique et les bruitages {{st:jeu}}
 
-Une ritournelle de ménestrels (flûte, luth, vielle, tambourin) accompagne la partie dès votre premier clic, et chaque tir, explosion, coup de tonnerre, plouf ou chute a son bruit, venant du côté de l'écran où il se produit. Le bouton du son, en haut à droite, passe à chaque appui de **musique et bruitages** à **musique seule**, **bruitages seuls**, puis **tout coupé**. Les deux volumes se règlent dans ⚙ Réglages (menu Pause), onglet **Son**. Tout vaut aussitôt et reste sur votre appareil.
+Une ritournelle de ménestrels (flûte, luth, vielle, tambourin) accompagne la partie dès votre premier clic, et chaque tir, explosion, coup de tonnerre, plouf ou chute a son bruit, venant du côté de l'écran où il se produit. Le bouton du son, en haut à droite, passe à chaque appui de **musique et bruitages** à **musique seule**, **bruitages seuls**, puis **tout coupé**. On le retrouve sur la page de titre et sur l'écran de préparation. Les deux volumes se règlent dans **Réglages** (menu Pause) : ces réglages-là valent aussitôt et la partie reprend où elle en était ; les **réglages de test**, qui changent les valeurs de la partie et la relancent, s'ouvrent depuis ce panneau. Tout reste sur votre appareil.
 
 ## 7. Les commandes
 

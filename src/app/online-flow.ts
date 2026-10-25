@@ -2,7 +2,7 @@
 // one with a code, or taking this device's seat again after a reload. `onReady` gets the match
 // once it starts.
 import type { MatchRules } from '../content/rules.ts';
-import { normalizeCode } from '../net/firebase-transport.ts';
+import { ALPHABET, normalizeCode } from '../net/firebase-transport.ts';
 import { onlineError, showConnecting, showJoin } from '../ui/online-screen.ts';
 import type { SetupLobby } from '../ui/setup-screen.ts';
 import { saveSetup, type MatchSetup } from './match-setup.ts';
@@ -50,6 +50,7 @@ export function setupLobby(
 export function joinFlow(onReady: (m: OnlineMatch) => void, onBack: () => void): void {
   showJoin(
     normalizeCode,
+    ALPHABET,
     async (code, seated) => {
       onReady(await joinMatch(code, seated));
     },

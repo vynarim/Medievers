@@ -1,6 +1,11 @@
 // The Help button's illustrated tutorial (GDD §9): short pages, one small drawing each, browsed
 // with Previous / Next. Texts are i18n keys; drawings are inline SVG in the palette tokens.
+import { CLASS_IDS, type ClassId } from '../content/classes.ts';
+import { FACTIONS, type FactionDef } from '../content/factions.ts';
+import { figureSvg } from '../render/figure-svg.ts';
+import type { WeaponId } from '../content/weapons.ts';
 import { t } from './i18n.ts';
+import { weaponArt } from './weapon-art.ts';
 import { button, el } from './overlay.ts';
 import { icon, setIcon, withIcons } from './icons.ts';
 import { COLORS, css } from './tokens.ts';
@@ -14,31 +19,54 @@ const C = {
   ochre: css(COLORS.ocre),
   earth: css(COLORS.terreOmbre),
   green: css(COLORS.vertDeGris),
+  rose: css(COLORS.roseGarance),
   vellum: css(COLORS.velin),
   skin: css(COLORS.carnation),
   grey: css(COLORS.roche),
 };
 
-/** A placeholder figure like the in-game ones, feet at (x, y). */
-function figure(x: number, y: number, tunic: string, facing = 1, nimbus = false): string {
-  const hx = x + facing * 2;
-  return `
-    ${nimbus ? `<circle cx="${hx}" cy="${y - 66}" r="21" fill="${C.gold}" stroke="${C.ink}" stroke-width="3"/>` : ''}
-    <rect x="${x - 9}" y="${y - 18}" width="7" height="18" fill="${C.earth}" stroke="${C.ink}" stroke-width="3"/>
-    <rect x="${x + 2}" y="${y - 18}" width="7" height="18" fill="${C.earth}" stroke="${C.ink}" stroke-width="3"/>
-    <polygon points="${x - 11},${y - 56} ${x + 11},${y - 56} ${x + 15},${y - 16} ${x - 15},${y - 16}"
-      fill="${tunic}" stroke="${C.ink}" stroke-width="3"/>
-    <circle cx="${hx}" cy="${y - 66}" r="11" fill="${C.skin}" stroke="${C.ink}" stroke-width="3"/>
-    <path d="M ${hx - 11.5} ${y - 66} A 11.5 11.5 0 0 1 ${hx + 11.5} ${y - 66} Z" fill="${C.grey}"
-      stroke="${C.ink}" stroke-width="3"/>
-    <circle cx="${hx + facing * 6}" cy="${y - 64}" r="2.2" fill="${C.ink}"/>`;
+/** The houses the drawings show: the first two of the game, red and blue. */
+const RED = FACTIONS[0];
+const BLUE = FACTIONS[1];
+
+/**
+ * A figure as drawn in the battle (render/figure-svg.ts), feet at (x, y), of class `cls` in the
+ * tinctures of house `house`, scaled by `k` (a little larger than in the battle, to be read);
+ * `nimbus` for the unit that plays.
+ */
+function figure(
+  x: number,
+  y: number,
+  house: FactionDef | undefined,
+  facing: -1 | 1 = 1,
+  nimbus = false,
+  cls: ClassId = 'knight',
+  k = 1.25,
+): string {
+  const body = figureSvg(
+    cls,
+    x,
+    y,
+    house?.primary ?? COLORS.vermillon,
+    house?.secondary ?? COLORS.or,
+    facing,
+    nimbus,
+  );
+  return k === 1
+    ? body
+    : `<g transform="translate(${x} ${y}) scale(${k}) translate(${-x} ${-y})">${body}</g>`;
 }
 
-const ground = (y: number): string =>
-  `<path d="M0 ${y} Q 80 ${y - 14} 160 ${y} T 320 ${y} T 480 ${y} V 200 H 0 Z" fill="${C.ochre}"
-    stroke="${C.ink}" stroke-width="3"/>
-   <path d="M0 ${y} Q 80 ${y - 14} 160 ${y} T 320 ${y} T 480 ${y}" fill="none" stroke="${C.green}"
-    stroke-width="6"/>`;
+/** The battle's ground at height y: green turf over bands of ochre and madder, as in the game. */
+const ground = (y: number): string => {
+  const hill = (dy: number): string =>
+    `M0 ${y + dy} Q 80 ${y + dy - 14} 160 ${y + dy} T 320 ${y + dy} T 480 ${y + dy}`;
+  return `<path d="${hill(0)} V 200 H 0 Z" fill="${C.ochre}"/>
+   <path d="${hill(12)} V 200 H 0 Z" fill="${C.rose}"/>
+   <path d="${hill(22)} V 200 H 0 Z" fill="${C.ochre}"/>
+   <path d="${hill(0)}" fill="none" stroke="${C.ink}" stroke-width="3"/>
+   <path d="${hill(-2)}" fill="none" stroke="${C.green}" stroke-width="6"/>`;
+};
 
 const aimDots = (x: number, y: number, dx: number, dy: number): string => {
   let s = '';
@@ -52,32 +80,38 @@ const aimDots = (x: number, y: number, dx: number, dy: number): string => {
     ${tx + dy * 11},${ty - dx * 11}" fill="${C.red}" stroke="${C.ink}" stroke-width="3"/>`;
 };
 
+/** A drawing on a pale gilt field strewn with lozenges, as behind the battle. */
 const svg = (body: string): string =>
-  `<svg viewBox="0 0 480 200" role="img" aria-hidden="true"><rect width="480" height="200"
-    fill="${C.vellum}"/>${body}</svg>`;
+  `<svg viewBox="0 0 480 200" role="img" aria-hidden="true">
+    <defs><pattern id="tuto-diaper" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M20 0 L40 20 L20 40 L0 20 Z" fill="none" stroke="${C.gold}" stroke-width="1.5"
+        opacity="0.45"/><circle cx="20" cy="20" r="2" fill="${C.gold}" opacity="0.6"/>
+    </pattern></defs>
+    <rect width="480" height="200" fill="${C.vellum}"/>
+    <rect width="480" height="200" fill="url(#tuto-diaper)"/>${body}</svg>`;
 
 /** One drawing per page, in page order. */
 const DRAWINGS: readonly string[] = [
   // 1. The goal: two houses face each other.
-  svg(`${ground(170)}${figure(90, 165, C.red, 1)}${figure(140, 160, C.red, 1)}
-    ${figure(340, 160, C.blue, -1)}${figure(390, 165, C.blue, -1)}`),
+  svg(`${ground(170)}${figure(90, 168, RED, 1, false, 'knight')}${figure(145, 164, RED, 1, false, 'archer')}
+    ${figure(335, 164, BLUE, -1, false, 'slinger')}${figure(390, 168, BLUE, -1, false, 'cleric')}`),
   // 2. A turn: the hourglass and the active unit's nimbus.
-  svg(`${ground(170)}${figure(160, 160, C.red, 1, true)}
+  svg(`${ground(170)}${figure(160, 164, RED, 1, true, 'knight')}
     <polygon points="150,48 170,48 160,72" fill="${C.gold}" stroke="${C.ink}" stroke-width="3"/>
     <circle cx="370" cy="80" r="44" fill="${C.vellum}" stroke="${C.ink}" stroke-width="3"/>
     <text x="370" y="96" text-anchor="middle" font-size="44" fill="${C.ink}">45</text>`),
   // 3. Moving: walk and jump arcs.
-  svg(`${ground(170)}${figure(120, 160, C.red, 1, true)}
+  svg(`${ground(170)}${figure(120, 164, RED, 1, true, 'sapper')}
     <path d="M 140 120 Q 220 30 300 150" fill="none" stroke="${C.red}" stroke-width="4"
       stroke-dasharray="10 8"/>
     <path d="M 100 188 H 200" stroke="${C.ink}" stroke-width="4"/>
     <polygon points="212,188 198,181 198,195" fill="${C.ink}"/>`),
   // 4. Aiming: the red arrowhead and the sweep.
-  svg(`${ground(170)}${figure(200, 160, C.red, 1, true)}${aimDots(202, 120, 0.8, -0.6)}
+  svg(`${ground(170)}${figure(200, 164, RED, 1, true, 'archer')}${aimDots(202, 120, 0.8, -0.6)}
     <path d="M 330 40 A 150 150 0 0 0 70 50" fill="none" stroke="${C.blue}" stroke-width="3"
       stroke-dasharray="6 8"/>`),
   // 5. Firing: the power arc around the unit.
-  svg(`${ground(170)}${figure(200, 160, C.red, 1, true)}
+  svg(`${ground(170)}${figure(200, 164, RED, 1, true, 'slinger')}
     <path d="M 202 60 A 60 60 0 1 1 152 152" fill="none" stroke="${C.gold}" stroke-width="10"/>
     ${aimDots(202, 120, 0.8, -0.6)}`),
   // 6. The battlefield: the wind gauge, a crater revealing the page, a tower.
@@ -89,17 +123,17 @@ const DRAWINGS: readonly string[] = [
     <rect x="240" y="30" width="90" height="16" fill="${C.azur}"/>
     <line x1="240" y1="24" x2="240" y2="52" stroke="${C.ink}" stroke-width="3"/>`),
   // 7. The classes: six figures, each with its mark.
-  svg(`${ground(170)}${[C.red, C.green, C.ochre, C.earth, C.vellum, C.blue]
-    .map((c, i) => figure(60 + i * 72, 162, c, 1, i === 5))
-    .join('')}
-    <polygon points="404,72 410,58 416,70 422,56 428,72" fill="${C.gold}" stroke="${C.ink}"
-      stroke-width="2"/>`),
+  svg(
+    `${ground(170)}${CLASS_IDS.map((c, i) =>
+      figure(52 + i * 75, 166, i % 2 === 0 ? RED : BLUE, 1, false, c),
+    ).join('')}`,
+  ),
   // 8. Online: two screens, one code between them.
   svg(`<rect x="30" y="40" width="150" height="104" rx="6" fill="${C.vellum}" stroke="${C.ink}"
       stroke-width="3"/>
     <rect x="300" y="40" width="150" height="104" rx="6" fill="${C.vellum}" stroke="${C.ink}"
       stroke-width="3"/>
-    ${figure(105, 132, C.red, 1)}${figure(375, 132, C.blue, -1)}
+    ${figure(105, 136, RED, 1, false, 'knight', 0.85)}${figure(375, 136, BLUE, -1, false, 'king', 0.85)}
     <rect x="182" y="78" width="116" height="34" rx="4" fill="${C.blue}" stroke="${C.ink}"
       stroke-width="3"/>
     <text x="240" y="102" text-anchor="middle" font-size="20" fill="${C.gold}"
@@ -108,13 +142,54 @@ const DRAWINGS: readonly string[] = [
       stroke-dasharray="8 6"/>`),
   // 9. Camera and menus.
   svg(`<rect x="60" y="30" width="360" height="140" fill="none" stroke="${C.ink}" stroke-width="3"
-      stroke-dasharray="10 8"/>${ground(170)}${figure(240, 160, C.red, 1, true)}
+      stroke-dasharray="10 8"/>${ground(170)}${figure(240, 164, RED, 1, true, 'king')}
     <circle cx="420" cy="30" r="22" fill="${C.vellum}" stroke="${C.ink}" stroke-width="3"/>
     <circle cx="420" cy="30" r="8" fill="none" stroke="${C.ink}" stroke-width="3"/>`),
 ];
 
-/** Topics of the advanced help, after the basic pages: text only (tuto.adv.N.*). */
-const ADVANCED_TOPICS = 12;
+/**
+ * Topics of the advanced help, after the basic pages (tuto.adv.N.*): each with the illumination
+ * of a weapon of the arsenal, on its card in the contents and beside its text.
+ */
+const TOPIC_ART: readonly WeaponId[] = [
+  'banner',
+  'bow',
+  'greekFire',
+  'falcon',
+  'sword',
+  'grapple',
+  'catapult',
+  'stoneWall',
+  'arrowRain',
+  'miracle',
+  'shieldCharge',
+  'sling',
+];
+const ADVANCED_TOPICS = TOPIC_ART.length;
+
+/** Under each topic, a red and a blue fighter of the classes it speaks of most, facing off. */
+const TOPIC_PAIRS: readonly (readonly [ClassId, ClassId])[] = [
+  ['knight', 'archer'],
+  ['archer', 'slinger'],
+  ['sapper', 'slinger'],
+  ['archer', 'king'],
+  ['knight', 'knight'],
+  ['sapper', 'cleric'],
+  ['knight', 'sapper'],
+  ['sapper', 'knight'],
+  ['cleric', 'king'],
+  ['cleric', 'archer'],
+  ['king', 'king'],
+  ['knight', 'slinger'],
+];
+
+/** The strip at the foot of a topic: the two fighters on the battle's ground. */
+function topicStrip(n: number): string {
+  const [a, b] = TOPIC_PAIRS[n - 1] ?? ['knight', 'knight'];
+  return svg(
+    `${ground(170)}${figure(150, 166, RED, 1, false, a)}${figure(330, 166, BLUE, -1, false, b)}`,
+  );
+}
 
 /** The page shown: a basic one, the advanced help's contents, or one of its topics. */
 type Page =
@@ -122,15 +197,45 @@ type Page =
   | { readonly kind: 'index' }
   | { readonly kind: 'topic'; readonly n: number };
 
-/** The text of an i18n key, one paragraph per line, icons drawn in. */
-function paragraphs(key: string): HTMLElement {
+/**
+ * The text of an i18n key, one paragraph per line, icons drawn in; `art` floats beside it.
+ * Lines that start with « - » make a list, their words before « : » set as a heading.
+ */
+function paragraphs(key: string, art = ''): HTMLElement {
   const body = el('div', 'tuto-body');
+  if (art) {
+    const pic = el('div', 'tuto-art');
+    pic.innerHTML = art;
+    body.append(pic);
+  }
+  let list: HTMLElement | null = null;
   for (const line of t(key).split('\n')) {
-    const p = el('p');
-    p.append(...withIcons(line));
-    body.append(p);
+    if (!line.startsWith('- ')) {
+      list = null;
+      const p = el('p');
+      p.append(...withIcons(line));
+      body.append(p);
+      continue;
+    }
+    if (!list) {
+      list = el('ul', 'tuto-list');
+      body.append(list);
+    }
+    const item = el('li');
+    const text = line.slice(2);
+    const cut = text.indexOf(' : ');
+    if (cut > 0) item.append(el('b', '', text.slice(0, cut)), ...withIcons(text.slice(cut)));
+    else item.append(...withIcons(text));
+    list.append(item);
   }
   return body;
+}
+
+/** A drawing below a topic's text, kept low so the text has the room. */
+function stripOf(markup: string): HTMLElement {
+  const strip = el('div', 'tuto-pic tuto-strip');
+  strip.innerHTML = markup;
+  return strip;
 }
 
 /**
@@ -184,11 +289,14 @@ export function renderTutorial(panel: HTMLElement, close: () => void): void {
     if (page.kind === 'index') {
       const list = el('div', 'tuto-topics');
       for (let k = 1; k <= ADVANCED_TOPICS; k++) {
-        const b = button(t(`tuto.adv.${k}.title`));
+        const b = button('');
+        const art = el('span', 'art');
+        art.innerHTML = weaponArt(TOPIC_ART[k - 1] ?? 'bow', 40);
+        b.append(art, el('span', '', t(`tuto.adv.${k}.title`)));
         b.addEventListener('click', () => go({ kind: 'topic', n: k }));
         list.append(b);
       }
-      const body = el('div', 'tuto-body');
+      const body = el('div', 'tuto-body plain');
       body.append(el('p', '', t('tuto.adv.intro')), list);
       nav.append(step(t('tuto.adv.back'), 'prev', { kind: 'basic', n: 1 }));
       panel.replaceChildren(closeBtn, el('h2', '', t('tuto.adv.title')), body, nav);
@@ -212,7 +320,8 @@ export function renderTutorial(panel: HTMLElement, close: () => void): void {
     panel.replaceChildren(
       closeBtn,
       el('h2', '', t(`tuto.adv.${n}.title`)),
-      paragraphs(`tuto.adv.${n}.body`),
+      paragraphs(`tuto.adv.${n}.body`, weaponArt(TOPIC_ART[n - 1] ?? 'bow', 96)),
+      stripOf(topicStrip(n)),
       nav,
     );
   };

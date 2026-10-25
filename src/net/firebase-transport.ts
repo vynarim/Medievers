@@ -55,7 +55,7 @@ const bucketOf = (ms: number): string =>
   String(Math.floor(ms / BUCKET_MS) * BUCKET_MS).padStart(13, '0');
 
 /** No 0/O, 1/I/L: a code read aloud or copied by hand stays right. */
-const ALPHABET = '23456789ABCDEFGHJKMNPQRSTUVWXYZ';
+export const ALPHABET = '23456789ABCDEFGHJKMNPQRSTUVWXYZ';
 
 let signedIn: Promise<{ db: Database; uid: string }> | null = null;
 let services: { auth: Auth; db: Database } | null = null;

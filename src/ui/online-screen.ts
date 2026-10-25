@@ -64,6 +64,8 @@ export interface WaitScreen {
  */
 export function showJoin(
   normalize: (typed: string) => string | null,
+  /** the signs a code is made of */
+  alphabet: string,
   onJoin: (
     code: string,
     seated: (leave: () => void, chooseLineup: (classes: readonly ClassId[]) => void) => void,
@@ -86,6 +88,20 @@ export function showJoin(
     if (e.key === 'Enter') go.click();
   });
   const error = el('p', 'error');
+  // As it is typed: upper case, the dash put in after three signs, and a word at once for a
+  // sign no code has (0, 1, I, L, O: too easily mistaken).
+  input.addEventListener('input', () => {
+    const signs = [...input.value.toUpperCase().replace(/[^0-9A-Z]/g, '')];
+    const wrong = [...new Set(signs.filter((c) => !alphabet.includes(c)))];
+    const kept = signs
+      .filter((c) => alphabet.includes(c))
+      .slice(0, 6)
+      .join('');
+    input.value = kept.length > 3 ? `${kept.slice(0, 3)}-${kept.slice(3)}` : kept;
+    error.classList.remove('ok');
+    error.textContent =
+      wrong.length > 0 ? t('online.error.signs', { signs: wrong.join(', ') }) : '';
+  });
   const go = button(t('online.join'), 'fire');
   go.addEventListener('click', () => {
     const code = normalize(input.value);
@@ -146,13 +162,7 @@ export function showJoin(
   });
   const actions = el('div', 'actions');
   actions.append(cancel, go);
-  box.append(
-    el('h2', '', t('online.joinTitle')),
-    body,
-    input,
-    error,
-    actions,
-  );
+  box.append(el('h2', '', t('online.joinTitle')), body, input, error, actions);
   setTimeout(() => input.focus(), 0);
   return close;
 }

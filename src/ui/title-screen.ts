@@ -1,6 +1,7 @@
 // Title screen (BACKLOG 7.4): the game's name as an illuminated incipit, a gilt initial on lapis
 // and the rest in textura, framed in vermilion and gold fillets. DOM over the canvas.
 import { t } from './i18n.ts';
+import { soundButton } from './sound-button.ts';
 import { button, el, infoButton, uiRoot } from './overlay.ts';
 import { renderTutorial } from './tutorial.ts';
 import { declineInstall, installOffer, onInstallable, promptInstall } from '../app/install.ts';
@@ -13,6 +14,7 @@ const STYLE = `
 #ui .title-screen { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
   pointer-events: auto; background:
     radial-gradient(ellipse at 50% 45%, rgba(233, 220, 192, 0.10) 0%, rgba(26, 20, 16, 0) 60%), #1a1410; }
+#ui .title-screen .title-sound { position: absolute; top: 28px; right: 30px; }
 #ui .title-screen .folio { position: relative; width: min(760px, calc(100vw - 32px)); padding: 44px 48px 64px;
   text-align: center; background: radial-gradient(ellipse at 50% 40%, var(--ceruse) 50%, var(--velin) 100%);
   border: 3px solid var(--encre); box-shadow: inset 0 0 0 6px var(--ceruse), inset 0 0 0 9px var(--or),
@@ -189,7 +191,10 @@ export function showTitleScreen(choices: TitleChoices): void {
   }
   bottom.append(join);
   actions.append(top, bottom);
+  // The sound, from the very first page: a corner of the folio.
+  const sound = soundButton('icon title-sound');
   folio.append(
+    sound,
     title,
     el('div', 'rule'),
     sub,
