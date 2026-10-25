@@ -19,6 +19,7 @@
     "replays:record": "node tools/record-reference-replays.ts",
     "maps:test": "node tools/gen-test-maps.ts",
     "maps:soak": "node tools/maps-soak.ts",
+    "balance:battery": "node tools/battery.ts",
     "lint": "eslint . --max-warnings 0",
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",

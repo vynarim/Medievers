@@ -19,7 +19,7 @@ import { isSolid, type Terrain } from '../sim/terrain/terrain.ts';
 import { ladderLook, teleportLanding } from '../sim/tools.ts';
 import { hookPoint, ledgeBeside } from '../sim/rope.ts';
 import { ropeTarget } from '../sim/units/climb.ts';
-import { UNIT_HALF_WIDTH, UNIT_HEIGHT, type Unit } from '../sim/units/unit.ts';
+import { GRAVITY, UNIT_HALF_WIDTH, UNIT_HEIGHT, type Unit } from '../sim/units/unit.ts';
 import { heldAim, launchPoint, shotSpeed } from '../sim/weapons/weapons.ts';
 import { Sandbox } from './sandbox.ts';
 import { SANDBOX_PACE, TurnScript, type AiMove, type AiPlan, type AiShot } from './script.ts';
@@ -37,6 +37,13 @@ const SWEEP_FROM = 1792;
 const SWEEP_TO = 4352;
 /** the best throws also tried a little off, on each side (the shake of the hand) */
 const ROBUST = 3;
+/** px: the sweep's best must land this near an enemy for a finer search to be worth it */
+const REFINE_WITHIN = 240;
+/** BAM: straight up, and how far past it a sweep goes towards the side with no enemy */
+const UP = 3072;
+const OVER_THE_TOP = 192;
+/** a throw's flat range is stretched by this much for the wind and the lie of the land */
+const RANGE_SLACK = 1.4;
 /** enemies a throw is searched for more finely, the nearest the sweep came first */
 const REFINED = 2;
 /** px: walks tried, towards the enemy first, then away */
@@ -71,6 +78,12 @@ interface Candidate {
 /** The match as the AI's house sees it: without the enemy chausse-trapes it cannot see. */
 export function asSeen(state: SimState, team: number): SimState {
   const s = structuredClone(state);
+  // The pause at the end of a turn, to let the players see, is no use to the AI's tries: they
+  // end as soon as everything is still (a third of the time of a try is saved).
+  (s as { rules: SimState['rules'] }).rules = {
+    ...s.rules,
+    turn: { ...s.rules.turn, settleTicks: 0 },
+  };
   const view = { ...s, turn: { ...s.turn, activeTeam: team } };
   const seen = new Set(visibleMines(view, team).map((m) => m.id));
   s.mines = s.mines.filter((m) => seen.has(m.id));
@@ -262,12 +275,25 @@ function throwsAt(
   level: AiLevel,
   team: number,
 ): { shot: AiShot; target: Readonly<Unit>; miss: number }[] {
-  const enemies = enemiesOf(v, team);
+  // Only the enemies the throw could reach at all: its range on flat ground, give or take the
+  // wind, and more downhill (a sweep is the costliest part of a plan).
+  const top = shotSpeed(v as SimState, u as Unit, def, MAX_POWER);
+  const range = (top * top) / GRAVITY / SUBPX;
+  const enemies = enemiesOf(v, team).filter((e) => {
+    const dx = Math.abs(subToPx(e.x) - subToPx(u.x));
+    const below = Math.max(0, subToPx(e.y) - subToPx(u.y));
+    return dx <= range * RANGE_SLACK + below * 2;
+  });
   if (enemies.length === 0) return [];
   const powers = def.fixedPower ? [MAX_POWER] : level.powers;
   const field = fieldOf(v, team);
   const best = enemies.map(() => ({ angle: 0, power: 0, miss: Infinity }));
-  for (let a = SWEEP_FROM; a < SWEEP_TO; a += level.angleStep) {
+  // Only the side the enemies stand on (and a little over the top, for the wind).
+  const right = enemies.some((e) => e.x >= u.x);
+  const left = enemies.some((e) => e.x < u.x);
+  const from = left ? SWEEP_FROM : UP - OVER_THE_TOP;
+  const to = right ? SWEEP_TO : UP + OVER_THE_TOP;
+  for (let a = from; a < to; a += level.angleStep) {
     const angle = a & ANGLE_MASK;
     for (const power of powers) {
       const hit = landing(v, u, def, angle, power, field);
@@ -287,7 +313,8 @@ function throwsAt(
     .slice(0, REFINED);
   for (const { e, i } of order) {
     let b = best[i];
-    if (!b || b.miss === Infinity) continue;
+    // Too far off at the sweep's best: a finer search would not bring it onto the enemy.
+    if (!b || b.miss > REFINE_WITHIN * SUBPX) continue;
     // A finer search around it: angle and power, by halving steps.
     let da = level.angleStep >> 1;
     let dp = def.fixedPower ? 0 : 96;
@@ -435,8 +462,9 @@ function movesFor(v: SimView, u: Readonly<Unit>, team: number, level: AiLevel): 
     // towards either side, and hauled in (hoisted at a ledge, else let go at the top).
     if (has(v, team, 'grapple')) moves.push(...grapplesFor(v, u));
     // A jump towards the enemy under the banner, to come down a drop unhurt.
-    if (has(v, team, 'banner'))
+    if (has(v, team, 'banner') && dropAhead(v, u, toward)) {
       moves.push({ kind: 'jump', jump: 'forward', dir: toward, banner: true });
+    }
   }
   // The water of the Déluge or the fire of the parchment coming for it: a miracle to the heights.
   if (has(v, team, 'miracle') && inDanger(v, u)) moves.push(...miraclesFor(v, u));
@@ -449,6 +477,10 @@ const GRAPPLE_STEP = 2;
 const GRAPPLE_HAUL = 240;
 /** grappling hooks tried: the highest ledges it can be hoisted onto */
 const GRAPPLES = 2;
+/** px a ledge must stand above the unit's feet for the hook to be worth it */
+const GRAPPLE_RISE = 60;
+/** px ahead a jump under the banner looks for a drop worth it (a long jump's reach) */
+const BANNER_LOOK = 420;
 
 /**
  * The grappling hook shot at the lip of a ledge it can be hoisted onto, the highest ones first
@@ -463,7 +495,7 @@ function grapplesFor(v: SimView, u: Readonly<Unit>): AiMove[] {
     const p = hookPoint(t, u, a, rope);
     const spot = p && ledgeBeside(t, p.x, p.y);
     // Only somewhere higher than where it stands.
-    if (spot && spot.y < subToPx(u.y) - 20) found.push({ angle: a, ...spot });
+    if (spot && spot.y < subToPx(u.y) - GRAPPLE_RISE) found.push({ angle: a, ...spot });
   }
   found.sort((a, b) => a.y - b.y);
   const out: AiMove[] = [];
@@ -473,6 +505,22 @@ function grapplesFor(v: SimView, u: Readonly<Unit>): AiMove[] {
     out.push({ kind: 'grapple', angle: f.angle, haul: GRAPPLE_HAUL });
   }
   return out;
+}
+
+/** Ground lower than a safe fall within a long jump on side `dir`: a jump the banner saves. */
+function dropAhead(v: SimView, u: Readonly<Unit>, dir: -1 | 1): boolean {
+  const t = v.terrain as Terrain;
+  const x0 = subToPx(u.x);
+  const feet = subToPx(u.y);
+  const safe = v.rules.unit.fallSafeHeight;
+  for (let d = 40; d <= BANNER_LOOK; d += 20) {
+    const x = x0 + dir * d;
+    if (x < 0 || x >= t.width) break;
+    let y = feet - UNIT_HEIGHT;
+    while (y < t.height && !isSolid(t, x, y)) y++;
+    if (y - feet > safe) return true;
+  }
+  return false;
 }
 
 /** The house still has some of weapon `id` in its arsenal. */
@@ -690,8 +738,9 @@ function candidatesFrom(
 }
 
 /**
- * The flaming pig let loose on each side where enemies stand: its trot followed on a copy of
- * the match, it is set off at the moment it comes nearest an enemy, if within its blast.
+ * The flaming pig let loose on each side where enemies stand within its trot: when the moment to
+ * set it off is not known yet (`detonate` -1), the candidate is probed in the sandbox before it
+ * is played (probePig).
  */
 function pigsFrom(
   at: SimView,
@@ -703,39 +752,57 @@ function pigsFrom(
   const out: Candidate[] = [];
   const w = def.walker;
   if (!w) return out;
-  const reach = def.explosionRadius * SUBPX;
   const range = (w.speed * w.fuse) / SUBPX + def.explosionRadius;
   for (const dir of [-1, 1] as const) {
     const ahead = enemiesOf(at, team).filter((e) => {
       const dx = (subToPx(e.x) - subToPx(u.x)) * dir;
-      return dx > 0 && dx < range;
+      return dx > 0 && dx < range && Math.abs(subToPx(e.y) - subToPx(u.y)) < 200;
     });
-    if (ahead.length === 0) continue;
-    const probe = Sim.fromState(structuredClone(at as SimState));
-    probe.step([
-      { t: 'selectWeapon', id: def.id },
-      { t: 'aim', angle: dir > 0 ? 0 : 2048 },
-      { t: 'fire', power: 0 },
-    ]);
-    let best: { tick: number; miss: number; target: Readonly<Unit> } | null = null;
-    for (let tick = 1; tick < w.fuse; tick++) {
-      const pig = probe.view().walkers[0];
-      if (!pig) break;
-      for (const e of ahead) {
-        const m = Math.hypot(pig.x - e.x, pig.y - e.y);
-        if (m < reach && (!best || m < best.miss)) best = { tick, miss: m, target: e };
-      }
-      probe.step();
-    }
-    if (!best) continue;
+    const first = ahead.sort((a, b) => Math.abs(a.x - u.x) - Math.abs(b.x - u.x))[0];
+    if (!first) continue;
     out.push({
       unitId: u.id,
       move,
-      shot: { weapon: def.id, angle: dir > 0 ? 0 : 2048, power: 0, detonate: best.tick },
-      guess: guessWorth(at, def, best.target, best.miss),
+      shot: { weapon: def.id, angle: dir > 0 ? 0 : 2048, power: 0, detonate: -1 },
+      guess: guessWorth(at, def, first, def.explosionRadius * SUBPX * 0.4),
     });
   }
   return out;
+}
+
+/**
+ * The tick after it is let loose at which the pig of `plan` comes nearest an enemy within its
+ * blast, followed in the sandbox; null if it never does.
+ */
+function probePig(box: Sandbox, plan: AiPlan, team: number): number | null {
+  const shot = plan.shot;
+  if (!shot) return null;
+  const def = box.state.rules.weapons.find((w) => w.id === shot.weapon);
+  const reach = (def?.explosionRadius ?? 0) * SUBPX;
+  const sim = box.load();
+  const { detonate: _skip, ...free } = shot;
+  void _skip;
+  const script = new TurnScript({ ...plan, shot: free }, SANDBOX_PACE);
+  const turn = box.state.turn.number;
+  let since = -1;
+  let best: { tick: number; miss: number } | null = null;
+  for (let i = 0; i < PLAY_MAX; i++) {
+    const events = sim.step(script.next(sim.view()));
+    const v = sim.view();
+    if (since < 0) {
+      if (events.some((e) => e.e === 'shotFired')) since = 0;
+      if (v.turn.number !== turn || v.turn.phase === 'gameOver') break;
+      continue;
+    }
+    const pig = v.walkers[0];
+    if (!pig) break;
+    for (const e of enemiesOf(v, team)) {
+      const m = Math.hypot(pig.x - e.x, pig.y - e.y);
+      if (m < reach && (!best || m < best.miss)) best = { tick: since + 1, miss: m };
+    }
+    since++;
+  }
+  return best?.tick ?? null;
 }
 
 /**
@@ -779,6 +846,7 @@ export function planTurn(input: PlanInput): PlanResult {
   let played = 0;
   const candidates: Candidate[] = [];
 
+  const seen = new Set<string>();
   for (const unitId of shootersOf(v0, team, level)) {
     const unit = v0.units.find((u) => u.id === unitId);
     if (!unit) continue;
@@ -790,7 +858,11 @@ export function planTurn(input: PlanInput): PlanResult {
         -moveCost(move) +
         play(box, stay, team, level, (at) => {
           const u = at.units.find((x) => x.id === unitId);
-          if (u?.alive && at.turn.phase === 'action') {
+          // A place already looked around from (a walk that went nowhere, a jump that came back
+          // down): the same throws again, so not looked for twice.
+          const spot = u ? `${unitId}:${u.x >> 11}:${u.y >> 11}` : '';
+          if (u?.alive && at.turn.phase === 'action' && !seen.has(spot)) {
+            seen.add(spot);
             candidates.push(...candidatesFrom(at, u, move, level, team));
           }
         });
@@ -803,7 +875,14 @@ export function planTurn(input: PlanInput): PlanResult {
   candidates.sort((a, b) => b.guess - a.guess);
   const shots: { plan: AiPlan; score: number }[] = [];
   for (const c of candidates.slice(0, level.candidates)) {
-    const plan: AiPlan = { unitId: c.unitId, move: c.move, shot: c.shot };
+    let plan: AiPlan = { unitId: c.unitId, move: c.move, shot: c.shot };
+    // A flaming pig: when to set it off, found in the sandbox first.
+    if (c.shot.detonate === -1) {
+      const tick = probePig(box, plan, team);
+      played++;
+      if (tick === null) continue;
+      plan = { ...plan, shot: { ...c.shot, detonate: tick } };
+    }
     shots.push({ plan, score: play(box, plan, team, level) - moveCost(c.move) });
     played++;
   }

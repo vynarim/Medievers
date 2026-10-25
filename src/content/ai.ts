@@ -83,8 +83,8 @@ export const AI_LEVELS: Readonly<Record<AiLevelId, AiLevel>> = {
   constable: {
     units: 2,
     positions: 9,
-    angleStep: 80,
-    powers: [320, 480, 640, 800, 928, 1024],
+    angleStep: 112,
+    powers: [352, 544, 736, 896, 1024],
     candidates: 30,
     angleNoise: 11,
     powerNoisePct: 2,

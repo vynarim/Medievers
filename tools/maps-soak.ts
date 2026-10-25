@@ -4,15 +4,9 @@
 // Usage: pnpm run maps:soak <valley|coast|holyLand|all> [--games N] [--levels a,b] [--seed S]
 //        [--turns T] [--quiet]
 import { mkdirSync, writeFileSync } from 'node:fs';
-import { AiController } from '../src/ai/controller.ts';
-import { planTurn } from '../src/ai/plan.ts';
-import { buildMap } from '../src/app/map-build.ts';
-import { defaultSetup, matchConfig, rulesFor } from '../src/app/match-setup.ts';
-import { AI_LEVELS, AI_LEVEL_IDS, type AiLevelId } from '../src/content/ai.ts';
-import { MAP_THEMES, generatedMapId, type MapTheme } from '../src/content/maps.ts';
-import type { GameCommand, TimedCommand } from '../src/sim/commands.ts';
-import { LOG_VERSION, replay, type GameLog } from '../src/sim/log.ts';
-import { Sim } from '../src/sim/sim.ts';
+import { AI_LEVEL_IDS, type AiLevelId } from '../src/content/ai.ts';
+import { MAP_THEMES, type MapTheme } from '../src/content/maps.ts';
+import { playGame, type GameReport } from './lib/soak-game.ts';
 
 const args = process.argv.slice(2);
 const opt = (name: string, def: string): string => {
@@ -32,148 +26,6 @@ const themes: MapTheme[] =
   which === 'all' ? [...MAP_THEMES] : MAP_THEMES.filter((t) => t === which);
 if (themes.length === 0) throw new Error(`unknown map theme ${which}`);
 
-/** ticks a match may last at most (well beyond any turn limit) */
-const MAX_TICKS = 60 * 60 * 90;
-
-interface GameReport {
-  readonly seed: number;
-  readonly mapId: string;
-  /** team id, -1 draw, null unfinished */
-  readonly winner: number | null;
-  readonly levels: readonly AiLevelId[];
-  readonly turns: number;
-  readonly ticks: number;
-  readonly error?: string;
-  readonly stuck: readonly { unitId: number; x: number; turn: number }[];
-  readonly kills: Record<string, number>;
-  readonly enemyDamage: number;
-  readonly friendlyDamage: number;
-  readonly planMs: readonly number[];
-  readonly replayOk?: boolean;
-}
-
-/** The active unit can get somewhere: a walk, a jump or a rope moves it at least 4 px. */
-function canMove(sim: Sim): boolean {
-  const v = sim.view();
-  const id = v.turn.activeUnitId;
-  const x0 = v.units.find((u) => u.id === id)?.x ?? 0;
-  const y0 = v.units.find((u) => u.id === id)?.y ?? 0;
-  const tries: GameCommand[] = [
-    { t: 'move', dir: 1 },
-    { t: 'move', dir: -1 },
-    { t: 'jump', kind: 'forward', dir: 1 },
-    { t: 'jump', kind: 'forward', dir: -1 },
-    { t: 'climb', dir: -1 },
-    { t: 'climb', dir: 1 },
-  ];
-  return tries.some((cmd) => {
-    const s = Sim.fromState(sim.snapshot());
-    s.step([cmd]);
-    for (let i = 0; i < 90; i++) s.step();
-    const u = s.view().units.find((w) => w.id === id);
-    return Math.abs((u?.x ?? x0) - x0) >= 4 * 256 || Math.abs((u?.y ?? y0) - y0) >= 4 * 256;
-  });
-}
-
-function playGame(theme: MapTheme, seed: number, gameLevels: readonly AiLevelId[]): GameReport {
-  const setup = defaultSetup(false);
-  const rules = rulesFor(setup, {});
-  const built = buildMap(theme, seed);
-  const config = matchConfig(built, setup, rules);
-  const sim = new Sim(config, seed, built.mask);
-  const planMs: number[] = [];
-  const ctrl = new AiController({
-    levels: new Map(gameLevels.map((l, team) => [team, AI_LEVELS[l]])),
-    seed,
-    planner: (input) => {
-      const t0 = performance.now();
-      const r = planTurn(input);
-      planMs.push(performance.now() - t0);
-      return r;
-    },
-    pace: { aimPerTick: 24, afterShot: 30, settle: 6 },
-    ticksPerSecond: 0,
-  });
-  const commands: TimedCommand[] = [];
-  const kills: Record<string, number> = {};
-  let enemyDamage = 0;
-  let friendlyDamage = 0;
-  let weapon = '';
-  // Damage counts as the AI's own doing between its shot and the end of its turn.
-  let shooting = false;
-  // Turns in a row each unit could neither walk nor jump anywhere: stuck (GDD §10).
-  const blocked = new Map<number, number>();
-  let probed = -1;
-  const stuck: { unitId: number; x: number; turn: number }[] = [];
-  let error: string | undefined;
-  try {
-    for (let tick = 1; tick <= MAX_TICKS; tick++) {
-      const v = sim.view();
-      if (v.turn.phase === 'gameOver' || v.turn.number > maxTurns) break;
-      const active = v.turn.activeUnitId;
-      const team = v.turn.activeTeam;
-      const turn = v.turn.number;
-      if (v.turn.phase === 'action' && probed !== turn) {
-        probed = turn;
-        const n = canMove(sim) ? 0 : (blocked.get(active) ?? 0) + 1;
-        blocked.set(active, n);
-        const u = v.units.find((x) => x.id === active);
-        if (n === 3 && u) stuck.push({ unitId: active, x: u.x >> 8, turn });
-      }
-      const cmds = ctrl.poll(tick, v);
-      for (const c of cmds) commands.push([tick, c]);
-      const events = sim.step(cmds);
-      for (const e of events) {
-        if (e.e === 'shotFired') {
-          weapon = e.weapon;
-          shooting = true;
-        }
-        if (e.e === 'unitDamaged' && shooting && !events.some((x) => x.e === 'turnStarted')) {
-          const victim = sim.view().units.find((u) => u.id === e.unitId);
-          if (victim?.team === team) friendlyDamage += e.damage;
-          else enemyDamage += e.damage;
-        }
-        if (e.e === 'unitDied') {
-          const key = e.cause === 'hp' ? weapon || 'other' : e.cause;
-          kills[key] = (kills[key] ?? 0) + 1;
-        }
-        if (e.e === 'turnStarted') {
-          weapon = '';
-          shooting = false;
-        }
-      }
-    }
-  } catch (e) {
-    error = e instanceof Error ? (e.stack ?? e.message) : String(e);
-  }
-  const v = sim.view();
-  const log: GameLog = {
-    version: LOG_VERSION,
-    config,
-    seed,
-    mapId: generatedMapId(theme, seed),
-    commands,
-    endTick: v.tick,
-  };
-  return {
-    seed,
-    mapId: log.mapId,
-    winner: v.winner,
-    levels: gameLevels,
-    turns: v.turn.number,
-    ticks: v.tick,
-    ...(error ? { error } : {}),
-    stuck,
-    kills,
-    enemyDamage,
-    friendlyDamage,
-    planMs,
-    ...(seed - baseSeed < 3 && !error
-      ? { replayOk: replay(log, built.mask).hash() === sim.hash() }
-      : {}),
-  };
-}
-
 const reports: GameReport[] = [];
 for (const theme of themes) {
   for (let g = 0; g < games; g++) {
@@ -181,7 +33,13 @@ for (const theme of themes) {
     // Every other match, the houses swap levels: the sides are tested for fairness as well.
     const gameLevels = g % 2 === 0 ? levels : [...levels].reverse();
     const t0 = performance.now();
-    const r = playGame(theme, seed, gameLevels);
+    const r = playGame({
+      theme,
+      seed,
+      levels: gameLevels,
+      maxTurns,
+      checkReplay: seed - baseSeed < 3,
+    });
     reports.push(r);
     if (!quiet) {
       const avg = r.planMs.reduce((a, b) => a + b, 0) / Math.max(1, r.planMs.length);
