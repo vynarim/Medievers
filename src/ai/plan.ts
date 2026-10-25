@@ -277,7 +277,7 @@ function throwsAt(
       });
     }
   }
-  const reach = (def.explosionRadius > 0 ? def.explosionRadius : 0) * SUBPX;
+  const reach = reachOf(def) * SUBPX;
   const out: { shot: AiShot; target: Readonly<Unit>; miss: number }[] = [];
   // The finer search only for the enemies the sweep came nearest to.
   const order = enemies
@@ -313,7 +313,7 @@ function throwsAt(
       }
     }
     // Close enough to hurt: on the unit for a direct hit, within its blast for the others.
-    const close = def.explosionRadius > 0 ? b.miss <= reach * 1.1 : b.miss === 0;
+    const close = reach > 0 ? b.miss <= reach * 1.1 : b.miss === 0;
     if (close) {
       out.push({
         shot: { weapon: def.id, angle: b.angle, power: b.power },
@@ -324,6 +324,16 @@ function throwsAt(
   }
   return out;
 }
+
+/** px: how near a throw must land to do harm (a blast; the swarm out of a hive); 0: on it. */
+function reachOf(def: WeaponDef): number {
+  if (def.explosionRadius > 0) return def.explosionRadius;
+  // The swarm goes for the nearest unit: landing well within reach of the enemy is enough.
+  return def.hive ? HIVE_REACH : 0;
+}
+
+/** px within which a hive breaking near an enemy sends its swarm on it, for the AI */
+const HIVE_REACH = 80;
 
 /** The weapons the unit may take up this turn, among the level's. */
 function weaponsFor(v: SimView, u: Readonly<Unit>, level: AiLevel): WeaponDef[] {
@@ -337,7 +347,8 @@ function weaponsFor(v: SimView, u: Readonly<Unit>, level: AiLevel): WeaponDef[] 
       w.behavior === 'walker' ||
       w.behavior === 'melee' ||
       w.behavior === 'charge' ||
-      w.behavior === 'strike'
+      w.behavior === 'strike' ||
+      w.behavior === 'homing'
     );
   }) as WeaponDef[];
 }
@@ -352,7 +363,11 @@ function guessWorth(
   hits = 1,
 ): number {
   const reach = Math.max(1, def.explosionRadius * SUBPX);
-  const one = def.explosionRadius > 0 ? def.damage * Math.max(0, 1 - m / reach) : def.damage;
+  const one = def.hive
+    ? (def.damage * def.hive.ticks) / def.hive.every / 2
+    : def.explosionRadius > 0
+      ? def.damage * Math.max(0, 1 - m / reach)
+      : def.damage;
   const dmg = one * hits;
   let worth = Math.min(dmg, target.hp);
   if (dmg >= target.hp) worth += AI_SCORE.enemyKill;
@@ -597,7 +612,8 @@ function candidatesFrom(
             weapon: def.id,
             angle: ex >= subToPx(u.x) ? 3584 : 2560,
             power: MAX_POWER,
-            at: { x: ex, y: subToPx(e.y) },
+            // The falcon goes for the body; a volley falls on the ground under it.
+            at: { x: ex, y: def.homing ? subToPx(centreY(e)) : subToPx(e.y) },
           },
           // Two stones of a volley, or three arrows of the rain, may well fall on it.
           guess: guessWorth(at, def, e, 0, def.explosionRadius > 0 ? 2 : 3) * 0.8,

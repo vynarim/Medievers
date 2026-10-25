@@ -132,6 +132,20 @@ const ART: Record<WeaponId, string> = {
     <path d="M10 36 Q4 32 8 28" fill="none" ${s(2)}/>
     <path d="M18 28 Q14 14 22 8 Q22 18 28 16 Q26 6 34 2 Q34 14 40 14 Q42 22 36 28 Z" fill="${C.red}" ${s(1.5)}/>
     <path d="M24 26 Q22 18 26 14 Q28 20 32 18 Q34 24 30 27 Z" fill="${C.gold}"/>`,
+  beehive: `
+    <path d="M32 10 Q14 14 14 32 Q14 52 32 56 Q50 52 50 32 Q50 14 32 10 Z" fill="${C.ochre}" ${s(2.5)}/>
+    <path d="M16 24 Q32 20 48 24 M14 34 Q32 30 50 34 M16 44 Q32 40 48 44" fill="none" ${s(1.8)}/>
+    <path d="M28 50 Q32 46 36 50 L36 56 L28 56 Z" fill="${INK}"/>
+    <line x1="32" y1="4" x2="32" y2="10" ${s(2.5)}/>
+    <ellipse cx="54" cy="12" rx="4" ry="3" fill="${C.gold}" ${s(1.2)}/>
+    <ellipse cx="9" cy="16" rx="4" ry="3" fill="${C.gold}" ${s(1.2)}/>
+    <ellipse cx="56" cy="48" rx="4" ry="3" fill="${C.gold}" ${s(1.2)}/>`,
+  falcon: `
+    <path d="M6 22 Q20 14 30 24 Q40 14 58 18 Q46 24 40 32 L46 44 L34 38 L26 46 L28 34 Q16 32 6 22 Z" fill="${C.wood}" ${s(2)}/>
+    <path d="M30 24 Q34 18 38 22 Q36 26 32 28 Z" fill="${C.ochre}" ${s(1.5)}/>
+    <path d="M38 22 L43 23 L38 25 Z" fill="${C.gold}" ${s(1)}/>
+    <circle cx="35" cy="22" r="1.2" fill="${INK}"/>
+    <path d="M14 26 L20 24 M48 22 L52 21 M12 22 L16 21" ${s(1.2)}/>`,
   miracle: `
     <circle cx="32" cy="26" r="16" fill="${C.gold}" ${s(2)}/>
     <path d="M32 2 L32 8 M32 44 L32 50 M8 26 L14 26 M50 26 L56 26 M15 9 L19 13 M45 39 L49 43 M49 9 L45 13 M19 39 L15 43" ${s(2)}/>

@@ -64,6 +64,24 @@ function weaponFields(w: WeaponDef): TuningField[] {
       field(`${p}.banner.windDrift`, 'tuning.bannerDrift', 'units.subPxPerTick', 1, 5, 0, 200),
     ];
   }
+  if (w.hive) {
+    return [
+      ammo,
+      field(`${p}.damage`, 'tuning.stingDamage', 'units.hp', 1, 1, 0, 50),
+      field(`${p}.hive.ticks`, 'tuning.swarmTime', 'units.seconds', TPS, 0.5, 0.5, 15),
+      field(`${p}.hive.every`, 'tuning.stingEvery', 'units.seconds', TPS, 0.05, 0.05, 3),
+      field(`${p}.windPct`, 'tuning.windPct', 'units.percent', 1, 5, 0, 300),
+    ];
+  }
+  if (w.homing) {
+    return [
+      ammo,
+      field(`${p}.damage`, 'tuning.damage', 'units.hp', 1, 1, 0, 200),
+      field(`${p}.explosionRadius`, 'tuning.explosionRadius', 'units.px', 1, 1, 1, 300),
+      field(`${p}.homing.speed`, 'tuning.falconSpeed', 'units.pxPerTick', SUB, 0.5, 1, 30),
+      field(`${p}.homing.windDrift`, 'tuning.bannerDrift', 'units.subPxPerTick', 1, 2, 0, 200),
+    ];
+  }
   if (w.walker) {
     return [
       ammo,

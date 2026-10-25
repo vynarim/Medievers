@@ -316,3 +316,71 @@ describe('flaming pig (GDD §4.1)', () => {
     expect(px(sim.view().walkers[0]?.x)).toBeLessThan(farthest);
   });
 });
+
+describe('beehive (GDD §4.1)', () => {
+  it('breaks where it lands and its swarm stings the nearest unit for 4 s', () => {
+    const sim = match(CALM, 300, [700]);
+    // Thrown high at the enemy: a lob that lands near it.
+    let landed = false;
+    for (const power of [600, 650, 700, 750, 800, 850, 900]) {
+      const probe = Sim.fromState(sim.snapshot());
+      const events = run(
+        probe,
+        [
+          { t: 'selectWeapon', id: 'beehive' },
+          { t: 'aim', angle: 3584 },
+          { t: 'fire', power },
+        ],
+        400,
+      );
+      const out = events.find((e) => e.e === 'swarmOut');
+      if (!out || out.e !== 'swarmOut' || Math.abs(out.x - 700) > 60) continue;
+      landed = true;
+      const stings = events.filter((e) => e.e === 'stung');
+      expect(stings.length).toBeGreaterThan(3);
+      expect(stings.length).toBeLessThanOrEqual(8);
+      expect(stings.every((e) => e.e === 'stung' && e.unitId === 2)).toBe(true);
+      expect(probe.view().units.find((u) => u.id === 2)?.hp).toBe(100 - 5 * stings.length);
+      expect(probe.view().swarms).toHaveLength(0);
+      expect(events.some((e) => e.e === 'swarmGone')).toBe(true);
+      break;
+    }
+    expect(landed).toBe(true);
+  });
+});
+
+describe('falcon (GDD §4.1)', () => {
+  it('flies to the point clicked, round a wall in its way, and strikes', () => {
+    const mask = flatMask();
+    for (let y = 380; y < 500; y++) mask.data.fill(Material.Rock, y * 1200 + 500, y * 1200 + 520);
+    const sim = match(CALM, 300, [800], mask);
+    const events = run(
+      sim,
+      [
+        { t: 'selectWeapon', id: 'falcon' },
+        { t: 'fireAt', x: 800, y: 460 },
+      ],
+      300,
+    );
+    expect(events.some((e) => e.e === 'explosion')).toBe(true);
+    expect(unit(sim, 2)?.hp ?? 100).toBeLessThan(70);
+  });
+
+  it('is pushed aside by the wind', () => {
+    const land = (wind: number): number => {
+      const sim = match(CALM, 300, [1100]);
+      (sim.view() as { turn: { wind: number } }).turn.wind = wind;
+      const events = run(
+        sim,
+        [
+          { t: 'selectWeapon', id: 'falcon' },
+          { t: 'fireAt', x: 300, y: 100 },
+        ],
+        200,
+      );
+      const e = events.find((x) => x.e === 'explosion');
+      return e && e.e === 'explosion' ? e.x >> 8 : -1;
+    };
+    expect(land(10)).toBeGreaterThan(land(0));
+  });
+});

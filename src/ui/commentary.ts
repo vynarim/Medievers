@@ -49,6 +49,8 @@ export class Commentary {
   private kingFell = false;
   /** the structure about to fall has lost its footing, rather than its HP */
   private undermined = false;
+  /** ms of the last quip about bees: one per swarm attack, not one per sting */
+  private stungAt = -Infinity;
   /** closes the end screen, while it is up */
   private endScreen: (() => void) | null = null;
   /** last state seen of each structure, by id */
@@ -143,6 +145,12 @@ export class Commentary {
           );
           break;
         }
+        case 'stung':
+          if (now - this.stungAt > 4000) {
+            this.stungAt = now;
+            this.hud.say(pick('quip.stung', { name: unitName(e.unitId) }), now, 'bad');
+          }
+          break;
         case 'mineSprung':
           this.hud.say(pick('quip.mineSprung'), now, 'bad');
           break;

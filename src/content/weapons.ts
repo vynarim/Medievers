@@ -20,7 +20,9 @@ export type WeaponId =
   | 'miracle'
   | 'ladder'
   | 'banner'
-  | 'flamingPig';
+  | 'flamingPig'
+  | 'beehive'
+  | 'falcon';
 
 /** Fragments a cluster weapon throws when it bursts (pot de poix, GDD §4.1). */
 export interface FragmentDef {
@@ -131,6 +133,34 @@ export interface WalkerDef {
   readonly maxStep: number;
 }
 
+/** Ruche (GDD §4.1): a hive thrown that breaks and lets out a swarm. */
+export interface HiveDef {
+  /** ticks the swarm lives */
+  readonly ticks: number;
+  /** sub-px/tick the swarm flies at, after the nearest unit */
+  readonly speed: number;
+  /** px around a unit's body within which the swarm stings */
+  readonly reach: number;
+  /** ticks between two stings of the same swarm */
+  readonly every: number;
+}
+
+/** Faucon (GDD §4.1): a bird sent at a point, that steers its way there and strikes. */
+export interface HomingDef {
+  /** sub-px/tick it flies at */
+  readonly speed: number;
+  /** BAM it may turn by in a tick */
+  readonly turn: number;
+  /** ticks it first rises straight up, before it steers */
+  readonly rise: number;
+  /** sub-px/tick of sideways drift per point of wind */
+  readonly windDrift: number;
+  /** ticks it flies at most, before it strikes where it is */
+  readonly ticks: number;
+  /** px: farthest from the unit the point may be with the gauge (a click goes anywhere) */
+  readonly reach: number;
+}
+
 export interface WeaponDef {
   readonly id: WeaponId;
   /** behaviour implemented in src/sim/weapons */
@@ -147,7 +177,9 @@ export interface WeaponDef {
     | 'teleport'
     | 'ladder'
     | 'banner'
-    | 'walker';
+    | 'walker'
+    | 'hive'
+    | 'homing';
   /** px; 0 = point projectile */
   readonly projectileRadius: number;
   /** percent of wind acceleration applied (GDD §4.1 « Vent ») */
@@ -215,6 +247,8 @@ export interface WeaponDef {
   /** Using it ends the turn at once (the miracle). */
   readonly endsTurn?: boolean;
   readonly walker?: WalkerDef;
+  readonly hive?: HiveDef;
+  readonly homing?: HomingDef;
   readonly teleport?: TeleportDef;
   readonly ladder?: LadderDef;
   readonly banner?: BannerDef;
@@ -226,7 +260,10 @@ export interface WeaponDef {
 
 /** Weapons aimed at a point of the map rather than fired along the aim (click or gauge). */
 export const isTargeted = (w: WeaponDef): boolean =>
-  w.behavior === 'build' || w.behavior === 'strike' || w.behavior === 'teleport';
+  w.behavior === 'build' ||
+  w.behavior === 'strike' ||
+  w.behavior === 'teleport' ||
+  w.behavior === 'homing';
 
 /** The gauge sets something (speed, distance, a blow's knockback); the others act at once. */
 export const usesPower = (w: WeaponDef): boolean =>
@@ -234,7 +271,10 @@ export const usesPower = (w: WeaponDef): boolean =>
 
 /** Weapons that throw something through the air along the aim (they have a flight preview). */
 export const isProjectile = (w: WeaponDef): boolean =>
-  w.behavior === 'directHit' || w.behavior === 'fusedBouncer' || w.behavior === 'cluster';
+  w.behavior === 'directHit' ||
+  w.behavior === 'fusedBouncer' ||
+  w.behavior === 'cluster' ||
+  w.behavior === 'hive';
 
 /** Tools without a projectile or explosion of their own: placed, dug or set. */
 const TOOL = {
@@ -461,6 +501,41 @@ export const WEAPONS: readonly WeaponDef[] = [
     knockbackPct: 100,
     ammo: 1,
     walker: { speed: 2 * 256, fuse: 8 * 60, hop: 7 * 256, maxStep: 8 },
+  },
+  {
+    // Ruche (2026-10-25): thrown like a stone, bent by the wind; where it breaks, a swarm comes
+    // out that flies after the nearest unit, whoever's, for 4 s, stinging it for 5 HP every
+    // half-second it is on it.
+    id: 'beehive',
+    behavior: 'hive',
+    thrown: true,
+    projectileRadius: 4,
+    windPct: 100,
+    maxSpeed: 18 * 256,
+    damage: 5,
+    explosionRadius: 0,
+    knockbackPct: 0,
+    bouncePct: 0,
+    defaultFuse: 0,
+    ammo: 1,
+    hive: { ticks: 4 * 60, speed: 3 * 256, reach: 10, every: 30 },
+  },
+  {
+    // Faucon (2026-10-25): sent at the point clicked (or as far along the aim as the gauge says),
+    // it rises, then steers its way there at 8 px a tick, the wind bending its course, and
+    // strikes the first thing it meets: 50 HP at the centre, 50 px.
+    id: 'falcon',
+    behavior: 'homing',
+    projectileRadius: 4,
+    windPct: 0,
+    maxSpeed: 8 * 256,
+    damage: 50,
+    explosionRadius: 50,
+    knockbackPct: 100,
+    bouncePct: 0,
+    defaultFuse: 0,
+    ammo: 1,
+    homing: { speed: 8 * 256, turn: 80, rise: 16, windDrift: 24, ticks: 6 * 60, reach: 1200 },
   },
   {
     // Miracle (2026-10-25): the unit is set down on the free point clicked (or along the aim, as

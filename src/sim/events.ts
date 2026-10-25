@@ -139,6 +139,12 @@ export type SimEvent =
   | { readonly e: 'ladderPlaced'; readonly x: number; readonly y: number; readonly h: number }
   /** a flaming pig went up (blast queued), or fizzled out in the water or off the map */
   | { readonly e: 'walkerGone'; readonly id: number; readonly fizzled: boolean }
+  /** a hive broke: its swarm came out at (x, y) px */
+  | { readonly e: 'swarmOut'; readonly id: number; readonly x: number; readonly y: number }
+  /** a swarm stung a unit (the damage comes as unitDamaged) */
+  | { readonly e: 'stung'; readonly unitId: number }
+  /** a swarm scattered */
+  | { readonly e: 'swarmGone'; readonly id: number }
   /** a unit held up its banner */
   | { readonly e: 'bannerRaised'; readonly unitId: number }
   | { readonly e: 'gameOver'; readonly winner: number };

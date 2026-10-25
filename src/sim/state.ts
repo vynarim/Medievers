@@ -85,6 +85,23 @@ export interface FlyingShot {
   readonly turns?: number;
   /** percent of the weapon's damage (king's aura, GDD §3.2); absent: 100 */
   readonly damagePct?: number;
+  /** the falcon: px of the point it steers for */
+  readonly homing?: { readonly x: number; readonly y: number };
+}
+
+/** A swarm of bees out of a broken hive (GDD §4.1), after the nearest unit. */
+export interface Swarm {
+  readonly id: number;
+  readonly weapon: WeaponId;
+  /** sub-px: middle of the swarm */
+  x: number;
+  y: number;
+  /** ticks left before it scatters */
+  ticks: number;
+  /** ticks before it may sting again */
+  sting: number;
+  /** percent of the weapon's damage (king's aura) */
+  readonly damagePct: number;
 }
 
 /** A unit cutting its way with the pick or the sap (GDD §4.4). */
@@ -331,6 +348,8 @@ export interface SimState {
   charge: Charge | null;
   /** flaming pigs let loose, sorted by id */
   walkers: Walker[];
+  /** swarms of bees, sorted by id */
+  swarms: Swarm[];
   /** sorted by id */
   mines: Mine[];
   /** units still to be placed, the next one first; empty once the battle has begun */

@@ -336,7 +336,8 @@ export function targetFor(
     );
     return { x, y: groundAt(v.terrain, x) };
   }
-  const d = idiv((def.wall?.reach ?? def.teleport?.reach ?? 0) * p, MAX_POWER);
+  const reach = def.wall?.reach ?? def.teleport?.reach ?? def.homing?.reach ?? 0;
+  const d = idiv(reach * p, MAX_POWER);
   return {
     x: cx + subToPx(mulQ14(d * SUBPX, cosQ14(aim))),
     y: cy + subToPx(mulQ14(d * SUBPX, sinQ14(aim))),

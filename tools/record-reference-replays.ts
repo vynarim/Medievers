@@ -865,6 +865,44 @@ const SCRIPTS: readonly Script[] = [
       ]);
     },
   },
+  {
+    name: 'hive-falcon',
+    description:
+      'Ruche et faucon (GDD §4.1): a hive lobbed by the enemy, whose swarm stings him for 4 s; ' +
+      'then a falcon sent at him over a wall, bent by the wind.',
+    mapId: 'flat',
+    seed: 1291,
+    config: {
+      rules: { ...NO_PLACEMENT, wind: { ...NO_PLACEMENT.wind, max: 6 } },
+      teams: [{ spawns: [300] }, { spawns: [700] }],
+    },
+    play: (r) => {
+      const ours = (cmds: Parameters<Recorder['step']>[0]): void => {
+        r.until('action');
+        r.step(cmds);
+        r.until('transition');
+        r.until('action');
+        r.step([{ t: 'skip' }]);
+        r.until('transition');
+      };
+      ours([
+        { t: 'selectWeapon', id: 'beehive' },
+        { t: 'aim', angle: 3584 },
+        { t: 'fire', power: 760 },
+      ]);
+      const ground = (r.sim.view().units[0]?.y ?? 0) >> 8;
+      ours([
+        { t: 'selectWeapon', id: 'stoneWall' },
+        { t: 'setFuse', seconds: 3 },
+        { t: 'aim', angle: 1024 },
+        { t: 'fireAt', x: 500, y: ground - 60 },
+      ]);
+      ours([
+        { t: 'selectWeapon', id: 'falcon' },
+        { t: 'fireAt', x: 700, y: ground - 40 },
+      ]);
+    },
+  },
 ];
 
 const force = process.argv.includes('--force');

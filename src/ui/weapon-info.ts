@@ -57,6 +57,7 @@ export function weaponLines(w: WeaponDef): string[] {
     lines.push(t('weapon.fragments', { n: w.fragments.count, damage: w.fragments.damage }));
   }
   if (w.reach) lines.push(t('weapon.reach', { px: w.reach }));
+  if (w.hive) lines.push(t('weapon.hive', { s: w.hive.ticks / 60, every: w.hive.every / 60 }));
   if (w.walker) lines.push(t('weapon.walker', { s: w.walker.fuse / 60 }));
   if (w.charge) lines.push(t('weapon.charge', { px: w.charge.distance }));
   if (w.strike) {

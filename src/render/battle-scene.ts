@@ -533,10 +533,14 @@ export class BattleScene extends Phaser.Scene {
       // A point counts with a unit's label above it: lower it so the shot itself is framed.
       points.push({ x, y: y + 150 });
     }
-    // A flaming pig trotting is followed like a shot.
+    // A flaming pig trotting, or a swarm, is followed like a shot.
     const pig = v.walkers[0];
+    const swarm = v.swarms[0];
     if (!shot && pig) {
       const [x, y] = this.pos(`w${pig.id}`, alpha, pig.x, pig.y);
+      points.push({ x, y: y + 150 });
+    } else if (!shot && swarm) {
+      const [x, y] = this.pos(`b${swarm.id}`, alpha, swarm.x, swarm.y);
       points.push({ x, y: y + 150 });
     }
     const { width, height } = this.scale;
@@ -553,7 +557,7 @@ export class BattleScene extends Phaser.Scene {
     const [ax, ay] = this.pos(`u${active.id}`, alpha, active.x, active.y);
     const near: Point[] = [{ x: ax, y: ay }];
     const last = points[points.length - 1];
-    if ((shot || pig) && last) near.push(last);
+    if ((shot || pig || swarm) && last) near.push(last);
     return frame(near, width, height, margins, floor, closest);
   }
 
@@ -1175,6 +1179,7 @@ export class BattleScene extends Phaser.Scene {
     for (const s of v.shots) put(`s${s.projectile.id}`, s.projectile.x, s.projectile.y);
     for (const c of v.crates) put(`c${c.id}`, c.x, c.y);
     for (const w of v.walkers) put(`w${w.id}`, w.x, w.y);
+    for (const w of v.swarms) put(`b${w.id}`, w.x, w.y);
     if (v.dragon) put(`d${v.dragon.id}`, v.dragon.x, v.dragon.y);
     if (v.unicorn) put(`n${v.unicorn.id}`, v.unicorn.x, v.unicorn.y);
     for (const key of this.interp.keys()) if (!seen.has(key)) this.interp.delete(key);
@@ -1317,6 +1322,20 @@ export class BattleScene extends Phaser.Scene {
         g.fillCircle(x, y, 3);
         continue;
       }
+      if (s.weapon === 'falcon') {
+        this.drawFalcon(g, x, y, dx, dy, time);
+        continue;
+      }
+      if (s.weapon === 'beehive') {
+        // A skep of straw, coiled.
+        g.fillStyle(COLORS.ocre, 1);
+        g.lineStyle(3, COLORS.encre, 1);
+        g.fillEllipse(x, y, 16, 20);
+        g.strokeEllipse(x, y, 16, 20);
+        g.lineStyle(1.5, COLORS.encre, 1);
+        for (const k of [-4, 1, 6]) g.lineBetween(x - 7, y + k, x + 7, y + k);
+        continue;
+      }
       if (
         s.weapon === 'bow' ||
         s.weapon === 'crossbow' ||
@@ -1362,8 +1381,68 @@ export class BattleScene extends Phaser.Scene {
     }
 
     this.drawWalkers(g, alpha, time);
+    this.drawSwarms(g, alpha, time);
     this.drawBursts(g, time);
     this.drawHalos(g, time);
+  }
+
+  /** The falcon, wings beating, along its flight. */
+  private drawFalcon(
+    g: Phaser.GameObjects.Graphics,
+    x: number,
+    y: number,
+    dx: number,
+    dy: number,
+    time: number,
+  ): void {
+    const beat = Math.sin(time / 45) * 12;
+    // Across the flight: the wings.
+    const ax = -dy;
+    const ay = dx;
+    g.fillStyle(COLORS.terreOmbre, 1);
+    g.lineStyle(2.5, COLORS.encre, 1);
+    const wing = (side: number): Phaser.Math.Vector2[] =>
+      poly([
+        { x: x - dx * 4, y: y - dy * 4 },
+        {
+          x: x + ax * side * 22 - dx * 10,
+          y: y + ay * side * 22 - dy * 10 + beat * side * 0.3 - Math.abs(beat),
+        },
+        { x: x + dx * 4, y: y + dy * 4 },
+      ]);
+    for (const side of [-1, 1]) {
+      g.fillPoints(wing(side), true);
+      g.strokePoints(wing(side), true);
+    }
+    g.fillStyle(COLORS.ocre, 1);
+    g.fillEllipse(x, y, 14, 10);
+    g.strokeEllipse(x, y, 14, 10);
+    g.fillStyle(COLORS.or, 1);
+    g.fillTriangle(
+      x + dx * 10,
+      y + dy * 10,
+      x + dx * 5 - dy * 3,
+      y + dy * 5 + dx * 3,
+      x + dx * 5 + dy * 3,
+      y + dy * 5 - dx * 3,
+    );
+  }
+
+  /** Swarms of bees: a buzzing cloud of gilt specks. */
+  private drawSwarms(g: Phaser.GameObjects.Graphics, alpha: number, time: number): void {
+    for (const w of this.sim.view().swarms) {
+      const [x, y] = this.pos(`b${w.id}`, alpha, w.x, w.y);
+      for (let i = 0; i < 14; i++) {
+        const a = time / (90 + i * 7) + i * 2.4;
+        const r = 6 + ((i * 7) % 16);
+        const bx = x + Math.cos(a) * r;
+        const by = y + Math.sin(a * 1.3) * r * 0.7;
+        g.fillStyle(COLORS.or, 1);
+        g.fillEllipse(bx, by, 6, 4);
+        g.fillStyle(COLORS.encre, 1);
+        g.fillRect(bx - 0.5, by - 2, 1.5, 4);
+      }
+    }
   }
 
   /** Flaming pigs: a pink pig trotting, its back on fire. */
@@ -2269,6 +2348,15 @@ export class BattleScene extends Phaser.Scene {
     let y = 0;
     const x = Math.max(0, Math.min(t.width - 1, at.x));
     while (y < t.height && (t.rules.solid[t.data[y * t.width + x] ?? 0] ?? false) === false) y++;
+    if (def.homing) {
+      // The falcon goes for the very point: a target there, in the air or on the ground.
+      g.lineStyle(4, COLORS.vermillon, 0.9);
+      g.strokeCircle(at.x, at.y, 22);
+      g.strokeCircle(at.x, at.y, 8);
+      g.lineBetween(at.x - 30, at.y, at.x + 30, at.y);
+      g.lineBetween(at.x, at.y - 30, at.x, at.y + 30);
+      return;
+    }
     const dir = Math.cos((v.turn.aim * Math.PI * 2) / 4096) >= 0 ? 1 : -1;
     g.lineStyle(4, COLORS.vermillon, 0.9);
     g.strokeCircle(x, y - 6, 26);

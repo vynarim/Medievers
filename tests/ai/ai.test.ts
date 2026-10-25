@@ -253,6 +253,20 @@ describe('the AI rope', () => {
     playOut(pig, plan);
     expect(pig.view().units.find((u) => u.id === 2)?.hp ?? 100).toBeLessThan(50);
 
+    // Beehive and falcon, each alone in the level's arsenal: both hurt the enemy.
+    for (const weapon of ['beehive', 'falcon'] as const) {
+      const sim = duel(400, 900);
+      const res = planTurn({
+        state: sim.snapshot(),
+        team: 0,
+        level: { ...STILL, weapons: [weapon] },
+        seed: 1,
+      });
+      expect(res.plan.shot?.weapon).toBe(weapon);
+      playOut(sim, res.plan);
+      expect(sim.view().units.find((u) => u.id === 2)?.hp ?? 100).toBeLessThan(100);
+    }
+
     // Miracle: up onto the cliff, from the plain.
     const miracle = duel(300, 1400);
     playOut(miracle, { unitId: 1, move: { kind: 'miracle', x: 1000, y: 400 }, shot: null });

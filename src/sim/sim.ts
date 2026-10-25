@@ -46,6 +46,7 @@ import { blowAngle, fire, stepCharge, stepShots, strikeHasTarget } from './weapo
 import { blastReachesMines, stepDig, stepMines } from './tools.ts';
 import { weatherTurnEnd } from './weather.ts';
 import { blastReachesWalkers, detonateWalkers, stepWalkers } from './walkers.ts';
+import { stepSwarms } from './swarms.ts';
 import { isTargeted, type WeaponId } from '../content/weapons.ts';
 import { MAX_POWER } from './commands.ts';
 import { delugeTurnEnd, drownThings, drownUnits, hasWater, underWater } from './deluge.ts';
@@ -211,6 +212,7 @@ function createState(config: MatchConfig, seed: number, mask: Mask): SimState {
     dig: null,
     charge: null,
     walkers: [],
+    swarms: [],
     mines: [],
     // One unit per house in turn: first units of every house, then the second ones…
     placing: placing
@@ -646,6 +648,7 @@ function advanceTick(s: SimState, phaseJustSet: boolean, events: SimEvent[]): vo
 
   drownUnits(s, events);
   stepShots(s, events);
+  stepSwarms(s, events);
   stepMines(s, events);
   stepDragon(s, events);
   stepUnicorn(s, events);
@@ -896,6 +899,7 @@ function settled(s: SimState): boolean {
     s.dig === null &&
     s.charge === null &&
     s.walkers.length === 0 &&
+    s.swarms.length === 0 &&
     !dragonBusy(s) &&
     s.lift === null &&
     s.units.every(atRest)
@@ -1028,6 +1032,7 @@ function hashState(s: SimState): number {
     if (shot.fragment) int(1);
     if (shot.turns !== undefined) int(shot.turns);
     if (shot.damagePct !== undefined) int(shot.damagePct);
+    if (shot.homing) for (const v of [shot.homing.x, shot.homing.y]) int(v);
   }
   int(s.explosions.items.length);
   int(s.explosions.nextSeq);
@@ -1107,6 +1112,11 @@ function hashState(s: SimState): number {
   if (s.rules.weapons.some((w) => w.charge)) {
     const c = s.charge;
     for (const v of c ? [c.id, c.unitId, c.dir, c.left, c.damagePct, ...c.hit] : [-1]) int(v);
+  }
+  if (s.rules.weapons.some((w) => w.hive)) {
+    int(s.swarms.length);
+    for (const w of s.swarms)
+      for (const v of [w.id, w.x, w.y, w.ticks, w.sting, w.damagePct]) int(v);
   }
   if (s.rules.weapons.some((w) => w.walker)) {
     int(s.walkers.length);

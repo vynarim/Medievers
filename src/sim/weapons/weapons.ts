@@ -7,9 +7,9 @@
 //  - dig, mine, build, strike: the pick and sap, the chausse-trape, the stone wall and the
 //    trebuchet volley (src/sim/tools.ts).
 import { weaponDefIn } from '../../content/rules.ts';
-import type { WeaponDef } from '../../content/weapons.ts';
+import type { HomingDef, WeaponDef } from '../../content/weapons.ts';
 import type { ExplosionRules } from '../../content/world.ts';
-import { cosQ14, sinQ14 } from '../math/angle.ts';
+import { ANGLE_MASK, angleDelta, atan2Bam, cosQ14, sinQ14 } from '../math/angle.ts';
 import { SUBPX, idiv, mulQ14, subToPx } from '../math/fixed.ts';
 import { isqrt } from '../math/isqrt.ts';
 import { queueExplosion } from '../explosions/explosion.ts';
@@ -35,6 +35,7 @@ import { damageDealtPct, throwPct, type ClassView } from '../classes.ts';
 import { igniteStructureAt, shotHitsStructure } from '../structures.ts';
 import { flameAt } from '../flames.ts';
 import { letLoose } from '../walkers.ts';
+import { breakHive } from '../swarms.ts';
 import {
   buildWall,
   launchStrike,
@@ -115,6 +116,29 @@ export function fire(
       damagePct: pct,
       hit: [],
     };
+    return true;
+  }
+  if (def.behavior === 'homing' && def.homing) {
+    // The falcon rises from the unit's shoulder, then steers for the point.
+    const p = at ?? targetFor(state, u, def, power);
+    const cy = u.y - (UNIT_HEIGHT * SUBPX) / 2;
+    const projectile = createProjectile(
+      id,
+      u.id,
+      u.x,
+      cy - MUZZLE_DISTANCE * SUBPX,
+      0,
+      -def.homing.speed,
+      { radius: def.projectileRadius, windPct: 0, gravityPct: 0 },
+    );
+    state.shots.push({
+      projectile,
+      weapon: def.id,
+      fuse: 0,
+      homing: { x: p.x, y: p.y },
+      ...damagePct,
+    });
+    events.push({ e: 'shotFired', shotId: id, weapon: def.id });
     return true;
   }
   if (def.behavior === 'walker') {
@@ -392,6 +416,22 @@ function burst(state: SimState, shot: FlyingShot, def: WeaponDef, queue: FlyingS
   }
 }
 
+/**
+ * The falcon turns towards its point by at most its turn rate, flies on at its speed, and the
+ * wind pushes it sideways.
+ */
+function steer(state: SimState, shot: FlyingShot, h: HomingDef): void {
+  const p = shot.projectile;
+  const to = shot.homing;
+  if (!to || p.age < h.rise) return;
+  const want = atan2Bam(to.y * SUBPX + SUBPX / 2 - p.y, to.x * SUBPX + SUBPX / 2 - p.x);
+  const now = atan2Bam(p.vy, p.vx);
+  const d = angleDelta(now, want);
+  const a = (now + Math.max(-h.turn, Math.min(h.turn, d))) & ANGLE_MASK;
+  p.vx = mulQ14(h.speed, cosQ14(a)) + state.turn.wind * h.windDrift;
+  p.vy = mulQ14(h.speed, sinQ14(a));
+}
+
 /** Advances every flying shot by one tick, resolving impacts and fuses. */
 export function stepShots(state: SimState, events: SimEvent[]): void {
   const remaining: FlyingShot[] = [];
@@ -401,6 +441,7 @@ export function stepShots(state: SimState, events: SimEvent[]): void {
     const def = weaponDefIn(state.rules, shot.weapon);
     const fromX = p.x;
     const fromY = p.y;
+    if (shot.homing && def.homing) steer(state, shot, def.homing);
     let impact = stepProjectile(
       p,
       state.terrain,
@@ -411,7 +452,11 @@ export function stepShots(state: SimState, events: SimEvent[]): void {
     let ended = false;
     // Things that stop an arrow, a bolt, a stone or a fragment: they count as an impact.
     const stops =
-      def.behavior === 'directHit' || def.behavior === 'strike' || shot.fragment === true;
+      def.behavior === 'directHit' ||
+      def.behavior === 'strike' ||
+      def.behavior === 'hive' ||
+      def.behavior === 'homing' ||
+      shot.fragment === true;
     // Any shot touching the field kitchen heals the shooter (GDD §4.9).
     if (segmentTouchesKitchen(state, fromX, fromY, p.x, p.y)) {
       useKitchen(state, events);
@@ -452,7 +497,35 @@ export function stepShots(state: SimState, events: SimEvent[]): void {
       if (stops) impact = { kind: 'outOfMap', x: p.x, y: p.y };
     }
 
-    if (def.behavior === 'strike' && def.explosionRadius > 0) {
+    if (def.behavior === 'hive') {
+      // The hive breaks where it lands, on the ground or on a unit: out comes the swarm.
+      if (impact && impact.kind !== 'outOfMap') breakHive(state, shot, events);
+      ended = impact !== null;
+      // Its shot ends with the swarm (stepSwarms), so that the turn waits for it.
+      if (ended && impact?.kind !== 'outOfMap' && def.hive) {
+        continue;
+      }
+    } else if (def.behavior === 'homing') {
+      // The falcon strikes what it meets, the point it was sent to, or wherever it is at the end.
+      const h = def.homing;
+      const there =
+        shot.homing !== undefined &&
+        Math.abs(subToPx(p.x) - shot.homing.x) <= 6 &&
+        Math.abs(subToPx(p.y) - shot.homing.y) <= 6;
+      const spent = h !== undefined && p.age >= h.ticks;
+      if ((impact && impact.kind !== 'outOfMap') || there || spent) {
+        queueExplosion(state.explosions, state.tick, {
+          x: p.x,
+          y: p.y,
+          radius: def.explosionRadius,
+          carveRadius: def.explosionRadius,
+          maxDamage: scaled(def.damage, shot.damagePct),
+          sourceId: p.id,
+          ...tagged(state, def),
+        });
+        ended = true;
+      } else ended = impact !== null;
+    } else if (def.behavior === 'strike' && def.explosionRadius > 0) {
       // A trebuchet stone bursts wherever it lands, on the ground or on a unit (GDD §4.2).
       if (impact && impact.kind !== 'outOfMap') {
         queueExplosion(state.explosions, state.tick, {
