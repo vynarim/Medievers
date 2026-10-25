@@ -15,11 +15,27 @@ export interface StructureDef {
 
 /** Stone: arrows barely scratch it, fire licks it; wood: fire eats it twice as fast. */
 const STONE: Omit<StructureDef, 'hp'> = {
-  weaponPct: { bow: 25, crossbow: 25, sling: 40, mace: 50, greekFire: 100, pitchPot: 80 },
+  weaponPct: {
+    bow: 25,
+    fireArrow: 25,
+    crossbow: 25,
+    sling: 40,
+    mace: 50,
+    greekFire: 100,
+    pitchPot: 80,
+  },
   defaultPct: 100,
 };
 const WOOD: Omit<StructureDef, 'hp'> = {
-  weaponPct: { bow: 50, crossbow: 60, sling: 50, mace: 100, greekFire: 200, pitchPot: 200 },
+  weaponPct: {
+    bow: 50,
+    fireArrow: 50,
+    crossbow: 60,
+    sling: 50,
+    mace: 100,
+    greekFire: 200,
+    pitchPot: 200,
+  },
   defaultPct: 100,
 };
 

@@ -7,7 +7,8 @@ import type { SimEvent } from './events.ts';
 import type { Explosion } from './explosions/explosion.ts';
 import { SUBPX, idiv, subToPx } from './math/fixed.ts';
 import type { SimState } from './state.ts';
-import { isSolid } from './terrain/terrain.ts';
+import { Material } from './terrain/material.ts';
+import { isSolid, materialOf } from './terrain/terrain.ts';
 import { barrelOnSegment, igniteBarrel } from './barrels.ts';
 
 /** px per tick a flame drops when its ground is gone */
@@ -35,6 +36,26 @@ export function spawnFlames(s: SimState, e: Explosion): void {
     if (y === null || (s.waterY < s.terrain.height && y > s.waterY)) continue;
     s.flames.push({ id: s.nextEntityId++, x: x * SUBPX + SUBPX / 2, y: y * SUBPX, turns: r.turns });
   }
+}
+
+/**
+ * A fire arrow struck the ground at px (x, y): one flame there, unless the ground is stone (rock,
+ * dressed stone) or under water.
+ */
+export function flameAt(s: SimState, x: number, y: number): void {
+  const r = s.rules.flames;
+  if (!r || x < 0 || x >= s.terrain.width) return;
+  const ground = groundBelow(s, x, y - 6, y + 12);
+  if (ground === null || (s.waterY < s.terrain.height && ground > s.waterY)) return;
+  const m = materialOf(s.terrain, x, ground);
+  if (m === Material.Rock || m === Material.BuiltStone) return;
+  s.flames.push({
+    id: s.nextEntityId++,
+    x: x * SUBPX + SUBPX / 2,
+    y: ground * SUBPX,
+    turns: r.turns,
+  });
+  s.flames.sort((a, b) => a.id - b.id);
 }
 
 /** Each tick: flames drop where the ground went, burn the units touching them, light barrels. */

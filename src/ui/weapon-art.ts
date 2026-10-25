@@ -35,6 +35,14 @@ const ART: Record<WeaponId, string> = {
     <line x1="14" y1="32" x2="56" y2="32" ${s(2.5)}/>
     <path d="M56 32 L48 27 L48 37 Z" fill="${C.stone}" ${s(1.5)}/>
     <path d="M14 32 L9 27 M14 32 L9 37 M18 32 L13 27 M18 32 L13 37" fill="none" stroke="${C.red}" stroke-width="2.5"/>`,
+  fireArrow: `
+    <path d="M22 8 Q50 32 22 56" fill="none" ${s(4)}/>
+    <path d="M22 8 Q50 32 22 56" fill="none" stroke="${C.wood}" stroke-width="2"/>
+    <line x1="22" y1="8" x2="22" y2="56" ${s(1.2)}/>
+    <line x1="14" y1="32" x2="50" y2="32" ${s(2.5)}/>
+    <path d="M14 32 L9 27 M14 32 L9 37 M18 32 L13 27 M18 32 L13 37" fill="none" stroke="${C.red}" stroke-width="2.5"/>
+    <path d="M58 32 Q54 22 48 24 Q52 28 46 32 Q52 36 48 40 Q54 42 58 32 Z" fill="${C.red}" ${s(1.5)}/>
+    <path d="M55 32 Q52 27 49 28 Q51 31 49 32 Q51 33 49 36 Q52 37 55 32 Z" fill="${C.gold}"/>`,
   sling: `
     <path d="M10 14 Q24 40 34 44" fill="none" ${s(2)}/>
     <path d="M10 22 Q22 46 34 44" fill="none" ${s(2)}/>

@@ -31,7 +31,8 @@ import type { FlyingShot, SimState } from '../state.ts';
 import { UNIT_HEIGHT, launch, type Unit } from '../units/unit.ts';
 import { MAX_POWER } from '../commands.ts';
 import { damageDealtPct, throwPct, type ClassView } from '../classes.ts';
-import { shotHitsStructure } from '../structures.ts';
+import { igniteStructureAt, shotHitsStructure } from '../structures.ts';
+import { flameAt } from '../flames.ts';
 import { buildWall, launchStrike, placeMine, startDig, targetFor } from '../tools.ts';
 
 /** px from the hitbox centre to the muzzle */
@@ -393,6 +394,8 @@ export function stepShots(state: SimState, events: SimEvent[]): void {
         const x = subToPx(impact.x);
         const y = subToPx(impact.y);
         shotHitsStructure(state, x, y, scaled(def.damage, shot.damagePct), def.id, events);
+        // A fire arrow sets alight what it strikes: a wooden tower, or the ground but stone.
+        if (def.flames && !igniteStructureAt(state, x, y, def.id, events)) flameAt(state, x, y);
         if (carveCircle(state.terrain, x, y, def.chipRadius) > 0) {
           events.push({ e: 'terrainCarved', x, y, radius: def.chipRadius });
         }

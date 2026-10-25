@@ -209,7 +209,9 @@ function takeCrate(s: SimState, c: Crate, unitId: number, events: SimEvent[]): v
   } else {
     const team = s.teams[u.team];
     const ammo = team?.ammo[c.weapon];
-    if (team && ammo !== undefined && ammo >= 0) team.ammo[c.weapon] = ammo + 1;
+    // Most coffers hold one shot; a quiver of fire arrows holds more (WeaponDef.crateAmmo).
+    const more = s.rules.weapons[c.weapon]?.crateAmmo ?? 1;
+    if (team && ammo !== undefined && ammo >= 0) team.ammo[c.weapon] = ammo + more;
   }
   events.push({ e: 'crateTaken', id: c.id, unitId, kind: c.kind, weapon: c.weapon, heal });
 }

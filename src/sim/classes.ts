@@ -86,7 +86,9 @@ export function throwPct(s: ClassView, u: Unit, def: WeaponDef): number {
 
 /** ticks of flight the aim preview shows for this unit and weapon (archer: longer, GDD §3.2) */
 export function aimPreviewTicks(s: ClassView, u: Unit, def: WeaponDef): number {
-  const archer = classOf(s, u) === 'archer' && (def.id === 'bow' || def.id === 'crossbow');
+  const archer =
+    classOf(s, u) === 'archer' &&
+    (def.id === 'bow' || def.id === 'crossbow' || def.id === 'fireArrow');
   return archer
     ? idiv(AIM_PREVIEW_TICKS * (s.rules.classes?.archer.previewPct ?? 100), 100)
     : AIM_PREVIEW_TICKS;

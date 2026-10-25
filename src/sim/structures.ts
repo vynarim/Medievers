@@ -334,6 +334,33 @@ export function blastHitsStructures(s: SimState, e: Explosion, events: SimEvent[
   }
 }
 
+/** A fire arrow at px (x, y) sets the wooden tower there alight, if any (rules.structures.burnTurns). */
+export function igniteStructureAt(
+  s: SimState,
+  x: number,
+  y: number,
+  weapon: WeaponId,
+  events: SimEvent[],
+): boolean {
+  const owners = s.owners;
+  if (!owners || !s.rules.structures) return false;
+  const w = s.terrain.width;
+  for (let dy = -IMPACT_REACH; dy <= IMPACT_REACH; dy++) {
+    for (let dx = -IMPACT_REACH; dx <= IMPACT_REACH; dx++) {
+      const px = x + dx;
+      const py = y + dy;
+      if (px < 0 || py < 0 || px >= w || py >= s.terrain.height) continue;
+      const id = owners[py * w + px] ?? 0;
+      const st = id > 0 ? s.structures.find((c) => c.id === id) : undefined;
+      if (st) {
+        setAlight(s, st, weapon, events);
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 /** px around a shot's impact searched for the structure it struck */
 const IMPACT_REACH = 2;
 

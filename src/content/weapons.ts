@@ -3,6 +3,7 @@
 
 export type WeaponId =
   | 'bow'
+  | 'fireArrow'
   | 'sling'
   | 'greekFire'
   | 'crossbow'
@@ -136,8 +137,13 @@ export interface WeaponDef {
   readonly fuseTurns?: number;
   /** thrown by hand (sling, pots): the slinger's passive applies (GDD §3.2) */
   readonly thrown?: boolean;
-  /** its blast leaves burning flames on the ground (rules.flames, GDD §4.1) */
+  /**
+   * its blast leaves burning flames on the ground (rules.flames, GDD §4.1); a direct hit (the
+   * fire arrow) sets alight what it strikes, but stone: a flame on the ground, a wooden tower
+   */
   readonly flames?: boolean;
+  /** shots a weapon reliquary holds of it (absent: 1) */
+  readonly crateAmmo?: number;
   readonly dig?: DigDef;
   readonly mine?: MineDef;
   readonly wall?: WallDef;
@@ -182,6 +188,24 @@ export const WEAPONS: readonly WeaponDef[] = [
     bouncePct: 0,
     defaultFuse: 0,
     ammo: -1,
+  },
+  {
+    // Flèche enflammée (2026-10-25): found in the reliquaries only, three at a time. An arrow
+    // that sets alight what it strikes, but stone; 5 HP more than the bow on a unit.
+    id: 'fireArrow',
+    behavior: 'directHit',
+    flames: true,
+    projectileRadius: 0,
+    windPct: 100,
+    maxSpeed: 24 * 256,
+    damage: 40,
+    explosionRadius: 0,
+    chipRadius: 3,
+    knockbackPct: 60,
+    bouncePct: 0,
+    defaultFuse: 0,
+    ammo: 0,
+    crateAmmo: 3,
   },
   {
     id: 'sling',

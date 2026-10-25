@@ -647,6 +647,43 @@ const SCRIPTS: readonly Script[] = [
     },
   },
   {
+    name: 'fire-arrow',
+    description:
+      'Fire arrows (2026-10-25): one sets the wooden tower alight, one leaves a flame by the ' +
+      'enemy, one strikes him for 40 HP; the tower burns down over the turns.',
+    mapId: 'flat',
+    seed: 1066,
+    config: {
+      rules: {
+        ...NO_PLACEMENT,
+        wind: { ...NO_PLACEMENT.wind, max: 0 },
+        structures: { ...STRUCTURE_RULES },
+        weapons: NO_PLACEMENT.weapons.map((w) => (w.id === 'fireArrow' ? { ...w, ammo: 6 } : w)),
+      },
+      teams: [{ spawns: [300] }, { spawns: [1000] }],
+      structures: [{ id: 1, type: 'woodTower', build: { x: 600, width: 100, ladder: -1 } }],
+    },
+    play: (r) => {
+      const shots = [
+        [3520, 600],
+        [3600, 600],
+        [3840, 800],
+      ] as const;
+      for (let turn = 0; turn < 8; turn++) {
+        r.until('action');
+        const shot = shots[turn >> 1];
+        if (r.sim.view().turn.activeTeam === 0 && shot) {
+          r.step([
+            { t: 'selectWeapon', id: 'fireArrow' },
+            { t: 'aim', angle: shot[0] },
+            { t: 'fire', power: shot[1] },
+          ]);
+        } else r.step([{ t: 'skip' }]);
+        r.until('transition');
+      }
+    },
+  },
+  {
     name: 'trebuchet',
     description:
       'Volée de trébuchet (GDD §4.2): five stones called down on the enemy, thrown from the ' +

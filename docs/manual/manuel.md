@@ -104,6 +104,7 @@ Déjà jouables {{st:jeu}} : **arc**, **arbalète**, **fronde**, **pot de feu gr
 |---|---|---|---|---|---|
 | **Arc** | 35 | — | oui | ∞ | La flèche reste fichée dans le décor |
 | **Arbalète** | 45 | — | faible | 2 | Puissance fixe : on ne règle que l'angle |
+| **Flèches enflammées** {{st:jeu}} | 40 | — | moyen | 0 | Seulement dans les reliquaires, trois à la fois. Ce qu'elle touche prend feu, sauf la pierre : une tour de bois s'embrase et brûle en quatre tours, le sol garde une flamme, un combattant perd 5 PV de plus qu'avec une flèche |
 | **Fronde** | 25 | — | oui | ∞ | Fort recul : idéale pour éjecter un ennemi |
 | **Pot de feu grégeois** | 45 | 60 px | non | 3 | Rebondit. **Mèche en tours** : 1 = il explose pendant ce tour (après 3 s) ; 2 = il se pose et explose au début du tour suivant ; 3 = dans deux tours. Un pot posé affiche son compte (I, II) et peut être projeté par une explosion |
 | **Pot de poix** | 30 + 5 × 15 | 50 / 30 px | non | 1 | Rebondit, puis éclate en 5 gouttes enflammées qui explosent là où elles tombent |
@@ -183,7 +184,7 @@ Le vent change à chaque tour, de −10 (fort vers la gauche) à +10 (fort vers 
 ### Les reliquaires {{st:jeu}}
 
 À la fin d'un tour sur trois environ, **un ange descend du ciel** avec un reliquaire, qu'il laisse dériver avec le vent avant de le poser. Le premier combattant qui le touche en marchant le prend :
-- **reliquaire d'armes** : une munition de plus pour une arme à munitions limitées ;
+- **reliquaire d'armes** : une munition de plus pour une arme à munitions limitées, ou un carquois de trois flèches enflammées ;
 - **fiole de baume** : +25 PV (sans dépasser les PV de départ) ;
 - **coffret piégé** (un sur dix) : il vous explose au nez, sans trop de gravité (20 PV au plus, dans un petit rayon).
 

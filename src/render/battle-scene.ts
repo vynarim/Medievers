@@ -1248,7 +1248,15 @@ export class BattleScene extends Phaser.Scene {
         g.fillCircle(x, y, 3);
         continue;
       }
-      if (s.weapon === 'bow' || s.weapon === 'crossbow') {
+      if (s.weapon === 'bow' || s.weapon === 'crossbow' || s.weapon === 'fireArrow') {
+        if (s.weapon === 'fireArrow') {
+          // Its burning head, flickering.
+          const flicker = 1 + Math.sin(time / 40) * 0.25;
+          g.fillStyle(COLORS.or, 0.9);
+          g.fillCircle(x - dx * 4, y - dy * 4 - 2, 7 * flicker);
+          g.fillStyle(COLORS.vermillon, 1);
+          g.fillCircle(x - dx * 2, y - dy * 2 - 2, 4 * flicker);
+        }
         g.lineStyle(4, COLORS.terreOmbre, 1);
         g.lineBetween(x - dx * 34, y - dy * 34, x, y);
         g.fillStyle(COLORS.encre, 1);

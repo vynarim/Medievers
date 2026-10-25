@@ -72,6 +72,8 @@
   "factions.short.key": "Clef",
   "factions.short.crescent": "Croissant d'Argent",
   "weapons.bow": "Arc",
+  "weapons.fireArrow": "Flèches enflammées",
+  "weapons.fireArrow.desc": "Une flèche qui met le feu à ce qu'elle touche, sauf la pierre : une flamme au sol, une tour de bois embrasée, 5 PV de plus qu'une flèche sur un combattant. Trois par reliquaire.",
   "weapons.sling": "Fronde",
   "weapons.greekFire": "Pot de feu grégeois",
   "weapons.bow.desc": "Une flèche tendue, déviée par le vent ; elle entame un peu le décor.",

@@ -48,7 +48,16 @@ export const AI_LEVELS: Readonly<Record<AiLevelId, AiLevel>> = {
     candidates: 14,
     angleNoise: 34,
     powerNoisePct: 6,
-    weapons: ['bow', 'sling', 'greekFire', 'crossbow', 'pitchPot', 'mace', 'trebuchet'],
+    weapons: [
+      'bow',
+      'fireArrow',
+      'sling',
+      'greekFire',
+      'crossbow',
+      'pitchPot',
+      'mace',
+      'trebuchet',
+    ],
     thinkMs: [2000, 4000],
   },
   constable: {

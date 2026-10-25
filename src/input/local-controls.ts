@@ -206,7 +206,8 @@ export class LocalControls {
     }
     if (input.selectWeapon) out.push({ t: 'selectWeapon', id: input.selectWeapon });
     else if (input.nextWeaponPressed) {
-      out.push({ t: 'selectWeapon', id: nextWeapon(view.rules.weapons, turn.weapon) });
+      const ammo = view.teams[turn.activeTeam]?.ammo ?? [];
+      out.push({ t: 'selectWeapon', id: nextWeapon(view.rules.weapons, turn.weapon, ammo) });
     }
     if (input.fusePressed !== null && input.fusePressed >= 1 && input.fusePressed <= 5) {
       out.push({ t: 'setFuse', seconds: input.fusePressed as 1 | 2 | 3 | 4 | 5 });
@@ -283,7 +284,16 @@ export class LocalControls {
   }
 }
 
-function nextWeapon(weapons: readonly WeaponDef[], current: WeaponId): WeaponId {
+/** The next weapon in the arsenal the house still has ammunition for. */
+function nextWeapon(
+  weapons: readonly WeaponDef[],
+  current: WeaponId,
+  ammo: readonly number[],
+): WeaponId {
   const i = weapons.findIndex((w) => w.id === current);
-  return weapons[(i + 1) % weapons.length]?.id ?? current;
+  for (let k = 1; k <= weapons.length; k++) {
+    const j = (i + k) % weapons.length;
+    if ((ammo[j] ?? -1) !== 0) return weapons[j]?.id ?? current;
+  }
+  return current;
 }
