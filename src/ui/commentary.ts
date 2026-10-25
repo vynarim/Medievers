@@ -149,6 +149,9 @@ export class Commentary {
         case 'engineDestroyed':
           this.hud.say(pick('quip.engineDestroyed'), now);
           break;
+        case 'dragonBit':
+          this.hud.say(pick('quip.dragonBit', { name: unitName(e.unitId) }), now, 'bad');
+          break;
         case 'stung':
           if (now - this.stungAt > 4000) {
             this.stungAt = now;

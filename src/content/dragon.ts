@@ -22,6 +22,12 @@ export interface DragonRules {
    */
   readonly swing?: number;
   readonly swingTicks?: number;
+  /**
+   * HP its bite takes from its prey, which it throws aside, instead of swallowing it whole
+   * (decided 2026-10-25 after the balance batteries: it killed one unit in four). Absent from
+   * older logs: it swallows its prey.
+   */
+  readonly biteDamage?: number;
 }
 
 export const DRAGON_RULES: DragonRules = {
@@ -32,6 +38,7 @@ export const DRAGON_RULES: DragonRules = {
   // 2026-10-25: from just over the heads up to 240 px higher, and down again, every 7 s.
   swing: 240,
   swingTicks: 420,
+  biteDamage: 50,
 };
 
 /** px: the dragon's body, around its centre, where a shot or a blast touches it */

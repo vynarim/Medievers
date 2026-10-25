@@ -1707,5 +1707,8 @@
   "quip.weapon.siegeRam.1": "{name} pousse le bélier. Le mur, poliment, recule.",
   "quip.weapon.siegeRam.2": "Boum ! Le bélier frappe. Les maçons d'en face prennent des notes.",
   "quip.engineDestroyed.1": "La machine s'effondre en un tas de planches. L'ingénieur nie toute responsabilité.",
-  "quip.engineDestroyed.2": "Plus de machine ! Il reste du bois de chauffage pour l'hiver."
+  "quip.engineDestroyed.2": "Plus de machine ! Il reste du bois de chauffage pour l'hiver.",
+  "quip.dragonBit.1": "Le dragon croque {name}, le trouve trop salé et le recrache plus loin.",
+  "quip.dragonBit.2": "Coup de dent du dragon ! {name} vole, vexé et un peu plus léger.",
+  "quip.dragonBit.3": "Le dragon mord {name}, puis s'en va en se plaignant de la cuisine locale."
 }

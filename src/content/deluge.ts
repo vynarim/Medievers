@@ -21,7 +21,9 @@ export interface DelugeRules {
 export const DELUGE_RULES: DelugeRules = {
   startTurn: 20,
   startTicks: 15 * 60 * 60,
-  risePx: 48,
+  // 24 px (was 48): slower, so that the weapons decide more often than the water (decided
+  // 2026-10-25 after the balance batteries: 48 % of even matches ended in a draw).
+  risePx: 24,
   // Only the water hurts: nobody it has not reached loses anything (decided 2026-10-25).
   damage: 0,
   wetDamage: 20,

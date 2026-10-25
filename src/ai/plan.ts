@@ -669,7 +669,10 @@ function candidatesFrom(
       // The dragon, sent on the enemy (a direct hit is enough; once per position).
       if (level.dragon && def.behavior === 'directHit' && !out.some((c) => c.dragon)) {
         const shot = throwAtDragon(at, u, def, level);
-        if (shot) out.push({ unitId, move, shot, guess: AI_SCORE.enemyKill * 1.5, dragon: true });
+        // Swallowed whole, a kill; bitten (rules.dragon.biteDamage), the bite's HP.
+        const bite = at.rules.dragon?.biteDamage;
+        const guess = bite !== undefined ? bite : AI_SCORE.enemyKill * 1.5;
+        if (shot) out.push({ unitId, move, shot, guess, dragon: true });
       }
     } else if (def.behavior === 'melee' && def.sparesUnits) {
       // The ram: at a tower or a wall in front with enemies on it, to bring it down on them.

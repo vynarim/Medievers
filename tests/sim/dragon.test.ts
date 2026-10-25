@@ -23,12 +23,17 @@ function mask(): Mask {
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const { kitchen, burn, barrels, crates, beasts, deluge, weather, ...BASE } = CLASSIC_RULES;
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const { swing, swingTicks, ...LEVEL } = DRAGON_RULES;
+const { swing, swingTicks, biteDamage, ...LEVEL } = DRAGON_RULES;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const { biteDamage: _bite, ...SWALLOWS } = DRAGON_RULES;
+/** The dragon as it was before 2026-10-25 evening: it swallows its prey whole. */
 const RULES: MatchRules = {
   ...BASE,
   wind: { ...CLASSIC_RULES.wind, max: 0 },
-  dragon: { ...DRAGON_RULES, spawnPermille: 1000 },
+  dragon: { ...SWALLOWS, spawnPermille: 1000 },
 };
+/** The dragon of the Classique rules: it bites its prey (rules.dragon.biteDamage). */
+const BITES: MatchRules = { ...RULES, dragon: { ...DRAGON_RULES, spawnPermille: 1000 } };
 /** A level flight, as in older logs, to measure its height over the relief. */
 const LEVEL_RULES: MatchRules = { ...RULES, dragon: { ...LEVEL, spawnPermille: 1000 } };
 
@@ -123,6 +128,29 @@ describe('dragon (GDD §4.11)', () => {
     expect(sim.view().units[0]?.alive).toBe(true);
     // Fed, it leaves.
     expect(rest).toContainEqual({ e: 'dragonGone' });
+  });
+
+  it('with biteDamage, bites its prey for 50 HP and throws it aside instead', () => {
+    const sim = match(BITES);
+    const snap = sim.snapshot();
+    const d = snap.dragon;
+    const archer = snap.units[0];
+    if (d && archer) d.x = archer.x;
+    sim.restore(snap);
+    const events = [
+      ...sim.step([
+        { t: 'aim', angle: 3072 },
+        { t: 'fire', power: 1024 },
+      ]),
+      ...run(sim, 700),
+    ];
+    const bit = events.find((e) => e.e === 'dragonBit');
+    expect(bit).toMatchObject({ damage: 50 });
+    const prey = bit?.e === 'dragonBit' ? bit.unitId : 0;
+    expect(events.some((e) => e.e === 'dragonAte')).toBe(false);
+    const u = sim.view().units.find((x) => x.id === prey);
+    expect(u?.alive).toBe(true);
+    expect(u?.hp).toBeLessThanOrEqual(50);
   });
 
   it('keeps the turn waiting while it swoops', () => {

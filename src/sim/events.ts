@@ -62,6 +62,8 @@ export type SimEvent =
   /** shot at, it swoops on this unit */
   | { readonly e: 'dragonEnraged'; readonly unitId: number }
   | { readonly e: 'dragonAte'; readonly unitId: number }
+  /** the dragon bit a unit and threw it aside (rules.dragon.biteDamage) */
+  | { readonly e: 'dragonBit'; readonly unitId: number; readonly damage: number }
   | { readonly e: 'dragonGone' }
   | { readonly e: 'unicornAppeared'; readonly dir: -1 | 1 }
   /** a shot of this unit touched it: `heal` HP back, all it had lost */

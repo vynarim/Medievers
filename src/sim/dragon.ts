@@ -11,7 +11,7 @@ import { ANGLE_FULL, cosQ14 } from './math/angle.ts';
 import { isqrt } from './math/isqrt.ts';
 import { nextRange } from './math/prng.ts';
 import type { SimState } from './state.ts';
-import { UNIT_HEIGHT } from './units/unit.ts';
+import { UNIT_HEIGHT, launch, type Unit } from './units/unit.ts';
 
 /** px: a unit's middle, above its feet, where the dragon bites */
 const BITE_HEIGHT = UNIT_HEIGHT >> 1;
@@ -76,6 +76,20 @@ function swallow(s: SimState, id: number, events: SimEvent[]): void {
   events.push({ e: 'unitDied', unitId: u.id, cause: 'dragon' });
 }
 
+/** sub-px/tick the bite throws its prey aside and up */
+const BITE_THROW = 6 * SUBPX;
+
+/** The dragon bites unit u (2026-10-25): it loses `damage` HP and is thrown aside. */
+function bite(u: Unit, damage: number, dir: -1 | 1, events: SimEvent[]): void {
+  const hp = Math.min(u.hp, damage);
+  u.hp -= hp;
+  u.vx += dir * BITE_THROW;
+  u.vy -= BITE_THROW;
+  launch(u);
+  events.push({ e: 'dragonBit', unitId: u.id, damage: hp });
+  events.push({ e: 'unitDamaged', unitId: u.id, damage: hp });
+}
+
 /** Each tick: the dragon flies across, swoops on its prey, or flies up and away once fed. */
 export function stepDragon(s: SimState, events: SimEvent[]): void {
   const r = s.rules.dragon;
@@ -93,7 +107,8 @@ export function stepDragon(s: SimState, events: SimEvent[]): void {
       if (len <= Math.max(r.diveSpeed, DRAGON_BITE * SUBPX)) {
         d.x += dx;
         d.y += dy;
-        swallow(s, u.id, events);
+        if (r.biteDamage !== undefined) bite(u, r.biteDamage, d.dir, events);
+        else swallow(s, u.id, events);
         d.prey = 0;
         d.fed = true;
       } else {

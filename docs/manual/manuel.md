@@ -234,7 +234,7 @@ Un tir, un coup de masse ou une explosion qui touche la bête la renvoie dans sa
 
 ### Le dragon {{st:jeu}}
 
-De temps en temps (12 % de chances au début d'un tour), un dragon des marges traverse le ciel en rase-mottes : il suit le relief, juste au-dessus de la tête des combattants, et monte par-dessus les collines et les tours ; il ondule aussi en volant : tantôt il rase les troupes, tantôt il remonte bien haut. Une flèche l'atteint sans peine. **Ne lui tirez pas dessus** : touché, même sans dégâts, il pique sur un combattant d'une maison adverse tiré au hasard, l'avale tout rond, puis repart. Le tour attend qu'il ait fini. Une explosion qui l'atteint le fâche de la même façon, comme si la maison qui joue avait tiré.
+De temps en temps (12 % de chances au début d'un tour), un dragon des marges traverse le ciel en rase-mottes : il suit le relief, juste au-dessus de la tête des combattants, et monte par-dessus les collines et les tours ; il ondule aussi en volant : tantôt il rase les troupes, tantôt il remonte bien haut. Une flèche l'atteint sans peine. **Ne lui tirez pas dessus** : touché, même sans dégâts, il pique sur un combattant d'une maison adverse tiré au hasard, le mord (50 PV) et le projette de côté, puis repart. Le tour attend qu'il ait fini. Une explosion qui l'atteint le fâche de la même façon, comme si la maison qui joue avait tiré.
 
 ### La licorne {{st:jeu}}
 
@@ -246,7 +246,7 @@ Après deux tours de table, un moine maladroit renverse sa chandelle : **la cart
 
 ### 5.4 Le Déluge {{st:jeu}}
 
-Pour que les parties ne s'éternisent pas, **le Déluge** arrive après 20 tours (ou 15 minutes). Une pleine page enluminée l'annonce : « *Et les eaux montèrent…* ». Ensuite, l'eau monte de 48 pixels à chaque fin de tour, et seuls les combattants qu'elle atteint en souffrent. Un combattant qui tombe à l'eau, ou que l'eau rattrape, **perd 20 PV et est rejeté sur la terre sèche la plus proche** ; il ne se noie que si ses PV n'y suffisent pas, ou quand il n'y a plus de terre hors de l'eau. Ce qui tombe à l'eau disparaît aussi : tirs, reliquaires, barils, pots, cuisine, bêtes. Si l'eau emporte toutes les maisons à la fois, c'est une égalité. Réglages : onglet **Déluge**.
+Pour que les parties ne s'éternisent pas, **le Déluge** arrive après 20 tours (ou 15 minutes). Une pleine page enluminée l'annonce : « *Et les eaux montèrent…* ». Ensuite, l'eau monte de 24 pixels à chaque fin de tour, et seuls les combattants qu'elle atteint en souffrent. Un combattant qui tombe à l'eau, ou que l'eau rattrape, **perd 20 PV et est rejeté sur la terre sèche la plus proche** ; il ne se noie que si ses PV n'y suffisent pas, ou quand il n'y a plus de terre hors de l'eau. Ce qui tombe à l'eau disparaît aussi : tirs, reliquaires, barils, pots, cuisine, bêtes. Si l'eau emporte toutes les maisons à la fois, c'est une égalité. Réglages : onglet **Déluge**.
 
 ## 6. Les modes de jeu
 
