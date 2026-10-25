@@ -22,7 +22,7 @@
 - Livré ensuite (2026-10-25, soir, M5) : critère 5.5 atteint, le Connétable bat l'Écuyer dans 93,3 % des parties (90 parties). Batteries d'équilibrage et synthèse : `docs/reports/balance/2026-10-25-synthese.md` (l'eau et le dragon causent 46 à 66 % des morts ; classes proches, 13 % d'écart de dégâts par tour ; parties de 30 à 33 tours).
 
 ## À reprendre en premier
-0. **Lot C de la passe UX** (disposition « manette » sur téléphone) : après l'essai de l'application installée sur Android par l'utilisateur. Le site sert `4981bd2` (IA, portrait, passe UX, PWA), sans le lot 6 : mise en production à proposer.
+0. **Lot C de la passe UX** (disposition « manette » sur téléphone) : après l'essai de l'application installée sur Android par l'utilisateur. Le site sert `9609dc0` (lot 6, dragon qui mord, Déluge plus lent).
 1. **Clore M2** : quand l'utilisateur aura fait les deux vérifications humaines du rapport, consigner le résultat et passer la gate à PASS.
 2. **M3** : gate PASS. **M9** : gate du 2026-10-25 = NOT ASSESSED ([rapport](reports/gates/2026-10-25-M9.md)) : tout est vert sauf 9.6 (partie entre deux appareils sur deux réseaux) et 9.7 (Blaze), qui attendent l'utilisateur. **M5** : voir [rapport](reports/gates/2026-10-25-M5.md). Suite recommandée : lot 6 (arsenal complet, M4), chaque arme avec son support IA.
 3. **Passer le projet Firebase `videogames-06` en Blaze** (action de l'utilisateur, dans la console : roue dentée › Utilisation et facturation). Ensuite : instance Realtime Database dédiée à Medieverse, nettoyage planifié des salles abandonnées, alerte de budget à 1 € (BACKLOG 9.7, TECH_SPEC §8.5). Blaze servira aussi aux mails.
