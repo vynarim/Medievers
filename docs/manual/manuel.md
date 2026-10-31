@@ -39,7 +39,7 @@ Un chroniqueur à l'humour douteux commente la partie {{st:jeu}} : chaque tour s
 
 ## 2. Le déroulement d'un tour {{st:jeu}}
 
-**Avant le premier tour, le placement.** Les maisons posent leurs combattants **une par une, à tour de rôle** : cliquez sur la carte à l'endroit voulu (un trait pointillé à vos couleurs montre où il tombera). Pas trop près d'un autre combattant ni du bord, et il faut un sol pour se tenir. Vous avez 20 secondes par combattant ; passé ce délai, il est posé à sa place par défaut. Quand toutes les armées sont en place, le tour 1 commence.
+**Avant le premier tour, le placement.** Les maisons posent leurs combattants **une par une, à tour de rôle** : cliquez sur la carte à l'endroit voulu (un trait pointillé à vos couleurs montre où il tombera). Au doigt, promenez le combattant sur la carte : il est posé là où vous levez le doigt. Pas trop près d'un autre combattant ni du bord, et il faut un sol pour se tenir. Vous avez 20 secondes par combattant ; passé ce délai, il est posé à sa place par défaut. Quand toutes les armées sont en place, le tour 1 commence.
 
 
 | Phase | Durée | Ce qui se passe |
@@ -340,9 +340,9 @@ En bas à droite, les armes :
 - **Mèche** (un pot à la mèche allumée) : visible avec les armes à mèche ; chaque appui passe à la valeur suivante (1 à 5 secondes, ou 1 à 3 tours pour le feu grégeois ; pour le mur, sa longueur de 1 à 3) ;
 - **Combattant** : donner la main au combattant suivant de votre maison, avant d'avoir bougé ou tiré ;
 - **Passer** (le sablier) : finir son tour sans tirer ; après le tir, il devient **Fin du tour** ;
-- **Tirer** est aux couleurs de la maison qui joue : on sait toujours à qui c'est le tour. Maintenir pour charger la puissance, relâcher pour tirer. Une jauge pleine repart de zéro : rien ne part tout seul, il faut lâcher au bon moment.
+- **Tirer** est aux couleurs de la maison qui joue : on sait toujours à qui c'est le tour. Maintenir pour charger la puissance, relâcher pour tirer. Une jauge pleine le reste une demi-seconde, puis repart de zéro : rien ne part tout seul, il faut lâcher au bon moment.
 
-Pendant la charge, c'est le bouton Tirer lui-même qui se remplit d'or. En haut à droite : **plein écran** (quatre flèches vers les coins, comme F11 ; un second appui en sort ; absent sur téléphone), **recentrer** (revenir au zoom par défaut et recentrer ; il n'apparaît que lorsque vous avez zoomé ou déplacé la vue), **?** (l'aide : neuf pages illustrées pour l'essentiel, puis une **aide avancée** en douze sujets, ouverte depuis n'importe quelle page), **le bouton du son** (musique et bruitages, musique seule, bruitages seuls, tout coupé) et **Pause** (trois traits ; sur téléphone, il donne aussi l'aide et les réglages). En haut au centre, la bannière du titre montre le vent et le numéro du tour ; en haut à gauche, les bandeaux des maisons, celui de la maison qui joue brillant à sa couleur. La souris posée contre un bord de l'écran fait défiler la carte. Le menu de pause (aussi sur Échap) propose de reprendre, de recommencer la partie, de lire l'aide ou d'ouvrir les réglages ; le temps est arrêté tant qu'il est ouvert, comme pendant l'aide et les réglages.
+Pendant la charge, c'est le bouton Tirer lui-même qui se remplit d'or. En haut à droite : **plein écran** (quatre flèches vers les coins, comme F11 ; un second appui en sort ; absent sur téléphone et dans l'application installée, déjà en plein écran), **recentrer** (revenir au zoom par défaut et recentrer ; il n'apparaît que lorsque vous avez zoomé ou déplacé la vue), **?** (l'aide : neuf pages illustrées pour l'essentiel, puis une **aide avancée** en douze sujets, ouverte depuis n'importe quelle page), **le bouton du son** (musique et bruitages, musique seule, bruitages seuls, tout coupé) et **Pause** (trois traits ; sur téléphone, il donne aussi l'aide et les réglages). En haut au centre, la bannière du titre montre le vent et le numéro du tour ; en haut à gauche, les bandeaux des maisons, celui de la maison qui joue brillant à sa couleur. La souris posée contre un bord de l'écran fait défiler la carte. Le menu de pause (aussi sur Échap) propose de reprendre, de recommencer la partie, de lire l'aide ou d'ouvrir les réglages ; le temps est arrêté tant qu'il est ouvert, comme pendant l'aide et les réglages.
 
 On peut aussi viser « à la fronde » : appuyer sur son combattant, tirer franchement en arrière (le trait devient rouge quand le tir est armé), relâcher. Un simple clic sur le combattant ne tire jamais, et revenir près de lui avant de relâcher annule le tir.
 
@@ -365,7 +365,9 @@ Le bouton **⚙ Réglages** ouvre toutes les valeurs du jeu en cours de réglage
 - Le **pad** en bas à gauche pour marcher, sauter et viser ; **Arsenal**, **Passer** et **Tirer** en bas à droite. Tous les boutons font au moins 48 px de côté.
 - **Viser à la fronde** : glissez depuis votre combattant, puis relâchez.
 - **Viser à la jauge** : Viser maintenu (ou la pointe rouge glissée) pour l'angle, le bouton Tirer maintenu pour la puissance.
-- **Caméra** : un doigt glissé hors du combattant pour se déplacer, deux doigts pour zoomer, double tap pour recentrer.
+- **Caméra** : un doigt glissé hors du combattant pour se déplacer, deux doigts pour zoomer (autour du point entre les doigts) ou faire glisser la vue, double tap pour recentrer.
+- **Visée** : la pointe rouge de la flèche se prend au doigt, même un peu à côté, et se fait tourner directement.
+- **Tablette** : elle se joue en paysage ; tenue en portrait, le jeu demande de la tourner.
 - **Frappes du ciel** {{st:prevu}} : touchez la cible, puis Confirmer.
 
 Le choix du mode de visée dans les options est prévu {{st:prevu}}. Le jeu n'a pas encore été essayé sur une vraie tablette.

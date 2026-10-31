@@ -303,10 +303,10 @@ L'IA joue via `InputSource` et produit les mêmes commandes qu'un humain. Elle �
 | Marcher | ← → ou A/D |
 | Saut long / saut haut | Entrée / Entrée ×2 (pad : **↶ ◀ ↑ ▶ ↷**, sauts longs vers la gauche et la droite aux deux bouts) |
 | Changer de combattant | Clic sur un combattant de sa maison ou sur son nom, ou bouton **⇄ Combattant**, tant qu'on n'a ni bougé ni tiré |
-| Plein écran | Bouton **⤢** en haut à droite (comme F11) |
+| Plein écran | Bouton **⤢** en haut à droite (comme F11) ; absent de l'application installée, toujours en plein écran (décidé le 2026-10-31) |
 | Viser (angle) | ↑ ↓, ou glisser la pointe de la flèche de visée (n'importe quel côté, l'unité se retourne) |
 | Se retourner sur place | T (garde l'élévation de la visée) |
-| Tirer (jauge de puissance) | Espace maintenu puis relâché |
+| Tirer (jauge de puissance) | Espace maintenu puis relâché. Pleine, la jauge le reste une demi-seconde avant de repartir de zéro (décidé le 2026-10-31 : elle n'était pleine qu'un instant, et la pleine puissance presque impossible à prendre) |
 | Drag-to-aim | Clic gauche maintenu sur l'unité, tirer en arrière d'au moins 48 px écran (sinon rien n'est visé ni tiré : un clic ne tire jamais), relâcher |
 | Arsenal | Clic droit ou Tab |
 | Mèche (pot) | Touches 1–5 |
@@ -317,10 +317,12 @@ L'IA joue via `InputSource` et produit les mêmes commandes qu'un humain. Elle �
 
 ### 8.2 Tablette
 - **Pad virtuel** en bas à gauche (← → saut, saut arrière, **⟳ Viser** maintenu : la visée fait le tour complet et l'unité se retourne quand elle passe derrière elle), boutons **Arsenal**, **Passer** et **Tir** en bas à droite, **Aide**, **Son** (quatre états, depuis le 2026-10-25, à la place de Réglages, ouverts depuis le menu Pause) et **Pause** en haut à droite.
-- **Pointe de visée** : glisser la pointe rouge de la flèche de visée oriente le tir, sans tirer.
+- **Pointe de visée** : glisser la pointe rouge de la flèche de visée oriente le tir, sans tirer. Au doigt, elle se prend dans un rayon de 64 px écran (36 à la souris).
 - **Drag-to-aim** : glisser depuis l'unité active. Une ligne pointillée enluminée prolonge la trajectoire, avec une longueur limitée (passif Archer ×2).
 - **Mode jauge** : roue d'angle autour de l'unité et bouton Tir maintenu pour la puissance.
-- Caméra : glisser à 1 doigt hors de l'unité, pincer pour zoomer, double-tap pour recentrer.
+- Caméra : glisser à 1 doigt hors de l'unité, pincer pour zoomer (autour du point entre les deux doigts, qui font aussi glisser la vue), double-tap pour recentrer.
+- **Placement des armées** (décidé le 2026-10-31) : le doigt promène le combattant à placer ; il est posé là où le doigt se lève.
+- **Orientation** (décidé le 2026-10-31) : une tablette se joue en paysage seulement. L'application installée verrouille l'écran en paysage ; dans un onglet, tenue en portrait, elle demande de la tourner. Sur un écran paysage peu haut (moins de 820 px CSS), l'écran de préparation replie les descriptions derrière un « ? », comme sur téléphone, pour tenir sans défilement. L'interface n'y rapetisse qu'en dessous de 1280 × 780 px CSS (1600 × 1000 à la souris), et l'arsenal prend toute la largeur.
 - Cibles des frappes hors champ : tap sur la carte, puis bouton Confirmer.
 - Toutes les zones tactiles font au moins 48 × 48 px CSS.
 
