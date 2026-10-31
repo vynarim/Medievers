@@ -10,6 +10,7 @@ import {
   hitboxCentreY,
   queueExplosion,
   takeDueExplosions,
+  bodyDistance,
   type Explosion,
 } from '../../../src/sim/explosions/index.ts';
 import {
@@ -25,6 +26,9 @@ import {
   stepUnitPhysics,
   type Unit,
 } from '../../../src/sim/units/index.ts';
+
+/** Blasts measured to the hitbox's centre, as in the logs from before toBody. */
+const CENTRE_RULES = { ...EXPLOSION_RULES, toBody: false };
 
 function makeTerrain(): Terrain {
   const width = 800;
@@ -69,7 +73,7 @@ describe('damage falloff', () => {
     expect(damageAt(45, R, (R * 3) / 4)).toBe(11);
   });
 
-  it('measures distance to the centre of the hitbox', () => {
+  it('measures distance to the centre of the hitbox in old logs (no toBody)', () => {
     for (const [offsetPx, expected] of [
       [0, 40],
       [30, 20],
@@ -81,11 +85,30 @@ describe('damage falloff', () => {
         blast(u.x + offsetPx * SUBPX, hitboxCentreY(u), 60, 40),
         t,
         [u],
-        EXPLOSION_RULES,
+        CENTRE_RULES,
       );
       expect(res.hits.find((h) => h.unitId === 1)?.damage ?? 0).toBe(expected);
       expect(u.hp).toBe(100 - expected);
     }
+  });
+
+  it('measures distance to the body with toBody: a blast at the feet strikes almost in full', () => {
+    const t = makeTerrain();
+    const u = unitAt(t, 1, 400);
+    // A stone of the trebuchet's volley (30 HP, 45 px) bursting on the ground by the feet.
+    const atFeet = blast(u.x + 10 * SUBPX, u.y, 45, 30);
+    expect(bodyDistance(u, atFeet)).toBe(820); // 3.2 px from the rounded foot of the body
+    const res = explode(atFeet, t, [u], EXPLOSION_RULES);
+    expect(res.hits[0]?.damage).toBe(28);
+    // The same 40 px from the centre, as old logs measure it: 3 HP.
+    const old = unitAt(makeTerrain(), 2, 400);
+    const before = explode(blast(old.x + 10 * SUBPX, old.y, 45, 30), makeTerrain(), [old], CENTRE_RULES);
+    expect(before.hits[0]?.damage).toBe(3);
+    // Off to the side, the half-width of the body counts as reached.
+    const side = unitAt(makeTerrain(), 3, 400);
+    expect(bodyDistance(side, blast(side.x + 44 * SUBPX, hitboxCentreY(side), 45, 30))).toBe(
+      30 * SUBPX,
+    );
   });
 
   it('applies damage multipliers such as the Haubert passive', () => {

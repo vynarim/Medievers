@@ -5,7 +5,7 @@ import type { WeaponId } from '../../content/weapons.ts';
 import { SUBPX, idiv, subToPx } from '../math/fixed.ts';
 import { isqrt } from '../math/isqrt.ts';
 import { carveCircle, type Terrain } from '../terrain/terrain.ts';
-import { UNIT_HEIGHT, launch, type Unit } from '../units/unit.ts';
+import { UNIT_HALF_WIDTH, UNIT_HEIGHT, launch, type Unit } from '../units/unit.ts';
 
 export interface Explosion {
   /** sub-px */
@@ -74,7 +74,7 @@ export function explode(
     const dx = u.x - e.x;
     const dy = hitboxCentreY(u) - e.y;
     const dist = isqrt(dx * dx + dy * dy);
-    const base = damageAt(e.maxDamage, radiusSub, dist);
+    const base = damageAt(e.maxDamage, radiusSub, rules.toBody ? bodyDistance(u, e) : dist);
     if (base === 0) continue;
     const damage = idiv(base * takenPct(u) + 50, 100);
     u.hp = Math.max(0, u.hp - damage);
@@ -82,6 +82,20 @@ export function explode(
     knock(u, dx, dy, dist, base * rules.knockbackPerHp, rules.liftPct);
   }
   return { carved, hits };
+}
+
+/**
+ * sub-px from a blast to the nearest point of a unit's body: its vertical axis, rounded by its
+ * half-width at both ends (a capsule), so a blast at its feet or by its head counts as close.
+ */
+export function bodyDistance(u: Unit, e: Pick<Explosion, 'x' | 'y'>): number {
+  const r = UNIT_HALF_WIDTH * SUBPX;
+  const top = u.y - UNIT_HEIGHT * SUBPX + r;
+  const bottom = u.y - r;
+  const ay = e.y < top ? top : e.y > bottom ? bottom : e.y;
+  const dx = u.x - e.x;
+  const dy = ay - e.y;
+  return Math.max(0, isqrt(dx * dx + dy * dy) - r);
 }
 
 /** Pushes a unit away from the blast at `speed` sub-px/tick, plus a lift. */

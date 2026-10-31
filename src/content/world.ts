@@ -17,9 +17,16 @@ export interface ExplosionRules {
   readonly knockbackPerHp: number;
   /** percent of the knockback speed added upward, so blasts lift units off the ground */
   readonly liftPct: number;
+  /**
+   * The blast reaches the nearest point of the body's axis, from its waist down to its knees
+   * and up to its shoulders, instead of its centre (decided 2026-10-31: a stone at a unit's
+   * feet, 40 px from its centre, did 3 HP). Absent from old logs: measured to the centre.
+   */
+  readonly toBody?: boolean;
 }
 
 export const EXPLOSION_RULES: ExplosionRules = {
   knockbackPerHp: 40,
   liftPct: 35,
+  toBody: true,
 };
