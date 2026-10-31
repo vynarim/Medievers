@@ -13,6 +13,8 @@ const STYLE = `
   --ocre: ${css(COLORS.ocre)}; --vert: ${css(COLORS.vertDeGris)}; --brun: ${css(COLORS.terreOmbre)};
   --azur: ${css(COLORS.azur)};
   --title: ${FONT_TITLE}; --text: ${FONT_TEXT}; --caps: ${FONT_CAPS};
+  /* A plain sans-serif, for the match codes alone: read and typed at a glance (2026-10-31). */
+  --plain: Roboto, 'Segoe UI', system-ui, -apple-system, Arial, sans-serif;
   --shade: rgba(42, 29, 20, 0.45); --gilt: rgba(212, 169, 60, 0.7);
   --frame: inset 0 0 0 3px var(--ceruse), inset 0 0 0 5px var(--or);
   --lift: 0 6px 18px var(--shade);
@@ -85,7 +87,7 @@ const STYLE = `
 #ui .sys { position: absolute; top: 12px; right: 12px; display: flex; gap: 6px; }
 #ui .pause-code { display: flex; align-items: center; justify-content: center; gap: 12px;
   margin: 0 0 12px; font-size: 18px; }
-#ui .pause-code b { font-family: var(--caps); font-size: 26px; letter-spacing: 2px; }
+#ui .pause-code b { font-family: var(--plain); font-weight: 500; font-size: 24px; letter-spacing: 2px; }
 
 /* HUD */
 #ui .shield { flex: none; width: 40px; height: 48px; border: 3px solid var(--encre);

@@ -15,9 +15,9 @@ import { COLORS, css } from './tokens.ts';
 const STYLE = `
 #ui .online { width: min(520px, calc(100vw - 32px)); text-align: center; }
 #ui .online p { font-size: 17px; line-height: 1.45; margin: 0 0 10px; }
-#ui .online .code { font-family: var(--caps); font-size: 52px; letter-spacing: 6px; color: var(--lapis);
+#ui .online .code { font-family: var(--plain); font-weight: 500; font-size: 46px; letter-spacing: 4px; color: var(--lapis);
   margin: 8px 0 12px; user-select: text; -webkit-user-select: text; }
-#ui .online input { font-family: var(--caps); font-size: 34px; letter-spacing: 4px; text-align: center;
+#ui .online input { font-family: var(--plain); font-weight: 500; font-size: 30px; letter-spacing: 3px; text-align: center;
   width: 9em; max-width: 100%; padding: 6px; border: 2px solid var(--encre); border-radius: 4px;
   background: var(--ceruse); color: var(--encre); pointer-events: auto; text-transform: uppercase; }
 #ui .online .error { color: var(--vermillon); min-height: 1.4em; }

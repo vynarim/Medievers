@@ -75,8 +75,8 @@ const STYLE = `
 #ui .setup .title .setup-sound { order: 3; align-self: flex-start; }
 #ui .setup .title .code { display: flex; align-items: center; gap: 8px; font-size: 15px;
   padding-top: 6px; }
-#ui .setup .title .code b { font-family: var(--caps); font-weight: normal; font-size: 24px;
-  letter-spacing: 3px; color: var(--lapis); user-select: text; -webkit-user-select: text; }
+#ui .setup .title .code b { font-family: var(--plain); font-weight: 500; font-size: 22px;
+  letter-spacing: 2px; color: var(--lapis); user-select: text; -webkit-user-select: text; }
 #ui .setup .title .code button { min-height: 32px; padding: 2px 10px; font-size: 14px; }
 @media (pointer: coarse) { #ui .setup .title .code button { min-height: 48px; } }
 #ui .error { color: var(--vermillon); font-weight: bold; }
