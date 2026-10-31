@@ -10,6 +10,7 @@ import { AI_LEVELS, type AiLevelId } from '../../src/content/ai.ts';
 import type { ClassId } from '../../src/content/classes.ts';
 import { generatedMapId, type MapTheme } from '../../src/content/maps.ts';
 import type { GameCommand, TimedCommand } from '../../src/sim/commands.ts';
+import type { DamageSource } from '../../src/sim/events.ts';
 import { LOG_VERSION, replay, type GameLog } from '../../src/sim/log.ts';
 import { Sim } from '../../src/sim/sim.ts';
 
@@ -44,8 +45,14 @@ export interface GameReport {
   readonly ticks: number;
   readonly error?: string;
   readonly stuck: readonly { unitId: number; x: number; turn: number }[];
-  /** deaths by the weapon of the turn, or their cause (drowned, outOfMap, kingFell…) */
+  /**
+   * deaths by the weapon of the turn (its hits, or the water it threw the victim into during the
+   * shot), or their cause: dragon (its bite, whoever angered it), drowned (the Déluge's rising
+   * water, or a unit that walked in), outOfMap, kingFell…
+   */
   readonly kills: Record<string, number>;
+  /** of the weapon kills above, the victims drowned (thrown into the water by the shot) */
+  readonly drownedBy?: Record<string, number>;
   /** shots taken with each weapon */
   readonly shots: Record<string, number>;
   /** HP taken from enemies by each weapon */
@@ -92,6 +99,27 @@ function canMove(sim: Sim): boolean {
   });
 }
 
+/**
+ * What a blow that took a unit's last HP is put down to (BACKLOG 8.5): the shot of the turn for
+ * its hits and for the falls, water, flames and falling blocks it caused while it lasted
+ * (`shot`: its weapon, '' outside a shot); else the dragon, the burning parchment, the Déluge, a
+ * beast, flames, a fall, the water, a block, the weapon of a blast going off later (a pot), the
+ * turn end (lightning and the like), or other.
+ */
+function fatalSource(
+  source: DamageSource | 'lightning' | undefined,
+  bitten: boolean,
+  shot: string,
+  turnEnd: boolean,
+): string {
+  if (bitten || source === 'dragon') return 'dragon';
+  if (source === 'burn' || source === 'deluge' || source === 'beast' || source === 'lightning')
+    return source;
+  if (shot !== '') return shot;
+  if (source === 'water') return 'drowned';
+  return source ?? (turnEnd ? 'turnEnd' : 'other');
+}
+
 export function playGame(o: GameOptions): GameReport {
   const base = defaultSetup(false);
   const setup: MatchSetup = o.lineups ? { ...base, lineups: o.lineups } : base;
@@ -114,6 +142,15 @@ export function playGame(o: GameOptions): GameReport {
   });
   const commands: TimedCommand[] = [];
   const kills: Record<string, number> = {};
+  const drownedBy: Record<string, number> = {};
+  /** units the dragon bit this turn: their damage and death are the dragon's, not the weapon's */
+  const bitten = new Set<number>();
+  /**
+   * what brought each unit's HP to 0 (a weapon, dragon, turnEnd, other): deaths are only called
+   * once everything has stopped, at the end of the turn, so the death event cannot tell
+   */
+  const fatal = new Map<number, string>();
+  let lightningAt = -10;
   const shots: Record<string, number> = {};
   const weaponDamage: Record<string, number> = {};
   let enemyDamage = 0;
@@ -156,6 +193,8 @@ export function playGame(o: GameOptions): GameReport {
       if (v.turn.phase === 'action' || v.turn.phase === 'retreat') playing = active;
       const cmds = ctrl.poll(tick, v);
       for (const c of cmds) commands.push([tick, c]);
+      /** HP of the units as this tick's events go, from those before it (the view is live) */
+      const hp = new Map(v.units.map((u) => [u.id, u.hp]));
       const events = sim.step(cmds);
       const now = sim.view();
       // The end of a turn (fire, water, the dragon…) is nobody's shot.
@@ -167,7 +206,12 @@ export function playGame(o: GameOptions): GameReport {
           weapon = '';
           shooting = false;
           shooter = e.unitId;
+          bitten.clear();
         }
+        if (e.e === 'dragonBit' || e.e === 'dragonAte') bitten.add(e.unitId);
+        // The bolt strikes at a turn's end; its blast goes off on the next tick.
+        if (e.e === 'lightning') lightningAt = tick;
+        if (e.e === 'unitHealed') hp.set(e.unitId, (hp.get(e.unitId) ?? 0) + e.heal);
         if (e.e === 'shotFired') {
           weapon = e.weapon;
           shooting = true;
@@ -176,7 +220,20 @@ export function playGame(o: GameOptions): GameReport {
         }
         if (e.e === 'unitDamaged') {
           stat(e.unitId).taken += e.damage;
-          if (shooting && !turnEnd) {
+          const before = hp.get(e.unitId) ?? 0;
+          hp.set(e.unitId, before - e.damage);
+          if (before > 0 && before - e.damage <= 0 && !fatal.has(e.unitId)) {
+            fatal.set(
+              e.unitId,
+              fatalSource(
+                e.source ?? (tick - lightningAt <= 2 ? 'lightning' : undefined),
+                bitten.has(e.unitId),
+                shooting && !turnEnd ? weapon : '',
+                turnEnd,
+              ),
+            );
+          }
+          if (shooting && !turnEnd && !bitten.has(e.unitId)) {
             const victim = now.units.find((u) => u.id === e.unitId);
             lastHurtBy.set(e.unitId, shooter);
             if (victim?.team === team) {
@@ -190,13 +247,32 @@ export function playGame(o: GameOptions): GameReport {
           }
         }
         if (e.e === 'unitDied') {
-          const key = e.cause === 'hp' ? weapon || 'other' : e.cause;
+          // The weapon of the turn is credited with the deaths during its shot (its hits, or the
+          // water it threw the victim into); the dragon's bites, the Déluge's rising water and
+          // the fires of the turn end are not a weapon's.
+          const key =
+            bitten.has(e.unitId) || e.cause === 'dragon'
+              ? 'dragon'
+              : e.cause === 'hp'
+                ? (fatal.get(e.unitId) ?? 'other')
+                : e.cause === 'drowned'
+                  ? (fatal.get(e.unitId) ??
+                    fatalSource('water', false, shooting && !turnEnd ? weapon : '', turnEnd))
+                  : e.cause;
           kills[key] = (kills[key] ?? 0) + 1;
+          if (e.cause === 'drowned' && key === weapon)
+            drownedBy[weapon] = (drownedBy[weapon] ?? 0) + 1;
           const by = lastHurtBy.get(e.unitId);
           const victim = now.units.find((u) => u.id === e.unitId);
           const killer = by !== undefined ? now.units.find((u) => u.id === by) : undefined;
           if (killer && victim && killer.team !== victim.team) stat(killer.id).kills++;
         }
+      }
+      // Healed back from 0 HP (a cleric, a reliquary…) before its death was called: what felled
+      // it no longer counts.
+      for (const id of fatal.keys()) {
+        const u = now.units.find((x) => x.id === id);
+        if (u?.alive && u.hp > 0) fatal.delete(id);
       }
     }
   } catch (e) {
@@ -239,6 +315,7 @@ export function playGame(o: GameOptions): GameReport {
     ...(error ? { error } : {}),
     stuck,
     kills,
+    drownedBy,
     shots,
     weaponDamage,
     enemyDamage,

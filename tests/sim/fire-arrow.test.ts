@@ -55,7 +55,12 @@ describe('fire arrows (2026-10-25)', () => {
 
   it('hurt a unit 5 HP more than an arrow', () => {
     const sim = match();
-    expect(shoot(sim, 3840, 800)).toContainEqual({ e: 'unitDamaged', unitId: 2, damage: 40 });
+    const arrow = WEAPONS.find((w) => w.id === 'bow')?.damage ?? 0;
+    expect(shoot(sim, 3840, 800)).toContainEqual({
+      e: 'unitDamaged',
+      unitId: 2,
+      damage: arrow + 5,
+    });
   });
 
   it('do not set stone alight', () => {

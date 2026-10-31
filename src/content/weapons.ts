@@ -349,7 +349,9 @@ export const WEAPONS: readonly WeaponDef[] = [
     projectileRadius: 0,
     windPct: 100,
     maxSpeed: 24 * 256,
-    damage: 35,
+    // 30 HP (35 until the balance of 2026-10-31, BACKLOG 8.5: the bow took 36 % of the kills by
+    // weapons in the AI's matches; now 23 %, the sling and the crossbow sharing the rest)
+    damage: 30,
     explosionRadius: 0,
     chipRadius: 3,
     knockbackPct: 60,
@@ -366,7 +368,8 @@ export const WEAPONS: readonly WeaponDef[] = [
     projectileRadius: 0,
     windPct: 100,
     maxSpeed: 24 * 256,
-    damage: 40,
+    // 35 HP, the bow's and 5 more (40 until the balance of 2026-10-31, the bow at 35)
+    damage: 35,
     explosionRadius: 0,
     chipRadius: 3,
     knockbackPct: 60,
@@ -387,7 +390,8 @@ export const WEAPONS: readonly WeaponDef[] = [
     knockbackPct: 80,
     bouncePct: 0,
     defaultFuse: 0,
-    ammo: 2,
+    // three bolts (two until the balance of 2026-10-31, BACKLOG 8.5)
+    ammo: 3,
     fixedPower: true,
   },
   {
@@ -397,7 +401,9 @@ export const WEAPONS: readonly WeaponDef[] = [
     projectileRadius: 2,
     windPct: 100,
     maxSpeed: 20 * 256,
-    damage: 25,
+    // 30 HP, as the bow, and its knock-back with it (25 until the balance of 2026-10-31,
+    // BACKLOG 8.5): the AI now takes it when throwing an enemy into the water is worth it
+    damage: 30,
     explosionRadius: 0,
     chipRadius: 5,
     knockbackPct: 250,

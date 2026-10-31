@@ -43,16 +43,16 @@ describe('crossbow', () => {
     expect(p?.vx).toBe(def('crossbow')?.maxSpeed);
   });
 
-  it('has two bolts', () => {
+  it('has three bolts', () => {
     const sim = duel(CALM, 300, 900);
     const i = weaponIndexIn(CALM, 'crossbow');
-    expect(sim.view().teams[0]?.ammo[i]).toBe(2);
+    expect(sim.view().teams[0]?.ammo[i]).toBe(3);
     sim.step([
       { t: 'selectWeapon', id: 'crossbow' },
       { t: 'aim', angle: 3500 },
       { t: 'fire', power: 1024 },
     ]);
-    expect(sim.view().teams[0]?.ammo[i]).toBe(1);
+    expect(sim.view().teams[0]?.ammo[i]).toBe(2);
   });
 });
 

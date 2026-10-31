@@ -51,7 +51,12 @@ describe('burning parchment (GDD §2.5)', () => {
     passTurns(sim, 2); // the first round ends: the fire reaches 120 px
     expect(sim.view().burnPx).toBe(BURN_RULES.advancePx);
     const events = passTurns(sim, 1);
-    expect(events).toContainEqual({ e: 'unitDamaged', unitId: 1, damage: BURN_RULES.damage });
+    expect(events).toContainEqual({
+      e: 'unitDamaged',
+      unitId: 1,
+      damage: BURN_RULES.damage,
+      source: 'burn',
+    });
     expect(events.some((e) => e.e === 'unitDamaged' && e.unitId !== 1)).toBe(false);
   });
 

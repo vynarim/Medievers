@@ -679,7 +679,7 @@ function advanceTick(s: SimState, phaseJustSet: boolean, events: SimEvent[]): vo
     if (held && (u.grounded || u.knocked)) u.banner = false;
     if (r.fallDamage > 0) {
       u.hp = Math.max(0, u.hp - r.fallDamage);
-      events.push({ e: 'unitDamaged', unitId: u.id, damage: r.fallDamage });
+      events.push({ e: 'unitDamaged', unitId: u.id, damage: r.fallDamage, source: 'fall' });
     }
     if (r.outOfMap) {
       u.alive = false;
@@ -707,7 +707,12 @@ function advanceTick(s: SimState, phaseJustSet: boolean, events: SimEvent[]): vo
       events.push({ e: 'terrainCarved', x: subToPx(e.x), y: subToPx(e.y), radius: e.carveRadius });
     }
     for (const h of res.hits) {
-      events.push({ e: 'unitDamaged', unitId: h.unitId, damage: h.damage });
+      events.push({
+        e: 'unitDamaged',
+        unitId: h.unitId,
+        damage: h.damage,
+        ...(e.weapon ? { source: e.weapon } : {}),
+      });
       if (e.trap && h.unitId === active?.id) trapped += h.damage;
     }
     blastReachesBarrels(s, e);
@@ -1001,7 +1006,7 @@ function burnTurn(s: SimState, events: SimEvent[]): void {
     if (x >= s.burnPx && x < width - s.burnPx) continue;
     const damage = Math.min(u.hp, r.damage);
     u.hp -= damage;
-    events.push({ e: 'unitDamaged', unitId: u.id, damage });
+    events.push({ e: 'unitDamaged', unitId: u.id, damage, source: 'burn' });
   }
   const n = s.turn.number;
   const rounds = idiv(n, s.teams.length);

@@ -95,7 +95,7 @@ export function stepFlames(s: SimState, events: SimEvent[]): void {
     if (damage <= 0) continue;
     scorch.hp += damage;
     u.hp -= damage;
-    events.push({ e: 'unitDamaged', unitId: u.id, damage });
+    events.push({ e: 'unitDamaged', unitId: u.id, damage, source: 'flames' });
   }
 }
 

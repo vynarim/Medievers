@@ -145,7 +145,7 @@ La priorité est le moteur : simulation, règles, réseau, IA. Jusqu'au lot 9, t
 | 8.2 | PWA (manifest, service worker, plein écran, orientation) | Installable ; jouable hors ligne |
 | 8.3 | Options d'accessibilité (GDD §13) | — |
 | 8.4 | i18n EN | — |
-| 8.5 | Équilibrage (tableur de paramètres ; soak IA contre IA par arme) | Aucune arme n'est utilisée dans plus de 30 % des kills IA |
+| 8.5 | Équilibrage (tableur de paramètres ; soak IA contre IA par arme) | Aucune arme n'est utilisée dans plus de 30 % des kills IA — fait le 2026-10-31 : l'arc passe de 36,1 ± 3,3 % à 23,5 ± 2,5 % des morts par les armes (150 parties Chevalier contre Chevalier ; arc 30 PV, fronde 30 PV, arbalète 3 carreaux), morts rendues à leur vraie cause (parchemin, eau, dragon hors des armes) ; [synthèse](reports/balance/2026-10-31-synthese.md) |
 
 ## M9 — En ligne
 Décidé le 2026-10-24 : le jeu à distance par code remplace le LAN 2 PC ([ADR 0002](adr/0002-online-transport.md), TECH_SPEC §8).

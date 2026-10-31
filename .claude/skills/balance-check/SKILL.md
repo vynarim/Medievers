@@ -44,6 +44,8 @@ Indicateurs :
 
 Signale tout indicateur calculé sur moins de 50 parties comme peu fiable.
 
+Le seuil de 30 % se lit sur **les morts par les armes** (section « Part des morts » des rapports de `balance:battery`, avec son intervalle de confiance regroupé par partie) : une arme compte les morts de son tir, noyades et chutes qu'il cause comprises ; le parchemin, l'eau du Déluge, les morsures du dragon, la foudre et les flammes des tours suivants n'en sont pas. Un rapport antérieur au 2026-10-31 se recompte avec `node tools/battery.ts --from <rapport.json>` (l'attribution d'avant donnait aux armes les morts constatées en fin de tour).
+
 ## Phase 5 — Rapport
 
 ```

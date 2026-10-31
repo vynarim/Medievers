@@ -103,10 +103,10 @@ Toutes les armes sont jouables {{st:jeu}}. Les munitions limitées se regagnent 
 
 | Arme | Dégâts max | Rayon d'explosion | Vent | Munitions | À savoir |
 |---|---|---|---|---|---|
-| **Arc** | 35 | — | oui | ∞ | La flèche reste fichée dans le décor |
-| **Arbalète** | 45 | — | faible | 2 | Puissance fixe : on ne règle que l'angle |
-| **Flèches enflammées** {{st:jeu}} | 40 | — | moyen | 0 | Seulement dans les reliquaires, trois à la fois. Ce qu'elle touche prend feu, sauf la pierre : une tour de bois s'embrase et brûle en quatre tours, le sol garde une flamme, un combattant perd 5 PV de plus qu'avec une flèche |
-| **Fronde** | 25 | — | oui | ∞ | Fort recul : idéale pour éjecter un ennemi |
+| **Arc** | 30 | — | oui | ∞ | La flèche reste fichée dans le décor |
+| **Arbalète** | 45 | — | faible | 3 | Puissance fixe : on ne règle que l'angle |
+| **Flèches enflammées** {{st:jeu}} | 35 | — | moyen | 0 | Seulement dans les reliquaires, trois à la fois. Ce qu'elle touche prend feu, sauf la pierre : une tour de bois s'embrase et brûle en quatre tours, le sol garde une flamme, un combattant perd 5 PV de plus qu'avec une flèche |
+| **Fronde** | 30 | — | oui | ∞ | Fort recul : idéale pour éjecter un ennemi |
 | **Pot de feu grégeois** | 45 | 60 px | non | 3 | Rebondit. **Mèche en tours** : 1 = il explose pendant ce tour (après 3 s) ; 2 = il se pose et explose au début du tour suivant ; 3 = dans deux tours. Un pot posé affiche son compte (I, II) et peut être projeté par une explosion |
 | **Pot de poix** | 30 + 5 × 15 | 50 / 30 px | non | 1 | Rebondit, puis éclate en 5 gouttes enflammées qui explosent là où elles tombent |
 | **Cochon enflammé** {{st:jeu}} | 70, sur le bâti seulement | 90 px | non | 1 | Une bête de sapeur : il ne blesse aucun combattant, mais ruine une tour de pierre et abat un mur de pierre ; le bois le craint peu. « Lâcher » : il part du côté où vous regardez, trotte tout seul, saute les obstacles (et fait demi-tour devant un mur trop haut). Appuyez de nouveau (« Faire sauter ») pour qu'il explose ; sinon il explose au bout de 8 s. L'eau l'éteint |

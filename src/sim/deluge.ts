@@ -51,7 +51,7 @@ export function drownUnits(s: SimState, events: SimEvent[]): void {
     if (shore) {
       const damage = Math.min(u.hp, wet ?? 0);
       u.hp -= damage;
-      events.push({ e: 'unitDamaged', unitId: u.id, damage });
+      events.push({ e: 'unitDamaged', unitId: u.id, damage, source: 'water' });
       u.x = shore.x * SUBPX + SUBPX / 2;
       u.y = shore.y * SUBPX;
       u.vx = 0;
@@ -125,7 +125,7 @@ export function delugeTurnEnd(s: SimState, events: SimEvent[]): void {
       if (!u.alive || u.hp <= 0) continue;
       const damage = Math.min(u.hp, r.damage);
       u.hp -= damage;
-      events.push({ e: 'unitDamaged', unitId: u.id, damage });
+      events.push({ e: 'unitDamaged', unitId: u.id, damage, source: 'deluge' });
     }
   }
   drownUnits(s, events);

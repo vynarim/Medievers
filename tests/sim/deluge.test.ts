@@ -85,7 +85,12 @@ describe('water and the Déluge (GDD §2.4)', () => {
     };
     const sim = new Sim({ rules, teams: [{ spawns: [650] }, { spawns: [1000] }] }, 1, pitMask());
     const events = skipTurns(sim, 1);
-    expect(events).toContainEqual({ e: 'unitDamaged', unitId: 1, damage: DELUGE_RULES.wetDamage });
+    expect(events).toContainEqual({
+      e: 'unitDamaged',
+      unitId: 1,
+      damage: DELUGE_RULES.wetDamage,
+      source: 'water',
+    });
     expect(events.some((e) => e.e === 'unitDied')).toBe(false);
     const u = sim.view().units[0];
     expect(u?.alive).toBe(true);

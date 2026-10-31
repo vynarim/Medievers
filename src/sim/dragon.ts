@@ -87,7 +87,7 @@ function bite(u: Unit, damage: number, dir: -1 | 1, events: SimEvent[]): void {
   u.vy -= BITE_THROW;
   launch(u);
   events.push({ e: 'dragonBit', unitId: u.id, damage: hp });
-  events.push({ e: 'unitDamaged', unitId: u.id, damage: hp });
+  events.push({ e: 'unitDamaged', unitId: u.id, damage: hp, source: 'dragon' });
 }
 
 /** Each tick: the dragon flies across, swoops on its prey, or flies up and away once fed. */

@@ -4,7 +4,9 @@
 // taken, kills, survival). Writes docs/reports/balance/<date>-<label>.json and .md.
 // Usage: node tools/battery.ts [--games N] [--levels a,b] [--themes all|valley,…]
 //        [--lineups default|random] [--turns T] [--workers K] [--seed S] [--label name]
-import { mkdirSync, writeFileSync } from 'node:fs';
+//        node tools/battery.ts --from <report.json>: sums up again the matches of a report (after a
+//        change to the summary), without playing them, and rewrites its .json and .md.
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { availableParallelism } from 'node:os';
 import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads';
 import { fixLineup } from '../src/app/match-setup.ts';
@@ -24,6 +26,18 @@ async function main(): Promise<void> {
     const i = args.indexOf(`--${name}`);
     return i >= 0 ? (args[i + 1] ?? def) : def;
   };
+  const from = opt('from', '');
+  if (from !== '') {
+    const old = JSON.parse(readFileSync(from, 'utf8')) as { summary: Summary; games: GameReport[] };
+    const o = old.summary;
+    const summary = summarize(old.games, { ...o, seconds: o.seconds });
+    const base = from.replace(/\.json$/, '');
+    const label = base.replace(/^.*[\\/]\d{4}-\d{2}-\d{2}-/, '');
+    writeFileSync(`${base}.json`, JSON.stringify({ summary, games: old.games }, null, 1));
+    writeFileSync(`${base}.md`, markdown(summary, label));
+    console.log(`report: ${base}.json, ${base}.md`);
+    return;
+  }
   const games = Number(opt('games', '60'));
   const levels = opt('levels', 'knight,knight').split(',') as AiLevelId[];
   for (const l of levels) if (!AI_LEVEL_IDS.includes(l)) throw new Error(`unknown level ${l}`);
@@ -139,9 +153,27 @@ interface Summary {
   readonly roundsAvg: number;
   readonly weapons: Record<
     string,
-    { shots: number; kills: number; damage: number; damagePerShot: number }
+    {
+      shots: number;
+      kills: number;
+      /** of its kills, the victims it threw into the water */
+      drowned: number;
+      damage: number;
+      damagePerShot: number;
+    }
   >;
   readonly deathCauses: Record<string, number>;
+  /** all deaths, and those credited to a weapon (BACKLOG 8.5: none above 30 % of these) */
+  readonly deaths: number;
+  readonly weaponKills: number;
+  /**
+   * each weapon's share of the weapon kills and of all deaths, %, with the half-width of its 95 %
+   * confidence interval (ratio estimator, clustered by match)
+   */
+  readonly killShares: Record<
+    string,
+    { ofWeaponKills: number; ci: number; ofDeaths: number; ciDeaths: number }
+  >;
   readonly classes: Record<
     string,
     {
@@ -195,9 +227,20 @@ function summarize(
     for (const [w, n] of Object.entries(r.shots)) (weapons[w] ??= blank()).shots += n;
     for (const [w, n] of Object.entries(r.weaponDamage)) (weapons[w] ??= blank()).damage += n;
     for (const [w, n] of Object.entries(r.kills)) {
-      if (w in r.shots || w in r.weaponDamage) (weapons[w] ??= blank()).kills += n;
+      if (isWeapon(r, w)) (weapons[w] ??= blank()).kills += n;
       deathCauses[w] = (deathCauses[w] ?? 0) + n;
     }
+    for (const [w, n] of Object.entries(r.drownedBy ?? {})) (weapons[w] ??= blank()).drowned += n;
+  }
+  const deathsOf = (r: GameReport): number => Object.values(r.kills).reduce((a, b) => a + b, 0);
+  const weaponKillsOf = (r: GameReport): number =>
+    Object.entries(r.kills).reduce((a, [w, n]) => a + (isWeapon(r, w) ? n : 0), 0);
+  const killShares: Summary['killShares'] = {};
+  for (const w of Object.keys(weapons)) {
+    const k = (r: GameReport): number => r.kills[w] ?? 0;
+    const a = share(reports, k, weaponKillsOf);
+    const b = share(reports, k, deathsOf);
+    if (a.p > 0) killShares[w] = { ofWeaponKills: a.p, ci: a.ci, ofDeaths: b.p, ciDeaths: b.ci };
   }
   for (const w of Object.values(weapons))
     w.damagePerShot = Math.round((10 * w.damage) / Math.max(1, w.shots)) / 10;
@@ -281,6 +324,9 @@ function summarize(
       Math.round((10 * turns.reduce((a, b) => a + b, 0)) / Math.max(1, turns.length) / houses) / 10,
     weapons,
     deathCauses,
+    deaths: reports.reduce((a, r) => a + deathsOf(r), 0),
+    weaponKills: reports.reduce((a, r) => a + weaponKillsOf(r), 0),
+    killShares,
     classes,
     friendlyFirePct: pct(friendly, friendly + enemy),
     planMsAvg: Math.round(ms.reduce((a, b) => a + b, 0) / Math.max(1, ms.length)),
@@ -289,9 +335,47 @@ function summarize(
   };
 }
 
-function blank(): { shots: number; kills: number; damage: number; damagePerShot: number } {
-  return { shots: 0, kills: 0, damage: 0, damagePerShot: 0 };
+function blank(): Summary['weapons'][string] {
+  return { shots: 0, kills: 0, drowned: 0, damage: 0, damagePerShot: 0 };
 }
+
+/** A kill key is a weapon's when the match shot or hurt with it (else it is a cause of death). */
+function isWeapon(r: GameReport, key: string): boolean {
+  return key in r.shots || key in r.weaponDamage;
+}
+
+/**
+ * %: sum of num over sum of den across the matches, with the half-width of its 95 % confidence
+ * interval, kills within a match being correlated (ratio estimator, clustered by match).
+ */
+function share(
+  reports: readonly GameReport[],
+  num: (r: GameReport) => number,
+  den: (r: GameReport) => number,
+): { p: number; ci: number } {
+  const g = reports.length;
+  const n = reports.reduce((a, r) => a + den(r), 0);
+  if (g < 2 || n === 0) return { p: 0, ci: 0 };
+  const p = reports.reduce((a, r) => a + num(r), 0) / n;
+  const mean = n / g;
+  const ss = reports.reduce((a, r) => a + (num(r) - p * den(r)) ** 2, 0);
+  const se = Math.sqrt(ss / (g * (g - 1))) / mean;
+  return { p: Math.round(1000 * p) / 10, ci: Math.round(1960 * se) / 10 };
+}
+
+/** The causes of death that are not a weapon's, in the order the report lists them. */
+const ENVIRONMENT = [
+  'burn',
+  'drowned',
+  'dragon',
+  'flames',
+  'beast',
+  'lightning',
+  'fall',
+  'outOfMap',
+  'kingFell',
+  'other',
+] as const;
 
 function markdown(s: Summary, label: string): string {
   const lines: string[] = [];
@@ -325,11 +409,30 @@ function markdown(s: Summary, label: string): string {
     '',
     '## Armes',
     '',
-    '| Arme | Tirs | Dégâts | Dégâts par tir | Morts |',
-    '|---|---|---|---|---|',
+    '| Arme | Tirs | Dégâts | Dégâts par tir | Morts | dont noyés |',
+    '|---|---|---|---|---|---|',
   );
   for (const [w, v] of Object.entries(s.weapons).sort((a, b) => b[1].shots - a[1].shots)) {
-    lines.push(`| ${w} | ${v.shots} | ${v.damage} | ${v.damagePerShot} | ${v.kills} |`);
+    lines.push(
+      `| ${w} | ${v.shots} | ${v.damage} | ${v.damagePerShot} | ${v.kills} | ${v.drowned} |`,
+    );
+  }
+  lines.push(
+    '',
+    `## Part des morts (BACKLOG 8.5 : aucune arme au-dessus de 30 % des morts par les armes)`,
+    '',
+    `${s.deaths} morts, dont ${s.weaponKills} par les armes (${pct(s.weaponKills, s.deaths)} %). ` +
+      'Une arme compte les morts de son tir : ses coups, et la noyade de ceux qu’elle jette à l’eau ; ' +
+      'les morsures du dragon, l’eau qui monte au Déluge et la fin du tour n’en sont pas. ' +
+      'Intervalle de confiance à 95 %, regroupé par partie.',
+    '',
+    '| Arme | % des morts par les armes | % de toutes les morts |',
+    '|---|---|---|',
+  );
+  for (const [w, v] of Object.entries(s.killShares).sort(
+    (a, b) => b[1].ofWeaponKills - a[1].ofWeaponKills,
+  )) {
+    lines.push(`| ${w} | ${v.ofWeaponKills} ± ${v.ci} | ${v.ofDeaths} ± ${v.ciDeaths} |`);
   }
   lines.push(
     '',
@@ -338,6 +441,17 @@ function markdown(s: Summary, label: string): string {
         .sort((a, b) => b[1] - a[1])
         .map(([k, n]) => `${k} ${n}`)
         .join(', '),
+    '',
+    'Hors des armes : `burn` le parchemin qui brûle, `drowned` l’eau sans tir (le Déluge qui monte), ' +
+      '`dragon` ses morsures, `flames` les flammes au sol hors du tir qui les a posées, `beast` les bêtes, ' +
+      '`lightning` la foudre, `fall` et `outOfMap` les chutes hors tir, `other` le reste.',
+    '',
+    '| Cause | Morts | % |',
+    '|---|---|---|',
+    ...[
+      ['Armes', s.weaponKills],
+      ...ENVIRONMENT.map((k): [string, number] => [k, s.deathCauses[k] ?? 0]),
+    ].map(([k, n]) => `| ${k} | ${n} | ${pct(Number(n), s.deaths)} |`),
     '',
   );
   lines.push(

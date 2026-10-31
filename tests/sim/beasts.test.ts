@@ -67,7 +67,12 @@ function strikeWith(kind: number, trick: number): { s: SimState; events: SimEven
 describe('beasts of the margins (GDD §4.10)', () => {
   it('hare kick: 15 HP and thrown away', () => {
     const { s, events } = strikeWith(BeastKind.Hare, Trick.Kick);
-    expect(events).toContainEqual({ e: 'unitDamaged', unitId: 1, damage: BEAST_RULES.kickDamage });
+    expect(events).toContainEqual({
+      e: 'unitDamaged',
+      unitId: 1,
+      damage: BEAST_RULES.kickDamage,
+      source: 'beast',
+    });
     expect(s.units[0]?.vx).toBeLessThan(0);
     expect(s.beast).toBeNull();
   });
@@ -76,9 +81,9 @@ describe('beasts of the margins (GDD §4.10)', () => {
     const { s } = strikeWith(BeastKind.Hare, Trick.Steal);
     const crossbow = weaponIndexIn(RULES, 'crossbow');
     const pitch = weaponIndexIn(RULES, 'pitchPot');
-    // Pitch pot (1 shot) is scarcer than the crossbow (2): it goes.
+    // Pitch pot (1 shot) is scarcer than the crossbow (3): it goes.
     expect(s.teams[0]?.ammo[pitch]).toBe(0);
-    expect(s.teams[0]?.ammo[crossbow]).toBe(2);
+    expect(s.teams[0]?.ammo[crossbow]).toBe(3);
   });
 
   it('hare panic: an uncontrolled backward jump at the start of the next turn', () => {

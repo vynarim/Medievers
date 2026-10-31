@@ -4,6 +4,15 @@ import type { WeaponId } from '../content/weapons.ts';
 /** kingFell: Régicide, the house's king is dead (GDD §2.3) */
 export type DeathCause = 'hp' | 'outOfMap' | 'drowned' | 'kingFell' | 'dragon' | 'burnt';
 
+/**
+ * What took a unit's HP, when it is not plainly the shot of the turn: a fall, the water, the
+ * burning parchment, flames on the ground, the Déluge, a beast, a falling block, the dragon, or the
+ * weapon whose blast it was (a pot going off turns later). For the balance reports (BACKLOG 8.5);
+ * absent: the shot of the turn, or not known.
+ */
+export type DamageSource =
+  WeaponId | 'fall' | 'water' | 'burn' | 'flames' | 'deluge' | 'beast' | 'crushed' | 'dragon';
+
 export type SimEvent =
   | {
       readonly e: 'turnStarted';
@@ -27,7 +36,12 @@ export type SimEvent =
       readonly y: number;
       readonly radius: number;
     }
-  | { readonly e: 'unitDamaged'; readonly unitId: number; readonly damage: number }
+  | {
+      readonly e: 'unitDamaged';
+      readonly unitId: number;
+      readonly damage: number;
+      readonly source?: DamageSource;
+    }
   /** Bénédiction of a cleric (GDD §3.2) */
   | { readonly e: 'unitHealed'; readonly unitId: number; readonly heal: number }
   | { readonly e: 'unitDied'; readonly unitId: number; readonly cause: DeathCause }

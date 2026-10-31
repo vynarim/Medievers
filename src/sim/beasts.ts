@@ -44,7 +44,7 @@ function strike(s: SimState, u: Unit, events: SimEvent[]): void {
     case Trick.Kick: {
       const damage = Math.min(u.hp, r.kickDamage);
       u.hp -= damage;
-      events.push({ e: 'unitDamaged', unitId: u.id, damage });
+      events.push({ e: 'unitDamaged', unitId: u.id, damage, source: 'beast' });
       u.vx += (u.x >= b.x ? 1 : -1) * r.kickSpeed;
       u.vy -= r.kickSpeed >> 1;
       launch(u);
@@ -104,7 +104,7 @@ export function beastsTurnEnd(s: SimState, events: SimEvent[]): void {
     if (a.trick === Trick.Bite) {
       const damage = Math.min(u.hp, r.biteDamage);
       u.hp -= damage;
-      events.push({ e: 'unitDamaged', unitId: u.id, damage });
+      events.push({ e: 'unitDamaged', unitId: u.id, damage, source: 'beast' });
       a.turns--;
     } else if ((a.trick === Trick.Shell || a.trick === Trick.Slime) && a.unitId === active) {
       a.turns--;

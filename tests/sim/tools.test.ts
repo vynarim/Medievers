@@ -220,7 +220,12 @@ describe('chausse-trape (GDD §4.4)', () => {
     expect(run(sim, [], 30).some((e) => e.e === 'explosion')).toBe(false);
     const events = run(sim, [], def('caltrop')?.mine?.armTicks ?? 0);
     expect(events).toContainEqual({ e: 'mineSprung', id: mine?.id, team: 0 });
-    expect(events).toContainEqual({ e: 'unitDamaged', unitId: 1, damage: expect.any(Number) });
+    expect(events).toContainEqual({
+      e: 'unitDamaged',
+      unitId: 1,
+      damage: expect.any(Number),
+      source: 'caltrop',
+    });
     expect(sim.view().mines).toHaveLength(0);
   });
 

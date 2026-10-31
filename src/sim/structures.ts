@@ -536,7 +536,7 @@ function crush(s: SimState, b: Block, r: StructureRules, events: SimEvent[]): vo
     st.struck.push(u.id);
     st.struck.sort((a, c) => a - c);
     u.hp -= damage;
-    events.push({ e: 'unitDamaged', unitId: u.id, damage });
+    events.push({ e: 'unitDamaged', unitId: u.id, damage, source: 'crushed' });
     events.push({ e: 'crushed', unitId: u.id });
     u.vx = (ux >= x0 + (b.w >> 1) ? 1 : -1) * CRUSH_PUSH;
     u.vy = -CRUSH_PUSH;

@@ -15,6 +15,9 @@ import {
   type TimedCommand,
 } from '../../src/sim/index.ts';
 
+/** HP of an arrow on a unit, from the Classique arsenal (35 until the balance of 2026-10-31) */
+const BOW_DAMAGE = CLASSIC_RULES.weapons.find((w) => w.id === 'bow')?.damage ?? 0;
+
 /** 1200 × 600 flat map, ground at y = 500. */
 function flatMask(): Mask {
   const width = 1200;
@@ -95,7 +98,7 @@ describe('turn loop', () => {
     expect(v().turn.phase).toBe('retreat');
     d.until('resolution');
     d.until('transition');
-    expect(unit(d, 2).hp).toBe(60 - 35);
+    expect(unit(d, 2).hp).toBe(60 - BOW_DAMAGE);
 
     // Turn 2: team 1 passes.
     d.until('action');
@@ -428,7 +431,7 @@ describe('turn loop', () => {
       { t: 'fire', power: 1024 },
     ]);
     arrow.until('transition');
-    expect(unit(arrow, 2).hp).toBe(60 - 35);
+    expect(unit(arrow, 2).hp).toBe(60 - BOW_DAMAGE);
     // A pot dropped between the two units of team 0 hurts both.
     const pot = new Driver({ ...config, teams: [{ spawns: [300, 330] }, { spawns: [1000] }] }, 7);
     pot.until('action');

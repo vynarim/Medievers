@@ -40,7 +40,7 @@ describe('tuning model', () => {
     expect(rules.weapons.find((w) => w.id === 'bow')?.damage).toBe(50);
     expect(rules.turn.actionTicks).toBe(1800);
     expect(CLASSIC_RULES.unit.walkSpeed).toBe(384);
-    expect(CLASSIC_RULES.weapons.find((w) => w.id === 'bow')?.damage).toBe(35);
+    expect(CLASSIC_RULES.weapons.find((w) => w.id === 'bow')?.damage).toBe(30);
   });
 
   it('ignores unknown paths and non-integer values', () => {
