@@ -105,6 +105,7 @@
   "hud.phase.gameOver": "Fin de partie",
   "hud.phase.placement": "Cliquez sur la carte pour poser un combattant",
   "hud.placement": "Placement",
+  "hud.steps": "{n} pas",
   "hud.placeRefused": "Pas là : trop près d'un autre combattant, du bord, ou rien pour se tenir debout.",
   "hud.placementSub": "Chaque maison pose un combattant, à tour de rôle",
   "hud.placementQuip": "Les armées arrivent sur le champ de bataille. Certaines ont même apporté leur pique-nique.",

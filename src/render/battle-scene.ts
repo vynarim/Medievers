@@ -79,6 +79,7 @@ import { leaveMatch, type OnlineMatch } from '../app/online.ts';
 import { joinFlow, setupLobby } from '../app/online-flow.ts';
 import { RemoteInputSource } from '../input/remote-input.ts';
 import { sfx, type SfxId } from './sfx.ts';
+import ART from '../content/art.json';
 
 /** The map fields of the battle data, from a built map. */
 export function battleMap(
@@ -249,6 +250,12 @@ const LABEL_STACK = 36;
 const LABEL_APART = 76;
 /** ms the tiny help bubble over a unit that cannot play stays up */
 const TIP_MS = 2600;
+/** ms the counter of steps left stays after the unit stops walking */
+const STEPS_SHOWN_MS = 1500;
+/** px of walk in one step: a unit's width (GDD §2.2, 280 px = 10 steps) */
+const STEP_PX = 2 * UNIT_HALF_WIDTH;
+/** over the units, under the name labels */
+const STEPS_DEPTH = 6.9;
 
 /** Phaser's polygon calls want Vector2 instances. */
 const poly = (points: readonly { x: number; y: number }[]): Phaser.Math.Vector2[] =>
@@ -301,6 +308,12 @@ export class BattleScene extends Phaser.Scene {
   private infoRef: ObjectRef | null = null;
   /** a teammate clicked that cannot take the turn: why, over its head, until `until` (ms) */
   private tip: { unitId: number; key: string; until: number } | null = null;
+  /**
+   * The steps left to walk, beside the unit that walks (playtest of 2026-10-31): shown while it
+   * walks and a moment after. `left` is the walk left last frame, of unit `unitId`.
+   */
+  private steps: { text: Phaser.GameObjects.Text; unitId: number; left: number; until: number } | null =
+    null;
   /** drawn position of the beast, easing after the sim's */
   private beastShown: { x: number; y: number } | null = null;
   /** the burnt ends of the parchment, over the terrain, under the units */
@@ -373,6 +386,13 @@ export class BattleScene extends Phaser.Scene {
     // The scene object outlives a restart: a match chosen from the paused one starts running.
     this.paused = false;
     this.stepOnce = false;
+  }
+
+  /** The drawn art (tools/build-art.ts): a key with no file keeps its placeholder. */
+  preload(): void {
+    for (const [key, path] of Object.entries(ART)) {
+      if (!this.textures.exists(key)) this.load.image(key, `${import.meta.env.BASE_URL}${path}`);
+    }
   }
 
   create(): void {
@@ -911,6 +931,7 @@ export class BattleScene extends Phaser.Scene {
     this.ui.showResetView(this.manualCamera);
     this.updateBubble();
     this.updateTip();
+    this.updateSteps();
     if (this.selectedUnit !== null) {
       // The card goes to the half of the screen the unit is not in.
       const u = this.sim.view().units.find((x) => x.id === this.selectedUnit);
@@ -1038,6 +1059,51 @@ export class BattleScene extends Phaser.Scene {
   }
 
   /** Keeps the tiny help bubble over its unit while it lasts. */
+  /** The walking unit's counter of steps left (a step is a unit's width, GDD §2.2). */
+  private updateSteps(): void {
+    const v = this.sim.view();
+    const budget = v.rules.unit.moveBudget;
+    const u = v.units.find((x) => x.id === v.turn.activeUnitId);
+    const playing = v.turn.phase === 'action' || v.turn.phase === 'retreat';
+    if (budget === undefined || !u?.alive || !playing) {
+      this.steps?.text.setVisible(false);
+      if (this.steps) this.steps.unitId = -1;
+      return;
+    }
+    if (!this.steps) {
+      const text = this.add
+        .text(0, 0, '', {
+          fontFamily: FONT_CAPS,
+          fontSize: '22px',
+          color: css(COLORS.encre),
+          stroke: css(COLORS.ceruse),
+          strokeThickness: 5,
+        })
+        .setResolution(3)
+        .setOrigin(0.5, 0.5)
+        .setDepth(STEPS_DEPTH);
+      this.hudCam.ignore(text);
+      this.steps = { text, unitId: -1, left: 0, until: 0 };
+    }
+    const st = this.steps;
+    const left = v.turn.moveLeft;
+    // A new turn (the walk filled up again) shows nothing until the unit walks.
+    if (st.unitId !== u.id) st.until = 0;
+    else if (left < st.left) st.until = this.time.now + STEPS_SHOWN_MS;
+    st.unitId = u.id;
+    st.left = left;
+    if (this.time.now > st.until) {
+      st.text.setVisible(false);
+      return;
+    }
+    const n = Math.ceil(left / (STEP_PX * SUBPX));
+    st.text.setText(t('hud.steps', { n })).setVisible(true);
+    // Behind the walker, at its waist: never under its feet nor over its aim.
+    const [x, y] = this.pos(`u${u.id}`, 1, u.x, u.y);
+    st.text.setPosition(x - u.facing * 44, y - UNIT_HEIGHT / 2);
+    st.text.setColor(css(n === 0 ? COLORS.vermillon : COLORS.encre));
+  }
+
   private updateTip(): void {
     const tip = this.tip;
     const u = tip ? this.sim.view().units.find((x) => x.id === tip.unitId) : undefined;
