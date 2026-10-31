@@ -33,6 +33,13 @@ export interface AiLevel {
    * line of three turns ahead, so that it climbs to safety (0: it does not look ahead)
    */
   readonly floodFear: number;
+  /**
+   * with the parchment burning, or a round before: share of the burn each unit of the house
+   * standing inside the line the fire will reach by the next round costs (its burn's HP at the
+   * worth of the unit's own HP, plus 1 per px of depth), so that the units in danger are sent to
+   * safety, and still shoot from there; 0: it does not look ahead (2026-10-31)
+   */
+  readonly burnFear: number;
 }
 
 export const AI_LEVELS: Readonly<Record<AiLevelId, AiLevel>> = {
@@ -48,6 +55,7 @@ export const AI_LEVELS: Readonly<Record<AiLevelId, AiLevel>> = {
     thinkMs: [2000, 3000],
     dragon: false,
     floodFear: 0,
+    burnFear: 0.2,
   },
   knight: {
     units: 2,
@@ -79,6 +87,7 @@ export const AI_LEVELS: Readonly<Record<AiLevelId, AiLevel>> = {
     thinkMs: [2000, 4000],
     dragon: true,
     floodFear: 0.1,
+    burnFear: 0.4,
   },
   constable: {
     units: 2,
@@ -92,6 +101,7 @@ export const AI_LEVELS: Readonly<Record<AiLevelId, AiLevel>> = {
     thinkMs: [3000, 5000],
     dragon: true,
     floodFear: 0.2,
+    burnFear: 0.6,
   },
 };
 

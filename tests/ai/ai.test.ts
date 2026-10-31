@@ -6,6 +6,7 @@ import { SANDBOX_PACE, TurnScript, type AiPlan } from '../../src/ai/script.ts';
 import { buildMap } from '../../src/app/map-build.ts';
 import { defaultSetup, matchConfig, rulesFor } from '../../src/app/match-setup.ts';
 import { AI_LEVELS, type AiLevel } from '../../src/content/ai.ts';
+import { BURN_RULES } from '../../src/content/burn.ts';
 import { DRAGON_RULES } from '../../src/content/dragon.ts';
 import { MAP_THEMES } from '../../src/content/maps.ts';
 import { Material, Sim, type Mask, type MatchConfig, type SimState } from '../../src/sim/index.ts';
@@ -100,6 +101,28 @@ describe('the AI turn (GDD §7.2)', () => {
     playOut(sim, plan);
     expect(sim.view().units.find((u) => u.team === 1)?.hp ?? hp).toBeLessThan(hp);
   });
+
+  it('sends a unit the fire of the parchment will reach to safety, and still shoots (2026-10-31)', () => {
+    const config: MatchConfig = {
+      rules: { ...RULES, burn: BURN_RULES },
+      teams: [{ spawns: [80, 700] }, { spawns: [1100] }],
+    };
+    const sim = new Sim(config, 3, flatMask());
+    for (let i = 0; i < 1000 && sim.view().turn.phase !== 'action'; i++) sim.step();
+    // The ends already burn 60 px in: by the next round the fire reaches 120 px, and the unit
+    // at 80 px with it.
+    const state: SimState = sim.snapshot();
+    state.burnPx = 60;
+    const endangered = state.units.find((u) => u.team === 0 && u.x >> 8 < 200);
+    const { plan } = planTurn({ state, team: 0, level: STILL, seed: 1 });
+    expect(plan.unitId).toBe(endangered?.id);
+    expect(plan.move.kind).not.toBe('stay');
+    expect(plan.shot).not.toBeNull();
+    const after = Sim.fromState(state);
+    playOut(after, plan);
+    const moved = after.view().units.find((u) => u.id === endangered?.id);
+    expect((moved?.x ?? 0) >> 8).toBeGreaterThan(60 + BURN_RULES.advancePx + 14);
+  }, 60_000);
 
   it('does not shoot its own side: no throw that hurts an ally more than the enemy', () => {
     // An ally stands right before the enemy: a blast there would hurt both.

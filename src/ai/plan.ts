@@ -143,8 +143,38 @@ function scoreOutcome(
       if (below > 0) score -= level.floodFear * below;
     }
   }
+  // The fire of the parchment by the next round: every unit of the house it would reach costs
+  // what it would burn, so the one in danger is sent to safety, and may still shoot from there.
+  const line = burnLine(after);
+  const burn = after.rules.burn;
+  if (line !== null && burn && level.burnFear > 0) {
+    for (const a of after.units) {
+      if (!a.alive || a.team !== team) continue;
+      const depth = burnDepth(after, a, line);
+      // What its burn would cost, and a little more the deeper it stands (the way out).
+      if (depth > 0) score += level.burnFear * (burn.damage * AI_SCORE.selfHp - depth);
+    }
+  }
   if (after.turn.phase === 'gameOver') score += after.winner === team ? 1000 : -1000;
   return score;
+}
+
+/**
+ * px from each end of the map that the fire of the parchment will have reached by the next
+ * round, once it burns or a round before it starts; null when there is no fire to fear.
+ */
+function burnLine(v: SimView): number | null {
+  const burn = v.rules.burn;
+  if (!burn) return null;
+  const rounds = Math.trunc(v.turn.number / Math.max(1, v.teams.length));
+  if (v.burnPx === 0 && rounds < burn.startRound - 1) return null;
+  return v.burnPx + burn.advancePx + UNIT_HALF_WIDTH;
+}
+
+/** px unit `u` stands inside the fire's line of the next round (0: out of its reach). */
+function burnDepth(v: SimView, u: Readonly<Unit>, line: number): number {
+  const x = subToPx(u.x);
+  return Math.max(0, line - x, x - (v.terrain.width - line));
 }
 
 /** Sub-px box around the enemies, past which a throw no longer interests the AI. */
@@ -547,13 +577,8 @@ function inDanger(v: SimView, u: Readonly<Unit>): boolean {
     const line = Math.min(v.waterY, v.terrain.height) - 3 * flood.risePx;
     if (subToPx(u.y) > line) return true;
   }
-  const burn = v.rules.burn;
-  if (burn && v.burnPx > 0) {
-    const x = subToPx(u.x);
-    const edge = v.burnPx + burn.advancePx + UNIT_HALF_WIDTH;
-    if (x < edge || x > v.terrain.width - edge) return true;
-  }
-  return false;
+  const line = burnLine(v);
+  return line !== null && burnDepth(v, u, line) > 0;
 }
 
 /** Miracles to the three highest places of the map, away from the burnt ends. */
@@ -600,6 +625,13 @@ function shootersOf(v: SimView, team: number, level: AiLevel): number[] {
     .map((u) => u.id);
   const out = ids.slice(0, level.units);
   if (!out.includes(active) && ids.includes(active)) out[out.length - 1] = active;
+  // One more: the unit the fire or the water is about to reach, deepest in the fire first.
+  const line = burnLine(v);
+  const endangered = ids
+    .map((id) => v.units.find((u) => u.id === id))
+    .filter((u): u is Readonly<Unit> => !!u && !out.includes(u.id) && inDanger(v, u))
+    .sort((a, b) => (line === null ? 0 : burnDepth(v, b, line) - burnDepth(v, a, line)));
+  if (level.burnFear > 0 && endangered[0]) out.push(endangered[0].id);
   return out.length > 0 ? out : [active];
 }
 
