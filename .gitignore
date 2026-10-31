@@ -6,3 +6,4 @@ coverage/
 .claude/settings.local.json
 .playwright-mcp/
 .firebase/
+.claude/worktrees/

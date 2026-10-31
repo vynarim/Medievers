@@ -108,11 +108,15 @@ const simGuard = {
 };
 
 export default tseslint.config(
-  { ignores: ['dist/', 'coverage/', 'node_modules/'] },
+  // Agents' worktrees are other checkouts of this repository, linted from their own root.
+  { ignores: ['dist/', 'coverage/', 'node_modules/', '.claude/worktrees/'] },
   js.configs.recommended,
   ...tseslint.configs.strict,
   {
-    languageOptions: { globals: { ...globals.browser } },
+    languageOptions: {
+      globals: { ...globals.browser },
+      parserOptions: { tsconfigRootDir: import.meta.dirname },
+    },
     rules: { 'no-restricted-syntax': ['error', RELATIVE_IMPORT_EXTENSION] },
   },
   {
