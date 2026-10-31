@@ -226,6 +226,7 @@ Fichiers : `src/content/rigs/<rig>/rig.json` et `src/content/rigs/<rig>/anim/<id
 | `pieces` | **Ordre du tableau = ordre de dessin**, du fond vers l'avant. `key` : clé d'asset (ASSETS §2), servie par le PNG s'il existe, sinon par un placeholder dessiné par le code. `size` : taille d'affichage en px. `pivot` : point de la pièce, depuis son coin haut-gauche, posé sur l'origine de l'os (il peut tomber hors du rectangle pour une pièce posée sur l'os d'une autre, comme la ceinture sur le buste) |
 | `tint` | `"primary"` (champ de la maison), `"secondary"` (seconde teinture) ou `null`. Multiplication ; clé suffixée `_tint` |
 | `slot` | La pièce ne s'affiche que quand le slot tient cet attachement. `slots[].default` : attachement de repos ou `null` |
+| `anims` (optionnel, 2026-10-31) | Id du rig dont celui-ci joue les animations, sur le même squelette (les cinq classes jouent celles du Chevalier) ; absent : celles de son dossier `anim/`. Le chargement vérifie chaque animation contre les os du rig qui l'emprunte |
 
 Composition : matrice locale de chaque os `T(x + dx, y + dy) · R(rot + drot) · S(sx, sy)`, multipliée par celle du parent ; chaque pièce prend la position, la rotation et l'échelle de son os. La figure entière est retournée par `scaleX = −1` pour regarder à gauche.
 

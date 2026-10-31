@@ -32,6 +32,7 @@
 4. **À chaque mécanique livrée** : manuel + `pnpm run manual`, champs de réglage, GDD, et commit + push automatique (préférence de l'utilisateur).
 
 ## Dettes connues / à ne pas refaire
+- **`import.meta.glob` et cache de transformation** (vu le 2026-10-31) : Vitest a gardé l'ancienne liste de `src/content/rigs/*` après l'ajout de dossiers, tant que le contenu de `src/render/rig/rigs.ts` n'avait pas changé. Après l'ajout d'un rig ou d'une animation, si un test ne les voit pas, modifier `rigs.ts` (un commentaire suffit) ou vider `node_modules/.vite`.
 - **Mode navigateur de Vitest** : Firefox y plante sur ce poste (« page crashed »). Le déterminisme navigateur passe donc par `tools/browser-determinism.ts` (Playwright direct, Vite en mode serveur). Ne pas y revenir.
 - **Coutures entre tuiles du terrain** : supprimées en combinant `antialiasGL: false` (`src/app/main.ts`), `CLAMP_TO_EDGE` et `NEAREST` sur les tuiles (`src/render/terrain-layer.ts`). Le filtre seul ne suffisait pas. Contrepartie : les Graphics ne sont plus antialiasés (bords des capsules un peu crénelés).
 - **Touches** : les appuis courts sont perdus avec `JustDown` quand l'appui et le relâchement tombent dans la même frame. Toutes les touches passent par des événements `on('down')` mémorisés : garder ce schéma.

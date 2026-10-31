@@ -51,10 +51,11 @@ import { drawClassMark } from './class-marks.ts';
 import { drawFigure, drawNimbus } from './figures.ts';
 import { KNIGHT_PIECES } from './rig/knight-art.ts';
 import { RigView, rigTextures } from './rig/rig-view.ts';
-import { rigSet } from './rig/rigs.ts';
+import { RIGS, rigSet, type RigSet } from './rig/rigs.ts';
 import { boneOrigin } from './rig/runtime.ts';
 import { AIM_POSE, UnitAnimator, type UnitAnimInput } from './rig/unit-anim.ts';
 import { aimPreviewTicks, classOf, maxHpOf, visibleMines } from '../sim/classes.ts';
+import type { ClassId } from '../content/classes.ts';
 import { heldAim, launchPoint, shotSpeed } from '../sim/weapons/weapons.ts';
 import {
   targetFor,
@@ -214,6 +215,8 @@ const SHOT_SFX: Readonly<Partial<Record<WeaponId, SfxId>>> = {
 const BURST_MS = 520;
 /** The knight's cutout rig (render/rig, BACKLOG 6.1); the other classes keep their drawings. */
 const KNIGHT_RIG = rigSet('knight');
+/** The rig of each class: the knight's skeleton and animations, its own pieces (2026-10-31). */
+const rigOf = (cls: ClassId | null): RigSet => RIGS.get(cls ?? 'knight') ?? KNIGHT_RIG;
 /** Rigged figures over the world's Graphics, under what is drawn in front of them. */
 const RIG_DEPTH = 6.05;
 const FRONT_DEPTH = 6.1;
@@ -452,7 +455,9 @@ export class BattleScene extends Phaser.Scene {
     this.scenery = new Scenery(this, this.sim.view().terrain, map.theme);
     this.terrain = new TerrainLayer(this, () => this.sim.view().terrain, map.theme);
     this.world = this.add.graphics().setDepth(6);
-    rigTextures(this, KNIGHT_RIG.rig, KNIGHT_PIECES);
+    for (const set of RIGS.values()) {
+      rigTextures(this, set.rig, set.rig.id === 'knight' ? KNIGHT_PIECES : {});
+    }
     this.front = this.add.graphics().setDepth(FRONT_DEPTH);
     // In front of the units it swoops on, behind their labels.
     this.dragonImg = this.add
@@ -1609,9 +1614,9 @@ export class BattleScene extends Phaser.Scene {
       const secondary = faction?.secondary ?? COLORS.or;
       const isActive = u.alive && u.id === turn.activeUnitId && turn.phase !== 'gameOver';
       const cls = classOf(v, u);
-      const rigged = (cls ?? 'knight') === 'knight';
+      const rigged = RIGS.has(cls ?? 'knight');
       // A rigged figure plays its death before the tombstone takes its place.
-      const animator = rigged ? this.animatorFor(u) : null;
+      const animator = rigged ? this.animatorFor(u, cls) : null;
       if (animator) {
         const events = animator.update(this.animInput(u, isActive), seconds);
         if (events.includes('dust')) this.dust.push({ x, y, born: time });
@@ -1633,7 +1638,7 @@ export class BattleScene extends Phaser.Scene {
           const head = boneOrigin(KNIGHT_RIG.rig, pose, 'head');
           drawNimbus(g, x + u.facing * (head.x + 1), y + head.y - 9, time);
         }
-        this.rigViewFor(u.id).show(pose, x, y, u.facing, { primary, secondary });
+        this.rigViewFor(u.id, cls).show(pose, x, y, u.facing, { primary, secondary });
       } else {
         drawFigure(g, x, y, u.facing, primary, secondary, cls, isActive, time);
         drawClassMark(g, cls, x, y, u.facing);
@@ -2511,19 +2516,20 @@ export class BattleScene extends Phaser.Scene {
   }
 
   /** The animator of a rigged unit; one already dead when first seen lies under its stone. */
-  private animatorFor(u: SimView['units'][number]): UnitAnimator {
+  private animatorFor(u: SimView['units'][number], cls: ClassId | null): UnitAnimator {
     let a = this.animators.get(u.id);
     if (!a) {
-      a = new UnitAnimator(KNIGHT_RIG.rig, KNIGHT_RIG.anims, u.alive);
+      const set = rigOf(cls);
+      a = new UnitAnimator(set.rig, set.anims, u.alive);
       this.animators.set(u.id, a);
     }
     return a;
   }
 
-  private rigViewFor(unitId: number): RigView {
+  private rigViewFor(unitId: number, cls: ClassId | null): RigView {
     let r = this.rigViews.get(unitId);
     if (!r) {
-      r = new RigView(this, KNIGHT_RIG.rig, RIG_DEPTH);
+      r = new RigView(this, rigOf(cls).rig, RIG_DEPTH);
       this.hudCam.ignore(r.container);
       this.rigViews.set(unitId, r);
     }

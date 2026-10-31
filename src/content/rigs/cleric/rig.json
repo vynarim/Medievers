@@ -1,0 +1,423 @@
+{
+  "format": "medieverse.rig/1",
+  "id": "cleric",
+  "height": 80,
+  "anims": "knight",
+  "bones": [
+    {
+      "id": "root",
+      "parent": null,
+      "x": 0,
+      "y": 0,
+      "rot": 0
+    },
+    {
+      "id": "center",
+      "parent": "root",
+      "x": 0,
+      "y": -40,
+      "rot": 0
+    },
+    {
+      "id": "pelvis",
+      "parent": "center",
+      "x": 0,
+      "y": 16,
+      "rot": 0
+    },
+    {
+      "id": "thigh_far",
+      "parent": "pelvis",
+      "x": -3,
+      "y": 0,
+      "rot": 0
+    },
+    {
+      "id": "shin_far",
+      "parent": "thigh_far",
+      "x": 0,
+      "y": 11,
+      "rot": 0
+    },
+    {
+      "id": "foot_far",
+      "parent": "shin_far",
+      "x": 0,
+      "y": 9,
+      "rot": 0
+    },
+    {
+      "id": "thigh_near",
+      "parent": "pelvis",
+      "x": 3,
+      "y": 0,
+      "rot": 0
+    },
+    {
+      "id": "shin_near",
+      "parent": "thigh_near",
+      "x": 0,
+      "y": 11,
+      "rot": 0
+    },
+    {
+      "id": "foot_near",
+      "parent": "shin_near",
+      "x": 0,
+      "y": 9,
+      "rot": 0
+    },
+    {
+      "id": "torso",
+      "parent": "center",
+      "x": 0,
+      "y": 0,
+      "rot": 0
+    },
+    {
+      "id": "head",
+      "parent": "torso",
+      "x": 1,
+      "y": -17,
+      "rot": 0
+    },
+    {
+      "id": "arm_far_upper",
+      "parent": "torso",
+      "x": -8,
+      "y": -17,
+      "rot": 0
+    },
+    {
+      "id": "arm_far_lower",
+      "parent": "arm_far_upper",
+      "x": -5,
+      "y": 9,
+      "rot": 0
+    },
+    {
+      "id": "hand_far",
+      "parent": "arm_far_lower",
+      "x": 0,
+      "y": 8,
+      "rot": 0
+    },
+    {
+      "id": "arm_near_upper",
+      "parent": "torso",
+      "x": 7,
+      "y": -17,
+      "rot": 0
+    },
+    {
+      "id": "arm_near_lower",
+      "parent": "arm_near_upper",
+      "x": 5,
+      "y": 10,
+      "rot": 0
+    },
+    {
+      "id": "hand_near",
+      "parent": "arm_near_lower",
+      "x": 7,
+      "y": 9.5,
+      "rot": 0
+    }
+  ],
+  "pieces": [
+    {
+      "id": "thigh_far",
+      "bone": "thigh_far",
+      "key": "unit_cleric_thigh_far",
+      "size": [
+        14,
+        25
+      ],
+      "pivot": [
+        7,
+        8
+      ],
+      "tint": null
+    },
+    {
+      "id": "shin_far",
+      "bone": "shin_far",
+      "key": "unit_cleric_shin_far",
+      "size": [
+        12,
+        20
+      ],
+      "pivot": [
+        6,
+        6
+      ],
+      "tint": null
+    },
+    {
+      "id": "foot_far",
+      "bone": "foot_far",
+      "key": "unit_cleric_foot_far",
+      "size": [
+        16,
+        7
+      ],
+      "pivot": [
+        5,
+        2
+      ],
+      "tint": null
+    },
+    {
+      "id": "thigh_near",
+      "bone": "thigh_near",
+      "key": "unit_cleric_thigh_near",
+      "size": [
+        14,
+        25
+      ],
+      "pivot": [
+        7,
+        8
+      ],
+      "tint": null
+    },
+    {
+      "id": "shin_near",
+      "bone": "shin_near",
+      "key": "unit_cleric_shin_near",
+      "size": [
+        12,
+        20
+      ],
+      "pivot": [
+        6,
+        6
+      ],
+      "tint": null
+    },
+    {
+      "id": "foot_near",
+      "bone": "foot_near",
+      "key": "unit_cleric_foot_near",
+      "size": [
+        16,
+        7
+      ],
+      "pivot": [
+        5,
+        2
+      ],
+      "tint": null
+    },
+    {
+      "id": "arm_far_upper",
+      "bone": "arm_far_upper",
+      "key": "unit_cleric_arm_far_upper_tint",
+      "size": [
+        17,
+        21
+      ],
+      "pivot": [
+        11,
+        6
+      ],
+      "tint": "primary"
+    },
+    {
+      "id": "arm_far_lower",
+      "bone": "arm_far_lower",
+      "key": "unit_cleric_arm_far_lower",
+      "size": [
+        12,
+        19
+      ],
+      "pivot": [
+        6,
+        6
+      ],
+      "tint": null
+    },
+    {
+      "id": "crosier",
+      "bone": "hand_far",
+      "key": "unit_cleric_crosier",
+      "size": [
+        16,
+        88
+      ],
+      "pivot": [
+        11,
+        48
+      ],
+      "tint": null
+    },
+    {
+      "id": "hand_far",
+      "bone": "hand_far",
+      "key": "unit_cleric_hand_far",
+      "size": [
+        11,
+        10
+      ],
+      "pivot": [
+        6,
+        4
+      ],
+      "tint": null
+    },
+    {
+      "id": "alb",
+      "bone": "torso",
+      "key": "unit_cleric_alb",
+      "size": [
+        38,
+        64
+      ],
+      "pivot": [
+        19,
+        24
+      ],
+      "tint": null
+    },
+    {
+      "id": "torso",
+      "bone": "torso",
+      "key": "unit_cleric_torso_tint",
+      "size": [
+        38,
+        49
+      ],
+      "pivot": [
+        19,
+        24
+      ],
+      "tint": "primary"
+    },
+    {
+      "id": "orphrey",
+      "bone": "torso",
+      "key": "unit_cleric_orphrey",
+      "size": [
+        12,
+        47
+      ],
+      "pivot": [
+        3,
+        23
+      ],
+      "tint": null
+    },
+    {
+      "id": "arm_near_upper",
+      "bone": "arm_near_upper",
+      "key": "unit_cleric_arm_near_upper_tint",
+      "size": [
+        17,
+        22
+      ],
+      "pivot": [
+        6,
+        6
+      ],
+      "tint": "primary"
+    },
+    {
+      "id": "arm_near_lower",
+      "bone": "arm_near_lower",
+      "key": "unit_cleric_arm_near_lower_tint",
+      "size": [
+        18,
+        20
+      ],
+      "pivot": [
+        6,
+        6
+      ],
+      "tint": "primary"
+    },
+    {
+      "id": "hand_near",
+      "bone": "hand_near",
+      "key": "unit_cleric_hand_near",
+      "size": [
+        11,
+        11
+      ],
+      "pivot": [
+        5,
+        5.5
+      ],
+      "tint": null
+    },
+    {
+      "id": "weapon_bow",
+      "bone": "hand_near",
+      "key": "weapon_bow_held",
+      "size": [
+        34,
+        27
+      ],
+      "pivot": [
+        17,
+        13.5
+      ],
+      "tint": null,
+      "slot": {
+        "slot": "weapon",
+        "attachment": "bow"
+      }
+    },
+    {
+      "id": "weapon_stone",
+      "bone": "hand_near",
+      "key": "weapon_stone_held",
+      "size": [
+        14,
+        13
+      ],
+      "pivot": [
+        6,
+        8.5
+      ],
+      "tint": null,
+      "slot": {
+        "slot": "weapon",
+        "attachment": "stone"
+      }
+    },
+    {
+      "id": "neck",
+      "bone": "torso",
+      "key": "unit_cleric_neck",
+      "size": [
+        13,
+        10
+      ],
+      "pivot": [
+        5,
+        21
+      ],
+      "tint": null
+    },
+    {
+      "id": "head",
+      "bone": "head",
+      "key": "unit_cleric_head_01",
+      "size": [
+        28,
+        32
+      ],
+      "pivot": [
+        13,
+        27
+      ],
+      "tint": null
+    }
+  ],
+  "slots": [
+    {
+      "id": "weapon",
+      "default": null
+    }
+  ]
+}

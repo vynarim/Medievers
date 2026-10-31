@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Medieverse: the cleric, source of the rig's pieces (ASSETS §3.5, §9). The knight's skeleton and
+  animations; the whole figure at rest in the rig's frame (px ×1, facing right, feet at (0, 0),
+  y down), one group `piece-<id>` per piece of rig.json, rendered at ×2 by `pnpm run art`.
+  Pieces tinted to the house's colours are drawn in neutral greys (ASSETS §2). The held bow and
+  stone are the knight's (same keys). Generated once, then drawn on by hand.
+  © 2026 vynarim, all rights reserved (public/assets/LICENSE.md).
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-40 -94 80 98" width="320" height="392">
+  <defs>
+    <pattern id="mail" width="2.6" height="2.2" patternUnits="userSpaceOnUse">
+      <rect width="2.6" height="2.2" fill="#a7a4a6"/>
+      <path d="M0 0.5q0.65 1 1.3 0q0.65 1 1.3 0M-1.3 1.6q0.65 1 1.3 0q0.65 1 1.3 0q0.65 1 1.3 0"
+        fill="none" stroke="#2a1d14" stroke-width="0.32" stroke-opacity="0.75"/>
+    </pattern>
+    <pattern id="mail-far" width="2.6" height="2.2" patternUnits="userSpaceOnUse">
+      <rect width="2.6" height="2.2" fill="#8a8789"/>
+      <path d="M0 0.5q0.65 1 1.3 0q0.65 1 1.3 0M-1.3 1.6q0.65 1 1.3 0q0.65 1 1.3 0q0.65 1 1.3 0"
+        fill="none" stroke="#2a1d14" stroke-width="0.32" stroke-opacity="0.8"/>
+    </pattern>
+  </defs>
+  <g stroke="#2a1d14" stroke-linejoin="round" stroke-linecap="round">
+    <g id="piece-thigh_far">
+      <path d="M-7.2 -26 C-7.4 -20 -7.0 -16 -6.6 -13 A3.6 3.6 0 0 0 0.6 -13 C1.0 -16 1.2 -20 1.2 -26 Z" fill="#3a2a20" stroke-width="1"/>
+    </g>
+    <g id="piece-shin_far">
+      <path d="M-6.6 -14 C-6.6 -10 -6.2 -7 -6.0 -4.4 A3 3 0 0 0 0.0 -4.4 C0.2 -7 0.6 -10 0.6 -14 A3.6 3.6 0 0 0 -6.6 -14 Z" fill="#3a2a20" stroke-width="1"/>
+    </g>
+    <g id="piece-foot_far">
+      <path d="M-6.4 -4.8 C-6.6 -2.6 -6.4 -0.8 -5.8 -0.2 L5.6 -0.2 C6.4 -0.4 6.6 -1.4 5.6 -1.8 C3.0 -2.6 1.0 -3.6 0.2 -5 Z" fill="#2a1d14" stroke-width="0.95"/>
+    </g>
+    <g id="piece-thigh_near">
+      <path d="M-1.2 -26 C-1.4 -20 -1.0 -16 -0.6 -13 A3.6 3.6 0 0 0 6.6 -13 C7.0 -16 7.2 -20 7.2 -26 Z" fill="#4a3424" stroke-width="1"/>
+    </g>
+    <g id="piece-shin_near">
+      <path d="M-0.6 -14 C-0.6 -10 -0.2 -7 0.0 -4.4 A3 3 0 0 0 6.0 -4.4 C6.2 -7 6.6 -10 6.6 -14 A3.6 3.6 0 0 0 -0.6 -14 Z" fill="#4a3424" stroke-width="1"/>
+    </g>
+    <g id="piece-foot_near">
+      <path d="M-0.4 -4.8 C-0.6 -2.6 -0.4 -0.8 0.2 -0.2 L11.6 -0.2 C12.4 -0.4 12.6 -1.4 11.6 -1.8 C9.0 -2.6 7.0 -3.6 6.2 -5 Z" fill="#2a1d14" stroke-width="0.95"/>
+    </g>
+    <g id="piece-arm_far_upper">
+      <path d="M-11.4 -58.6 C-13.4 -55 -15.6 -51 -16 -48.6 A3 3 0 0 0 -10 -47.4 C-9.4 -50 -6.8 -53.4 -4.8 -56 A3.6 3.6 0 0 0 -11.4 -58.6 Z" fill="#bcbcbc" stroke-width="1.0"/>
+    </g>
+    <g id="piece-arm_far_lower">
+      <path d="M-16 -48 C-16.2 -45 -16 -42.4 -15.8 -40 A2.8 2.8 0 0 0 -10.2 -40 C-10 -42.4 -9.8 -45 -10 -48 A3 3 0 0 0 -16 -48 Z" fill="#d9cfb6" stroke-width="1.0"/>
+    </g>
+    <g id="piece-crosier">
+      <path d="M-14.6 -76 L-12.4 -76 L-12.6 -2 L-14.4 -2 Z" fill="#8a5a32" stroke-width="0.8"/>
+      <path d="M-13.4 -76 C-13.6 -82 -17.4 -86.4 -21.4 -84.6 C-24.4 -83.2 -23.4 -78.6 -20.4 -78.8 C-18.4 -79 -18.6 -81.4 -19.8 -81.6" fill="none" stroke="#2a1d14" stroke-width="3"/>
+      <path d="M-13.4 -76 C-13.6 -82 -17.4 -86.4 -21.4 -84.6 C-24.4 -83.2 -23.4 -78.6 -20.4 -78.8 C-18.4 -79 -18.6 -81.4 -19.8 -81.6" fill="none" stroke="#d4a93c" stroke-width="1.6"/>
+      <path d="M-15.6 -76.6 L-11.4 -76.6 L-11.8 -73.6 L-15.2 -73.6 Z" fill="#d4a93c" stroke-width="0.7"/>
+    </g>
+    <g id="piece-hand_far">
+      <path d="M-16.6 -40.6 C-17 -38 -16 -36 -13.6 -35.8 C-11.2 -35.8 -10.2 -37.8 -10.6 -40.6 C-12.4 -41.8 -14.8 -41.8 -16.6 -40.6 Z" fill="#e0bc9c" stroke-width="0.95"/>
+    </g>
+    <g id="piece-alb">
+      <path d="M-9 -60 L9 -60 C11 -44 13.6 -20 15.2 -3.4 C5 -1.8 -5 -1.8 -14.8 -3.4 C-13.2 -20 -11 -44 -9 -60 Z" fill="#f3ecd9" stroke-width="1.1"/>
+      <path d="M-5 -24 C-6.4 -16 -7.6 -9 -8.4 -3 M2 -24 C2.4 -16 2.6 -9 2.8 -2.4 M8.6 -24 C9.8 -16 10.8 -9 11.6 -3" fill="none" stroke="#c8bfa8" stroke-width="0.9"/>
+    </g>
+    <g id="piece-torso">
+      <path d="M-5.6 -61.6 C-1.6 -62.6 2.6 -62.6 6 -61.6 C11 -61 14.2 -57 15 -50 C16.2 -40 16 -30 12 -20.6 C4 -16.6 -4 -16.6 -12 -20.6 C-16 -30 -16.2 -40 -15 -50 C-14.2 -57 -10.6 -61 -5.6 -61.6 Z" fill="#d8d8d8" stroke-width="1.1"/>
+      <path d="M-9.8 -50 C-11.6 -40 -11.6 -30 -9.4 -21.4 M10 -50 C11.8 -40 11.8 -30 9.4 -21.2" fill="none" stroke="#9c9c9c" stroke-width="1"/>
+      <path d="M-6.6 -46 C-7.6 -38 -7.6 -30 -6.4 -20" fill="none" stroke="#f6f6f6" stroke-width="0.6"/>
+    </g>
+    <g id="piece-orphrey">
+      <path d="M1.2 -61.8 L4.8 -61.8 L4.8 -18 L1.2 -18 Z" fill="#d4a93c" stroke-width="0.8"/>
+      <path d="M3 -56 L3 -50 M0.6 -53 L5.4 -53" fill="none" stroke="#b8322a" stroke-width="1"/>
+      <circle cx="3" cy="-40" r="0.8" fill="#b8322a" stroke="none"/><circle cx="3" cy="-30" r="0.8" fill="#b8322a" stroke="none"/>
+    </g>
+    <g id="piece-arm_near_upper">
+      <path d="M3.2 -59.6 C6 -56 9.2 -51.4 10.4 -47 C12.8 -45.6 15.6 -46.6 16.4 -49 C14.8 -53 12.2 -56.8 10.4 -59 C8 -61 4.8 -61 3.2 -59.6 Z" fill="#d8d8d8" stroke-width="1.0"/>
+      <path d="M7 -55.6 L10.4 -50.4" fill="none" stroke="#9c9c9c" stroke-width="0.8"/>
+    </g>
+    <g id="piece-arm_near_lower">
+      <path d="M9.2 -49.6 C12 -46 14.4 -42.6 16 -39.2 C18.6 -37.4 22.6 -39.6 22.4 -43 C20.2 -46 17.2 -49.4 14.6 -51.8 C12.6 -52.6 10.2 -51.6 9.2 -49.6 Z" fill="#d8d8d8" stroke-width="1.0"/>
+      <path d="M13 -47.6 L17.6 -42.4" fill="none" stroke="#9c9c9c" stroke-width="0.8"/>
+    </g>
+    <g id="piece-hand_near">
+      <path d="M16.4 -40.4 C15.6 -38 16.6 -35.4 19.2 -34.8 C21.8 -34.4 23.4 -36.4 23 -39 C22.6 -41 20.8 -42 18.8 -41.8 C17.8 -41.6 17 -41.2 16.4 -40.4 Z" fill="#f0cfb0" stroke-width="0.95"/>
+    </g>
+    <g id="piece-neck">
+      <path d="M-0.6 -59.6 L6.4 -59.6 L6.8 -52.4 C4 -51.6 1 -51.6 -1 -52.4 Z" fill="#f0cfb0" stroke-width="0.95"/>
+    </g>
+    <g id="piece-head">
+      <path d="M-3.6 -73 C-3.4 -78 1 -80.2 5.2 -79.6 C9.6 -79 12 -75.6 12 -71 C12 -69.4 12.8 -68.2 13.4 -66.8 C13.8 -66 13.2 -65.4 12.4 -65.2 C12.6 -63.8 12.2 -62.6 11.4 -61.8 C10.4 -59.4 7.6 -57.6 4.2 -57.8 C0.4 -58 -3 -61 -3.8 -65.4 C-4.2 -68 -4 -70.6 -3.6 -73 Z" fill="#f0cfb0" stroke-width="1.0"/>
+      <circle cx="8.4" cy="-64.4" r="1.4" fill="#c96a6e" fill-opacity="0.55" stroke="none"/>
+      <path d="M6.6 -69.2 Q8.4 -70.6 10.2 -69.2 Q8.4 -68.2 6.6 -69.2 Z" fill="#2a1d14" stroke-width="0.3"/>
+      <path d="M5.8 -71.8 Q8.4 -73.6 10.8 -72" fill="none" stroke-width="0.6"/>
+      <path d="M9.2 -62.4 Q10.4 -62 11.4 -62.6" fill="none" stroke-width="0.6"/>
+      <path d="M0.8 -68.8 C-0.8 -68.8 -1.2 -65.2 0.6 -64.6" fill="none" stroke-width="0.6"/>
+      <path d="M-3.6 -73 C-3 -76.4 -1 -78.6 1.6 -79.4 C1 -77.4 1.4 -75.6 2.6 -74.6 C4.8 -76.4 8.8 -76.6 11.6 -74.4 C12 -76 11.6 -77.2 11 -78 C11.8 -76.6 12.4 -75 12.2 -72.6 C9.4 -74.8 5 -74.8 2.4 -72.8 C0.2 -70.6 -0.4 -67 -0.2 -64.4 C-2.8 -64.6 -4.2 -67.6 -3.6 -73 Z" fill="#8a5a32" stroke-width="0.8"/>
+    </g>
+  </g>
+</svg>

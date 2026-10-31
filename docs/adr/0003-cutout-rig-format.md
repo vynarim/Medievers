@@ -43,3 +43,7 @@ Le choix de l'animation à partir de l'état de la sim (`src/render/rig/unit-ani
 - Les échelles non uniformes d'un os parent ne se propagent pas proprement à ses enfants tournés (cisaillement ignoré) : garder `sx = sy` sur les os qui ont des enfants.
 - Seul le Chevalier est riggé au 6.1 ; les cinq autres classes gardent leur dessin (`figures.ts`) jusqu'à leurs rigs (lot 9, ou plus tôt sur demande).
 - Le format est versionné : un changement incompatible passe à `/2`, avec mise à jour de cet ADR.
+
+## Avenant du 2026-10-31
+
+Les cinq autres classes (Archer, Frondeur, Sapeur, Clerc, Roi) ont leur rig, sur le squelette du Chevalier : mêmes os, pièces propres (chaperon et carquois, fronde, tablier et pioche, aube, chasuble et crosse, manteau, col d'hermine et couronne). Plutôt que de copier treize animations par classe, `rig.json` gagne un champ optionnel `anims` : l'id du rig dont il joue les animations, vérifiées contre ses propres os. Une classe pourra plus tard avoir ses propres animations en retirant ce champ et en remplissant son dossier `anim/`.
