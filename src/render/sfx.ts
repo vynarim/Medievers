@@ -50,7 +50,7 @@ export type SfxId =
 const SAME_SFX_MS = 45;
 /** length of the rain's loop, s, and how many drops fall in a second */
 const RAIN_LOOP_S = 6;
-const RAIN_DROPS_PER_S = 140;
+const RAIN_DROPS_PER_S = 100;
 /** effects at most within one frame */
 const MAX_PER_FRAME = 6;
 

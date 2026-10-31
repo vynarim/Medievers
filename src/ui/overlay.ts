@@ -53,7 +53,9 @@ const STYLE = `
   border: 6px solid transparent; border-top: 9px solid var(--encre); border-bottom: 0; }
 #ui .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 12px; }
 #ui .tabs button { min-height: 40px; font-size: 16px; }
-/* Test settings, « Bruitages »: a button per effect. */
+/* Test settings, « Bruitages »: its tab in azure, apart from the values' tabs; a button per effect. */
+#ui .tabs button.tab-sfx { background: var(--azur); color: var(--ceruse); }
+#ui .tabs button.tab-sfx.on { background: var(--lapis); }
 #ui .sfx-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; }
 #ui .sfx-grid button { font-size: 15px; min-height: 40px; padding: 4px 8px; }
 #ui .options { width: min(620px, calc(100vw - 32px)); }
@@ -160,8 +162,10 @@ const STYLE = `
   align-items: center; justify-content: center; padding: 32px; text-align: center; font-size: 22px; }
 /* Modals */
 #ui .veil { position: absolute; inset: 0; background: var(--shade); pointer-events: auto; }
+/* Heights in % of the overlay (fixed to the visible window), not in vh: an installed app on
+   Android counts its system bars in 100vh, which pushed the foot of a window off the screen. */
 #ui .modal { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
-  max-width: min(780px, calc(100vw - 32px)); max-height: calc(100vh - 48px); overflow: auto;
+  max-width: min(780px, calc(100vw - 32px)); max-height: calc(100% - 48px); overflow: auto;
   padding: 20px 28px 22px; }
 #ui h2 { margin: 0 0 12px; padding-bottom: 6px; color: var(--lapis); font-family: var(--title);
   font-weight: normal; font-size: 36px; line-height: 1.1;
@@ -191,8 +195,8 @@ const STYLE = `
 #ui .weapon .art { float: right; margin: 0 0 4px 8px; line-height: 0; }
 #ui .weapon:disabled .art { filter: grayscale(1); }
 #ui .card { position: absolute; right: 12px; top: 182px; width: var(--col);
-  max-height: calc(100vh - 290px); overflow: auto; padding: 14px 18px; font-size: 16px; line-height: 1.4; }
-#ui .card.left { right: auto; left: 12px; top: 250px; max-height: calc(100vh - 358px); }
+  max-height: calc(100% - 290px); overflow: auto; padding: 14px 18px; font-size: 16px; line-height: 1.4; }
+#ui .card.left { right: auto; left: 12px; top: 250px; max-height: calc(100% - 358px); }
 #ui .card h2 { font-size: 30px; margin-bottom: 4px; }
 #ui .card .house { font-family: var(--caps); font-size: 18px; margin-bottom: 8px; display: flex;
   gap: 8px; align-items: center; }
@@ -209,7 +213,7 @@ const STYLE = `
 #ui .note { font-size: 16px; margin: 0 0 6px; }
 #ui .actions { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
 /* The help keeps one size on every page, so its buttons never move under the finger. */
-#ui .help { width: min(640px, calc(100vw - 32px)); height: min(680px, calc(100vh - 48px));
+#ui .help { width: min(640px, calc(100vw - 32px)); height: min(680px, calc(100% - 48px));
   display: flex; flex-direction: column; overflow: hidden; }
 #ui .help .tuto-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
 #ui .help .tuto-body p:last-child { margin-bottom: 0; }
@@ -280,7 +284,7 @@ const STYLE = `
 /* A phone held upright: one column, the flavour folded, the HUD packed into the corners, and
    the battlefield above the action bar (--bar-h, set by watchBar), never under it. */
 html.phone #game { height: calc(100% - var(--bar-h, 0px)); }
-#ui.phone .modal { max-height: calc(100vh - 24px); padding: 16px 18px 18px; }
+#ui.phone .modal { max-height: calc(100% - 24px); padding: 16px 18px 18px; }
 #ui.phone .actions { justify-content: center; }
 #ui.phone .sys { flex-direction: column; align-items: flex-end; }
 #ui.phone .sys .fullscreen, #ui.phone .sys .sys-help, #ui.phone .sys .sys-music,

@@ -998,7 +998,7 @@ export class GameUi {
     // The last tab: every sound effect, to hear one at a time.
     const sounds = this.sfxBoard();
     const n = pages.length;
-    tabs.append(this.click(button(t('tuning.group.sfx')), () => showTab(n)));
+    tabs.append(this.click(button(t('tuning.group.sfx'), 'tab-sfx'), () => showTab(n)));
     pages.push(sounds);
     this.settings.append(sounds);
     showTab(Math.min(this.settingsTab, pages.length - 1));
