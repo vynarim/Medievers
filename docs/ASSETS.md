@@ -119,6 +119,26 @@ Jusqu'à la production artistique (BACKLOG, lot 9), aucun fichier image n'est re
 | victory, taunt | non | 1,5 s | P1 |
 | clerc_bless (VFX halo) | non | 1 s | P1 |
 
+### 3.5 Rig du Chevalier (format figé le 2026-10-31, TECH_SPEC §7.1, [ADR 0003](adr/0003-cutout-rig-format.md))
+
+Source de vérité : `src/content/rigs/knight/rig.json` (tailles et pivots en px ×1 ; produire à ×2). Les placeholders actuels sont dessinés par `src/render/rig/knight-art.ts` aux mêmes tailles et pivots ; déposer le PNG d'une clé le remplace.
+
+| Ordre | Pièce | Os | Clé | Teinte |
+|---|---|---|---|---|
+| 1–3 | cuisse, jambe, pied (loin) | `thigh_far`, `shin_far`, `foot_far` | `unit_knight_thigh_far`… | — |
+| 4–6 | cuisse, jambe, pied (près) | `thigh_near`, `shin_near`, `foot_near` | `unit_knight_thigh_near`… | — |
+| 7–9 | bras haut, avant-bras, main (loin) | `arm_far_*`, `hand_far` | `unit_knight_arm_far_upper`… | — |
+| 10 | écu | `arm_far_lower` | `unit_knight_shield_tint` | champ |
+| 11 | meuble de l'écu (chevron, zone du blason du 6.2) | `arm_far_lower` | `unit_knight_shield_charge_tint` | seconde |
+| 12 | cotte (buste) | `torso` | `unit_knight_torso_tint` | champ |
+| 13–14 | ceinture, boucle | `torso` | `unit_knight_belt_tint`, `unit_knight_buckle` | seconde, — |
+| 15–17 | bras haut, avant-bras, main (près) | `arm_near_*`, `hand_near` | `unit_knight_arm_near_upper`… | — |
+| 18–19 | arc tenu, pierre tenue (slot `weapon`) | `hand_near` | `weapon_bow_held`, `weapon_stone_held` | — |
+| 20 | camail (cou) | `torso` | `unit_knight_neck` | — |
+| 21 | heaume | `head` | `unit_knight_helm_01` | — |
+
+Os de rotation : genoux et chevilles à 13 et 4 px du sol, hanches à 24, taille à 40, cou à 57 ; `center` (taille) porte les culbutes, `root` (pieds) la chute raide de la mort. Animations P0 livrées : `idle`, `walk`, `jump_forward`, `jump_back`, `fall`, `land`, `fly_tumble`, `hurt`, `aim_bow`, `fire_bow`, `aim_throw`, `fire_throw`, `death`.
+
 ## 4. Armes et objets
 
 ### 4.1 Icônes d'arsenal (128 × 128 ×2, sur fond de cartouche)

@@ -1,0 +1,70 @@
+{
+  "format": "medieverse.anim/1",
+  "id": "fly_tumble",
+  "rig": "knight",
+  "duration": 0.6,
+  "mode": "loop",
+  "mix": 0.1,
+  "tracks": {
+    "center": {
+      "rot": [
+        {
+          "t": 0,
+          "v": 0
+        },
+        {
+          "t": 0.6,
+          "v": 360
+        }
+      ]
+    },
+    "thigh_near": {
+      "rot": [
+        {
+          "t": 0,
+          "v": -30
+        }
+      ]
+    },
+    "shin_near": {
+      "rot": [
+        {
+          "t": 0,
+          "v": 30
+        }
+      ]
+    },
+    "thigh_far": {
+      "rot": [
+        {
+          "t": 0,
+          "v": 20
+        }
+      ]
+    },
+    "shin_far": {
+      "rot": [
+        {
+          "t": 0,
+          "v": 35
+        }
+      ]
+    },
+    "arm_near_upper": {
+      "rot": [
+        {
+          "t": 0,
+          "v": -90
+        }
+      ]
+    },
+    "arm_far_upper": {
+      "rot": [
+        {
+          "t": 0,
+          "v": -60
+        }
+      ]
+    }
+  }
+}

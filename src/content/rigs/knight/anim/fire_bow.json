@@ -1,0 +1,80 @@
+{
+  "format": "medieverse.anim/1",
+  "id": "fire_bow",
+  "rig": "knight",
+  "duration": 0.35,
+  "mode": "once",
+  "mix": 0.03,
+  "slots": {
+    "weapon": [
+      {
+        "t": 0,
+        "v": "bow"
+      }
+    ]
+  },
+  "aim": [
+    {
+      "bone": "arm_near_upper",
+      "weight": 1
+    }
+  ],
+  "events": [
+    {
+      "t": 0.03,
+      "name": "release"
+    }
+  ],
+  "tracks": {
+    "torso": {
+      "rot": [
+        {
+          "t": 0,
+          "v": 2
+        }
+      ]
+    },
+    "arm_near_upper": {
+      "rot": [
+        {
+          "t": 0,
+          "v": -63
+        },
+        {
+          "t": 0.04,
+          "v": -56,
+          "ease": "easeInOut"
+        },
+        {
+          "t": 0.35,
+          "v": -63
+        }
+      ]
+    },
+    "arm_near_lower": {
+      "rot": [
+        {
+          "t": 0,
+          "v": 11
+        }
+      ]
+    },
+    "arm_far_upper": {
+      "rot": [
+        {
+          "t": 0,
+          "v": -10
+        },
+        {
+          "t": 0.04,
+          "v": 6,
+          "ease": "easeInOut"
+        },
+        {
+          "t": 0.35,
+          "v": -10
+        }
+      ]
+    }
+  }
+}

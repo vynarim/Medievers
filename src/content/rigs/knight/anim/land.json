@@ -1,0 +1,133 @@
+{
+  "format": "medieverse.anim/1",
+  "id": "land",
+  "rig": "knight",
+  "duration": 0.3,
+  "mode": "once",
+  "mix": 0.04,
+  "events": [
+    {
+      "t": 0,
+      "name": "dust"
+    }
+  ],
+  "tracks": {
+    "center": {
+      "y": [
+        {
+          "t": 0,
+          "v": 4,
+          "ease": "easeOut"
+        },
+        {
+          "t": 0.3,
+          "v": 0
+        }
+      ]
+    },
+    "thigh_near": {
+      "rot": [
+        {
+          "t": 0,
+          "v": -28,
+          "ease": "easeOut"
+        },
+        {
+          "t": 0.3,
+          "v": 0
+        }
+      ]
+    },
+    "shin_near": {
+      "rot": [
+        {
+          "t": 0,
+          "v": 50,
+          "ease": "easeOut"
+        },
+        {
+          "t": 0.3,
+          "v": 0
+        }
+      ]
+    },
+    "foot_near": {
+      "rot": [
+        {
+          "t": 0,
+          "v": -22,
+          "ease": "easeOut"
+        },
+        {
+          "t": 0.3,
+          "v": 0
+        }
+      ]
+    },
+    "thigh_far": {
+      "rot": [
+        {
+          "t": 0,
+          "v": -28,
+          "ease": "easeOut"
+        },
+        {
+          "t": 0.3,
+          "v": 0
+        }
+      ]
+    },
+    "shin_far": {
+      "rot": [
+        {
+          "t": 0,
+          "v": 50,
+          "ease": "easeOut"
+        },
+        {
+          "t": 0.3,
+          "v": 0
+        }
+      ]
+    },
+    "foot_far": {
+      "rot": [
+        {
+          "t": 0,
+          "v": -22,
+          "ease": "easeOut"
+        },
+        {
+          "t": 0.3,
+          "v": 0
+        }
+      ]
+    },
+    "arm_near_upper": {
+      "rot": [
+        {
+          "t": 0,
+          "v": -40,
+          "ease": "easeOut"
+        },
+        {
+          "t": 0.3,
+          "v": 0
+        }
+      ]
+    },
+    "arm_far_upper": {
+      "rot": [
+        {
+          "t": 0,
+          "v": -30,
+          "ease": "easeOut"
+        },
+        {
+          "t": 0.3,
+          "v": 0
+        }
+      ]
+    }
+  }
+}

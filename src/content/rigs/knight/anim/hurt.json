@@ -1,0 +1,83 @@
+{
+  "format": "medieverse.anim/1",
+  "id": "hurt",
+  "rig": "knight",
+  "duration": 0.4,
+  "mode": "once",
+  "mix": 0.04,
+  "tracks": {
+    "center": {
+      "x": [
+        {
+          "t": 0,
+          "v": -3,
+          "ease": "easeOut"
+        },
+        {
+          "t": 0.4,
+          "v": 0
+        }
+      ]
+    },
+    "torso": {
+      "rot": [
+        {
+          "t": 0,
+          "v": -14
+        },
+        {
+          "t": 0.1,
+          "v": -14,
+          "ease": "easeInOut"
+        },
+        {
+          "t": 0.4,
+          "v": 0
+        }
+      ]
+    },
+    "head": {
+      "rot": [
+        {
+          "t": 0,
+          "v": -18
+        },
+        {
+          "t": 0.1,
+          "v": -18,
+          "ease": "easeInOut"
+        },
+        {
+          "t": 0.4,
+          "v": 0
+        }
+      ]
+    },
+    "arm_near_upper": {
+      "rot": [
+        {
+          "t": 0,
+          "v": -50,
+          "ease": "easeInOut"
+        },
+        {
+          "t": 0.4,
+          "v": 0
+        }
+      ]
+    },
+    "arm_far_upper": {
+      "rot": [
+        {
+          "t": 0,
+          "v": -30,
+          "ease": "easeInOut"
+        },
+        {
+          "t": 0.4,
+          "v": 0
+        }
+      ]
+    }
+  }
+}

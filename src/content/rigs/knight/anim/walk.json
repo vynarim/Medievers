@@ -1,0 +1,218 @@
+{
+  "format": "medieverse.anim/1",
+  "id": "walk",
+  "rig": "knight",
+  "duration": 0.8,
+  "mode": "loop",
+  "mix": 0.1,
+  "events": [
+    {
+      "t": 0,
+      "name": "step"
+    },
+    {
+      "t": 0.4,
+      "name": "step"
+    }
+  ],
+  "tracks": {
+    "center": {
+      "y": [
+        {
+          "t": 0,
+          "v": 0,
+          "ease": "easeInOut"
+        },
+        {
+          "t": 0.2,
+          "v": -1.5,
+          "ease": "easeInOut"
+        },
+        {
+          "t": 0.4,
+          "v": 0,
+          "ease": "easeInOut"
+        },
+        {
+          "t": 0.6,
+          "v": -1.5,
+          "ease": "easeInOut"
+        },
+        {
+          "t": 0.8,
+          "v": 0
+        }
+      ]
+    },
+    "torso": {
+      "rot": [
+        {
+          "t": 0,
+          "v": 3
+        }
+      ]
+    },
+    "thigh_near": {
+      "rot": [
+        {
+          "t": 0,
+          "v": -22,
+          "ease": "easeInOut"
+        },
+        {
+          "t": 0.4,
+          "v": 22,
+          "ease": "easeInOut"
+        },
+        {
+          "t": 0.8,
+          "v": -22
+        }
+      ]
+    },
+    "shin_near": {
+      "rot": [
+        {
+          "t": 0,
+          "v": 0
+        },
+        {
+          "t": 0.4,
+          "v": 5,
+          "ease": "easeInOut"
+        },
+        {
+          "t": 0.6,
+          "v": 40,
+          "ease": "easeInOut"
+        },
+        {
+          "t": 0.8,
+          "v": 0
+        }
+      ]
+    },
+    "foot_near": {
+      "rot": [
+        {
+          "t": 0,
+          "v": 22,
+          "ease": "easeInOut"
+        },
+        {
+          "t": 0.4,
+          "v": -27,
+          "ease": "easeInOut"
+        },
+        {
+          "t": 0.6,
+          "v": -20,
+          "ease": "easeInOut"
+        },
+        {
+          "t": 0.8,
+          "v": 22
+        }
+      ]
+    },
+    "thigh_far": {
+      "rot": [
+        {
+          "t": 0,
+          "v": 22,
+          "ease": "easeInOut"
+        },
+        {
+          "t": 0.4,
+          "v": -22,
+          "ease": "easeInOut"
+        },
+        {
+          "t": 0.8,
+          "v": 22
+        }
+      ]
+    },
+    "shin_far": {
+      "rot": [
+        {
+          "t": 0,
+          "v": 5,
+          "ease": "easeInOut"
+        },
+        {
+          "t": 0.2,
+          "v": 40,
+          "ease": "easeInOut"
+        },
+        {
+          "t": 0.4,
+          "v": 0
+        },
+        {
+          "t": 0.8,
+          "v": 5
+        }
+      ]
+    },
+    "foot_far": {
+      "rot": [
+        {
+          "t": 0,
+          "v": -27,
+          "ease": "easeInOut"
+        },
+        {
+          "t": 0.2,
+          "v": -20,
+          "ease": "easeInOut"
+        },
+        {
+          "t": 0.4,
+          "v": 22,
+          "ease": "easeInOut"
+        },
+        {
+          "t": 0.8,
+          "v": -27
+        }
+      ]
+    },
+    "arm_near_upper": {
+      "rot": [
+        {
+          "t": 0,
+          "v": 14,
+          "ease": "easeInOut"
+        },
+        {
+          "t": 0.4,
+          "v": -14,
+          "ease": "easeInOut"
+        },
+        {
+          "t": 0.8,
+          "v": 14
+        }
+      ]
+    },
+    "arm_far_upper": {
+      "rot": [
+        {
+          "t": 0,
+          "v": -14,
+          "ease": "easeInOut"
+        },
+        {
+          "t": 0.4,
+          "v": 14,
+          "ease": "easeInOut"
+        },
+        {
+          "t": 0.8,
+          "v": -14
+        }
+      ]
+    }
+  }
+}

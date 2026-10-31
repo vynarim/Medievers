@@ -111,7 +111,7 @@ La priorité est le moteur : simulation, règles, réseau, IA. Jusqu'au lot 9, t
 
 | # | Tâche | CA |
 |---|---|---|
-| 6.1 **[tech]** | Format `rig.json` + `anim/*.json`, runtime d'animation cutout | Le Chevalier P0 joue toutes ses animations P0 (rig placeholder accepté en lot 7) |
+| 6.1 **[tech]** | Format `rig.json` + `anim/*.json`, runtime d'animation cutout | Le Chevalier P0 joue toutes ses animations P0 (rig placeholder accepté en lot 7) — Fait le 2026-10-31 : format figé ([ADR 0003](adr/0003-cutout-rig-format.md), TECH_SPEC §7.1–7.3, ASSETS §3.5), runtime `src/render/rig/`, 13 animations P0 du Chevalier jouées en partie ; les autres classes gardent leur dessin |
 | 6.2 **[tech]** | Tint de faction + composition dynamique du blason sur l'écu et la bannière | 8 blasons pré-composés affichés |
 | 6.3 **[tech]** | `pnpm run maps:build` (découpe, validations) | La carte de test greybox passe les validations (Jéricho : vérifiée au lot 9) |
 | 6.4 **[art]** | Carte Jéricho complète (peinture, masque, parallaxe, cadre) | — |

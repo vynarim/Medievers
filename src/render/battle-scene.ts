@@ -48,7 +48,12 @@ import { dragonColours, dragonTexture } from './sky-life.ts';
 import { FixedStep } from './fixed-step.ts';
 import { TerrainLayer } from './terrain-layer.ts';
 import { drawClassMark } from './class-marks.ts';
-import { drawFigure } from './figures.ts';
+import { drawFigure, drawNimbus } from './figures.ts';
+import { KNIGHT_PIECES } from './rig/knight-art.ts';
+import { RigView, rigTextures } from './rig/rig-view.ts';
+import { rigSet } from './rig/rigs.ts';
+import { boneOrigin } from './rig/runtime.ts';
+import { AIM_POSE, UnitAnimator, type UnitAnimInput } from './rig/unit-anim.ts';
 import { aimPreviewTicks, classOf, maxHpOf, visibleMines } from '../sim/classes.ts';
 import { heldAim, launchPoint, shotSpeed } from '../sim/weapons/weapons.ts';
 import {
@@ -206,6 +211,13 @@ const SHOT_SFX: Readonly<Partial<Record<WeaponId, SfxId>>> = {
 
 /** ms an explosion burst lasts */
 const BURST_MS = 520;
+/** The knight's cutout rig (render/rig, BACKLOG 6.1); the other classes keep their drawings. */
+const KNIGHT_RIG = rigSet('knight');
+/** Rigged figures over the world's Graphics, under what is drawn in front of them. */
+const RIG_DEPTH = 6.05;
+const FRONT_DEPTH = 6.1;
+/** ms a puff of dust lasts */
+const DUST_MS = 450;
 /** ms a lightning bolt stays on screen, ms it holds full before fading, ms it strikes again */
 const BOLT_MS = 3200;
 const BOLT_HOLD_MS = 2200;
@@ -267,6 +279,13 @@ export class BattleScene extends Phaser.Scene {
   private scenery!: Scenery;
   private saver!: AutoSaver;
   private world!: Phaser.GameObjects.Graphics;
+  /** over the rigged figures: what they hold out, their labels, the aim, the shots */
+  private front!: Phaser.GameObjects.Graphics;
+  /** the rigged figures (render/rig), by unit id */
+  private readonly rigViews = new Map<number, RigView>();
+  private readonly animators = new Map<number, UnitAnimator>();
+  /** puffs of dust at the feet of a figure landing or falling dead: px, ms */
+  private dust: { x: number; y: number; born: number }[] = [];
   /** the dragon of the sim (GDD §4.11), painted by SkyLife */
   private dragonImg!: Phaser.GameObjects.Image;
   /** the unicorn of the sim (GDD §4.12) */
@@ -343,6 +362,10 @@ export class BattleScene extends Phaser.Scene {
     this.labels.clear();
     this.potLabels.clear();
     this.bursts = [];
+    // The rigs' images went with the old scene's display list.
+    this.rigViews.clear();
+    this.animators.clear();
+    this.dust = [];
     this.manualCamera = false;
     this.selectedUnit = null;
     this.infoRef = null;
@@ -409,6 +432,8 @@ export class BattleScene extends Phaser.Scene {
     this.scenery = new Scenery(this, this.sim.view().terrain, map.theme);
     this.terrain = new TerrainLayer(this, () => this.sim.view().terrain, map.theme);
     this.world = this.add.graphics().setDepth(6);
+    rigTextures(this, KNIGHT_RIG.rig, KNIGHT_PIECES);
+    this.front = this.add.graphics().setDepth(FRONT_DEPTH);
     // In front of the units it swoops on, behind their labels.
     this.dragonImg = this.add
       .image(0, 0, dragonTexture(0, 0))
@@ -448,6 +473,7 @@ export class BattleScene extends Phaser.Scene {
       ...this.scenery.objects,
       ...this.terrain.images,
       this.world,
+      this.front,
       this.dragonImg,
       this.unicornImg,
       this.burnGfx,
@@ -1299,6 +1325,12 @@ export class BattleScene extends Phaser.Scene {
   private handleEvents(events: readonly SimEvent[]): void {
     for (const e of events) {
       this.soundOf(e);
+      // The rigged figures flinch at a blow and swing as they let fly.
+      if (e.e === 'unitDamaged' || e.e === 'crushed') this.animators.get(e.unitId)?.hurt();
+      if (e.e === 'shotFired') {
+        const pose = AIM_POSE[e.weapon];
+        if (pose) this.animators.get(this.sim.view().turn.activeUnitId)?.fire(pose);
+      }
       // Ice breaks beyond the blast's radius: repaint as far as the carve could reach.
       if (e.e === 'terrainCarved') {
         const reach = this.sim.view().terrain.reachPct;
@@ -1498,27 +1530,53 @@ export class BattleScene extends Phaser.Scene {
     this.drawEngines(g, time);
     this.drawPlacementGhost(g, time);
     this.stackLabels(alpha);
+    // Over the figures: what they hold out, their labels, the aim, the shots.
+    const f = this.front;
+    f.clear();
+    const seconds = Math.min(delta, 100) / 1000;
     for (const u of v.units) {
       const label = this.labelFor(u.id);
       const lift = this.labelLift.get(u.id) ?? 0;
       const [x, y] = this.pos(`u${u.id}`, alpha, u.x, u.y);
-      if (!u.alive) {
-        label?.setVisible(false);
-        this.drawGrave(g, x, y, FACTIONS[u.team]?.primary ?? COLORS.roche);
-        continue;
-      }
       const faction = FACTIONS[u.team] ?? FACTIONS[0];
       const primary = faction?.primary ?? COLORS.lapis;
       const secondary = faction?.secondary ?? COLORS.or;
-      const isActive = u.id === turn.activeUnitId && turn.phase !== 'gameOver';
+      const isActive = u.alive && u.id === turn.activeUnitId && turn.phase !== 'gameOver';
+      const cls = classOf(v, u);
+      const rigged = (cls ?? 'knight') === 'knight';
+      // A rigged figure plays its death before the tombstone takes its place.
+      const animator = rigged ? this.animatorFor(u) : null;
+      if (animator) {
+        const events = animator.update(this.animInput(u, isActive), seconds);
+        if (events.includes('dust')) this.dust.push({ x, y, born: time });
+      }
+      if (!u.alive && (!animator || animator.gone)) {
+        label?.setVisible(false);
+        this.rigViews.get(u.id)?.hide();
+        this.drawGrave(g, x, y, FACTIONS[u.team]?.primary ?? COLORS.roche);
+        continue;
+      }
       if (u.id === this.selectedUnit) {
         g.lineStyle(4, COLORS.lapis, 1);
         g.strokeEllipse(x, y + 2, UNIT_HALF_WIDTH * 5, 18);
       }
-      const cls = classOf(v, u);
-      drawFigure(g, x, y, u.facing, primary, secondary, cls, isActive, time);
-      drawClassMark(g, cls, x, y, u.facing);
-      this.drawGear(g, v, u, x, y, primary, secondary);
+      if (animator) {
+        const pose = animator.player.pose;
+        if (isActive) {
+          // The nimbus round the helm, wherever the animation takes the head.
+          const head = boneOrigin(KNIGHT_RIG.rig, pose, 'head');
+          drawNimbus(g, x + u.facing * (head.x + 1), y + head.y - 9, time);
+        }
+        this.rigViewFor(u.id).show(pose, x, y, u.facing, { primary, secondary });
+      } else {
+        drawFigure(g, x, y, u.facing, primary, secondary, cls, isActive, time);
+        drawClassMark(g, cls, x, y, u.facing);
+      }
+      if (!u.alive) {
+        label?.setVisible(false);
+        continue;
+      }
+      this.drawGear(f, v, u, x, y, primary, secondary);
 
       if (label) {
         // A small phylactery with the name and a thin life bar under it; the figures are in the
@@ -1528,27 +1586,28 @@ export class BattleScene extends Phaser.Scene {
         label.setPosition(x, bottom);
         if (label.text !== unitName(u.id)) label.setText(unitName(u.id));
         label.setColor(css(faction?.ink ?? primary));
-        this.drawScroll(g, x, bottom, label.width, label.height, isActive);
-        this.drawLifeBar(g, x, bottom + 2, u.hp / maxHpOf(v, u), primary);
-        this.drawAfflictions(g, u.id, x, bottom - label.height - 8);
+        this.drawScroll(f, x, bottom, label.width, label.height, isActive);
+        this.drawLifeBar(f, x, bottom + 2, u.hp / maxHpOf(v, u), primary);
+        this.drawAfflictions(f, u.id, x, bottom - label.height - 8);
       }
       if (isActive) {
         // Bobbing pointer above the name: who plays is never in doubt.
         const top =
           y - UNIT_HEIGHT - 18 - lift - (label?.height ?? 28) - 12 + Math.sin(time / 180) * 7;
-        g.fillStyle(COLORS.or, 1);
-        g.lineStyle(4, COLORS.encre, 1);
-        g.fillTriangle(x - 20, top - 30, x + 20, top - 30, x, top);
-        g.strokeTriangle(x - 20, top - 30, x + 20, top - 30, x, top);
-        g.fillStyle(primary, 1);
-        g.fillRect(x - 6, top - 52, 12, 22);
-        g.strokeRect(x - 6, top - 52, 12, 22);
+        f.fillStyle(COLORS.or, 1);
+        f.lineStyle(4, COLORS.encre, 1);
+        f.fillTriangle(x - 20, top - 30, x + 20, top - 30, x, top);
+        f.strokeTriangle(x - 20, top - 30, x + 20, top - 30, x, top);
+        f.fillStyle(primary, 1);
+        f.fillRect(x - 6, top - 52, 12, 22);
+        f.strokeRect(x - 6, top - 52, 12, 22);
       }
       if (isActive && (turn.phase === 'action' || turn.phase === 'transition')) {
-        this.drawAim(g, x, y - UNIT_HEIGHT / 2, turn.aim);
-        if (turn.phase === 'action') this.drawPreview(g, u);
+        this.drawAim(f, x, y - UNIT_HEIGHT / 2, turn.aim);
+        if (turn.phase === 'action') this.drawPreview(f, u);
       }
     }
+    this.drawDust(f, time);
 
     for (const s of v.shots) {
       const p = s.projectile;
@@ -1558,24 +1617,24 @@ export class BattleScene extends Phaser.Scene {
       const dy = p.vy / speed;
       if (s.fragment) {
         // A drop of burning pitch.
-        g.fillStyle(COLORS.or, 0.9);
-        g.fillCircle(x - dx * 4, y - dy * 4, 4);
-        g.fillStyle(COLORS.encre, 1);
-        g.fillCircle(x, y, 3);
+        f.fillStyle(COLORS.or, 0.9);
+        f.fillCircle(x - dx * 4, y - dy * 4, 4);
+        f.fillStyle(COLORS.encre, 1);
+        f.fillCircle(x, y, 3);
         continue;
       }
       if (s.weapon === 'falcon') {
-        this.drawFalcon(g, x, y, dx, dy, time);
+        this.drawFalcon(f, x, y, dx, dy, time);
         continue;
       }
       if (s.weapon === 'beehive') {
         // A skep of straw, coiled.
-        g.fillStyle(COLORS.ocre, 1);
-        g.lineStyle(3, COLORS.encre, 1);
-        g.fillEllipse(x, y, 16, 20);
-        g.strokeEllipse(x, y, 16, 20);
-        g.lineStyle(1.5, COLORS.encre, 1);
-        for (const k of [-4, 1, 6]) g.lineBetween(x - 7, y + k, x + 7, y + k);
+        f.fillStyle(COLORS.ocre, 1);
+        f.lineStyle(3, COLORS.encre, 1);
+        f.fillEllipse(x, y, 16, 20);
+        f.strokeEllipse(x, y, 16, 20);
+        f.lineStyle(1.5, COLORS.encre, 1);
+        for (const k of [-4, 1, 6]) f.lineBetween(x - 7, y + k, x + 7, y + k);
         continue;
       }
       if (
@@ -1589,17 +1648,17 @@ export class BattleScene extends Phaser.Scene {
         if (s.weapon === 'fireArrow') {
           // Its burning head, flickering.
           const flicker = 1 + Math.sin(time / 40) * 0.25;
-          g.fillStyle(COLORS.or, 0.9);
-          g.fillCircle(x - dx * 4, y - dy * 4 - 2, 7 * flicker);
-          g.fillStyle(COLORS.vermillon, 1);
-          g.fillCircle(x - dx * 2, y - dy * 2 - 2, 4 * flicker);
+          f.fillStyle(COLORS.or, 0.9);
+          f.fillCircle(x - dx * 4, y - dy * 4 - 2, 7 * flicker);
+          f.fillStyle(COLORS.vermillon, 1);
+          f.fillCircle(x - dx * 2, y - dy * 2 - 2, 4 * flicker);
         }
-        g.lineStyle(4, COLORS.terreOmbre, 1);
-        g.lineBetween(x - dx * 34, y - dy * 34, x, y);
-        g.fillStyle(COLORS.encre, 1);
-        g.fillTriangle(x + dx * 10, y + dy * 10, x - dy * 6, y + dx * 6, x + dy * 6, y - dx * 6);
-        g.fillStyle(COLORS.vermillon, 1);
-        g.fillTriangle(
+        f.lineStyle(4, COLORS.terreOmbre, 1);
+        f.lineBetween(x - dx * 34, y - dy * 34, x, y);
+        f.fillStyle(COLORS.encre, 1);
+        f.fillTriangle(x + dx * 10, y + dy * 10, x - dy * 6, y + dx * 6, x + dy * 6, y - dx * 6);
+        f.fillStyle(COLORS.vermillon, 1);
+        f.fillTriangle(
           x - dx * 34,
           y - dy * 34,
           x - dx * 24 - dy * 7,
@@ -1612,22 +1671,22 @@ export class BattleScene extends Phaser.Scene {
         const fire = s.weapon === 'greekFire' || s.weapon === 'pitchPot';
         if (fire) {
           const flicker = 1 + Math.sin(time / 40) * 0.25;
-          g.fillStyle(COLORS.or, 0.9);
-          g.fillCircle(x - dx * r, y - dy * r - 2, r * 0.9 * flicker);
-          g.fillStyle(COLORS.vermillon, 1);
-          g.fillCircle(x - dx * r * 0.6, y - dy * r * 0.6 - 2, r * 0.6 * flicker);
+          f.fillStyle(COLORS.or, 0.9);
+          f.fillCircle(x - dx * r, y - dy * r - 2, r * 0.9 * flicker);
+          f.fillStyle(COLORS.vermillon, 1);
+          f.fillCircle(x - dx * r * 0.6, y - dy * r * 0.6 - 2, r * 0.6 * flicker);
         }
-        g.fillStyle(fire ? COLORS.terreOmbre : COLORS.roche, 1);
-        g.fillCircle(x, y, r);
-        g.lineStyle(3, COLORS.encre, 1);
-        g.strokeCircle(x, y, r);
+        f.fillStyle(fire ? COLORS.terreOmbre : COLORS.roche, 1);
+        f.fillCircle(x, y, r);
+        f.lineStyle(3, COLORS.encre, 1);
+        f.strokeCircle(x, y, r);
       }
     }
 
-    this.drawWalkers(g, alpha, time);
-    this.drawSwarms(g, alpha, time);
-    this.drawBursts(g, time);
-    this.drawHalos(g, time);
+    this.drawWalkers(f, alpha, time);
+    this.drawSwarms(f, alpha, time);
+    this.drawBursts(f, time);
+    this.drawHalos(f, time);
   }
 
   /** The falcon, wings beating, along its flight. */
@@ -2382,6 +2441,61 @@ export class BattleScene extends Phaser.Scene {
       g.beginPath();
       g.arc(sx, y - 40 - p, 4, Math.PI * 0.5, Math.PI * 1.5);
       g.strokePath();
+    }
+  }
+
+  /** The animator of a rigged unit; one already dead when first seen lies under its stone. */
+  private animatorFor(u: SimView['units'][number]): UnitAnimator {
+    let a = this.animators.get(u.id);
+    if (!a) {
+      a = new UnitAnimator(KNIGHT_RIG.rig, KNIGHT_RIG.anims, u.alive);
+      this.animators.set(u.id, a);
+    }
+    return a;
+  }
+
+  private rigViewFor(unitId: number): RigView {
+    let r = this.rigViews.get(unitId);
+    if (!r) {
+      r = new RigView(this, KNIGHT_RIG.rig, RIG_DEPTH);
+      this.hudCam.ignore(r.container);
+      this.rigViews.set(unitId, r);
+    }
+    return r;
+  }
+
+  /** What a unit's animator reads of it: its state, its last move, its aim if it plays. */
+  private animInput(u: SimView['units'][number], isActive: boolean): UnitAnimInput {
+    const e = this.interp.get(`u${u.id}`);
+    const turn = this.sim.view().turn;
+    const aiming = isActive && turn.phase === 'action' ? AIM_POSE[turn.weapon] : null;
+    const ax = cosQ14(turn.aim) / 16384;
+    const ay = sinQ14(turn.aim) / 16384;
+    return {
+      alive: u.alive,
+      grounded: u.grounded,
+      knocked: u.knocked,
+      climbing: u.climbing ?? false,
+      dx: e ? (e.cx - e.px) / SUBPX : 0,
+      dy: e ? (e.cy - e.py) / SUBPX : 0,
+      vy: u.vy,
+      facing: u.facing,
+      aiming,
+      aimDeg: (Math.atan2(ay, ax * u.facing) * 180) / Math.PI,
+    };
+  }
+
+  /** Puffs of ochre dust at the feet, spreading and fading. */
+  private drawDust(g: Phaser.GameObjects.Graphics, time: number): void {
+    this.dust = this.dust.filter((d) => time - d.born < DUST_MS);
+    for (const d of this.dust) {
+      const k = (time - d.born) / DUST_MS;
+      g.fillStyle(COLORS.ocre, 0.55 * (1 - k));
+      for (const side of [-1, 1]) {
+        for (let i = 1; i <= 3; i++) {
+          g.fillCircle(d.x + side * (6 + i * 7) * (0.6 + k), d.y - 3 - i * 2 * k, 7 - i * 1.5);
+        }
+      }
     }
   }
 

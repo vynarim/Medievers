@@ -1,0 +1,82 @@
+{
+  "format": "medieverse.anim/1",
+  "id": "death",
+  "rig": "knight",
+  "duration": 1,
+  "mode": "once",
+  "mix": 0.05,
+  "events": [
+    {
+      "t": 0.65,
+      "name": "dust"
+    }
+  ],
+  "tracks": {
+    "root": {
+      "rot": [
+        {
+          "t": 0,
+          "v": 0,
+          "ease": "easeInOut"
+        },
+        {
+          "t": 0.15,
+          "v": -8,
+          "ease": "easeIn"
+        },
+        {
+          "t": 0.65,
+          "v": -90,
+          "ease": "easeOut"
+        },
+        {
+          "t": 0.8,
+          "v": -84,
+          "ease": "easeIn"
+        },
+        {
+          "t": 0.95,
+          "v": -90
+        }
+      ]
+    },
+    "head": {
+      "rot": [
+        {
+          "t": 0,
+          "v": 0
+        },
+        {
+          "t": 0.65,
+          "v": 12
+        }
+      ]
+    },
+    "arm_near_upper": {
+      "rot": [
+        {
+          "t": 0,
+          "v": 0,
+          "ease": "easeInOut"
+        },
+        {
+          "t": 0.5,
+          "v": -70
+        }
+      ]
+    },
+    "arm_far_upper": {
+      "rot": [
+        {
+          "t": 0,
+          "v": 0,
+          "ease": "easeInOut"
+        },
+        {
+          "t": 0.5,
+          "v": -40
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,101 @@
+{
+  "format": "medieverse.anim/1",
+  "id": "fall",
+  "rig": "knight",
+  "duration": 0.4,
+  "mode": "hold",
+  "mix": 0.2,
+  "tracks": {
+    "thigh_near": {
+      "rot": [
+        {
+          "t": 0,
+          "v": -5,
+          "ease": "easeInOut"
+        },
+        {
+          "t": 0.4,
+          "v": -15
+        }
+      ]
+    },
+    "shin_near": {
+      "rot": [
+        {
+          "t": 0,
+          "v": 10,
+          "ease": "easeInOut"
+        },
+        {
+          "t": 0.4,
+          "v": 20
+        }
+      ]
+    },
+    "thigh_far": {
+      "rot": [
+        {
+          "t": 0,
+          "v": 5,
+          "ease": "easeInOut"
+        },
+        {
+          "t": 0.4,
+          "v": 12
+        }
+      ]
+    },
+    "shin_far": {
+      "rot": [
+        {
+          "t": 0,
+          "v": 5,
+          "ease": "easeInOut"
+        },
+        {
+          "t": 0.4,
+          "v": 15
+        }
+      ]
+    },
+    "arm_near_upper": {
+      "rot": [
+        {
+          "t": 0,
+          "v": -120,
+          "ease": "easeInOut"
+        },
+        {
+          "t": 0.4,
+          "v": -150
+        }
+      ]
+    },
+    "arm_far_upper": {
+      "rot": [
+        {
+          "t": 0,
+          "v": -130,
+          "ease": "easeInOut"
+        },
+        {
+          "t": 0.4,
+          "v": -165
+        }
+      ]
+    },
+    "head": {
+      "rot": [
+        {
+          "t": 0,
+          "v": 0,
+          "ease": "easeInOut"
+        },
+        {
+          "t": 0.4,
+          "v": -8
+        }
+      ]
+    }
+  }
+}

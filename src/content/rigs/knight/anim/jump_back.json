@@ -1,0 +1,114 @@
+{
+  "format": "medieverse.anim/1",
+  "id": "jump_back",
+  "rig": "knight",
+  "duration": 0.3,
+  "mode": "hold",
+  "mix": 0.08,
+  "tracks": {
+    "center": {
+      "rot": [
+        {
+          "t": 0,
+          "v": 0,
+          "ease": "easeOut"
+        },
+        {
+          "t": 0.3,
+          "v": -22
+        }
+      ]
+    },
+    "thigh_near": {
+      "rot": [
+        {
+          "t": 0,
+          "v": -10,
+          "ease": "easeOut"
+        },
+        {
+          "t": 0.3,
+          "v": -35
+        }
+      ]
+    },
+    "shin_near": {
+      "rot": [
+        {
+          "t": 0,
+          "v": 10,
+          "ease": "easeOut"
+        },
+        {
+          "t": 0.3,
+          "v": 25
+        }
+      ]
+    },
+    "thigh_far": {
+      "rot": [
+        {
+          "t": 0,
+          "v": 0,
+          "ease": "easeOut"
+        },
+        {
+          "t": 0.3,
+          "v": -15
+        }
+      ]
+    },
+    "shin_far": {
+      "rot": [
+        {
+          "t": 0,
+          "v": 10,
+          "ease": "easeOut"
+        },
+        {
+          "t": 0.3,
+          "v": 30
+        }
+      ]
+    },
+    "arm_near_upper": {
+      "rot": [
+        {
+          "t": 0,
+          "v": -40,
+          "ease": "easeOut"
+        },
+        {
+          "t": 0.3,
+          "v": -100
+        }
+      ]
+    },
+    "arm_far_upper": {
+      "rot": [
+        {
+          "t": 0,
+          "v": -40,
+          "ease": "easeOut"
+        },
+        {
+          "t": 0.3,
+          "v": -120
+        }
+      ]
+    },
+    "head": {
+      "rot": [
+        {
+          "t": 0,
+          "v": 0,
+          "ease": "easeOut"
+        },
+        {
+          "t": 0.3,
+          "v": -10
+        }
+      ]
+    }
+  }
+}

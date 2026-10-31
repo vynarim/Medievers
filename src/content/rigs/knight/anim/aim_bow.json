@@ -1,0 +1,56 @@
+{
+  "format": "medieverse.anim/1",
+  "id": "aim_bow",
+  "rig": "knight",
+  "duration": 0.2,
+  "mode": "hold",
+  "mix": 0.12,
+  "slots": {
+    "weapon": [
+      {
+        "t": 0,
+        "v": "bow"
+      }
+    ]
+  },
+  "aim": [
+    {
+      "bone": "arm_near_upper",
+      "weight": 1
+    }
+  ],
+  "tracks": {
+    "torso": {
+      "rot": [
+        {
+          "t": 0,
+          "v": 2
+        }
+      ]
+    },
+    "arm_near_upper": {
+      "rot": [
+        {
+          "t": 0,
+          "v": -63
+        }
+      ]
+    },
+    "arm_near_lower": {
+      "rot": [
+        {
+          "t": 0,
+          "v": 11
+        }
+      ]
+    },
+    "arm_far_upper": {
+      "rot": [
+        {
+          "t": 0,
+          "v": -10
+        }
+      ]
+    }
+  }
+}

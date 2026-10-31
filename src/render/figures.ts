@@ -9,6 +9,11 @@
 import Phaser from 'phaser';
 import type { ClassId } from '../content/classes.ts';
 import { COLORS } from '../ui/tokens.ts';
+import { KNIGHT_PIECES } from './rig/knight-art.ts';
+import { drawRigAtRest } from './rig/rest.ts';
+import { rigSet } from './rig/rigs.ts';
+
+const KNIGHT = rigSet('knight');
 
 type G = Phaser.GameObjects.Graphics;
 type Pt = { x: number; y: number };
@@ -251,73 +256,15 @@ function hairCap(F: Frame, hx: number, hy: number, colour: number, long = false)
   F.stroke(quad(P(hx - 6, hy - 8), P(hx - 9, hy - 2), P(hx - 7.5, back - 2), 4), 1, ink, 0.5);
 }
 
-/** The knight's barrel helm over his mail coif, a gilt cross over the eye slit. */
-function barrelHelm(F: Frame, hx: number, hy: number): void {
-  F.shape(
-    [P(hx - 4, hy + 7), P(hx + 3, hy + 7), P(hx + 4, hy + 13), P(hx - 5, hy + 13)],
-    mail,
-    1.5,
-  );
-  F.shape(
-    [
-      ...quad(P(hx - 10, hy - 6), P(hx - 10, hy - 13.5), P(hx, hy - 13.5)),
-      ...quad(P(hx, hy - 13.5), P(hx + 10, hy - 13.5), P(hx + 10, hy - 6)),
-      P(hx + 10.5, hy + 10),
-      P(hx - 10.5, hy + 10),
-    ],
-    mail,
-  );
-  // The eye slit, the gilt cross over it, breaths on the cheek.
-  F.shape(
-    [P(hx - 4, hy - 4), P(hx + 10, hy - 4), P(hx + 10, hy - 1.5), P(hx - 4, hy - 1.5)],
-    ink,
-    0,
-  );
-  F.shape(
-    [P(hx + 3, hy - 11), P(hx + 5.5, hy - 11), P(hx + 5.5, hy + 8), P(hx + 3, hy + 8)],
-    COLORS.or,
-    1,
-  );
-  F.shape(
-    [P(hx - 2, hy + 1), P(hx + 10, hy + 1), P(hx + 10, hy + 3.2), P(hx - 2, hy + 3.2)],
-    COLORS.or,
-    1,
-  );
-  for (const [bx, by] of [
-    [-5, 5],
-    [-2, 6],
-    [-5, 8],
-    [-2, 9],
-  ] as const)
-    F.circle(hx + bx, hy + by, 0.9, ink);
-  F.stroke([P(hx - 10, hy - 7), P(hx + 10, hy - 7)], 1, ink, 0.5);
-}
-
-/** The heater shield on the far arm: the house's field, a chevron of its second tincture. */
-function shield(F: Frame, primary: number, secondary: number): void {
-  const top = -58;
-  F.shape(
-    [
-      P(-22, top),
-      P(-6, top),
-      P(-6, top + 14),
-      ...quad(P(-6, top + 14), P(-7, top + 26), P(-14, top + 33)),
-      ...quad(P(-14, top + 33), P(-21, top + 26), P(-22, top + 14)),
-    ],
-    primary,
-  );
-  F.shape(
-    [
-      P(-21, top + 22),
-      P(-14, top + 12),
-      P(-7, top + 22),
-      P(-7, top + 27),
-      P(-14, top + 17),
-      P(-21, top + 27),
-    ],
-    secondary,
-    1.5,
-  );
+/** The gilt nimbus behind the head of the unit that plays, as on the saints of the manuscript. */
+export function drawNimbus(g: G, cx: number, cy: number, time: number): void {
+  const pulse = 1 + Math.sin(time / 250) * 0.06;
+  g.fillStyle(COLORS.or, 1);
+  g.fillCircle(cx, cy, 21 * pulse);
+  g.lineStyle(3, ink, 1);
+  g.strokeCircle(cx, cy, 21 * pulse);
+  g.lineStyle(2, COLORS.ocre, 1);
+  g.strokeCircle(cx, cy, 16 * pulse);
 }
 
 /**
@@ -340,27 +287,16 @@ export function drawFigure(
   const hx = 2;
   const hy = -66;
   if (active) {
-    // Gilt nimbus, as on the saints of the manuscript.
-    const pulse = 1 + Math.sin(time / 250) * 0.06;
     const c = F.p(hx, hy);
-    g.fillStyle(COLORS.or, 1);
-    g.fillCircle(c.x, c.y, 21 * pulse);
-    g.lineStyle(3, ink, 1);
-    g.strokeCircle(c.x, c.y, 21 * pulse);
-    g.lineStyle(2, COLORS.ocre, 1);
-    g.strokeCircle(c.x, c.y, 16 * pulse);
+    drawNimbus(g, c.x, c.y, time);
   }
   switch (cls ?? 'knight') {
     case 'knight':
-      legs(F, 'mail');
-      farArm(F, mail);
-      shield(F, primary, secondary);
-      // Mail sleeves under a long surcoat, split in front.
-      robe(F, primary, -19, 5);
-      F.stroke([P(3, -30), P(3, -19)], 2);
-      belt(F, secondary);
-      nearArm(F, mail);
-      barrelHelm(F, hx, hy);
+      // The rig's pieces at rest (render/rig, BACKLOG 6.1): the battle animates them.
+      drawRigAtRest(g, KNIGHT.rig, KNIGHT_PIECES, x, y, facing, {
+        primary,
+        secondary,
+      });
       break;
     case 'king':
       // The mantle behind, its ermine lining showing at the edge.

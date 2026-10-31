@@ -193,7 +193,76 @@ public/assets/maps/<mapId>/
 - Animations décrites en **keyframes** (`anim/*.json` : rotations et translations par os, easing). Elles sont interpolées dans `render/`, purement cosmétiques et non déterministes autorisées.
 - Teinte de faction : pièces « tissu » en niveaux de gris recolorées par tint ; blason composé dynamiquement sur l'écu et la bannière (RenderTexture).
 - Variété : 3 à 4 têtes par classe, 2 coiffes, symétrie gauche/droite par `scaleX = -1`.
-- Alternative possible si l'outillage le justifie : Spine ou DragonBones. Il faut alors vérifier la licence du runtime Spine (payante pour un usage commercial) et la maintenance de DragonBones avant de choisir. **La V1 part sur le format maison**, plus simple à piloter avec Claude Code.
+- Alternative possible si l'outillage le justifie : Spine ou DragonBones. Il faut alors vérifier la licence du runtime Spine (payante pour un usage commercial) et la maintenance de DragonBones avant de choisir. **La V1 part sur le format maison**, plus simple à piloter avec Claude Code. Format figé le 2026-10-31 (BACKLOG 6.1) : [ADR 0003](adr/0003-cutout-rig-format.md).
+
+### 7.1 `rig.json` (`medieverse.rig/1`)
+
+Fichiers : `src/content/rigs/<rig>/rig.json` et `src/content/rigs/<rig>/anim/<id>.json`, importés au build et validés au chargement (`src/render/rig/format.ts`, tests `tests/render/rig-format.test.ts`). Tout champ inconnu est refusé. Unités : px du monde à ×1, degrés positifs dans le sens horaire (y vers le bas). Le rig regarde à droite, origine entre les pieds, au sol.
+
+```json
+{
+  "format": "medieverse.rig/1",
+  "id": "knight",
+  "height": 80,
+  "bones": [
+    { "id": "root", "parent": null, "x": 0, "y": 0, "rot": 0 },
+    { "id": "center", "parent": "root", "x": 0, "y": -40 },
+    { "id": "arm_near_upper", "parent": "torso", "x": 7, "y": -17 }
+  ],
+  "pieces": [
+    { "id": "torso", "bone": "torso", "key": "unit_knight_torso_tint",
+      "size": [38, 49], "pivot": [19, 24], "tint": "primary" },
+    { "id": "weapon_bow", "bone": "hand_near", "key": "weapon_bow_held",
+      "size": [34, 27], "pivot": [17, 13.5], "tint": null,
+      "slot": { "slot": "weapon", "attachment": "bow" } }
+  ],
+  "slots": [{ "id": "weapon", "default": null }]
+}
+```
+
+| Champ | Règle |
+|---|---|
+| `bones` | Le premier est la racine (`parent: null`), chaque parent est déclaré avant ses enfants. `x`, `y`, `rot` (défaut 0) : transformation de repos dans le repère du parent |
+| `pieces` | **Ordre du tableau = ordre de dessin**, du fond vers l'avant. `key` : clé d'asset (ASSETS §2), servie par le PNG s'il existe, sinon par un placeholder dessiné par le code. `size` : taille d'affichage en px. `pivot` : point de la pièce, depuis son coin haut-gauche, posé sur l'origine de l'os (il peut tomber hors du rectangle pour une pièce posée sur l'os d'une autre, comme la ceinture sur le buste) |
+| `tint` | `"primary"` (champ de la maison), `"secondary"` (seconde teinture) ou `null`. Multiplication ; clé suffixée `_tint` |
+| `slot` | La pièce ne s'affiche que quand le slot tient cet attachement. `slots[].default` : attachement de repos ou `null` |
+
+Composition : matrice locale de chaque os `T(x + dx, y + dy) · R(rot + drot) · S(sx, sy)`, multipliée par celle du parent ; chaque pièce prend la position, la rotation et l'échelle de son os. La figure entière est retournée par `scaleX = −1` pour regarder à gauche.
+
+### 7.2 `anim/<id>.json` (`medieverse.anim/1`)
+
+```json
+{
+  "format": "medieverse.anim/1",
+  "id": "fire_throw",
+  "rig": "knight",
+  "duration": 0.4,
+  "mode": "once",
+  "mix": 0.03,
+  "tracks": {
+    "arm_near_upper": { "rot": [ { "t": 0, "v": -223, "ease": "easeIn" }, { "t": 0.12, "v": -20 } ] }
+  },
+  "slots": { "weapon": [ { "t": 0, "v": "stone" }, { "t": 0.08, "v": null } ] },
+  "events": [ { "t": 0.08, "name": "release" } ],
+  "aim": [ { "bone": "arm_near_upper", "weight": 0.4 } ]
+}
+```
+
+| Champ | Règle |
+|---|---|
+| `duration` | secondes |
+| `mode` | `loop` (boucle ; la dernière clé, à `t = duration`, reprend la première), `once` (joue, garde sa dernière pose et se déclare finie), `hold` (pose maintenue, jamais finie : visées, saut, chute) |
+| `mix` | secondes de fondu depuis la pose affichée au démarrage (défaut 0,1) |
+| `tracks` | par os, canaux `rot`, `x`, `y` (ajoutés au repos), `sx`, `sy` (multiplient). Clés `{ t, v, ease }` en ordre strict, dans `0..duration` ; avant la première et après la dernière, la valeur est tenue. `ease` façonne le trajet vers la clé suivante : `linear` (défaut), `step`, `easeIn`, `easeOut`, `easeInOut` |
+| `slots` | par slot, paliers `{ t, v }` (attachement ou `null`) |
+| `events` | `{ t, name }` en ordre, émis quand la lecture passe `t`, à chaque tour d'une boucle. Crochets cosmétiques : `step`, `release`, `dust` (le rendu soulève de la poussière). La sim décide seule de l'instant du tir |
+| `aim` | os tournés de `weight` × l'angle de visée (0 : droit devant, positif vers le bas, borné à ±110°) |
+
+### 7.3 Runtime et choix de l'animation
+
+- `src/render/rig/runtime.ts` (pur, sans Phaser) : échantillonnage des clés, `AnimPlayer` (fondu, boucles, événements, slots, visée), transformations des pièces. `rig-view.ts` : un `Container` Phaser par combattant, une `Image` par pièce, et les placeholders peints sur canvas à ×2 (`PLACEHOLDER_RES`). Coût mesuré : environ 0,01 ms par figure et par image.
+- `src/render/rig/unit-anim.ts` choisit l'animation d'après l'état lu de la sim : projeté et en l'air → `fly_tumble` ; en l'air → `jump_forward` / `jump_back` (selon le sens du déplacement par rapport au regard) puis `fall` ; au sol, en mouvement → `walk` ; combattant qui joue, en phase d'action, avec une arme qui se vise → `aim_<pose>` ; sinon `idle`. Par-dessus : `land` au sol après 0,18 s en l'air (sauf après une projection), `hurt` sur `unitDamaged` ou `crushed`, `fire_<pose>` sur `shotFired`, `death` quand `alive` passe à faux, puis la stèle remplace la figure.
+- Pose de visée de chaque arme : table `AIM_POSE` (exhaustive sur `WeaponId`). Les poses P1 absentes empruntent `bow` (arbalète) ou `throw` (fronde, mêlée, désignation), l'objet tenu masqué.
 
 ## 8. En ligne (jalon M9)
 

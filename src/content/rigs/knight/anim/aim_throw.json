@@ -1,0 +1,56 @@
+{
+  "format": "medieverse.anim/1",
+  "id": "aim_throw",
+  "rig": "knight",
+  "duration": 0.25,
+  "mode": "hold",
+  "mix": 0.12,
+  "slots": {
+    "weapon": [
+      {
+        "t": 0,
+        "v": "stone"
+      }
+    ]
+  },
+  "aim": [
+    {
+      "bone": "arm_near_upper",
+      "weight": 0.4
+    }
+  ],
+  "tracks": {
+    "torso": {
+      "rot": [
+        {
+          "t": 0,
+          "v": -6
+        }
+      ]
+    },
+    "arm_near_upper": {
+      "rot": [
+        {
+          "t": 0,
+          "v": -223
+        }
+      ]
+    },
+    "arm_near_lower": {
+      "rot": [
+        {
+          "t": 0,
+          "v": -10
+        }
+      ]
+    },
+    "arm_far_upper": {
+      "rot": [
+        {
+          "t": 0,
+          "v": -60
+        }
+      ]
+    }
+  }
+}
