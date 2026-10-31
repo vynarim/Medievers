@@ -55,9 +55,7 @@ const STYLE = `
   border: 6px solid transparent; border-top: 9px solid var(--encre); border-bottom: 0; }
 #ui .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 12px; }
 #ui .tabs button { min-height: 40px; font-size: 16px; }
-/* Test settings, « Bruitages »: its tab in azure, apart from the values' tabs; a button per effect. */
-#ui .tabs button.tab-sfx { background: var(--azur); color: var(--ceruse); }
-#ui .tabs button.tab-sfx.on { background: var(--lapis); }
+/* « Bruitages de test »: a button per effect. */
 #ui .sfx-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; }
 #ui .sfx-grid button { font-size: 15px; min-height: 40px; padding: 4px 8px; }
 #ui .options { width: min(620px, calc(100vw - 32px)); }

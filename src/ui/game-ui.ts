@@ -912,12 +912,29 @@ export class GameUi {
     actions.append(
       this.click(button(t('options.done')), () => this.show(null)),
       this.click(button(t('options.tuning')), () => this.openSettings()),
+      this.click(button(t('options.sfxTest')), () => this.openSfxTest()),
     );
     this.options.append(actions);
     this.show(this.options);
   }
 
-  /** One button per sound effect, and the rain on and off (test settings). */
+  /** « Bruitages de test »: every sound effect to hear one at a time, apart from the values. */
+  private openSfxTest(): void {
+    this.settings.replaceChildren(
+      this.closeButton(),
+      el('h2', '', t('sfxTest.title')),
+      this.sfxBoard(),
+    );
+    const actions = el('div', 'actions');
+    actions.append(
+      this.click(button(t('sfxTest.back')), () => this.openOptions()),
+      this.click(button(t('options.done')), () => this.show(null)),
+    );
+    this.settings.append(actions);
+    this.show(this.settings);
+  }
+
+  /** One button per sound effect, and the rain on and off. */
   private sfxBoard(): HTMLElement {
     const board = el('div', 'sfx-board');
     board.append(el('p', 'note', t('tuning.sfx.note')));
@@ -995,12 +1012,6 @@ export class GameUi {
       }
       this.settings.append(table);
     }
-    // The last tab: every sound effect, to hear one at a time.
-    const sounds = this.sfxBoard();
-    const n = pages.length;
-    tabs.append(this.click(button(t('tuning.group.sfx'), 'tab-sfx'), () => showTab(n)));
-    pages.push(sounds);
-    this.settings.append(sounds);
     showTab(Math.min(this.settingsTab, pages.length - 1));
     const actions = el('div', 'actions');
     actions.append(
