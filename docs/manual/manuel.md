@@ -360,6 +360,8 @@ Un clic (ou un appui) sur un baril de poudre, un reliquaire, la cuisine de campa
 
 Le bouton **⚙ Réglages** ouvre toutes les valeurs du jeu en cours de réglage : durées du tour, points de vie, vitesse de marche, sauts, chutes, vent, projections, et pour chaque arme ses dégâts, sa vitesse, son rayon, son usure du terrain, sa mèche, ses munitions. Les valeurs sont rangées par onglets (Tour, Combattants, Vent et explosions, puis une page par arme). Elles s'appliquent à la partie suivante (**Appliquer et relancer**), le navigateur s'en souvient, et **Valeurs par défaut** remet tout comme avant. Les valeurs d'une partie sont enregistrées avec son replay.
 
+Le dernier onglet, **Bruitages**, a un bouton par bruitage du jeu (arc, explosions, tonnerre, cochon, cloche…) pour les écouter un par un, et un bouton qui lance ou arrête la pluie. Le son doit être allumé, bruitages compris.
+
 ### Sur tablette {{st:jeu}}
 
 - Le **pad** en bas à gauche pour marcher, sauter et viser ; **Arsenal**, **Passer** et **Tirer** en bas à droite. Tous les boutons font au moins 48 px de côté.

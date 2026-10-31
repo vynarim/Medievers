@@ -53,6 +53,9 @@ const STYLE = `
   border: 6px solid transparent; border-top: 9px solid var(--encre); border-bottom: 0; }
 #ui .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 12px; }
 #ui .tabs button { min-height: 40px; font-size: 16px; }
+/* Test settings, « Bruitages »: a button per effect. */
+#ui .sfx-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; }
+#ui .sfx-grid button { font-size: 15px; min-height: 40px; padding: 4px 8px; }
 #ui .options { width: min(620px, calc(100vw - 32px)); }
 #ui .sound-modes { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 12px; }
 #ui .sound-modes button { font-size: 15px; }

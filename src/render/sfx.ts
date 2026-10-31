@@ -85,6 +85,11 @@ class Sfx {
     // The node graph frees itself once its sources have stopped.
   }
 
+  /** True while the rain falls (the test settings switch it on and off). */
+  get raining(): boolean {
+    return this.rain !== null;
+  }
+
   /** The rain's hiss, while it rains. */
   setRain(on: boolean): void {
     const ctx = audio.ctx;
@@ -420,3 +425,6 @@ const RECIPES: Readonly<Record<SfxId, Recipe>> = {
 };
 
 export const sfx = new Sfx();
+
+/** Every effect, in the order of its recipe (the test settings play each one). */
+export const SFX_IDS = Object.keys(RECIPES) as SfxId[];

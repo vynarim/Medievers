@@ -27,6 +27,7 @@ import {
 import { weaponLines } from './weapon-info.ts';
 import { weaponArt } from './weapon-art.ts';
 import { audio, SOUND_MODES } from '../render/audio.ts';
+import { SFX_IDS, sfx } from '../render/sfx.ts';
 import { copyButton } from './copy-button.ts';
 import { installed } from '../app/install.ts';
 import { soundButton as makeSoundButton, SOUND_ICON } from './sound-button.ts';
@@ -916,6 +917,28 @@ export class GameUi {
     this.show(this.options);
   }
 
+  /** One button per sound effect, and the rain on and off (test settings). */
+  private sfxBoard(): HTMLElement {
+    const board = el('div', 'sfx-board');
+    board.append(el('p', 'note', t('tuning.sfx.note')));
+    const grid = el('div', 'sfx-grid');
+    for (const id of SFX_IDS) {
+      grid.append(this.click(button(t(`sfx.${id}`)), () => sfx.play(id)));
+    }
+    const rain = button('');
+    const label = (): void => {
+      rain.textContent = t(sfx.raining ? 'sfx.rainOff' : 'sfx.rainOn');
+    };
+    label();
+    this.click(rain, () => {
+      sfx.setRain(!sfx.raining);
+      label();
+    });
+    grid.append(rain);
+    board.append(grid);
+    return board;
+  }
+
   private openSettings(): void {
     if (this.open === this.settings) {
       this.show(null);
@@ -972,6 +995,12 @@ export class GameUi {
       }
       this.settings.append(table);
     }
+    // The last tab: every sound effect, to hear one at a time.
+    const sounds = this.sfxBoard();
+    const n = pages.length;
+    tabs.append(this.click(button(t('tuning.group.sfx')), () => showTab(n)));
+    pages.push(sounds);
+    this.settings.append(sounds);
     showTab(Math.min(this.settingsTab, pages.length - 1));
     const actions = el('div', 'actions');
     actions.append(
