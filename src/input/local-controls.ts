@@ -79,6 +79,11 @@ export const AIM_SPEED = 16;
 export const SPIN_SPEED = 24;
 /** Power gained per tick while charging: full gauge in 1.5 s. */
 export const CHARGE_SPEED = Math.ceil(MAX_POWER / 90);
+/**
+ * Ticks a full gauge stays full before it starts again from empty: a finger lifted on « Tirer »
+ * at the top really shoots at full power (it was a single tick, playtest of 2026-10-31).
+ */
+export const FULL_HOLD_TICKS = 30;
 /** Ticks to wait for a second jump press before jumping forward. */
 export const DOUBLE_PRESS_TICKS = 12;
 /** px of drag for full power. */
@@ -118,6 +123,8 @@ export class LocalControls {
   private downBefore = false;
   private pendingJumpTick = -1;
   private charging = false;
+  /** ticks the gauge has been full, while charging */
+  private fullFor = 0;
   /** 0..1024 while charging, for the HUD gauge */
   power = 0;
 
@@ -269,13 +276,19 @@ export class LocalControls {
       if (aim !== turn.aim) out.push({ t: 'aim', angle: aim });
     }
 
-    // Gauge: hold to charge, release to fire. A full gauge starts again from empty, so the
-    // shot only leaves when the button is let go at the right moment.
+    // Gauge: hold to charge, release to fire. A full gauge stays full a moment, then starts
+    // again from empty, so the shot only leaves when the button is let go at the right moment.
     if (input.charge && def && !usesPower(def)) {
       // Held on from the press that already struck: nothing more.
     } else if (input.charge) {
       this.charging = true;
-      this.power = this.power >= MAX_POWER ? 0 : Math.min(MAX_POWER, this.power + CHARGE_SPEED);
+      if (this.power >= MAX_POWER && ++this.fullFor > FULL_HOLD_TICKS) {
+        this.power = 0;
+        this.fullFor = 0;
+      } else if (this.power < MAX_POWER) {
+        this.fullFor = 0;
+        this.power = Math.min(MAX_POWER, this.power + CHARGE_SPEED);
+      }
     } else if (this.charging) {
       this.fire(out);
     }

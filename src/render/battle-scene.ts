@@ -474,8 +474,8 @@ export class BattleScene extends Phaser.Scene {
     ] as const) {
       kb.addKey(code).on('down', () => this.pressed.add(name));
     }
-    this.input.on('wheel', (_p: Phaser.Input.Pointer, _o: unknown, _dx: number, dy: number) => {
-      this.zoomTo(cam.zoom * (dy > 0 ? 0.9 : 1.1));
+    this.input.on('wheel', (p: Phaser.Input.Pointer, _o: unknown, _dx: number, dy: number) => {
+      this.zoomTo(cam.zoom * (dy > 0 ? 0.9 : 1.1), { x: p.x, y: p.y });
       this.manualCamera = true;
     });
     this.ui = new GameUi({
@@ -619,7 +619,7 @@ export class BattleScene extends Phaser.Scene {
       points.push({ x, y: y + 150 });
     }
     const { width, height } = this.scale;
-    const u = uiScale(width, height);
+    const u = uiScale(width, height, window.matchMedia('(pointer: coarse)').matches);
     const phone = isPhonePortrait(width, height);
     const m = phone ? PHONE_FRAME_MARGINS : FRAME_MARGINS;
     const margins = { top: m.top * u, bottom: m.bottom * u, side: m.side * u };
@@ -636,9 +636,18 @@ export class BattleScene extends Phaser.Scene {
     return frame(near, width, height, margins, floor, closest);
   }
 
-  private zoomTo(zoom: number): void {
+  /** Zooms, keeping the world point under screen point `at` (fingers, mouse) where it is. */
+  private zoomTo(zoom: number, at: { x: number; y: number } | null = null): void {
+    const cam = this.cameras.main;
     const max = Math.max(this.minZoom(), (ZOOM_MAX * this.scale.height) / REF_HEIGHT);
-    this.cameras.main.setZoom(Phaser.Math.Clamp(zoom, this.minZoom(), max));
+    const before = cam.zoom;
+    const after = Phaser.Math.Clamp(zoom, this.minZoom(), max);
+    cam.setZoom(after);
+    if (!at) return;
+    // The camera zooms about its centre: shift it so the point under `at` stays put.
+    const k = 1 / before - 1 / after;
+    cam.scrollX += (at.x - cam.width / 2) * k;
+    cam.scrollY += (at.y - cam.height / 2) * k;
   }
 
   /** « Vue par défaut »: the camera goes back to framing every unit. */
@@ -843,6 +852,7 @@ export class BattleScene extends Phaser.Scene {
       ? { x: active.x / SUBPX, y: active.y / SUBPX - UNIT_HEIGHT / 2 }
       : null;
     const turn = this.sim.view().turn;
+    this.input_.placing = turn.phase === 'placement';
     this.input_.aimTip =
       active && turn.phase === 'action'
         ? {
@@ -1445,8 +1455,9 @@ export class BattleScene extends Phaser.Scene {
       this.manualCamera = true;
     }
     if (this.input_.zoom !== 1) {
-      this.zoomTo(cam.zoom * this.input_.zoom);
+      this.zoomTo(cam.zoom * this.input_.zoom, this.input_.zoomAt);
       this.input_.zoom = 1;
+      this.input_.zoomAt = null;
       this.manualCamera = true;
     }
     if (this.input_.recenter) {

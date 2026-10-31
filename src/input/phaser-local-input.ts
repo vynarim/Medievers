@@ -1,6 +1,6 @@
 // Local player input through Phaser: keyboard, mouse and touch (drag-to-aim, dragging the aim
-// arrowhead, one-finger pan,
-// pinch zoom, double tap to recentre) feed LocalControls (GDD §8).
+// arrowhead, one-finger pan, two-finger pinch and pan, double tap to recentre) feed
+// LocalControls (GDD §8).
 import Phaser from 'phaser';
 import type { GameCommand } from '../sim/commands.ts';
 import type { SimView } from '../sim/sim.ts';
@@ -16,8 +16,11 @@ const EDGE_PX = 24;
 const EDGE_DWELL_MS = 350;
 /** screen px around the aim arrowhead where a press grabs it to re-aim */
 const TIP_GRAB_RADIUS = 36;
-/** px a press may move and still count as a click */
+/** same, for a finger, which hides what it touches */
+const TIP_GRAB_RADIUS_TOUCH = 64;
+/** px a press may move and still count as a click, with a mouse and with a finger */
 const CLICK_SLOP = 6;
+const CLICK_SLOP_TOUCH = 18;
 /**
  * Screen px a slingshot pull must reach before it aims or can fire. A click on the unit, even
  * a shaky one, never shoots; bringing the pointer back inside this distance cancels the shot.
@@ -26,6 +29,8 @@ const SLING_ARM_PX = 48;
 /** ms and px between two taps of a double tap (recentre the camera, GDD §8.2) */
 const DOUBLE_TAP_MS = 320;
 const DOUBLE_TAP_SLOP = 40;
+
+const TOUCH_EVENTS = ['touchstart', 'touchmove', 'touchend', 'touchcancel'] as const;
 
 type Keys = Record<
   'left' | 'right' | 'a' | 'd' | 'up' | 'down' | 'enter' | 'space' | 'tab' | 't' | 'g',
@@ -73,10 +78,19 @@ export class PhaserLocalInput implements InputSource {
   private edgeSince = 0;
   /** zoom factor requested by a pinch since the last frame, consumed by the scene */
   zoom = 1;
+  /** screen point the pinch zooms about (between the fingers), consumed with `zoom` */
+  zoomAt: { x: number; y: number } | null = null;
+  /** true during the placement, set by the scene each frame: a release puts the unit down */
+  placing = false;
+  /** a press of the placement in progress, released where the unit goes */
+  private placeFrom = false;
   /** set by a double tap: the scene recentres the camera */
   recenter = false;
   private panFrom: { x: number; y: number } | null = null;
-  private pinchDistance = 0;
+  /** the two fingers' spread and midpoint while they pinch, in game px */
+  private pinch: { spread: number; mid: { x: number; y: number } } | null = null;
+  /** a pinch happened since the first finger came down: lifting the fingers is no tap */
+  private pinched = false;
   private lastTap = { time: -Infinity, x: 0, y: 0 };
 
   constructor(scene: Phaser.Scene) {
@@ -109,6 +123,49 @@ export class PhaserLocalInput implements InputSource {
     scene.input.on('pointermove', this.onMove, this);
     scene.input.on('pointerup', this.onUp, this);
     scene.input.on('gameout', this.onOut, this);
+    // The pinch reads the browser's touches straight, before Phaser hears of them (capture):
+    // every finger counts, even one that came down on the HUD, and none is ever missed.
+    for (const type of TOUCH_EVENTS) window.addEventListener(type, this.onTouch, true);
+  }
+
+  private readonly onTouch = (e: TouchEvent): void => {
+    const a = e.touches[0];
+    const b = e.touches[1];
+    if (!a || !b) {
+      this.pinch = null;
+      return;
+    }
+    const sc = this.scene.scale;
+    const ax = sc.transformX(a.pageX);
+    const ay = sc.transformY(a.pageY);
+    const bx = sc.transformX(b.pageX);
+    const by = sc.transformY(b.pageY);
+    const spread = Math.max(1, Math.hypot(ax - bx, ay - by));
+    const mid = { x: (ax + bx) / 2, y: (ay + by) / 2 };
+    if (!this.pinch) {
+      // Two fingers on a menu (a list to scroll) are not a pinch of the battlefield.
+      const canvas = this.scene.game.canvas;
+      if (![a, b].some((t) => t.target === canvas)) return;
+      this.startPinch();
+    } else {
+      this.zoom *= spread / this.pinch.spread;
+      this.zoomAt = mid;
+      // Both fingers sliding together drag the map along.
+      this.pan.dx += this.pinch.mid.x - mid.x;
+      this.pan.dy += this.pinch.mid.y - mid.y;
+    }
+    this.pinch = { spread, mid };
+  };
+
+  /** A second finger turns the gesture into a pinch: cancel any aim, pan or placement. */
+  private startPinch(): void {
+    this.pinched = true;
+    this.drag = null;
+    this.dragArmed = false;
+    this.aimAt = null;
+    this.panFrom = null;
+    this.downAt = null;
+    this.placeFrom = false;
   }
 
   /** Pointer position in world px, through the main (world) camera. */
@@ -117,31 +174,31 @@ export class PhaserLocalInput implements InputSource {
     return { x: w.x, y: w.y };
   }
 
-  /** Distance between the two first touches, or 0 when fewer than two are down. */
-  private touchSpread(): number {
-    const a = this.scene.input.pointer1;
-    const b = this.scene.input.pointer2;
-    return a.isDown && b.isDown ? Math.hypot(a.x - b.x, a.y - b.y) : 0;
+  /** True while two touches are down (Phaser's own count, should a touch event be missed). */
+  private twoFingers(): boolean {
+    return this.scene.input.pointer1.isDown && this.scene.input.pointer2.isDown;
   }
 
   private onDown(p: Phaser.Input.Pointer): void {
-    // A second finger turns the gesture into a pinch: cancel any aim or pan in progress.
-    const spread = this.touchSpread();
-    if (spread > 0) {
-      this.pinchDistance = spread;
-      this.drag = null;
-      this.panFrom = null;
-      this.downAt = null;
+    if (this.pinch || this.twoFingers()) {
+      this.startPinch();
       return;
     }
+    // The first finger of a new gesture.
+    this.pinched = false;
     this.downAt = { x: p.x, y: p.y };
     if (p.rightButtonDown()) {
       this.weaponClick = true;
       return;
     }
+    // During the placement, the press drags the unit about; its release puts it down.
+    if (this.placing) {
+      this.placeFrom = true;
+      return;
+    }
     const c = this.unitCentre;
     const w = this.world(p);
-    if (c && this.overTip(w)) {
+    if (c && this.overTip(w, p.wasTouch)) {
       this.aimAt = { x: w.x - c.x, y: w.y - c.y };
       return;
     }
@@ -153,10 +210,11 @@ export class PhaserLocalInput implements InputSource {
   }
 
   /** True when a world point is on the aim arrowhead (radius in screen px). */
-  private overTip(w: { x: number; y: number }): boolean {
+  private overTip(w: { x: number; y: number }, touch = false): boolean {
     const tip = this.aimTip;
     const zoom = this.scene.cameras.main.zoom;
-    return !!tip && Math.hypot(w.x - tip.x, w.y - tip.y) * zoom <= TIP_GRAB_RADIUS;
+    const radius = touch ? TIP_GRAB_RADIUS_TOUCH : TIP_GRAB_RADIUS;
+    return !!tip && Math.hypot(w.x - tip.x, w.y - tip.y) * zoom <= radius;
   }
 
   /** The mouse left the canvas (or went over a DOM panel): stop edge scrolling. */
@@ -186,14 +244,7 @@ export class PhaserLocalInput implements InputSource {
     if (!p.isDown) {
       this.scene.input.setDefaultCursor(this.overTip(this.world(p)) ? 'grab' : 'default');
     }
-    if (this.pinchDistance > 0) {
-      const spread = this.touchSpread();
-      if (spread > 0) {
-        this.zoom *= spread / this.pinchDistance;
-        this.pinchDistance = spread;
-      }
-      return;
-    }
+    if (this.pinch || this.pinched) return;
     if (this.drag && this.unitCentre) {
       const w = this.world(p);
       this.drag = { pullX: w.x - this.unitCentre.x, pullY: w.y - this.unitCentre.y };
@@ -207,11 +258,18 @@ export class PhaserLocalInput implements InputSource {
   }
 
   private onUp(p: Phaser.Input.Pointer): void {
-    if (this.pinchDistance > 0) {
-      if (this.touchSpread() === 0) this.pinchDistance = 0;
+    if (this.pinch || this.pinched) {
+      this.downAt = null;
       return;
     }
-    if (this.downAt && Math.hypot(p.x - this.downAt.x, p.y - this.downAt.y) <= CLICK_SLOP) {
+    if (this.placeFrom) {
+      this.placeFrom = false;
+      this.downAt = null;
+      this.clickAt = this.world(p);
+      return;
+    }
+    const slop = p.wasTouch ? CLICK_SLOP_TOUCH : CLICK_SLOP;
+    if (this.downAt && Math.hypot(p.x - this.downAt.x, p.y - this.downAt.y) <= slop) {
       this.clickAt = this.world(p);
       const tap = this.lastTap;
       if (
@@ -294,5 +352,6 @@ export class PhaserLocalInput implements InputSource {
     this.scene.input.off('pointermove', this.onMove, this);
     this.scene.input.off('pointerup', this.onUp, this);
     this.scene.input.off('gameout', this.onOut, this);
+    for (const type of TOUCH_EVENTS) window.removeEventListener(type, this.onTouch, true);
   }
 }

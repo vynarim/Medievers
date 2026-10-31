@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { CLASSIC_RULES } from '../rules-fixture.ts';
 import {
   CHARGE_SPEED,
+  FULL_HOLD_TICKS,
   DOUBLE_PRESS_TICKS,
   SPIN_SPEED,
   LocalControls,
@@ -140,6 +141,19 @@ describe('LocalControls', () => {
     const cmds = tick({});
     expect(cmds).toContainEqual({ t: 'fire', power: 20 * CHARGE_SPEED });
     expect(sim.view().turn.phase).toBe('retreat');
+  });
+
+  it('keeps a full gauge full for a moment, so a release at the top fires at full power', () => {
+    const { tick, controls } = setup();
+    let ticks = 0;
+    while (controls.power < 1024) {
+      tick({ charge: true });
+      ticks++;
+    }
+    for (let i = 0; i < FULL_HOLD_TICKS - 1; i++) tick({ charge: true });
+    expect(controls.power).toBe(1024);
+    expect(ticks).toBeLessThan(100);
+    expect(tick({}).find((c) => c.t === 'fire')).toEqual({ t: 'fire', power: 1024 });
   });
 
   it('never fires by itself: a full gauge starts again from empty', () => {
