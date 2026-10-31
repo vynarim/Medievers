@@ -47,7 +47,7 @@ for (const id of readdirSync(rigsDir)) {
       { piece: pc.id, x: at.x, y: at.y, w: pc.size[0], h: pc.size[1], scale: SCALE },
     );
     if (!found) {
-      console.log(`--   ${id}/${pc.id}: not drawn, keeps its placeholder`);
+      console.log(`--   ${id}/${pc.id}: not drawn here (another rig may draw ${pc.key})`);
       continue;
     }
     const file = `${pc.key}.png`;

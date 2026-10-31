@@ -1,5 +1,6 @@
 // The rigs of the game and their animations (src/content/rigs/<rig>/rig.json and anim/*.json),
-// checked at load: a broken file stops the game at once, with the faulty field named.
+// checked at load: a broken file stops the game at once, with the faulty field named. A rig may
+// borrow the animations of another on the same skeleton (rig.json "anims").
 import { parseAnim, parseRig, type AnimDef, type RigDef } from './format.ts';
 
 export interface RigSet {
@@ -28,9 +29,11 @@ export function loadRigs(
     const rig = parseRig(json, path);
     if (rig.id !== dir) throw new Error(`${path}: id "${rig.id}" is not its folder "${dir}"`);
     const set = new Map<string, AnimDef>();
+    // A rig on another's skeleton plays that one's animations, checked against its own bones.
+    const from = rig.anims ?? dir;
     for (const [ap, aj] of Object.entries(anims)) {
       const m = /rigs\/([^/]+)\/anim\/([^/]+)\.json$/.exec(ap);
-      if (!m || m[1] !== dir) continue;
+      if (!m || m[1] !== from) continue;
       const anim = parseAnim(aj, rig, ap);
       if (anim.id !== m[2]) throw new Error(`${ap}: id "${anim.id}" is not its file name`);
       set.set(anim.id, anim);

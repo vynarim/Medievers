@@ -60,6 +60,11 @@ export interface RigDef {
   /** in draw order, back to front */
   readonly pieces: readonly PieceDef[];
   readonly slots: readonly SlotDef[];
+  /**
+   * The rig whose animations this one plays, its skeleton being the same (the classes play the
+   * knight's, 2026-10-31); null: its own, in its folder's anim/.
+   */
+  readonly anims: string | null;
 }
 
 export type Ease = 'linear' | 'step' | 'easeIn' | 'easeOut' | 'easeInOut';
@@ -175,7 +180,7 @@ function pair(v: Json, path: string): readonly [number, number] {
 /** Checks a parsed `rig.json` and returns it typed, defaults filled in. */
 export function parseRig(json: Json, path = 'rig'): RigDef {
   const o = obj(json, path);
-  only(o, path, ['format', 'id', 'height', 'bones', 'pieces', 'slots']);
+  only(o, path, ['format', 'id', 'height', 'bones', 'pieces', 'slots', 'anims']);
   if (o['format'] !== RIG_FORMAT) {
     throw new RigFormatError(`${path}.format`, `expected "${RIG_FORMAT}"`);
   }
@@ -267,7 +272,8 @@ export function parseRig(json: Json, path = 'rig'): RigDef {
     }
   });
 
-  return { format: RIG_FORMAT, id: rigId, height, bones, pieces, slots };
+  const anims = o['anims'] === undefined || o['anims'] === null ? null : id(o['anims'], `${path}.anims`);
+  return { format: RIG_FORMAT, id: rigId, height, bones, pieces, slots, anims };
 }
 
 function keys(v: Json, path: string, duration: number): readonly Key[] {
@@ -313,7 +319,9 @@ export function parseAnim(json: Json, rig: RigDef, path = 'anim'): AnimDef {
   }
   const animId = id(o['id'], `${path}.id`);
   const rigId = id(o['rig'], `${path}.rig`);
-  if (rigId !== rig.id) throw new RigFormatError(`${path}.rig`, `expected "${rig.id}"`);
+  // Written for this rig, or for the rig whose animations it borrows.
+  const owner = rig.anims ?? rig.id;
+  if (rigId !== owner) throw new RigFormatError(`${path}.rig`, `expected "${owner}"`);
   const duration = num(o['duration'], `${path}.duration`);
   if (duration <= 0) throw new RigFormatError(`${path}.duration`, 'must be positive');
   const mode = o['mode'];

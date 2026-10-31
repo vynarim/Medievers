@@ -24,12 +24,20 @@ export function rigTextures(
     if (scene.textures.exists(pc.key)) continue;
     const draw = drawers[pc.id];
     const corner = corners.get(pc.id);
-    if (!draw || !corner) throw new Error(`rig ${rig.id}: no placeholder for piece ${pc.id}`);
+    if (!corner) throw new Error(`rig ${rig.id}: no piece ${pc.id}`);
     const w = Math.ceil(pc.size[0] * PLACEHOLDER_RES);
     const h = Math.ceil(pc.size[1] * PLACEHOLDER_RES);
     const t = scene.textures.createCanvas(pc.key, w, h);
     if (!t) throw new Error(`cannot create texture ${pc.key}`);
     const ctx = t.getContext();
+    if (!draw) {
+      // No drawing for it and no file: a plain frame at its size (ASSETS §2.1).
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+      ctx.fillRect(0, 0, w, h);
+      ctx.strokeRect(0.5, 0.5, w - 1, h - 1);
+      t.refresh();
+      continue;
+    }
     const r = PLACEHOLDER_RES;
     ctx.setTransform(r, 0, 0, r, -corner.x * r, -corner.y * r);
     draw(new Frame(new CanvasPen(ctx), 0, 0, 1), WHITE);

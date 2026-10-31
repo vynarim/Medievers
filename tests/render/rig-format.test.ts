@@ -19,17 +19,27 @@ describe('rig files', () => {
     for (const dir of dirs) {
       const rig = parseRig(read(join(ROOT, dir, 'rig.json')), `${dir}/rig.json`);
       expect(rig.id).toBe(dir);
-      for (const file of readdirSync(join(ROOT, dir, 'anim'))) {
-        const anim = parseAnim(read(join(ROOT, dir, 'anim', file)), rig, file);
+      // A rig on another's skeleton plays that one's animations, checked against its own bones.
+      const from = rig.anims ?? dir;
+      for (const file of readdirSync(join(ROOT, from, 'anim'))) {
+        const anim = parseAnim(read(join(ROOT, from, 'anim', file)), rig, file);
         expect(`${anim.id}.json`).toBe(file);
       }
       // The game loads the very same files.
-      expect(RIGS.get(dir)?.anims.size).toBe(readdirSync(join(ROOT, dir, 'anim')).length);
+      expect(RIGS.get(dir)?.anims.size).toBe(readdirSync(join(ROOT, from, 'anim')).length);
     }
   });
 
   const knight = RIGS.get('knight');
   if (!knight) throw new Error('no knight rig');
+
+  it('every class has its rig, on the skeleton of the knight, playing its animations', () => {
+    for (const cls of ['knight', 'archer', 'slinger', 'sapper', 'cleric', 'king']) {
+      const set = RIGS.get(cls);
+      expect(set?.rig.bones).toEqual(knight.rig.bones);
+      expect([...(set?.anims.keys() ?? [])].sort()).toEqual([...knight.anims.keys()].sort());
+    }
+  });
 
   it('the knight has every P0 animation of ASSETS §3.4, with its loop and duration', () => {
     const want: Record<string, [mode: string, min: number, max: number]> = {
