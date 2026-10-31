@@ -123,6 +123,10 @@ export class LocalControls {
   private downBefore = false;
   private pendingJumpTick = -1;
   private charging = false;
+  /** the last weapon held that is the turn's action (not the banner nor the ladder) */
+  private lastWeapon: WeaponId | null = null;
+  /** a free tool was just used: the next tick hands back lastWeapon */
+  private handBack = false;
   /** ticks the gauge has been full, while charging */
   private fullFor = 0;
   /** 0..1024 while charging, for the HUD gauge */
@@ -220,8 +224,20 @@ export class LocalControls {
       this.power = 0;
       return out;
     }
+    const inHand = view.rules.weapons.findIndex((w) => w.id === turn.weapon);
+    const hand = view.rules.weapons[inHand];
+    if (hand && !hand.free) this.lastWeapon = hand.id;
     if (input.selectWeapon) out.push({ t: 'selectWeapon', id: input.selectWeapon });
-    else if (input.nextWeaponPressed) {
+    else if (this.handBack && hand?.free && this.lastWeapon !== null) {
+      // A banner held up or a ladder set is not the turn's action: the hand goes back to the
+      // weapon it held, so that the shot is still at hand (playtest of 2026-10-31).
+      this.handBack = false;
+      const back = view.rules.weapons.findIndex((w) => w.id === this.lastWeapon);
+      const w = view.rules.weapons[back];
+      if (w && view.teams[turn.activeTeam]?.ammo[back] !== 0 && mayUse(view, unit, w)) {
+        out.push({ t: 'selectWeapon', id: w.id });
+      }
+    } else if (input.nextWeaponPressed) {
       const ammo = view.teams[turn.activeTeam]?.ammo ?? [];
       const usable = (w: WeaponDef): boolean => mayUse(view, unit, w);
       out.push({
@@ -237,6 +253,7 @@ export class LocalControls {
     // A targeted weapon goes where the map was clicked.
     if (input.target && def && isTargeted(def)) {
       out.push({ t: 'fireAt', x: Math.trunc(input.target.x), y: Math.trunc(input.target.y) });
+      this.handBack = def.free === true;
       this.charging = false;
       this.power = 0;
       return out;
@@ -244,6 +261,7 @@ export class LocalControls {
     // Weapons without power (mace, pick, sap, chausse-trape) act as soon as fire is pressed.
     if (def && !usesPower(def) && input.firePressed) {
       this.fire(out);
+      this.handBack = def.free === true;
       return out;
     }
 
@@ -291,6 +309,7 @@ export class LocalControls {
       }
     } else if (this.charging) {
       this.fire(out);
+      this.handBack = def?.free === true;
     }
     return out;
   }
@@ -307,6 +326,7 @@ export class LocalControls {
     this.pendingJumpTick = -1;
     this.charging = false;
     this.power = 0;
+    this.handBack = false;
   }
 }
 

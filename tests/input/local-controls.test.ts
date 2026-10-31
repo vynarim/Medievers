@@ -134,6 +134,17 @@ describe('LocalControls', () => {
     expect(b.tick({ jumpPressed: true })).toContainEqual({ t: 'jump', kind: 'back' });
   });
 
+  it('hands back the weapon held before once the banner is used up, so the shot is at hand', () => {
+    const { sim, tick } = setup();
+    expect(sim.view().turn.weapon).toBe('bow');
+    tick({ selectWeapon: 'banner' });
+    expect(sim.view().turn.weapon).toBe('banner');
+    tick({ firePressed: true });
+    for (let i = 0; i < 3; i++) tick();
+    expect(sim.view().turn.phase).toBe('action');
+    expect(sim.view().turn.weapon).toBe('bow');
+  });
+
   it('charges while the key is held and fires on release', () => {
     const { sim, controls, tick } = setup();
     for (let i = 0; i < 20; i++) tick({ charge: true });
