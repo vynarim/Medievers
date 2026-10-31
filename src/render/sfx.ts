@@ -49,8 +49,8 @@ export type SfxId =
 /** ms the same effect waits before it may sound again, so a volley is not a din */
 const SAME_SFX_MS = 45;
 /** length of the rain's loop, s, and how many drops fall in a second */
-const RAIN_LOOP_S = 4;
-const RAIN_DROPS_PER_S = 900;
+const RAIN_LOOP_S = 6;
+const RAIN_DROPS_PER_S = 140;
 /** effects at most within one frame */
 const MAX_PER_FRAME = 6;
 
@@ -102,10 +102,11 @@ class Sfx {
     const src = ctx.createBufferSource();
     src.buffer = this.rainBuffer(ctx);
     src.loop = true;
-    // The drops ring high; the shower's far murmur stays under them.
+    // No rumble under the shower, and no hiss over it.
     const f = ctx.createBiquadFilter();
-    f.type = 'highpass';
-    f.frequency.value = 700;
+    f.type = 'bandpass';
+    f.frequency.value = 1100;
+    f.Q.value = 0.35;
     const gain = ctx.createGain();
     gain.gain.value = 0;
     gain.gain.setTargetAtTime(0.09, ctx.currentTime, 1.5);
@@ -117,8 +118,9 @@ class Sfx {
   }
 
   /**
-   * A shower, not a hiss: hundreds of tiny drops a second, each a click that dies in a few ms,
-   * loud or faint at random, over a soft low murmur; in stereo, so it falls all around.
+   * A shower on the fields: a soft wash of dark noise that swells and ebbs, and over it the
+   * patter of drops, each a muffled tap of noise (never a tone: tones chirp like crickets),
+   * some near and bright, most far and dull; in stereo, so it falls all around.
    */
   private rainBuffer(ctx: AudioContext): AudioBuffer {
     if (this.rainBuf) return this.rainBuf;
@@ -126,24 +128,30 @@ class Sfx {
     const buf = ctx.createBuffer(2, rate * RAIN_LOOP_S, rate);
     for (let c = 0; c < 2; c++) {
       const d = buf.getChannelData(c);
-      // The murmur: noise smoothed twice, a distant patter.
+      // The wash: white noise through two gentle low-pass poles, swelling slowly (whole cycles
+      // over the loop, so that it joins seamlessly).
       let a = 0;
       let b = 0;
+      const phase = Math.random() * 2 * Math.PI;
       for (let i = 0; i < d.length; i++) {
-        a += (Math.random() * 2 - 1 - a) * 0.08;
-        b += (a - b) * 0.08;
-        d[i] = b * 0.5;
+        a += (Math.random() * 2 - 1 - a) * 0.35;
+        b += (a - b) * 0.35;
+        const swell = 0.75 + 0.25 * Math.sin(phase + (2 * Math.PI * 2 * i) / d.length);
+        d[i] = b * 0.55 * swell;
       }
       const drops = RAIN_DROPS_PER_S * RAIN_LOOP_S;
       for (let k = 0; k < drops; k++) {
         const at = Math.floor(Math.random() * d.length);
-        const amp = Math.random() ** 3 * 0.9;
-        const tau = rate * (0.0008 + Math.random() * 0.0025);
+        const near = Math.random() < 0.15;
+        const amp = (near ? 0.5 : 0.18) * (0.4 + Math.random() * 0.6);
+        const tau = rate * (near ? 0.004 : 0.008) * (0.6 + Math.random() * 0.8);
         const len = Math.min(Math.floor(tau * 5), d.length - at);
-        // A wet click: a few cycles of a high tone, damped at once.
-        const w = (2 * Math.PI * (1800 + Math.random() * 4200)) / rate;
+        // Brightness: how much of the tap's noise passes (a near drop is crisper).
+        const k1 = near ? 0.55 : 0.18;
+        let y = 0;
         for (let i = 0; i < len; i++) {
-          d[at + i] = (d[at + i] ?? 0) + amp * Math.exp(-i / tau) * Math.sin(w * i);
+          y += (Math.random() * 2 - 1 - y) * k1;
+          d[at + i] = (d[at + i] ?? 0) + amp * Math.exp(-i / tau) * y;
         }
       }
     }
