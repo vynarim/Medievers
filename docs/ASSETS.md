@@ -33,6 +33,7 @@
 | Blanc | Céruse | #f3ecd9 |
 | Vélin | Vélin | #e9dcc0 |
 | Cerne | Encre | #2a1d14 |
+| Mailles et fer (ajout du 2026-10-31) | Fer, fer à l'ombre, heaume | #a7a4a6, #8a8789, #bdb9b0 |
 | Chair | Carnation | #f0cfb0 |
 
 ### 1.2 bis Placeholders procéduraux (2026-10-24)
@@ -121,7 +122,7 @@ Jusqu'à la production artistique (BACKLOG, lot 9), aucun fichier image n'est re
 
 ### 3.5 Rig du Chevalier (format figé le 2026-10-31, TECH_SPEC §7.1, [ADR 0003](adr/0003-cutout-rig-format.md))
 
-Source de vérité : `src/content/rigs/knight/rig.json` (tailles et pivots en px ×1 ; produire à ×2). Les placeholders actuels sont dessinés par `src/render/rig/knight-art.ts` aux mêmes tailles et pivots ; déposer le PNG d'une clé le remplace.
+Source de vérité : `src/content/rigs/knight/rig.json` (tailles et pivots en px ×1 ; produire à ×2). Les placeholders sont dessinés par `src/render/rig/knight-art.ts` aux mêmes tailles et pivots ; déposer le PNG d'une clé le remplace. **Dessin final, première version (2026-10-31)** : `assets/units/knight/knight.svg`, la figure entière au repos dans le repère du rig, un groupe `piece-<id>` par pièce ; `pnpm run art` (`tools/build-art.ts`) cadre chaque pièce sur son rectangle, la rend à ×2 par Chromium dans `public/assets/units/knight/<clé>.png` et liste les clés servies dans `src/content/art.json`, que la scène charge. L'aide et le fantôme du placement gardent pour l'instant le dessin du placeholder.
 
 | Ordre | Pièce | Os | Clé | Teinte |
 |---|---|---|---|---|
@@ -242,6 +243,8 @@ Cartes V1 : Jéricho (P0, carte de référence), Ela, Camp, Arche, Tour, Verger 
 - Les trois polices sont embarquées via les paquets `@fontsource/*` (aucun appel réseau) et chargées avant la première scène (`src/ui/fonts.ts`).
 
 ## 9. Pipeline de production (génération IA + retouche)
+
+**Décidé le 2026-10-31** : l'art est dessiné en **vectoriel (SVG) par Claude**, sans génération d'images. Les règles ci-dessous valent pour la cohérence du dessin ; la génération IA (§9.2) reste une piste pour remplacer plus tard des pièces. Une source SVG par rig ou par lot (`assets/<catégorie>/<sujet>/<sujet>.svg`), rendue en PNG par `pnpm run art`.
 
 ### 9.1 Règles de cohérence
 1. Produire d'abord une **planche de référence de style** validée (1 chevalier complet, 1 morceau de terrain, 1 explosion, 1 bouton). Elle sert d'image de référence à toutes les générations suivantes.

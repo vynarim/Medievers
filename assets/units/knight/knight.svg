@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Medieverse: the knight, source of the rig's pieces (ASSETS §3.5, §9).
+  The whole figure at rest, in the rig's own frame: px ×1, facing right, feet at (0, 0), y down.
+  Each piece is the group `piece-<id>` of rig.json; `pnpm run art:build` frames it on its
+  rectangle and rasterises it at ×2 under its asset key. Pieces tinted to the house's colours are
+  drawn in neutral greys (50–85 % lightness, multiply tint, ASSETS §2).
+  © 2026 vynarim, all rights reserved (public/assets/LICENSE.md).
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-40 -90 80 94" width="320" height="376">
+  <defs>
+    <!-- Mail: rows of little arcs, every other row shifted half a ring (ASSETS §1.1). -->
+    <pattern id="mail" width="2.6" height="2.2" patternUnits="userSpaceOnUse">
+      <rect width="2.6" height="2.2" fill="#a7a4a6"/>
+      <path d="M0 0.5q0.65 1 1.3 0q0.65 1 1.3 0M-1.3 1.6q0.65 1 1.3 0q0.65 1 1.3 0q0.65 1 1.3 0"
+        fill="none" stroke="#2a1d14" stroke-width="0.32" stroke-opacity="0.75"/>
+    </pattern>
+    <pattern id="mail-far" width="2.6" height="2.2" patternUnits="userSpaceOnUse">
+      <rect width="2.6" height="2.2" fill="#8a8789"/>
+      <path d="M0 0.5q0.65 1 1.3 0q0.65 1 1.3 0M-1.3 1.6q0.65 1 1.3 0q0.65 1 1.3 0q0.65 1 1.3 0"
+        fill="none" stroke="#2a1d14" stroke-width="0.32" stroke-opacity="0.8"/>
+    </pattern>
+  </defs>
+  <g stroke="#2a1d14" stroke-linejoin="round" stroke-linecap="round">
+
+    <!-- Far leg, in the shade of the body: mail chausses, a pointed shoe. -->
+    <g id="piece-thigh_far">
+      <path d="M-7.2 -26 C-7.4 -20 -7 -16 -6.6 -13 A3.6 3.6 0 0 0 0.6 -13 C1 -16 1.2 -20 1.2 -26 Z"
+        fill="url(#mail-far)" stroke-width="1"/>
+    </g>
+    <g id="piece-shin_far">
+      <path d="M-6.6 -14 C-6.6 -10 -6.2 -7 -6 -4.4 A3 3 0 0 0 0 -4.4 C0.2 -7 0.6 -10 0.6 -14 A3.6 3.6 0 0 0 -6.6 -14 Z"
+        fill="url(#mail-far)" stroke-width="1"/>
+    </g>
+    <g id="piece-foot_far">
+      <path d="M-6.4 -4.8 C-6.6 -2.6 -6.4 -0.8 -5.8 -0.2 L5.6 -0.2 C6.4 -0.4 6.6 -1.4 5.6 -1.8 C3 -2.6 1 -3.6 0.2 -5 Z"
+        fill="#4a3424" stroke-width="0.95"/>
+    </g>
+
+    <!-- Near leg. -->
+    <g id="piece-thigh_near">
+      <path d="M-1.2 -26 C-1.4 -20 -1 -16 -0.6 -13 A3.6 3.6 0 0 0 6.6 -13 C7 -16 7.2 -20 7.2 -26 Z"
+        fill="url(#mail)" stroke-width="1"/>
+    </g>
+    <g id="piece-shin_near">
+      <path d="M-0.6 -14 C-0.6 -10 -0.2 -7 0 -4.4 A3 3 0 0 0 6 -4.4 C6.2 -7 6.6 -10 6.6 -14 A3.6 3.6 0 0 0 -0.6 -14 Z"
+        fill="url(#mail)" stroke-width="1"/>
+      <!-- the knee cop, a little plate of iron -->
+      <path d="M0.6 -15.4 Q3 -17.6 5.6 -15.4 Q5.4 -12.6 3 -12 Q0.8 -12.6 0.6 -15.4 Z" fill="#c9c6bf" stroke-width="0.8"/>
+    </g>
+    <g id="piece-foot_near">
+      <path d="M-0.4 -4.8 C-0.6 -2.6 -0.4 -0.8 0.2 -0.2 L11.6 -0.2 C12.4 -0.4 12.6 -1.4 11.6 -1.8 C9 -2.6 7 -3.6 6.2 -5 Z"
+        fill="#5e4430" stroke-width="0.95"/>
+      <!-- a gilt prick spur at the heel -->
+      <path d="M-0.4 -2.8 L-3.4 -3.4" fill="none" stroke="#d4a93c" stroke-width="1.1"/>
+      <path d="M-0.4 -2.8 L-3.4 -3.4" fill="none" stroke-width="0.4"/>
+    </g>
+
+    <!-- Far arm, behind the body, and its shield. -->
+    <g id="piece-arm_far_upper">
+      <path d="M-11.4 -58.6 C-13.4 -55 -15.6 -51 -16 -48.6 A3 3 0 0 0 -10 -47.4 C-9.4 -50 -6.8 -53.4 -4.8 -56 A3.6 3.6 0 0 0 -11.4 -58.6 Z"
+        fill="url(#mail-far)" stroke-width="1"/>
+    </g>
+    <g id="piece-arm_far_lower">
+      <path d="M-16 -48 C-16.2 -45 -16 -42.4 -15.8 -40 A2.8 2.8 0 0 0 -10.2 -40 C-10 -42.4 -9.8 -45 -10 -48 A3 3 0 0 0 -16 -48 Z"
+        fill="url(#mail-far)" stroke-width="1"/>
+    </g>
+    <g id="piece-hand_far">
+      <path d="M-16.6 -40.6 C-17 -38 -16 -36 -13.6 -35.8 C-11.2 -35.8 -10.2 -37.8 -10.6 -40.6 C-12.4 -41.8 -14.8 -41.8 -16.6 -40.6 Z"
+        fill="url(#mail-far)" stroke-width="0.95"/>
+    </g>
+    <!-- The heater shield: the house's field, a pale border, the guige strap. -->
+    <g id="piece-shield">
+      <path d="M-23.6 -59 L-4.4 -59 C-4.2 -50 -4.4 -42 -7.6 -35 C-9.6 -30.6 -12 -27.6 -14 -24.6 C-16 -27.6 -18.4 -30.6 -20.4 -35 C-23.6 -42 -23.8 -50 -23.6 -59 Z"
+        fill="#d2d2d2" stroke-width="1.1"/>
+      <path d="M-21.8 -57.2 L-6.2 -57.2 C-6 -49.6 -6.4 -42.6 -9.2 -36.2 C-10.8 -32.6 -12.6 -30 -14 -27.8 C-15.4 -30 -17.2 -32.6 -18.8 -36.2 C-21.6 -42.6 -22 -49.6 -21.8 -57.2 Z"
+        fill="none" stroke="#f4f4f4" stroke-width="0.9"/>
+      <!-- the light comes from the top left: a shadow down the right of the field -->
+      <path d="M-7.4 -55.4 C-7.4 -48 -7.8 -42 -10.2 -36.6" fill="none" stroke="#a6a6a6" stroke-width="0.95"/>
+    </g>
+    <g id="piece-shield_charge">
+      <path d="M-21.4 -36.2 L-14 -46.4 L-6.6 -36.2 L-6.6 -31.4 L-14 -41.6 L-21.4 -31.4 Z"
+        fill="#ececec" stroke-width="1.1"/>
+    </g>
+
+    <!-- The surcoat over the hauberk: the house's colour, split in front, tubular folds. -->
+    <g id="piece-torso">
+      <!-- the hauberk's skirt shows under the hem and through the split -->
+      <path d="M-9.6 -24 L9.8 -24 L9.4 -17.6 Q0 -16 -9.2 -17.6 Z" fill="url(#mail)" stroke-width="1.1"/>
+      <path d="M-5.6 -61.6 C-2 -62.6 2.6 -62.6 6 -61.6 C9.6 -61 11.6 -58.8 11.8 -55.4 C11.8 -50.4 10.8 -46 10.4 -42
+        C12 -36 13.4 -28 14.6 -20.4 C10 -18.6 7.6 -19.4 5.4 -19 L4.2 -28.6 L3 -19 C-1.6 -18.4 -6.6 -18.8 -10.6 -19.6
+        C-12.4 -19.8 -13.6 -20.4 -14.4 -21 C-13 -28 -11.6 -36 -10.2 -42 C-10.8 -46 -11.8 -50.4 -11.6 -55.4
+        C-11.4 -58.8 -9.4 -61 -5.6 -61.6 Z"
+        fill="#d8d8d8" stroke-width="1.1"/>
+      <!-- folds: tubular pleats falling from the belt, darker greys, one pale crest -->
+      <path d="M-6.4 -41 C-7.6 -34 -9.2 -27 -11 -21.2" fill="none" stroke="#9c9c9c" stroke-width="1.1"/>
+      <path d="M-2.2 -41 C-2.8 -34 -3.6 -27 -4.4 -19.6" fill="none" stroke="#9c9c9c" stroke-width="1.1"/>
+      <path d="M8.2 -41 C9.4 -34 10.8 -27 12 -21" fill="none" stroke="#9c9c9c" stroke-width="1.1"/>
+      <path d="M-4.4 -40 C-5.2 -33 -6.2 -27 -7.4 -21" fill="none" stroke="#f6f6f6" stroke-width="0.7"/>
+      <path d="M6.2 -40 C7 -33 7.8 -27 8.6 -21" fill="none" stroke="#f6f6f6" stroke-width="0.7"/>
+      <!-- the chest: a shade under the arm, the fall of the cloth over the shoulders -->
+      <path d="M-9.6 -54 C-8.4 -50 -8 -46.6 -8.6 -43.4" fill="none" stroke="#a8a8a8" stroke-width="1"/>
+      <path d="M8.6 -56 C9.4 -52 9.2 -48 8.6 -44" fill="none" stroke="#b4b4b4" stroke-width="0.9"/>
+      <!-- the scalloped hem -->
+      <path d="M-14.4 -21 Q-12.4 -18.4 -10.6 -19.6 Q-8.6 -17.6 -6.6 -18.8 Q-4.6 -17.4 -2.4 -18.6 Q-0.4 -17.4 1.4 -18.8"
+        fill="none" stroke-width="0.8"/>
+      <path d="M5.4 -19 Q7.4 -17.6 9.4 -19 Q11.6 -17.8 14.6 -20.4" fill="none" stroke-width="0.8"/>
+    </g>
+    <g id="piece-belt">
+      <path d="M-10.8 -44.6 C-4 -45.6 4 -45.6 10.8 -44.6 L10.6 -41.4 C4 -42.4 -4 -42.4 -10.6 -41.4 Z"
+        fill="#dadada" stroke-width="1.1"/>
+      <!-- the strap's tongue hanging from the buckle -->
+      <path d="M5.6 -42.4 L6.6 -36 L8 -36.6 L7.4 -42.4" fill="#c4c4c4" stroke-width="0.8"/>
+    </g>
+    <g id="piece-buckle">
+      <path d="M3.4 -45.4 L7.6 -45.4 L7.6 -41 L3.4 -41 Z" fill="#d4a93c" stroke-width="0.9"/>
+      <path d="M4.8 -44 L6.2 -44 L6.2 -42.4 L4.8 -42.4 Z" fill="#8c6222" stroke-width="0.4"/>
+    </g>
+
+    <!-- Near arm, in front, its mail mitten. -->
+    <g id="piece-arm_near_upper">
+      <path d="M3.6 -59 C5.4 -55.4 8.2 -51 9.2 -47.6 A3.2 3.2 0 0 0 15 -48.8 C13.8 -52.4 11.6 -56 10.4 -58.4 A3.8 3.8 0 0 0 3.6 -59 Z"
+        fill="url(#mail)" stroke-width="1"/>
+      <!-- the surcoat's short sleeve over the shoulder -->
+      <path d="M3.4 -60 C6.6 -61.6 10.6 -60.6 11.8 -57.2 C10.6 -55 8.6 -54 6.4 -53.6 C5.2 -55.4 4.2 -57.6 3.4 -60 Z"
+        fill="#d8d8d8" stroke-width="1.1"/>
+      <path d="M5.4 -58.4 C6.2 -57 6.8 -55.8 7.2 -54.4" fill="none" stroke="#9c9c9c" stroke-width="0.8"/>
+    </g>
+    <g id="piece-arm_near_lower">
+      <path d="M9.6 -49.2 C12 -46 14.6 -42.6 16.8 -40 A2.8 2.8 0 0 0 21 -43.4 C19 -45.8 16.4 -48.8 14.2 -51.2 A3.2 3.2 0 0 0 9.6 -49.2 Z"
+        fill="url(#mail)" stroke-width="1"/>
+    </g>
+    <g id="piece-hand_near">
+      <path d="M16.4 -40.4 C15.6 -38 16.6 -35.4 19.2 -34.8 C21.8 -34.4 23.4 -36.4 23 -39 C22.6 -41 20.8 -42 18.8 -41.8 C17.8 -41.6 17 -41.2 16.4 -40.4 Z"
+        fill="url(#mail)" stroke-width="0.95"/>
+      <path d="M19 -41.6 C19.6 -40 21.2 -38.8 22.8 -38.8" fill="none" stroke-width="0.6"/>
+    </g>
+
+    <!-- The held weapons (slot `weapon`). The bow across the forearm, upright at full draw. -->
+    <g id="piece-weapon_bow">
+      <path d="M29.6 -46.8 L9.4 -28.2" fill="none" stroke="#e9dcc0" stroke-width="0.7"/>
+      <path d="M29.6 -46.8 L9.4 -28.2" fill="none" stroke-width="0.25"/>
+      <path d="M29.6 -46.8 C33.4 -38 32 -31 25.6 -27.6 C21 -25 15 -25.8 9.4 -28.2" fill="none" stroke-width="3.4"/>
+      <path d="M29.6 -46.8 C33.4 -38 32 -31 25.6 -27.6 C21 -25 15 -25.8 9.4 -28.2" fill="none" stroke="#8a5a32" stroke-width="1.9"/>
+      <path d="M28.4 -31.6 L26.2 -29.4" fill="none" stroke="#b8322a" stroke-width="2.2"/>
+    </g>
+    <g id="piece-weapon_stone">
+      <path d="M15.4 -41.6 C15 -44 17.4 -45.6 20 -45.4 C22.8 -45.2 24.6 -43.4 24.4 -40.8 C24.2 -37.8 21.8 -36.2 19.2 -36.4 C16.6 -36.6 15.6 -38.8 15.4 -41.6 Z"
+        fill="#77737a" stroke-width="0.95"/>
+      <path d="M17.6 -43 C18.6 -44 20 -44.2 21.2 -43.8" fill="none" stroke="#c9c6bf" stroke-width="0.8"/>
+    </g>
+
+    <!-- The mail coif round the neck, under the helm. -->
+    <g id="piece-neck">
+      <path d="M-3.2 -60 L6 -60 C6.6 -57.6 7 -55 6.6 -52.4 C3.4 -51.6 -0.4 -51.6 -3.4 -52.6 C-3.8 -55 -3.8 -57.6 -3.2 -60 Z"
+        fill="url(#mail)" stroke-width="0.95"/>
+    </g>
+
+    <!-- The great helm: flat top, a gilt cross over the eye slit, breaths on the cheek. -->
+    <g id="piece-helm">
+      <path d="M-8.4 -78.6 C-4 -80.4 8 -80.4 12 -78.6 L12.8 -60 C12.4 -57.6 11 -56.4 9.4 -56 L-5.6 -56 C-7.4 -56.4 -8.8 -57.6 -9.2 -60 Z"
+        fill="#bdb9b0" stroke-width="1.1"/>
+      <!-- the back of the helm in shade -->
+      <path d="M-7.6 -77.2 L-7.8 -59.4 C-7.4 -58.2 -6.6 -57.6 -5.4 -57.4 L-3.6 -57.4 L-3.4 -77.8 Z"
+        fill="#8f8b84" stroke="none"/>
+      <!-- the flat crown, seen just from below its rim -->
+      <path d="M-8.4 -78.6 C-4 -77.2 8 -77.2 12 -78.6" fill="none" stroke-width="0.8"/>
+      <!-- the eye slits -->
+      <path d="M-1.4 -69.6 L12.4 -69.6 L12.4 -67.4 L-1.4 -67.4 Z" fill="#2a1d14" stroke-width="0.5"/>
+      <!-- the gilt cross: upright down the face, arm under the slit -->
+      <path d="M4.6 -77.6 L7.4 -77.6 L7.4 -57 L4.6 -57 Z" fill="#d4a93c" stroke-width="0.8"/>
+      <path d="M-1 -65.6 L12.6 -65.6 L12.6 -63.2 L-1 -63.2 Z" fill="#d4a93c" stroke-width="0.8"/>
+      <!-- breathing holes -->
+      <circle cx="-0.4" cy="-60.6" r="0.75" fill="#2a1d14" stroke="none"/>
+      <circle cx="2.2" cy="-59.6" r="0.75" fill="#2a1d14" stroke="none"/>
+      <circle cx="-0.4" cy="-58" r="0.75" fill="#2a1d14" stroke="none"/>
+      <circle cx="2.2" cy="-57.4" r="0.75" fill="#2a1d14" stroke="none"/>
+      <!-- rivets of the crown band -->
+      <path d="M-8.2 -75.6 C-4 -74.4 8 -74.4 12.2 -75.6" fill="none" stroke-width="0.6"/>
+      <circle cx="-5.8" cy="-74.9" r="0.45" fill="#2a1d14" stroke="none"/>
+      <circle cx="0" cy="-74.5" r="0.45" fill="#2a1d14" stroke="none"/>
+      <circle cx="10" cy="-74.9" r="0.45" fill="#2a1d14" stroke="none"/>
+    </g>
+  </g>
+</svg>

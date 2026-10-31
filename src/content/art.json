@@ -1,0 +1,23 @@
+{
+  "unit_knight_arm_far_lower": "assets/units/knight/unit_knight_arm_far_lower.png",
+  "unit_knight_arm_far_upper": "assets/units/knight/unit_knight_arm_far_upper.png",
+  "unit_knight_arm_near_lower": "assets/units/knight/unit_knight_arm_near_lower.png",
+  "unit_knight_arm_near_upper": "assets/units/knight/unit_knight_arm_near_upper.png",
+  "unit_knight_belt_tint": "assets/units/knight/unit_knight_belt_tint.png",
+  "unit_knight_buckle": "assets/units/knight/unit_knight_buckle.png",
+  "unit_knight_foot_far": "assets/units/knight/unit_knight_foot_far.png",
+  "unit_knight_foot_near": "assets/units/knight/unit_knight_foot_near.png",
+  "unit_knight_hand_far": "assets/units/knight/unit_knight_hand_far.png",
+  "unit_knight_hand_near": "assets/units/knight/unit_knight_hand_near.png",
+  "unit_knight_helm_01": "assets/units/knight/unit_knight_helm_01.png",
+  "unit_knight_neck": "assets/units/knight/unit_knight_neck.png",
+  "unit_knight_shield_charge_tint": "assets/units/knight/unit_knight_shield_charge_tint.png",
+  "unit_knight_shield_tint": "assets/units/knight/unit_knight_shield_tint.png",
+  "unit_knight_shin_far": "assets/units/knight/unit_knight_shin_far.png",
+  "unit_knight_shin_near": "assets/units/knight/unit_knight_shin_near.png",
+  "unit_knight_thigh_far": "assets/units/knight/unit_knight_thigh_far.png",
+  "unit_knight_thigh_near": "assets/units/knight/unit_knight_thigh_near.png",
+  "unit_knight_torso_tint": "assets/units/knight/unit_knight_torso_tint.png",
+  "weapon_bow_held": "assets/units/knight/weapon_bow_held.png",
+  "weapon_stone_held": "assets/units/knight/weapon_stone_held.png"
+}
