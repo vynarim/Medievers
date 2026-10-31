@@ -27,7 +27,7 @@ export function watchInstall(): void {
 }
 
 /** Already running as the installed app. */
-function installed(): boolean {
+export function installed(): boolean {
   return (
     window.matchMedia('(display-mode: fullscreen)').matches ||
     window.matchMedia('(display-mode: standalone)').matches ||

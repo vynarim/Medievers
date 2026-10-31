@@ -6,6 +6,9 @@ export const UI_SCALE_MIN = 0.6;
 /** Window size (CSS px) under which the overlay starts shrinking. */
 const REF_W = 1600;
 const REF_H = 1000;
+/** Same, on a touch screen held sideways: a 1280×800 tablet keeps the full size. */
+const TOUCH_REF_W = 1280;
+const TOUCH_REF_H = 780;
 /** Widest window (CSS px) still taken for a phone when held upright. */
 const PHONE_MAX_W = 760;
 /** Width (CSS px) under which the overlay of a phone held upright starts shrinking. */
@@ -18,11 +21,27 @@ export function isPhonePortrait(w: number, h: number): boolean {
   return w <= PHONE_MAX_W && h > w;
 }
 
-/** Overlay scale for a window of w × h CSS pixels, in [UI_SCALE_MIN, 1]. */
-export function uiScale(w: number, h: number): number {
+/** Tallest window (CSS px) still taken for a short landscape screen: a tablet, a small laptop. */
+const SHORT_MAX_H = 820;
+
+/**
+ * A screen held sideways but short (a tablet in landscape): the flavour text folds behind a « ? »
+ * as on a phone, so that the menus fit without scrolling (class `short` on #ui).
+ */
+export function isShortLandscape(w: number, h: number): boolean {
+  return !isPhonePortrait(w, h) && h < SHORT_MAX_H;
+}
+
+/**
+ * Overlay scale for a window of w × h CSS pixels, in [UI_SCALE_MIN, 1]. A touch screen (a tablet)
+ * is read from further away than a monitor of the same size: it shrinks only below a smaller one.
+ */
+export function uiScale(w: number, h: number, touch = false): number {
+  const refW = touch ? TOUCH_REF_W : REF_W;
+  const refH = touch ? TOUCH_REF_H : REF_H;
   const s = isPhonePortrait(w, h)
     ? Math.min(w / PHONE_REF_W, 1)
-    : Math.min(w / REF_W, h / REF_H, 1);
+    : Math.min(w / refW, h / refH, 1);
   return Math.round(Math.max(UI_SCALE_MIN, s) * 100) / 100;
 }
 

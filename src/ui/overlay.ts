@@ -3,7 +3,7 @@
 import { FONT_CAPS, FONT_TEXT, FONT_TITLE } from './fonts.ts';
 import { COLORS, css } from './tokens.ts';
 import { t } from './i18n.ts';
-import { isPhonePortrait, scalableCss, uiScale } from './ui-scale.ts';
+import { isPhonePortrait, isShortLandscape, scalableCss, uiScale } from './ui-scale.ts';
 
 const STYLE = `
 :root {
@@ -152,6 +152,9 @@ const STYLE = `
 #ui .banner .quip { font-size: 20px; margin-top: 10px; }
 #ui .banner button { margin-top: 14px; pointer-events: auto; }
 
+/* A tablet held upright: the whole screen asks to turn it (app/orientation.ts). */
+#ui .rotate { position: fixed; inset: 0; z-index: 50; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; padding: 32px; text-align: center; font-size: 22px; }
 /* Modals */
 #ui .veil { position: absolute; inset: 0; background: var(--shade); pointer-events: auto; }
 #ui .modal { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
@@ -172,6 +175,9 @@ const STYLE = `
 /* The arsenal takes its width outright: shrunk to fit at left: 50%, it would get half the screen,
    a single narrow column on a phone. Its buttons let a finger scroll the list (touch-action). */
 #ui .armoury { width: min(780px, calc(100vw - 32px)); }
+/* Held sideways (a tablet, a monitor), it spreads over the whole width, so that every weapon
+   shows at once. */
+#ui:not(.phone) .armoury { width: min(1600px, calc(100vw - 48px)); max-width: none; }
 #ui .modal button { touch-action: pan-y; }
 #ui .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 10px; }
 #ui .weapon { text-align: left; display: block; width: 100%; padding: 10px 12px; font-family: var(--text); }
@@ -255,10 +261,11 @@ const STYLE = `
 #ui button.icon .ico { width: 26px; height: 26px; }
 #ui .tuto-body .ico, #ui .hint .ico, #ui .info-bubble .ico { width: 1.2em; height: 1.2em; }
 
-/* Flavour text: in full on a wide screen; on a phone held upright, behind a « ? » (infoButton). */
+/* Flavour text: in full on a wide screen; on a phone held upright, behind a « ? » (infoButton),
+   and in the setup screen of a short landscape screen (a tablet), which must fit unscrolled. */
 #ui .info { display: none; }
-#ui.phone .ambient { display: none !important; }
-#ui.phone .info { display: inline-flex; align-items: center; justify-content: center; flex: none;
+#ui.phone .ambient, #ui.short .setup .ambient { display: none !important; }
+#ui.phone .info, #ui.short .setup .info { display: inline-flex; align-items: center; justify-content: center; flex: none;
   width: 30px; height: 30px; margin: 0 0 0 8px; vertical-align: middle; border-radius: 50%;
   font-family: var(--text); font-size: 20px; font-weight: bold; line-height: 1; color: var(--lapis);
   background: var(--ceruse); border: 2px solid var(--azur); pointer-events: auto; cursor: pointer; }
@@ -334,11 +341,13 @@ export function uiRoot(): HTMLElement {
   root.id = 'ui';
   document.body.appendChild(root);
   const fit = (): void => {
-    const u = uiScale(window.innerWidth, window.innerHeight);
+    const touch = window.matchMedia('(pointer: coarse)').matches;
+    const u = uiScale(window.innerWidth, window.innerHeight, touch);
     document.documentElement.style.setProperty('--u', `${u}px`);
     const phone = isPhonePortrait(window.innerWidth, window.innerHeight);
     root?.classList.toggle('phone', phone);
     document.documentElement.classList.toggle('phone', phone);
+    root?.classList.toggle('short', isShortLandscape(window.innerWidth, window.innerHeight));
     measureBars();
   };
   fit();

@@ -148,6 +148,11 @@ const STYLE = `
 #ui.phone .setup .tools button { flex: 1 1 40%; }
 #ui.phone .setup .start { flex-wrap: wrap; justify-content: center; }
 #ui.phone .setup .start button { flex: 1 1 40%; white-space: normal; }
+/* A short landscape screen (a tablet): the cards shrink to their names, their story behind a « ? ». */
+#ui.short .setup .scheme { display: flex; align-items: center; justify-content: space-between;
+  min-height: 48px; padding-top: 4px; padding-bottom: 4px; }
+#ui.short .setup .scheme b .date { display: block; margin-left: 0; }
+#ui.short .setup h3 { margin-top: 6px; }
 #ui .setup .back .arrow, #ui .setup .back .short, #ui.phone .setup .back .long { display: none; }
 #ui.phone .setup .back .arrow, #ui.phone .setup .back .short { display: inline; }
 /* The way out and the way in stay in view, floating at the foot of the page. */

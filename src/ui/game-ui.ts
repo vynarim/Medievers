@@ -28,6 +28,7 @@ import { weaponLines } from './weapon-info.ts';
 import { weaponArt } from './weapon-art.ts';
 import { audio, SOUND_MODES } from '../render/audio.ts';
 import { copyButton } from './copy-button.ts';
+import { installed } from '../app/install.ts';
 import { soundButton as makeSoundButton, SOUND_ICON } from './sound-button.ts';
 
 const STORAGE_KEY = 'medieverse.tuning.v1';
@@ -296,8 +297,9 @@ export class GameUi {
       opts.resetView(),
     );
     this.resetView.title = t('tip.resetView');
-    // Not on a phone held upright (overlay.ts): the page already fills it.
-    if (document.fullscreenEnabled) sys.append(this.fullscreenButton());
+    // Not on a phone held upright (overlay.ts): the page already fills it. Nor in the installed
+    // app, which always opens full screen.
+    if (document.fullscreenEnabled && !installed()) sys.append(this.fullscreenButton());
     // On a phone held upright, help is reached from the pause menu, which shows as its three
     // strokes alone (overlay.ts). Settings are always in the pause menu; here, the music.
     const helpButton = this.click(setIcon(button('', 'icon sys-help'), 'help'), () =>
