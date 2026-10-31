@@ -48,13 +48,24 @@ let drawnArt: (key: string) => CanvasImageSource | null = () => null;
  * (assets/sprites/valley.svg), `scale` times its size. False when no such sprite is loaded:
  * the caller draws it by code instead.
  */
-export function stamp(ctx: Ctx, key: string, x: number, ground: number, scale = 1): boolean {
+export function stamp(
+  ctx: Ctx,
+  key: string,
+  x: number,
+  ground: number,
+  scale = 1,
+  flip = false,
+): boolean {
   const variants = [0, 1, 2, 3].map((i) => drawnArt(`${key}_${i}`)).filter((v) => v !== null);
   const img = variants.length > 0 ? pick(variants) : drawnArt(key);
   if (!img) return false;
   const w = (img as HTMLImageElement).width * scale;
   const h = (img as HTMLImageElement).height * scale;
-  ctx.drawImage(img, x - w / 2, ground + 8 * scale - h, w, h);
+  ctx.save();
+  ctx.translate(x, ground + 8 * scale - h);
+  if (flip) ctx.scale(-1, 1);
+  ctx.drawImage(img, -w / 2, 0, w, h);
+  ctx.restore();
   return true;
 }
 export const pick = <T>(xs: readonly T[]): T => xs[Math.floor(Math.random() * xs.length)] as T;

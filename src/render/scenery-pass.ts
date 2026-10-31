@@ -14,6 +14,7 @@ import {
   rnd,
   scallops,
   shape,
+  stamp,
   type Ctx,
   type FarBeast,
   type FarHerd,
@@ -188,6 +189,11 @@ function fir(ctx: Ctx, x: number, base: number, h: number): void {
   }
 }
 
+/** A fir, drawn (assets/sprites/pass.svg) or else by code. */
+function firAt(ctx: Ctx, x: number, base: number, h: number): void {
+  if (!stamp(ctx, 'scene_fir', x, base, h / 70)) fir(ctx, x, base, h);
+}
+
 /** A wooden wayside cross, a cap of snow on its arms. */
 function wayCross(ctx: Ctx, x: number, base: number, h: number): void {
   shape(ctx, () => ctx.rect(x - 3, base - h, 6, h), COLORS.terreOmbre, undefined, 2);
@@ -334,22 +340,30 @@ export function drawFarPass(ctx: Ctx): void {
     }
     band(l, PASS_PASTURE, COLORS.ceruse, 0.9 / 0.66);
     for (const x of [500, 560, 1500, 1560, 1610, 2500, 3150])
-      fir(l, x, PASS_PASTURE(x) + 10, rnd(46, 66));
+      firAt(l, x, PASS_PASTURE(x) + 10, rnd(46, 66));
   });
   // The snowfields of the pass: the hospice, crosses along the road, a file of pilgrims.
   layer(ctx, 0.82, (l) => {
     band(l, PASS_GROUND, COLORS.ceruse, 1 / 0.82);
-    hospice(l, 1700, groundOf(PASS_GROUND, 1600, 1800) + 6);
-    for (const x of [1180, 2080, 2700]) wayCross(l, x, PASS_GROUND(x) + 6, rnd(34, 44));
-    for (const [x, cloak] of [
-      [1880, COLORS.terreOmbre],
-      [1906, COLORS.lapis],
-      [1930, COLORS.vertDeGris],
+    // The drawn sprites (assets/sprites/pass.svg), else the ones drawn by code.
+    const hospiceAt = groundOf(PASS_GROUND, 1600, 1800) + 6;
+    if (!stamp(l, 'scene_hospice', 1700, hospiceAt)) hospice(l, 1700, hospiceAt);
+    for (const x of [1180, 2080, 2700]) {
+      const h = rnd(34, 44);
+      if (!stamp(l, 'scene_cross', x, PASS_GROUND(x) + 6, h / 40))
+        wayCross(l, x, PASS_GROUND(x) + 6, h);
+    }
+    for (const [x, k, cloak] of [
+      [1880, 0, COLORS.terreOmbre],
+      [1906, 1, COLORS.lapis],
+      [1930, 2, COLORS.vertDeGris],
     ] as const) {
-      pilgrim(l, x, PASS_GROUND(x) + 4, cloak);
+      if (!stamp(l, `scene_pilgrim_${k}`, x, PASS_GROUND(x) + 4))
+        pilgrim(l, x, PASS_GROUND(x) + 4, cloak);
     }
     // Its mules and ibex are sprites of their own (passHerd).
-    for (const x of [300, 380, 1000, 2300, 3000, 3070]) fir(l, x, PASS_GROUND(x) + 10, rnd(60, 86));
+    for (const x of [300, 380, 1000, 2300, 3000, 3070])
+      firAt(l, x, PASS_GROUND(x) + 10, rnd(60, 86));
   });
 }
 

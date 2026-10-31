@@ -17,6 +17,7 @@ import {
   rnd,
   scallops,
   shape,
+  stamp,
   sheep,
   goat,
   type Ctx,
@@ -306,24 +307,28 @@ export function drawFarCoast(ctx: Ctx): void {
   const front = COAST_GROUND;
   layer(ctx, 0.7, (l) => {
     sea(l, horizon);
-    abbey(l, 1500, horizon + 70);
+    // The drawn sprites (assets/sprites/coast.svg), else the ones drawn by code.
+    if (!stamp(l, 'scene_abbey', 1500, horizon + 70)) abbey(l, 1500, horizon + 70);
     for (const [x, dy, s, f] of [
       [420, 40, 0.8, 1],
       [930, 20, 0.6, -1],
       [2250, 30, 0.75, 1],
       [2800, 55, 0.9, -1],
     ] as const) {
-      cog(l, x, horizon + dy, s, f);
+      if (!stamp(l, 'scene_cog', x, horizon + dy, s, f < 0)) cog(l, x, horizon + dy, s, f);
     }
   });
   layer(ctx, 0.82, (l) => {
     // Opaque enough to hide the sea behind the dunes.
     band(l, front, COLORS.feuilleOr, 0.95);
     for (let x = 40; x < FAR_W - 40; x += rnd(50, 110)) dunegrass(l, x, front(x) + rnd(8, 30), 1.2);
-    farm(l, 600, groundOf(front, 560, 820) + 8);
-    farm(l, 2500, groundOf(front, 2460, 2720) + 8);
-    beached(l, 1100, front(1100) + 10);
-    beached(l, 1900, front(1900) + 10);
+    for (const fx of [600, 2500]) {
+      const at = groundOf(front, fx - 40, fx + 220) + 8;
+      if (!stamp(l, 'scene_farm', fx + 110, at)) farm(l, fx, at);
+    }
+    for (const bx of [1100, 1900]) {
+      if (!stamp(l, 'scene_boat', bx, front(bx) + 10)) beached(l, bx, front(bx) + 10);
+    }
     // Its sheep are sprites of their own (coastHerd).
   });
 }
@@ -544,8 +549,11 @@ export function drawFarHolyLand(ctx: Ctx): void {
   const front = HOLY_LAND_DUNES;
   layer(ctx, 0.62, (l) => {
     band(l, back, COLORS.or, 0.5 / 0.62);
-    city(l, 1150, groundOf(back, 900, 1400) + 8);
-    fortress(l, 2550, groundOf(back, 2380, 2720) + 8);
+    // The drawn sprites (assets/sprites/holyland.svg), else the ones drawn by code.
+    const cityAt = groundOf(back, 900, 1400) + 8;
+    if (!stamp(l, 'scene_city', 1150, cityAt)) city(l, 1150, cityAt);
+    const fortAt = groundOf(back, 2380, 2720) + 8;
+    if (!stamp(l, 'scene_fortress', 2550, fortAt)) fortress(l, 2550, fortAt);
     for (const [x, h] of [
       [300, 70],
       [340, 56],
@@ -553,17 +561,29 @@ export function drawFarHolyLand(ctx: Ctx): void {
       [1745, 78],
       [3000, 60],
     ] as const) {
-      palm(l, x, back(x) + 14, h, pick([-1, 1]));
+      const lean = pick([-1, 1] as const);
+      if (!stamp(l, `scene_palm_${lean < 0 ? 1 : 0}`, x, back(x) + 14, h / 80)) {
+        palm(l, x, back(x) + 14, h, lean);
+      }
     }
   });
   layer(ctx, 0.8, (l) => {
     band(l, front, COLORS.ocre, 0.32 / 0.8);
-    tent(l, 600, front(600) + 8, 70, COLORS.vermillon);
-    tent(l, 680, front(680) + 8, 54, COLORS.lapis);
-    tent(l, 2200, front(2200) + 8, 64, COLORS.vertDeGris);
+    for (const [x, w, k, c] of [
+      [600, 70, 0, COLORS.vermillon],
+      [680, 54, 1, COLORS.lapis],
+      [2200, 64, 2, COLORS.vertDeGris],
+    ] as const) {
+      if (!stamp(l, `scene_tent_${k}`, x, front(x) + 8, w / 64)) tent(l, x, front(x) + 8, w, c);
+    }
     // Its camels are sprites of their own (holyLandHerd).
-    for (const x of [450, 1400, 1460, 2420, 3100])
-      palm(l, x, front(x) + 12, rnd(70, 95), pick([-1, 1]));
+    for (const x of [450, 1400, 1460, 2420, 3100]) {
+      const h = rnd(70, 95);
+      const lean = pick([-1, 1] as const);
+      if (!stamp(l, `scene_palm_${lean < 0 ? 1 : 0}`, x, front(x) + 12, h / 80)) {
+        palm(l, x, front(x) + 12, h, lean);
+      }
+    }
   });
 }
 
