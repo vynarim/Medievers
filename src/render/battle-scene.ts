@@ -311,12 +311,18 @@ export class BattleScene extends Phaser.Scene {
   private infoRef: ObjectRef | null = null;
   /** a teammate clicked that cannot take the turn: why, over its head, until `until` (ms) */
   private tip: { unitId: number; key: string; until: number } | null = null;
+  /** the beast of the margins, once its drawing is loaded */
+  private beastImg: Phaser.GameObjects.Image | null = null;
   /**
    * The steps left to walk, beside the unit that walks (playtest of 2026-10-31): shown while it
    * walks and a moment after. `left` is the walk left last frame, of unit `unitId`.
    */
-  private steps: { text: Phaser.GameObjects.Text; unitId: number; left: number; until: number } | null =
-    null;
+  private steps: {
+    text: Phaser.GameObjects.Text;
+    unitId: number;
+    left: number;
+    until: number;
+  } | null = null;
   /** drawn position of the beast, easing after the sim's */
   private beastShown: { x: number; y: number } | null = null;
   /** the burnt ends of the parchment, over the terrain, under the units */
@@ -386,6 +392,9 @@ export class BattleScene extends Phaser.Scene {
     this.selectedUnit = null;
     this.infoRef = null;
     this.tip = null;
+    // Made lazily during the match: gone with the scene's objects at a restart.
+    this.steps = null;
+    this.beastImg = null;
     // The scene object outlives a restart: a match chosen from the paused one starts running.
     this.paused = false;
     this.stepOnce = false;
@@ -2179,6 +2188,7 @@ export class BattleScene extends Phaser.Scene {
     const b = this.sim.view().beast;
     if (!b) {
       this.beastShown = null;
+      this.beastImg?.setVisible(false);
       return;
     }
     const tx = b.x / SUBPX;
@@ -2194,6 +2204,20 @@ export class BattleScene extends Phaser.Scene {
     const x = shown.x;
     const hop = hare && moving ? Math.abs(Math.sin(time / 110)) * 18 : 0;
     const y = shown.y - hop;
+    // The drawn beast (assets/sprites/beasts.svg), else the one drawn by code below.
+    const key = hare ? (moving ? 'beast_hare_1' : 'beast_hare_0') : 'beast_snail';
+    if (this.textures.exists(key)) {
+      if (!this.beastImg) {
+        this.beastImg = this.add.image(0, 0, key).setOrigin(0.5, 1).setScale(0.5).setDepth(6);
+        this.hudCam.ignore(this.beastImg);
+      }
+      this.beastImg
+        .setTexture(key)
+        .setVisible(true)
+        .setPosition(x, y + 1)
+        .setFlipX(facing < 0);
+      return;
+    }
     g.lineStyle(2, COLORS.encre, 1);
     if (hare) {
       g.fillStyle(COLORS.terreOmbre, 1);

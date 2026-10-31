@@ -246,6 +246,8 @@ Cartes V1 : Jéricho (P0, carte de référence), Ela, Camp, Arche, Tour, Verger 
 
 **Décidé le 2026-10-31** : l'art est dessiné en **vectoriel (SVG) par Claude**, sans génération d'images. Les règles ci-dessous valent pour la cohérence du dessin ; la génération IA (§9.2) reste une piste pour remplacer plus tard des pièces. Une source SVG par rig ou par lot (`assets/<catégorie>/<sujet>/<sujet>.svg`), rendue en PNG par `pnpm run art`.
 
+**Sprites** (2026-10-31) : `assets/sprites/<lot>.svg`, un groupe `sprite-<clé>` par texture, cadré par `data-box="x y w h"` (et `data-scale`), rendu sous la clé que le code peignait jusque-là : le jeu prend le dessin dès qu'il est chargé, et retombe sur le dessin du code sinon. Un `{v}` dans une clé se remplit des colorations déclarées par `data-variants` (variables CSS) à la racine du SVG. Lots livrés : `dragon.svg` (trois battements d'ailes, six robes), `unicorn.svg` (deux temps du galop), `beasts.svg` (lièvre assis et bondissant, escargot), `herd.svg` (mouton, vache pie, chèvre, cheval, chameau, mule des fonds), `valley.svg` (château, ferme, auberge, moulin et arbre du fond en deux colorations, arbre et fleurs du premier plan, quatre nuages, oiseaux). Bâtiments et arbres : x = 0 au milieu, y = 0 au sol, le bas du cadre 8 px plus bas (`stamp()` de `scenery.ts`).
+
 ### 9.1 Règles de cohérence
 1. Produire d'abord une **planche de référence de style** validée (1 chevalier complet, 1 morceau de terrain, 1 explosion, 1 bouton). Elle sert d'image de référence à toutes les générations suivantes.
 2. Générer les personnages **en pose neutre de profil, bras écartés du corps**, sur fond uni (#ff00ff ou blanc pur), puis découper les pièces à la main. Ne pas générer les pièces séparément, car leurs styles divergent.

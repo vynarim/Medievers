@@ -38,6 +38,25 @@ const STORM_TINT = COLORS.roche;
 export type Ctx = CanvasRenderingContext2D;
 
 export const rnd = (a: number, b: number): number => a + Math.random() * (b - a);
+
+/** The drawn sprites the scene loaded (assets/sprites), looked up by key while the far tile is painted. */
+let drawnArt: (key: string) => CanvasImageSource | null = () => null;
+
+/**
+ * Lays down the drawn sprite `key` (or one of its colourings `key_0`, `key_1`…) with its middle
+ * at x and its ground at `ground`, the sprite's ground line being 8 px above its bottom edge
+ * (assets/sprites/valley.svg), `scale` times its size. False when no such sprite is loaded:
+ * the caller draws it by code instead.
+ */
+export function stamp(ctx: Ctx, key: string, x: number, ground: number, scale = 1): boolean {
+  const variants = [0, 1, 2, 3].map((i) => drawnArt(`${key}_${i}`)).filter((v) => v !== null);
+  const img = variants.length > 0 ? pick(variants) : drawnArt(key);
+  if (!img) return false;
+  const w = (img as HTMLImageElement).width * scale;
+  const h = (img as HTMLImageElement).height * scale;
+  ctx.drawImage(img, x - w / 2, ground + 8 * scale - h, w, h);
+  return true;
+}
 export const pick = <T>(xs: readonly T[]): T => xs[Math.floor(Math.random() * xs.length)] as T;
 
 export const ink = (ctx: Ctx, w = 2): void => {
@@ -966,6 +985,8 @@ export interface FarBeast {
   readonly f: -1 | 1;
   /** drawing scale */
   readonly s: number;
+  /** its species, whose drawing `beast_<kind>` (assets/sprites/herd.svg) replaces `draw` once loaded */
+  readonly kind?: string;
 }
 
 /** A herd on its crest, and the opacity of the layer it grazes in. */
@@ -1032,7 +1053,13 @@ function valleyHerd(): FarHerd {
   return {
     ground: VALLEY_FIELDS,
     alpha: VALLEY_FIELDS_ALPHA,
-    beasts: herd.map(([draw, x, f]) => ({ draw, x, f, s: rnd(1.3, 1.45) })),
+    beasts: herd.map(([draw, x, f]) => ({
+      draw,
+      x,
+      f,
+      s: rnd(1.3, 1.45),
+      kind: draw === sheep ? 'sheep' : draw === cow ? 'cow' : draw === goat ? 'goat' : 'horse',
+    })),
   };
 }
 
@@ -1083,12 +1110,20 @@ function drawFar(ctx: Ctx): void {
   const backAlpha = 0.62;
   layer(ctx, backAlpha, (l) => {
     hill(l, back, COLORS.vertTendre, 0.45 / backAlpha);
-    castle(l, 1050, ground(back, 892, 1208) + 8);
-    farm(l, 330, ground(back, 290, 550) + 8);
-    farm(l, 2240, ground(back, 2200, 2460) + 8);
-    inn(l, 1480, ground(back, 1440, 1650) + 8);
-    windmill(l, 1820, ground(back, 1800, 1840) + 8);
-    windmill(l, 2900, ground(back, 2880, 2920) + 8);
+    // The drawn buildings (assets/sprites/valley.svg), else the ones drawn by code.
+    const castleAt = ground(back, 892, 1208) + 8;
+    if (!stamp(l, 'scene_castle', 1050, castleAt)) castle(l, 1050, castleAt);
+    for (const fx of [330, 2240]) {
+      const at = ground(back, fx - 40, fx + 220) + 8;
+      // The farm's drawing has its middle 110 px right of the code's x (its house's left wall).
+      if (!stamp(l, 'scene_farm', fx + 110, at)) farm(l, fx, at);
+    }
+    const innAt = ground(back, 1440, 1650) + 8;
+    if (!stamp(l, 'scene_inn', 1540, innAt)) inn(l, 1480, innAt);
+    for (const mx of [1820, 2900]) {
+      const at = ground(back, mx - 20, mx + 20) + 8;
+      if (!stamp(l, 'scene_windmill', mx, at)) windmill(l, mx, at);
+    }
     for (const [x, r] of [
       [120, 22],
       [200, 16],
@@ -1103,7 +1138,9 @@ function drawFar(ctx: Ctx): void {
       [2720, 16],
       [3080, 22],
     ] as const) {
-      lollipop(l, x, back(x) + 30, r, pick([COLORS.vertDeGris, COLORS.vertTendre]), 0.8);
+      if (!stamp(l, 'scene_tree', x, back(x) + 30, r / 22)) {
+        lollipop(l, x, back(x) + 30, r, pick([COLORS.vertDeGris, COLORS.vertTendre]), 0.8);
+      }
     }
   });
   const frontAlpha = VALLEY_FIELDS_ALPHA;
@@ -1228,6 +1265,10 @@ export class Scenery {
 
   constructor(scene: Phaser.Scene, mask: MaskView, theme: MapTheme = 'valley') {
     this.width = mask.width;
+    drawnArt = (key) =>
+      scene.textures.exists(key)
+        ? (scene.textures.get(key).getSourceImage() as CanvasImageSource)
+        : null;
     const tex = (key: string, w: number, h: number, draw: (ctx: Ctx) => void): string => {
       if (scene.textures.exists(key)) return key;
       const t = scene.textures.createCanvas(key, w, h);
@@ -1283,11 +1324,14 @@ export class Scenery {
             : valleyHerd();
     const repeats = Math.ceil((mask.width * 3) / FAR_W);
     this.herd.beasts.forEach((b, i) => {
-      const key = tex(`far_beast_${theme}_${i}`, BEAST_TEX_W, BEAST_TEX_H, (ctx) => {
-        ctx.lineJoin = 'round';
-        ctx.lineCap = 'round';
-        b.draw(ctx, BEAST_TEX_W / 2, BEAST_FEET, 1, b.s);
-      });
+      const drawn = b.kind ? `beast_${b.kind}` : '';
+      const key = scene.textures.exists(drawn)
+        ? drawn
+        : tex(`far_beast_${theme}_${i}`, BEAST_TEX_W, BEAST_TEX_H, (ctx) => {
+            ctx.lineJoin = 'round';
+            ctx.lineCap = 'round';
+            b.draw(ctx, BEAST_TEX_W / 2, BEAST_FEET, 1, b.s);
+          });
       const images: Phaser.GameObjects.Image[] = [];
       for (let k = 0; k < repeats; k++) {
         const image = scene.add
@@ -1306,8 +1350,11 @@ export class Scenery {
     });
     this.objects.push(far);
 
-    const cloudKeys: string[] = [];
-    for (let i = 0; i < CLOUD_SHAPES; i++) {
+    // The drawn clouds (assets/sprites/valley.svg), else the ones drawn by code.
+    const cloudKeys: string[] = [0, 1, 2, 3]
+      .map((i) => `cloudart${i}`)
+      .filter((k) => scene.textures.exists(k));
+    for (let i = 0; i < CLOUD_SHAPES && cloudKeys.length === 0; i++) {
       const w = Math.round(rnd(230, 400));
       cloudKeys.push(tex(`cloud${i}`, w, CLOUD_H, (ctx) => drawCloud(ctx, w, CLOUD_H)));
     }
@@ -1316,7 +1363,7 @@ export class Scenery {
         .image(
           Math.random() * mask.width,
           60 + Math.random() * mask.height * 0.25,
-          cloudKeys[i % CLOUD_SHAPES] ?? 'cloud0',
+          cloudKeys[i % cloudKeys.length] ?? 'cloud0',
         )
         .setScrollFactor(CLOUD_SCROLL, 0.7)
         .setScale(rnd(0.8, 1.3))

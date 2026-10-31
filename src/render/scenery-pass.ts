@@ -98,7 +98,7 @@ export function passHerd(): FarHerd {
         [2442, -1],
       ] as const
     )
-      .map(([x, f]): FarBeast => ({ draw: mule, x, f, s: rnd(1.15, 1.3) }))
+      .map(([x, f]): FarBeast => ({ draw: mule, x, f, s: rnd(1.15, 1.3), kind: 'mule' }))
       .concat(
         (
           [
@@ -106,7 +106,7 @@ export function passHerd(): FarHerd {
             [1330, -1],
             [2900, 1],
           ] as const
-        ).map(([x, f]): FarBeast => ({ draw: goat, x, f, s: rnd(1.15, 1.3) })),
+        ).map(([x, f]): FarBeast => ({ draw: goat, x, f, s: rnd(1.15, 1.3), kind: 'goat' })),
       ),
   };
 }

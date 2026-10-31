@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Medieverse: the beasts of the margins (GDD §4.12 bis): the hare, sitting and leaping, and the
+  snail. Facing right, feet on the middle of the box's bottom edge; 48 × 44 design px rendered
+  at ×2 (beast_hare_0, beast_hare_1, beast_snail), shown at half their size by battle-scene.ts.
+  © 2026 vynarim, all rights reserved (public/assets/LICENSE.md).
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 44" width="96" height="88">
+<g stroke="#2a1d14" stroke-linejoin="round" stroke-linecap="round">
+
+  <!-- The hare, sitting up: haunch, white scut, long ears tipped with ink. -->
+  <g id="sprite-beast_hare_0" data-box="0 0 48 44" data-scale="2">
+    <path d="M11 43 C8 40 8 34 12 30 C15 26 21 25 26 27 C30 28.6 32 32 32 36 C32 40 30 42.6 27 43 Z" fill="#8a5a32" stroke-width="1.2"/>
+    <path d="M10.6 34 C8 33 6.4 35 7.4 37 C8.4 38.8 10.6 38.4 11.4 36.6 Z" fill="#f3ecd9" stroke-width="0.9"/>
+    <path d="M14 34 C16 30.6 21 30 24 32" fill="none" stroke="#6b4a2e" stroke-width="0.8"/>
+    <path d="M26 43 C24 41.6 24 40 26 39.4 L33 40.6 C35 41 35 43 33.4 43 Z" fill="#8a5a32" stroke-width="1"/>
+    <path d="M29.6 33.4 C31 28 34.6 25.4 38 25.8 C41.4 26.2 43.2 29 42.4 31.8 C41.8 34 39.6 34.8 37.4 34.6 L33.2 36 Z" fill="#8a5a32" stroke-width="1.2"/>
+    <path d="M42.2 30.6 C42.8 31 43 31.6 42.6 32" fill="none" stroke-width="0.9"/>
+    <circle cx="39" cy="29.2" r="1.1" fill="#2a1d14" stroke="none"/>
+    <path d="M41 32.4 L46 31.4 M41 32.8 L45.6 33.6" fill="none" stroke-width="0.4"/>
+    <path d="M35.6 26.6 C34.4 19 34.6 10.6 36.6 6.6 C38.4 9.6 38.6 18 37.8 26" fill="#8a5a32" stroke-width="1.1"/>
+    <path d="M37.8 26 C38.6 18.6 40.6 11 43.4 8 C44.4 11.6 42.6 19.6 39.6 26.6" fill="#a8744a" stroke-width="1.1"/>
+    <path d="M35.2 10 C35.6 8 36 7 36.6 6.6 C37.2 7.6 37.6 8.8 37.8 10.2 Z M42.2 11.4 C42.6 9.6 43 8.6 43.4 8 C43.8 9 43.8 10.2 43.6 11.8 Z" fill="#2a1d14" stroke="none"/>
+    <path d="M36.4 24 C36 19 36.2 14 36.8 11" fill="none" stroke="#c96a6e" stroke-width="0.8"/>
+  </g>
+
+  <!-- The hare, leaping: stretched out, ears laid back. -->
+  <g id="sprite-beast_hare_1" data-box="0 0 48 44" data-scale="2">
+    <path d="M4 40 L10 36.4 C12 32.4 17 29.6 23 29.6 C29 29.6 33.6 31.6 35.4 34.6 L30 37 C26 39.4 18 40 13 38.6 Z" fill="#8a5a32" stroke-width="1.2"/>
+    <path d="M10 36.4 C7.4 35.8 6 33.6 7.6 32 C9 30.8 11 31.6 11.4 33.4 Z" fill="#f3ecd9" stroke-width="0.9"/>
+    <path d="M3 41 L9.4 37.4 L12 38.6 L5 42.4 Z" fill="#8a5a32" stroke-width="1"/>
+    <path d="M31.6 36.6 L38.6 41.4 L40.6 40.6 L34.4 35.2 Z" fill="#8a5a32" stroke-width="1"/>
+    <path d="M33.6 33.4 C35 29.4 38.4 27.4 41.6 28 C44.6 28.6 46 31.2 45 33.6 C44.2 35.4 42 36 40 35.6 L36 36.6 Z" fill="#8a5a32" stroke-width="1.2"/>
+    <circle cx="42" cy="31.2" r="1.1" fill="#2a1d14" stroke="none"/>
+    <path d="M37.2 29 C32 26 26 24.8 20.4 25.6 C25 27.8 31 29.6 36.4 30.6" fill="#8a5a32" stroke-width="1.1"/>
+    <path d="M38.6 28.4 C34.6 23.6 29.6 21 24 20.8 C28 24 33 27 37.6 29.6" fill="#a8744a" stroke-width="1.1"/>
+    <path d="M20.4 25.6 L22.6 25.2 L23.4 26.6 Z M24 20.8 L26.2 21 L26.4 22.4 Z" fill="#2a1d14" stroke="none"/>
+    <path d="M16 31 C20 31.6 26 32.4 30 34" fill="none" stroke="#6b4a2e" stroke-width="0.8"/>
+  </g>
+
+  <!-- The snail: a gilt spiral shell on a green foot, its horns raised. -->
+  <g id="sprite-beast_snail" data-box="0 0 48 44" data-scale="2">
+    <path d="M5 43 C8 40 14 39.4 22 39.6 L36 39.6 C39 38 40 34 40.6 31.4 C41 29.6 43 29.6 43.2 31.6 C43.6 36 42 41 38 43 Z" fill="#8fae6a" stroke-width="1.1"/>
+    <path d="M41.2 31 L42.6 22.6 M43 31.2 L46.4 24" fill="none" stroke-width="1"/>
+    <circle cx="42.6" cy="22.4" r="1.2" fill="#2a1d14" stroke="none"/>
+    <circle cx="46.4" cy="23.8" r="1.2" fill="#2a1d14" stroke="none"/>
+    <circle cx="40.2" cy="34" r="0.7" fill="#2a1d14" stroke="none"/>
+    <path d="M10 41.4 Q20 40.6 32 41" fill="none" stroke="#4d7a4a" stroke-width="0.7"/>
+    <circle cx="23" cy="28" r="12" fill="#c99a3e" stroke-width="1.3"/>
+    <path d="M23 28 m0 -7.6 a7.6 7.6 0 1 1 -7.4 9 a5.4 5.4 0 1 1 9.6 -3.4 a3 3 0 1 1 -4.8 2.6" fill="none" stroke-width="1"/>
+    <path d="M14 21 Q12.6 25 14 29" fill="none" stroke="#f3ecd9" stroke-width="1" stroke-opacity="0.8"/>
+    <path d="M30.6 36.4 Q27 39.4 20 39.6" fill="none" stroke="#8c6222" stroke-width="0.9"/>
+  </g>
+</g>
+</svg>
